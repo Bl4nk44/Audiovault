@@ -1,0 +1,64 @@
+version: '3.8'
+
+services:
+  backend:
+    build: ./backend
+    container_name: spotizerr-backend
+    command: uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
+    volumes:
+      - ./backend:/app
+      - ./downloads:/downloads
+    ports:
+      - "8000:8000"
+    environment:
+      - DATABASE_URL=postgresql://postgres:postgres@db:5432/spotizerr
+      - REDIS_URL=redis://redis:6379/0
+    depends_on:
+      - db
+      - redis
+    networks:
+      - spotizerr-network
+
+  frontend:
+    build: ./frontend
+    container_name: spotizerr-frontend
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    ports:
+      - "3000:5173"
+    environment:
+      - VITE_API_URL=http://localhost:8000/api/v1
+    depends_on:
+      - backend
+    networks:
+      - spotizerr-network
+
+  db:
+    image: postgres:16-alpine
+    container_name: spotizerr-db
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=spotizerr
+    ports:
+      - "5432:5432"
+    networks:
+      - spotizerr-network
+
+  redis:
+    image: redis:7-alpine
+    container_name: spotizerr-redis
+    ports:
+      - "6379:6379"
+    networks:
+      - spotizerr-network
+
+networks:
+  spotizerr-network:
+    driver: bridge
+
+volumes:
+  postgres_data:

@@ -1,0 +1,59 @@
+from fastapi import APIRouter, HTTPException, Response
+from fastapi.responses import StreamingResponse
+import yt_dlp
+import aiohttp
+import asyncio
+from app.services.spotify_service import SpotifyService
+from app.services.youtube_service import YouTubeService
+
+router = APIRouter()
+
+@router.get("/{track_id}.mp3")
+async def stream_track(track_id: str):
+    # Determine source based on ID format or lookup
+    youtube_url = None
+    
+    try:
+        if len(track_id) == 11:
+            # Assume YouTube
+            youtube_url = f"https://www.youtube.com/watch?v={track_id}"
+        else:
+            # Assume Spotify, resolve to YouTube
+            spotify_service = SpotifyService()
+            track = spotify_service.get_track(track_id)
+            if not track:
+                raise HTTPException(status_code=404, detail="Track not found")
+            
+            # Search on YouTube
+            youtube_service = YouTubeService()
+            query = f"{track['artist']} - {track['title']}"
+            results = youtube_service.search(query, limit=1)
+            if not results:
+                raise HTTPException(status_code=404, detail="Stream not found")
+            
+            youtube_url = f"https://www.youtube.com/watch?v={results[0]['id']}"
+
+        # Get direct stream URL using yt-dlp (blocking, run in executor)
+        ydl_opts = {
+            'format': 'bestaudio/best',
+            'quiet': True,
+            'no_warnings': True,
+        }
+        
+        loop = asyncio.get_event_loop()
+        with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+            info = await loop.run_in_executor(None, lambda: ydl.extract_info(youtube_url, download=False))
+            url = info['url']
+            
+            # Stream the content using aiohttp
+            async def iterfile():
+                async with aiohttp.ClientSession() as session:
+                    async with session.get(url) as response:
+                        async for chunk in response.content.iter_chunked(8192):
+                            yield chunk
+
+            return StreamingResponse(iterfile(), media_type="audio/mpeg")
+            
+    except Exception as e:
+        print(f"Streaming error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))

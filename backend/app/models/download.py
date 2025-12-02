@@ -1,0 +1,39 @@
+from sqlalchemy import Column, String, Integer, DateTime, ForeignKey
+from sqlalchemy.dialects.postgresql import UUID
+from sqlalchemy.orm import relationship
+from datetime import datetime
+from uuid import uuid4
+from app.db.base import Base
+
+class Download(Base):
+    __tablename__ = "downloads"
+    
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid4)
+    user_id = Column(UUID(as_uuid=True), ForeignKey("users.id"), index=True)
+    track_id = Column(UUID(as_uuid=True), ForeignKey("tracks.id"))
+    
+    # Download details
+    source = Column(String(20))  # spotify, youtube, deezer
+    status = Column(String(20), default="pending")  
+    # pending, downloading, processing, completed, failed
+    
+    # Progress
+    progress = Column(Integer, default=0)  # 0-100
+    file_path = Column(String(500), nullable=True)
+    file_size = Column(Integer, default=0)  # bytes
+    
+    # Priority & Scheduling
+    priority = Column(Integer, default=5)  # 1-10
+    
+    # Error tracking
+    error_message = Column(String(1000), nullable=True)
+    retry_count = Column(Integer, default=0)
+    
+    # Timestamps
+    created_at = Column(DateTime, default=datetime.utcnow)
+    started_at = Column(DateTime, nullable=True)
+    completed_at = Column(DateTime, nullable=True)
+    
+    # Relationships
+    user = relationship("User", back_populates="downloads")
+    track = relationship("Track", back_populates="downloads")
