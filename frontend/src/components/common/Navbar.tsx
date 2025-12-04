@@ -3,8 +3,13 @@ import { useStore } from '../../store/useStore'
 import { useNavigate, useLocation } from 'react-router-dom'
 import { motion } from 'framer-motion'
 
+import NotificationCenter from './NotificationCenter'
+import UserMenu from './UserMenu'
+import { useState } from 'react'
+
 export default function Navbar() {
-    const { user, logout } = useStore()
+    const { user, logout, unreadCount } = useStore()
+    const [isNotificationsOpen, setIsNotificationsOpen] = useState(false)
     const navigate = useNavigate()
     const location = useLocation()
 
@@ -50,31 +55,21 @@ export default function Navbar() {
                 <motion.button
                     whileHover={{ scale: 1.1, rotate: 15 }}
                     whileTap={{ scale: 0.9 }}
+                    onClick={() => setIsNotificationsOpen(!isNotificationsOpen)}
                     className="text-gray-400 hover:text-white p-2.5 rounded-full hover:bg-white/10 transition-colors relative"
                 >
                     <Bell size={20} />
-                    <span className="absolute top-2 right-2.5 w-2 h-2 bg-primary rounded-full shadow-[0_0_8px_rgba(34,197,94,0.8)]" />
+                    {unreadCount > 0 && (
+                        <span className="absolute top-2 right-2.5 w-2 h-2 bg-primary rounded-full shadow-[0_0_8px_rgba(34,197,94,0.8)]" />
+                    )}
                 </motion.button>
 
-                <motion.div
-                    whileHover={{ scale: 1.02 }}
-                    className="flex items-center gap-3 bg-black/40 backdrop-blur-xl border border-white/5 p-1.5 pr-4 rounded-full hover:bg-black/60 transition-colors cursor-pointer group shadow-lg"
-                >
-                    <div className="w-9 h-9 rounded-full bg-gradient-to-br from-primary to-green-600 flex items-center justify-center shadow-lg group-hover:shadow-primary/30 transition-shadow">
-                        <User size={18} className="text-black" />
-                    </div>
-                    <span className="text-sm font-bold text-white group-hover:text-primary transition-colors">{user?.username || 'User'}</span>
-                </motion.div>
+                <NotificationCenter
+                    isOpen={isNotificationsOpen}
+                    onClose={() => setIsNotificationsOpen(false)}
+                />
 
-                <motion.button
-                    whileHover={{ scale: 1.1, rotate: -10 }}
-                    whileTap={{ scale: 0.9 }}
-                    onClick={logout}
-                    className="p-2.5 hover:bg-red-500/20 text-gray-400 hover:text-red-500 rounded-full transition-colors"
-                    title="Logout"
-                >
-                    <LogOut size={20} />
-                </motion.button>
+                <UserMenu />
             </div>
         </motion.nav>
     )

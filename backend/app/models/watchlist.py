@@ -1,5 +1,5 @@
 from sqlalchemy import Column, String, Integer, Boolean, DateTime, JSON, ForeignKey, UniqueConstraint
-from sqlalchemy.dialects.postgresql import UUID
+from sqlalchemy import Uuid
 from sqlalchemy.orm import relationship
 from datetime import datetime
 from uuid import uuid4
@@ -8,8 +8,8 @@ from app.db.base import Base
 class Watchlist(Base):
     __tablename__ = "watchlist"
     
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid4)
-    user_id = Column(UUID(as_uuid=True), ForeignKey("users.id"), index=True)
+    id = Column(Uuid(as_uuid=True), primary_key=True, default=uuid4)
+    user_id = Column(Uuid(as_uuid=True), ForeignKey("users.id"), index=True)
     
     # What to watch
     watch_type = Column(String(20))  # artist, playlist, channel

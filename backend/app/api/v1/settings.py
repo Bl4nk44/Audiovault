@@ -16,6 +16,48 @@ class SettingsUpdate(BaseModel):
     youtubeApiKey: Optional[str] = None
     downloadPath: Optional[str] = None
     maxParallelDownloads: Optional[int] = None
+    theme: Optional[str] = None
+    language: Optional[str] = None
+    filenameSchema: Optional[str] = None
+    audioQuality: Optional[str] = None
+
+
+class VerifySpotify(BaseModel):
+    clientId: str
+    clientSecret: str
+
+class VerifyYouTube(BaseModel):
+    apiKey: str
+
+@router.post("/verify/spotify")
+async def verify_spotify(creds: VerifySpotify):
+    import spotipy
+    from spotipy.oauth2 import SpotifyClientCredentials
+    try:
+        client = spotipy.Spotify(
+            auth_manager=SpotifyClientCredentials(
+                client_id=creds.clientId,
+                client_secret=creds.clientSecret
+            )
+        )
+        client.search(q='test', limit=1)
+        return {"status": "valid"}
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+@router.post("/verify/youtube")
+async def verify_youtube(creds: VerifyYouTube):
+    import requests
+    try:
+        # Simple test request to YouTube Data API
+        url = f"https://www.googleapis.com/youtube/v3/search?part=snippet&q=test&key={creds.apiKey}&maxResults=1"
+        response = requests.get(url)
+        if response.status_code == 200:
+            return {"status": "valid"}
+        else:
+            raise HTTPException(status_code=400, detail="Invalid API Key")
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
 
 @router.get("/")
 async def get_settings(
@@ -37,7 +79,11 @@ async def get_settings(
         "spotifyClientSecret": spotify_creds.extra_data.get('client_secret', '') if spotify_creds else '',
         "youtubeApiKey": youtube_creds.extra_data.get('api_key', '') if youtube_creds else '',
         "downloadPath": current_user.preferences.get('download_path', '/downloads'),
-        "maxParallelDownloads": current_user.preferences.get('max_parallel_downloads', 3)
+        "maxParallelDownloads": current_user.preferences.get('max_parallel_downloads', 3),
+        "theme": current_user.preferences.get('theme', 'dark'),
+        "language": current_user.preferences.get('language', 'en'),
+        "filenameSchema": current_user.preferences.get('filename_schema', '{artist} - {title}'),
+        "audioQuality": current_user.preferences.get('audio_quality', 'high')
     }
 
 @router.post("/")
@@ -52,6 +98,14 @@ async def update_settings(
         current_prefs['download_path'] = settings.downloadPath
     if settings.maxParallelDownloads:
         current_prefs['max_parallel_downloads'] = settings.maxParallelDownloads
+    if settings.theme:
+        current_prefs['theme'] = settings.theme
+    if settings.language:
+        current_prefs['language'] = settings.language
+    if settings.filenameSchema:
+        current_prefs['filename_schema'] = settings.filenameSchema
+    if settings.audioQuality:
+        current_prefs['audio_quality'] = settings.audioQuality
     
     current_user.preferences = current_prefs
     

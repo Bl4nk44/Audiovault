@@ -1,5 +1,5 @@
 from sqlalchemy import Column, String, Integer, JSON, DateTime
-from sqlalchemy.dialects.postgresql import UUID
+from sqlalchemy import Uuid
 from sqlalchemy.orm import relationship
 from datetime import datetime
 from uuid import uuid4
@@ -8,7 +8,7 @@ from app.db.base import Base
 class Track(Base):
     __tablename__ = "tracks"
     
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid4)
+    id = Column(Uuid(as_uuid=True), primary_key=True, default=uuid4)
     title = Column(String(500), index=True, nullable=False)
     artist = Column(String(500), index=True, nullable=False)
     album = Column(String(500))

@@ -6,9 +6,11 @@ import Dashboard from './pages/Dashboard'
 import Search from './pages/Search'
 import Queue from './pages/Queue'
 import Watchlist from './pages/Watchlist'
+import Library from './pages/Library'
 import Settings from './pages/Settings'
 import CreatePlaylist from './pages/CreatePlaylist'
 import LikedSongs from './pages/LikedSongs'
+import NotFound from './pages/NotFound'
 import Layout from './components/common/Layout'
 import { useStore } from './store/useStore'
 
@@ -36,10 +38,13 @@ function App() {
             <Route path="search" element={<Search />} />
             <Route path="queue" element={<Queue />} />
             <Route path="watchlist" element={<Watchlist />} />
+            <Route path="library" element={<Library />} />
             <Route path="settings" element={<Settings />} />
             <Route path="create-playlist" element={<CreatePlaylist />} />
             <Route path="liked" element={<LikedSongs />} />
           </Route>
+
+          <Route path="*" element={<NotFound />} />
         </Routes>
         <Toaster
           position="bottom-right"

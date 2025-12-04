@@ -25,3 +25,15 @@ Thumbs.db
 # Project specific
 downloads/
 postgres_data/
+
+# Cache
+backend/.cache/
+
+# Private Documentation
+JAK_TO_DZIALA.md
+
+# Logs
+*.log
+logs.txt
+logs_full.txt
+backend/logs/

@@ -1,4 +1,6 @@
 import TrackCard from './TrackCard'
+import ArtistCard from './ArtistCard'
+import PlaylistCard from './PlaylistCard'
 import { motion } from 'framer-motion'
 
 interface SearchResultsProps {
@@ -39,16 +41,49 @@ export default function SearchResults({ results, isLoading }: SearchResultsProps
         )
     }
 
+    const artists = results.filter(r => r.type === 'artist')
+    const playlists = results.filter(r => r.type === 'playlist')
+    const tracks = results.filter(r => !r.type || r.type === 'track' || r.type === 'song')
+
     return (
         <motion.div
             variants={container}
             initial="hidden"
             animate="show"
-            className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6 pb-20"
+            className="space-y-8 pb-20"
         >
-            {results.map((track) => (
-                <TrackCard key={`${track.source}-${track.id}`} track={track} />
-            ))}
+            {tracks.length > 0 && (
+                <section>
+                    <h2 className="text-2xl font-bold mb-4 text-white">Tracks</h2>
+                    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
+                        {tracks.map((item) => (
+                            <TrackCard key={`${item.source}-${item.id}`} track={item} />
+                        ))}
+                    </div>
+                </section>
+            )}
+
+            {artists.length > 0 && (
+                <section>
+                    <h2 className="text-2xl font-bold mb-4 text-white">Artists</h2>
+                    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
+                        {artists.map((item) => (
+                            <ArtistCard key={`${item.source}-${item.id}`} artist={item} />
+                        ))}
+                    </div>
+                </section>
+            )}
+
+            {playlists.length > 0 && (
+                <section>
+                    <h2 className="text-2xl font-bold mb-4 text-white">Playlists</h2>
+                    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
+                        {playlists.map((item) => (
+                            <PlaylistCard key={`${item.source}-${item.id}`} playlist={item} />
+                        ))}
+                    </div>
+                </section>
+            )}
         </motion.div>
     )
 }

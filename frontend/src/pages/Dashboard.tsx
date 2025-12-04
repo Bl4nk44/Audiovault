@@ -1,18 +1,39 @@
 import { Download, Music, Clock, HardDrive, Play } from 'lucide-react'
 import { motion } from 'framer-motion'
 import Button from '../components/ui/Button'
-import ProgressBar from '../components/ui/ProgressBar'
-import WeeklyMix from '../components/dashboard/WeeklyMix'
-import DiscoveryPlaylist from '../components/dashboard/DiscoveryPlaylist'
-import ListenerProfileCard from '../components/dashboard/ListenerProfileCard'
 import { useEffect, useState } from 'react'
 import api from '../services/api'
+import { useNavigate } from 'react-router-dom'
+
+
+interface RecentActivityItem {
+    id: string
+    title: string
+    artist: string
+    time_ago: string
+    progress: number
+    image_url?: string
+    filename?: string
+}
+
+import { useStore } from '../store/useStore'
+
+interface ActiveDownloadItem {
+    id: string
+    title: string
+    artist: string
+    status: string
+    progress: number
+    image_url?: string
+}
 
 interface DashboardStats {
     total_downloads: string
     tracks_in_library: string
     pending_queue: string
     storage_free: string
+    recent_activity: RecentActivityItem[]
+    active_download: ActiveDownloadItem | null
 }
 
 const container = {
@@ -30,15 +51,16 @@ const item = {
     show: { opacity: 1, y: 0 }
 }
 
-import { useNavigate } from 'react-router-dom'
-
 export default function Dashboard() {
     const navigate = useNavigate()
+    const { playTrack } = useStore()
     const [dashboardStats, setDashboardStats] = useState<DashboardStats>({
         total_downloads: '-',
         tracks_in_library: '-',
         pending_queue: '-',
-        storage_free: '-'
+        storage_free: '-',
+        recent_activity: [],
+        active_download: null
     })
 
     useEffect(() => {
@@ -51,6 +73,52 @@ export default function Dashboard() {
             }
         }
         fetchStats()
+        // Poll for updates every 5 seconds (fallback and for other stats)
+        const interval = setInterval(fetchStats, 5000)
+
+        // WebSocket listeners for real-time progress
+        const handleProgress = (e: any) => {
+            const { download_id, progress, status } = e.detail
+            setDashboardStats(prev => {
+                // Only update if we have an active download or if this is a new one starting
+                // But usually dashboard stats active_download is populated by fetchStats.
+                // If we receive progress, it means something is downloading.
+
+                // If current active download matches, update it
+                if (prev.active_download && prev.active_download.id === download_id) {
+                    return {
+                        ...prev,
+                        active_download: {
+                            ...prev.active_download,
+                            progress: progress,
+                            status: status
+                        }
+                    }
+                }
+                // If no active download shown but we get progress, we might want to fetch stats to get the full object (title, image etc)
+                // Or if the ID is different (new download started)
+                if (!prev.active_download || prev.active_download.id !== download_id) {
+                    // Trigger fetch to get metadata for the new download
+                    fetchStats()
+                    return prev
+                }
+                return prev
+            })
+        }
+
+        const handleCompleted = () => {
+            // Refresh stats to show next download or empty state
+            fetchStats()
+        }
+
+        window.addEventListener('download:progress', handleProgress as any)
+        window.addEventListener('download:completed', handleCompleted as any)
+
+        return () => {
+            clearInterval(interval)
+            window.removeEventListener('download:progress', handleProgress as any)
+            window.removeEventListener('download:completed', handleCompleted as any)
+        }
     }, [])
 
     const stats = [
@@ -62,12 +130,6 @@ export default function Dashboard() {
 
     return (
         <div className="relative min-h-screen">
-            {/* Ambient Background */}
-            <div className="fixed top-0 left-0 w-full h-full overflow-hidden pointer-events-none z-0">
-                <div className="absolute top-[10%] right-[10%] w-[40%] h-[40%] bg-purple-500/5 rounded-full blur-[150px] animate-blob" />
-                <div className="absolute bottom-[10%] left-[20%] w-[30%] h-[30%] bg-blue-500/5 rounded-full blur-[150px] animate-blob animation-delay-2000" />
-            </div>
-
             <motion.div
                 variants={container}
                 initial="hidden"
@@ -103,103 +165,192 @@ export default function Dashboard() {
                     ))}
                 </motion.div>
 
-                <div className="grid gap-6 md:grid-cols-2">
-                    <motion.div variants={item}>
-                        <WeeklyMix />
-                    </motion.div>
-                    <motion.div variants={item}>
-                        <DiscoveryPlaylist />
-                    </motion.div>
-                </div>
-
-                <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-7">
+                <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
                     <motion.div
                         variants={item}
-                        className="col-span-4 rounded-3xl border border-white/10 bg-white/5 backdrop-blur-xl p-8 shadow-2xl space-y-8"
+                        className="col-span-2 rounded-3xl border border-white/10 bg-black/20 backdrop-blur-xl p-8 shadow-2xl space-y-8"
                     >
-                        <ListenerProfileCard />
-
                         <div>
                             <h3 className="font-bold mb-8 text-2xl text-white flex items-center gap-3">
                                 <span className="w-1.5 h-8 bg-primary rounded-full shadow-[0_0_10px_rgba(34,197,94,0.5)]"></span>
                                 Recent Activity
                             </h3>
                             <div className="space-y-4">
-                                {[1, 2, 3].map((i) => (
-                                    <motion.div
-                                        key={i}
-                                        initial={{ opacity: 0, x: -20 }}
-                                        animate={{ opacity: 1, x: 0 }}
-                                        transition={{ delay: i * 0.1 }}
-                                        className="flex items-center gap-4 p-4 rounded-2xl hover:bg-white/5 transition-colors group cursor-pointer border border-transparent hover:border-white/10"
-                                    >
-                                        <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-gray-800 to-black flex items-center justify-center shadow-lg group-hover:shadow-primary/20 transition-all relative overflow-hidden">
-                                            <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity backdrop-blur-[1px]">
-                                                <Play size={24} className="text-white fill-white" />
+                                {dashboardStats.recent_activity.length === 0 ? (
+                                    <p className="text-gray-400 text-center py-8">No recent activity</p>
+                                ) : (
+                                    dashboardStats.recent_activity.map((activity) => (
+                                        <motion.div
+                                            key={activity.id}
+                                            initial={{ opacity: 0, x: -20 }}
+                                            animate={{ opacity: 1, x: 0 }}
+                                            onClick={() => {
+                                                playTrack({
+                                                    id: activity.id,
+                                                    title: activity.title,
+                                                    artist: activity.artist,
+                                                    cover: activity.image_url,
+                                                    source: 'download',
+                                                    filename: activity.filename
+                                                })
+                                            }}
+                                            className="flex items-center gap-5 p-4 rounded-2xl bg-white/5 hover:bg-white/10 transition-all group cursor-pointer border border-white/5 hover:border-white/10 hover:scale-[1.01]"
+                                        >
+                                            <div className="w-16 h-16 rounded-xl bg-gradient-to-br from-gray-800 to-black flex items-center justify-center shadow-lg group-hover:shadow-primary/20 transition-all relative overflow-hidden flex-shrink-0">
+                                                {activity.image_url ? (
+                                                    <img
+                                                        src={activity.image_url}
+                                                        alt={activity.title}
+                                                        className="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity"
+                                                    />
+                                                ) : (
+                                                    <>
+                                                        <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity backdrop-blur-[1px] z-10">
+                                                            <Play size={28} className="text-white fill-white drop-shadow-md" />
+                                                        </div>
+                                                        <Music size={28} className="text-gray-500 group-hover:opacity-0 transition-opacity" />
+                                                    </>
+                                                )}
+                                                {activity.image_url && (
+                                                    <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity backdrop-blur-[1px] z-10">
+                                                        <Play size={28} className="text-white fill-white drop-shadow-md" />
+                                                    </div>
+                                                )}
                                             </div>
-                                            <Music size={24} className="text-gray-500 group-hover:opacity-0 transition-opacity" />
-                                        </div>
-                                        <div className="flex-1 min-w-0">
-                                            <p className="font-bold text-white group-hover:text-primary transition-colors truncate">Blinding Lights</p>
-                                            <p className="text-sm text-gray-400 truncate">The Weeknd • Downloaded 2h ago</p>
-                                        </div>
-                                        <div className="w-32 hidden sm:block">
-                                            <ProgressBar progress={75} height="h-1.5" showLabel={false} />
-                                        </div>
-                                    </motion.div>
-                                ))}
+                                            <div className="flex-1 min-w-0">
+                                                <div className="flex justify-between items-start">
+                                                    <div>
+                                                        <p className="font-bold text-lg text-white group-hover:text-primary transition-colors truncate">{activity.title}</p>
+                                                        <p className="text-sm text-gray-400 truncate font-medium">{activity.artist}</p>
+                                                    </div>
+                                                    <span className="text-xs text-gray-500 bg-white/5 px-2 py-1 rounded-full border border-white/5 whitespace-nowrap ml-2">
+                                                        {activity.time_ago}
+                                                    </span>
+                                                </div>
+                                                <div className="mt-2 flex items-center gap-2">
+                                                    <div className="h-1 flex-1 bg-white/10 rounded-full overflow-hidden">
+                                                        <div className="h-full bg-green-500/50 w-full rounded-full" />
+                                                    </div>
+                                                    <span className="text-xs text-green-400 font-medium">Completed</span>
+                                                </div>
+                                            </div>
+                                        </motion.div>
+                                    ))
+                                )}
                             </div>
                         </div>
                     </motion.div>
 
                     <motion.div
                         variants={item}
-                        className="col-span-3 rounded-3xl border border-white/10 bg-white/5 backdrop-blur-xl p-8 shadow-2xl flex flex-col"
+                        className="col-span-1 space-y-6"
                     >
-                        <h3 className="font-bold mb-8 text-2xl text-white flex items-center gap-3">
-                            <span className="w-1.5 h-8 bg-purple-500 rounded-full shadow-[0_0_10px_rgba(168,85,247,0.5)]"></span>
-                            Quick Actions
-                        </h3>
-                        <div className="space-y-4 flex-1">
-                            <Button
-                                variant="primary"
-                                className="w-full justify-start h-14 text-lg font-bold shadow-lg shadow-primary/20"
-                                size="lg"
-                                onClick={() => navigate('/search')}
-                            >
-                                <Download className="mr-3 h-6 w-6" /> Add New Download
-                            </Button>
-                            <Button
-                                variant="secondary"
-                                className="w-full justify-start h-14 text-lg bg-white/5 hover:bg-white/10 border border-white/10"
-                                size="lg"
-                                onClick={() => navigate('/search')}
-                            >
-                                <Music className="mr-3 h-6 w-6" /> Import Playlist
-                            </Button>
-                            <Button
-                                variant="outline"
-                                className="w-full justify-start h-14 text-lg border-white/10 hover:bg-white/5 text-gray-300 hover:text-white"
-                                size="lg"
-                                onClick={() => navigate('/watchlist')}
-                            >
-                                <Clock className="mr-3 h-6 w-6" /> View Watchlist
-                            </Button>
+                        <div className="rounded-3xl border border-white/10 bg-black/20 backdrop-blur-xl p-8 shadow-2xl">
+                            <h3 className="font-bold mb-6 text-2xl text-white flex items-center gap-3">
+                                <span className="w-1.5 h-8 bg-purple-500 rounded-full shadow-[0_0_10px_rgba(168,85,247,0.5)]"></span>
+                                Quick Actions
+                            </h3>
+                            <div className="space-y-4">
+                                <Button
+                                    variant="primary"
+                                    className="w-full justify-start h-14 text-lg font-bold shadow-lg shadow-primary/20"
+                                    size="lg"
+                                    onClick={() => navigate('/search')}
+                                >
+                                    <Download className="mr-3 h-6 w-6" /> Add New Download
+                                </Button>
+                                <Button
+                                    variant="secondary"
+                                    className="w-full justify-start h-14 text-lg bg-purple-500/20 hover:bg-purple-500/30 text-purple-100 border border-purple-500/20 shadow-[0_0_15px_rgba(168,85,247,0.1)] transition-all"
+                                    size="lg"
+                                    onClick={() => navigate('/search')}
+                                >
+                                    <Music className="mr-3 h-6 w-6" /> Import Playlist
+                                </Button>
+                                <Button
+                                    variant="outline"
+                                    className="w-full justify-start h-14 text-lg border-white/10 hover:bg-white/5 text-gray-300 hover:text-white"
+                                    size="lg"
+                                    onClick={() => navigate('/watchlist')}
+                                >
+                                    <Clock className="mr-3 h-6 w-6" /> View Watchlist
+                                </Button>
+                            </div>
                         </div>
 
-                        <div className="mt-8 p-6 rounded-2xl bg-gradient-to-br from-primary/10 to-transparent border border-primary/20 relative overflow-hidden">
-                            <div className="absolute top-0 right-0 w-32 h-32 bg-primary/10 rounded-full blur-2xl -translate-y-1/2 translate-x-1/2 pointer-events-none" />
-                            <div className="flex items-center gap-3 mb-4 relative z-10">
-                                <div className="p-2.5 rounded-xl bg-primary/20 text-primary border border-primary/20 shadow-[0_0_15px_rgba(34,197,94,0.3)]">
-                                    <Download size={20} />
+                        {/* Active Download Widget */}
+                        {dashboardStats.active_download ? (
+                            <motion.div
+                                initial={{ opacity: 0, y: 20 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                className="rounded-3xl border border-primary/30 bg-gradient-to-b from-black/80 to-black/60 backdrop-blur-xl p-6 shadow-[0_0_30px_rgba(34,197,94,0.1)] relative overflow-hidden group"
+                            >
+                                {/* Background Image Blur Effect */}
+                                {dashboardStats.active_download.image_url && (
+                                    <div
+                                        className="absolute inset-0 opacity-20 bg-cover bg-center blur-xl pointer-events-none"
+                                        style={{ backgroundImage: `url(${dashboardStats.active_download.image_url})` }}
+                                    />
+                                )}
+                                <div className="absolute top-0 right-0 w-40 h-40 bg-primary/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 pointer-events-none" />
+
+                                <div className="flex items-center gap-4 mb-4 relative z-10">
+                                    <div className="relative">
+                                        {dashboardStats.active_download.image_url ? (
+                                            <img
+                                                src={dashboardStats.active_download.image_url}
+                                                alt="Cover"
+                                                className="w-12 h-12 rounded-xl object-cover border border-white/10 shadow-lg"
+                                            />
+                                        ) : (
+                                            <div className="p-3 rounded-xl bg-primary/20 text-primary border border-primary/20 shadow-[0_0_15px_rgba(34,197,94,0.3)] animate-pulse">
+                                                <Download size={24} />
+                                            </div>
+                                        )}
+                                        {dashboardStats.active_download.status === 'downloading' && (
+                                            <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-primary rounded-full border-2 border-black animate-pulse" />
+                                        )}
+                                    </div>
+
+                                    <div>
+                                        <span className="font-bold text-white text-lg block">
+                                            {dashboardStats.active_download.status === 'downloading' ? 'Downloading...' : 'Pending...'}
+                                        </span>
+                                        <span className="text-xs text-primary/80 font-medium tracking-wide uppercase">
+                                            {Math.round(dashboardStats.active_download.progress)}% Completed
+                                        </span>
+                                    </div>
                                 </div>
-                                <span className="font-bold text-white">Downloading...</span>
+
+                                <div className="relative z-10 space-y-3">
+                                    <div>
+                                        <p className="text-white font-bold text-lg truncate leading-tight">
+                                            {dashboardStats.active_download.title}
+                                        </p>
+                                        <p className="text-gray-400 text-sm truncate">
+                                            {dashboardStats.active_download.artist}
+                                        </p>
+                                    </div>
+
+                                    <div className="h-2 bg-white/10 rounded-full overflow-hidden border border-white/5">
+                                        <motion.div
+                                            initial={{ width: 0 }}
+                                            animate={{ width: `${dashboardStats.active_download.progress}%` }}
+                                            transition={{ ease: "linear" }}
+                                            className="h-full bg-gradient-to-r from-primary to-green-400 shadow-[0_0_10px_rgba(34,197,94,0.5)]"
+                                        />
+                                    </div>
+                                </div>
+                            </motion.div>
+                        ) : (
+                            <div className="rounded-3xl border border-white/5 bg-white/5 p-6 flex flex-col items-center justify-center text-center space-y-3 min-h-[180px]">
+                                <div className="w-12 h-12 rounded-full bg-white/5 flex items-center justify-center text-gray-600">
+                                    <Download size={24} />
+                                </div>
+                                <p className="text-gray-500 font-medium">No active downloads</p>
+                                <p className="text-xs text-gray-600 max-w-[150px]">Start downloading music to see progress here</p>
                             </div>
-                            <p className="text-sm text-gray-300 mb-3 relative z-10">Downloading "Starboy" - 45%</p>
-                            <div className="relative z-10">
-                                <ProgressBar progress={45} showLabel height="h-2" />
-                            </div>
-                        </div>
+                        )}
                     </motion.div>
                 </div>
             </motion.div>

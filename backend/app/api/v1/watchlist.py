@@ -23,6 +23,9 @@ async def add_to_watchlist(
     current_user: User = Depends(get_current_active_user),
     db: AsyncSession = Depends(get_db)
 ):
+    import logging
+    logger = logging.getLogger(__name__)
+    logger.info(f"Watchlist add request: {request.dict()}")
     return await watchlist_engine.add_to_watchlist(db, current_user.id, request.dict())
 
 @router.get("/list")
@@ -42,3 +45,26 @@ async def remove_from_watchlist(
     if not success:
         raise HTTPException(status_code=404, detail="Item not found")
     return {"status": "success"}
+
+class WatchlistUpdateRequest(BaseModel):
+    auto_download: bool
+
+@router.patch("/{watchlist_id}")
+async def update_watchlist_item(
+    watchlist_id: UUID,
+    request: WatchlistUpdateRequest,
+    current_user: User = Depends(get_current_active_user),
+    db: AsyncSession = Depends(get_db)
+):
+    item = await watchlist_engine.update_watchlist_item(db, watchlist_id, current_user.id, request.dict(exclude_unset=True))
+    if not item:
+        raise HTTPException(status_code=404, detail="Item not found")
+    return item
+
+@router.post("/check-updates")
+async def check_updates(
+    current_user: User = Depends(get_current_active_user),
+    db: AsyncSession = Depends(get_db)
+):
+    count = await watchlist_engine.check_for_updates(db, current_user.id)
+    return {"status": "success", "new_downloads": count}

@@ -10,16 +10,35 @@ export default function Search() {
     const [offset, setOffset] = useState(0)
     const [hasMore, setHasMore] = useState(true)
     const [currentQuery, setCurrentQuery] = useState('')
+    const [currentSource, setCurrentSource] = useState('all')
+    const [currentType, setCurrentType] = useState('all')
 
-    const handleSearch = async (query: string, source: string) => {
+    const handleSearch = async (query: string, source: string, type: string) => {
         setIsLoading(true)
         setResults([])
         setOffset(0)
         setHasMore(true)
+
+        // Auto-detect source and type from URL
+        let effectiveSource = source
+        let effectiveType = type
+
+        if (query.includes('spotify.com') || query.includes('spotify:')) {
+            effectiveSource = 'spotify'
+            console.log('Auto-detected source: Spotify')
+        } else if (query.includes('youtube.com') || query.includes('youtu.be')) {
+            effectiveSource = 'youtube'
+            console.log('Auto-detected source: YouTube')
+        }
+
+        console.log(`Searching: query="${query}", source="${effectiveSource}", type="${effectiveType}"`)
+
         setCurrentQuery(query)
+        setCurrentSource(effectiveSource)
+        setCurrentType(effectiveType)
 
         try {
-            await fetchResults(query, source, 0)
+            await fetchResults(query, effectiveSource, effectiveType, 0)
         } catch (error) {
             toast.error('Search failed')
             console.error(error)
@@ -28,21 +47,63 @@ export default function Search() {
         }
     }
 
-    const fetchResults = async (query: string, source: string, currentOffset: number) => {
+    const fetchResults = async (query: string, source: string, type: string, currentOffset: number) => {
         let newResults: any[] = []
 
-        if (source !== 'all') {
-            const response = await api.get(`/${source}/search`, { params: { q: query, offset: currentOffset } })
-            newResults = response.data
-        } else {
-            const sources = ['spotify', 'youtube', 'deezer']
-            const promises = sources.map(s =>
-                api.get(`/${s}/search`, { params: { q: query, offset: currentOffset } })
+        // Determine which types to fetch
+        let typesToFetch = ['track', 'artist', 'playlist']
+        if (type !== 'all') {
+            typesToFetch = [type]
+        }
+
+        if (source === 'spotify') {
+            // Spotify supports multiple types in one call
+            try {
+                const spotifyTypes = type === 'all' ? 'track,artist,playlist' : type
+                const response = await api.get('/spotify/search', { params: { q: query, offset: currentOffset, type: spotifyTypes } })
+                newResults = response.data
+            } catch (e) {
+                console.error(e)
+            }
+        } else if (source === 'youtube') {
+            // YouTube needs separate calls
+            const promises = typesToFetch.map(t =>
+                api.get('/youtube/search', { params: { q: query, offset: currentOffset, type: t } })
                     .then(res => res.data)
                     .catch(() => [])
             )
-            const allResults = await Promise.all(promises)
-            newResults = allResults.flat()
+            const results = await Promise.all(promises)
+            newResults = results.flat()
+        } else if (source === 'all') {
+            // Fetch from all sources
+            const spotifyTypes = type === 'all' ? 'track,artist,playlist' : type
+            const spotifyPromise = api.get('/spotify/search', { params: { q: query, offset: currentOffset, type: spotifyTypes } })
+                .then(res => res.data)
+                .catch(() => [])
+
+            const youtubePromises = typesToFetch.map(t =>
+                api.get('/youtube/search', { params: { q: query, offset: currentOffset, type: t } })
+                    .then(res => res.data)
+                    .catch(() => [])
+            )
+
+            // Deezer (tracks only for now)
+            // Only fetch deezer if type is 'all' or 'track'
+            let deezerPromise = Promise.resolve([])
+            if (type === 'all' || type === 'track') {
+                deezerPromise = api.get('/deezer/search', { params: { q: query, offset: currentOffset } })
+                    .then(res => res.data)
+                    .catch(() => [])
+            }
+
+            const [spotifyResults, ...youtubeResultsArray] = await Promise.all([spotifyPromise, ...youtubePromises, deezerPromise])
+            const deezerResults = youtubeResultsArray.pop() // Last one is deezer
+
+            newResults = [...spotifyResults, ...youtubeResultsArray.flat(), ...deezerResults]
+        } else {
+            // Fallback for other sources (deezer)
+            const response = await api.get(`/${source}/search`, { params: { q: query, offset: currentOffset } })
+            newResults = response.data
         }
 
         if (newResults.length === 0) {
@@ -57,11 +118,8 @@ export default function Search() {
         if (isLoading || !hasMore) return
         setIsLoading(true)
         try {
-            // For now assuming 'all' or specific source is handled by keeping track of last source
-            // But handleSearch doesn't save source. Let's assume 'all' for now or we need to save source state.
-            // Simplification: just pass 'all' if we don't track it, or better add source state.
-            // Let's add source state.
-            await fetchResults(currentQuery, 'all', offset)
+            // Use the tracked source and type for pagination
+            await fetchResults(currentQuery, currentSource, currentType, offset)
         } catch (error) {
             toast.error('Failed to load more')
         } finally {

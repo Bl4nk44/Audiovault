@@ -61,3 +61,64 @@ class AuthManager:
             "token_type": "bearer",
             "expires_in": settings.ACCESS_TOKEN_EXPIRE_MINUTES * 60
         }
+
+    async def refresh_access_token(self, refresh_token: str):
+        from jose import jwt, JWTError
+        from app.core.config import settings
+        
+        try:
+            payload = jwt.decode(refresh_token, settings.JWT_SECRET_KEY, algorithms=[settings.JWT_ALGORITHM])
+            token_type = payload.get("type")
+            user_id = payload.get("sub")
+            
+            if token_type != "refresh":
+                raise HTTPException(
+                    status_code=status.HTTP_401_UNAUTHORIZED,
+                    detail="Invalid token type",
+                    headers={"WWW-Authenticate": "Bearer"},
+                )
+                
+            if not user_id:
+                raise HTTPException(
+                    status_code=status.HTTP_401_UNAUTHORIZED,
+                    detail="Invalid token subject",
+                    headers={"WWW-Authenticate": "Bearer"},
+                )
+                
+            # Verify user exists
+            from uuid import UUID
+            try:
+                user_uuid = UUID(user_id)
+            except ValueError:
+                 raise HTTPException(
+                    status_code=status.HTTP_401_UNAUTHORIZED,
+                    detail="Invalid token subject format",
+                    headers={"WWW-Authenticate": "Bearer"},
+                )
+
+            result = await self.db.execute(select(User).where(User.id == user_uuid))
+            user = result.scalar_one_or_none()
+            
+            if not user:
+                raise HTTPException(
+                    status_code=status.HTTP_401_UNAUTHORIZED,
+                    detail="User not found",
+                    headers={"WWW-Authenticate": "Bearer"},
+                )
+                
+            # Create new access token
+            access_token = create_access_token(user.id)
+            
+            return {
+                "access_token": access_token,
+                "refresh_token": refresh_token, # Return same refresh token or rotate? For now return same.
+                "token_type": "bearer",
+                "expires_in": settings.ACCESS_TOKEN_EXPIRE_MINUTES * 60
+            }
+            
+        except JWTError:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Could not validate credentials",
+                headers={"WWW-Authenticate": "Bearer"},
+            )

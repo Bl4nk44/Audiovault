@@ -23,7 +23,9 @@ export default function RegisterForm() {
             toast.success('Registration successful! Please login.')
             navigate('/login')
         } catch (error: any) {
-            toast.error(error.response?.data?.detail || 'Registration failed')
+            console.error('Registration error:', error)
+            const errorMessage = error.response?.data?.detail || error.message || 'Registration failed. Please try again.'
+            toast.error(errorMessage)
         } finally {
             setIsLoading(false)
         }

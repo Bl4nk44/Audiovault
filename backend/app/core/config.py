@@ -1,5 +1,7 @@
 from pydantic_settings import BaseSettings
 from typing import Optional
+from pathlib import Path
+import os
 
 class Settings(BaseSettings):
     PROJECT_NAME: str = "Spotizerr 3.0"
@@ -20,7 +22,7 @@ class Settings(BaseSettings):
     YOUTUBE_API_KEY: Optional[str] = None
     DEEZER_API_KEY: Optional[str] = None
     
-    DOWNLOAD_DIR: str = "/downloads"
+    DOWNLOAD_DIR: str = os.getenv("DOWNLOAD_DIR", str(Path.home() / "Downloads" / "Spotizerr"))
     MAX_PARALLEL_DOWNLOADS: int = 3
     STORAGE_QUOTA_GB: int = 500
     LOG_LEVEL: str = "INFO"

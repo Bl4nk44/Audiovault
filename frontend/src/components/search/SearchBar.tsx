@@ -4,18 +4,19 @@ import { motion } from 'framer-motion'
 
 
 interface SearchBarProps {
-    onSearch: (query: string, source: string) => void
+    onSearch: (query: string, source: string, type: string) => void
     isLoading: boolean
 }
 
 export default function SearchBar({ onSearch, isLoading }: SearchBarProps) {
     const [query, setQuery] = useState('')
     const [source, setSource] = useState('all')
+    const [type, setType] = useState('all')
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault()
         if (query.trim()) {
-            onSearch(query, source)
+            onSearch(query, source, type)
         }
     }
 
@@ -52,6 +53,20 @@ export default function SearchBar({ onSearch, isLoading }: SearchBarProps) {
                 <div className="flex gap-4 w-full md:w-auto">
                     <div className="relative min-w-[140px]">
                         <select
+                            value={type}
+                            onChange={(e) => setType(e.target.value)}
+                            className="w-full appearance-none px-6 py-5 rounded-2xl bg-white/5 backdrop-blur-xl border border-white/10 text-white font-medium focus:outline-none focus:border-primary/50 cursor-pointer hover:bg-white/10 transition-all"
+                        >
+                            <option value="all" className="bg-gray-900">All Types</option>
+                            <option value="artist" className="bg-gray-900">Artists</option>
+                            <option value="playlist" className="bg-gray-900">Playlists</option>
+                            <option value="track" className="bg-gray-900">Tracks</option>
+                        </select>
+                        <Filter className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" size={18} />
+                    </div>
+
+                    <div className="relative min-w-[140px]">
+                        <select
                             value={source}
                             onChange={(e) => setSource(e.target.value)}
                             className="w-full appearance-none px-6 py-5 rounded-2xl bg-white/5 backdrop-blur-xl border border-white/10 text-white font-medium focus:outline-none focus:border-primary/50 cursor-pointer hover:bg-white/10 transition-all"
@@ -76,27 +91,7 @@ export default function SearchBar({ onSearch, isLoading }: SearchBarProps) {
                 </div>
             </motion.form>
 
-            {/* Quick Filters */}
-            <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ delay: 0.4 }}
-                className="flex flex-wrap gap-3 mt-6 justify-center"
-            >
-                {['Rock', 'Pop', 'Hip-Hop', 'Electronic', 'Indie', 'Jazz', 'Classical'].map((genre, i) => (
-                    <motion.button
-                        key={genre}
-                        initial={{ opacity: 0, scale: 0.8 }}
-                        animate={{ opacity: 1, scale: 1 }}
-                        transition={{ delay: 0.4 + (i * 0.05) }}
-                        whileHover={{ scale: 1.1, backgroundColor: "rgba(255, 255, 255, 0.15)" }}
-                        whileTap={{ scale: 0.95 }}
-                        className="px-5 py-2 rounded-full bg-white/5 border border-white/5 text-sm font-medium text-gray-300 hover:text-white hover:border-white/20 transition-all backdrop-blur-sm"
-                    >
-                        {genre}
-                    </motion.button>
-                ))}
-            </motion.div>
+
         </div>
     )
 }

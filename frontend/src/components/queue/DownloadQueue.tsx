@@ -1,12 +1,15 @@
 import { useEffect, useState } from 'react'
 import api from '../../services/api'
 import DownloadItem from './DownloadItem'
-import { Loader2, Music2 } from 'lucide-react'
+import { Loader2, Music2, History } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
+
+import { useStore } from '../../store/useStore'
 
 export default function DownloadQueue() {
     const [queue, setQueue] = useState<any[]>([])
     const [isLoading, setIsLoading] = useState(true)
+    const { addNotification } = useStore()
 
     const fetchQueue = async () => {
         try {
@@ -14,6 +17,7 @@ export default function DownloadQueue() {
             setQueue(response.data)
         } catch (error) {
             console.error('Failed to fetch queue', error)
+            addNotification('error', 'Failed to refresh download queue')
         } finally {
             setIsLoading(false)
         }
@@ -31,8 +35,11 @@ export default function DownloadQueue() {
             ))
         }
 
-        const handleCompleted = () => {
+        const handleCompleted = (e: any) => {
             fetchQueue()
+            // Extract track title if available in event, otherwise generic message
+            const trackTitle = e.detail?.track?.title || 'Track'
+            addNotification('success', `Download completed: ${trackTitle}`)
         }
 
         window.addEventListener('download:progress', handleProgress as any)
@@ -71,8 +78,28 @@ export default function DownloadQueue() {
         )
     }
 
+    const handleClearHistory = async () => {
+        try {
+            await api.post('/downloads/clear-history')
+            fetchQueue()
+            addNotification('success', 'History cleared')
+        } catch (error) {
+            console.error('Failed to clear history', error)
+            addNotification('error', 'Failed to clear history')
+        }
+    }
+
     return (
         <div className="space-y-4 pb-20">
+            <div className="flex justify-end mb-4">
+                <button
+                    onClick={handleClearHistory}
+                    className="flex items-center gap-2 px-3 py-1.5 bg-white/5 hover:bg-white/10 border border-white/10 rounded-lg text-sm text-gray-400 hover:text-white transition-colors"
+                >
+                    <History size={16} />
+                    <span>Clear History</span>
+                </button>
+            </div>
             <AnimatePresence mode='popLayout'>
                 {queue.map((item) => (
                     <DownloadItem key={item.id} item={item} />
