@@ -32,12 +32,7 @@ export default function ProgressBar({
                     )}
                 >
                     {/* Animated shimmer effect */}
-                    <motion.div
-                        className="absolute top-0 left-0 bottom-0 w-full bg-gradient-to-r from-transparent via-white/30 to-transparent"
-                        initial={{ x: "-100%" }}
-                        animate={{ x: "100%" }}
-                        transition={{ repeat: Infinity, duration: 1.5, ease: "linear" }}
-                    />
+                    <div className="absolute top-0 left-0 bottom-0 w-full bg-gradient-to-r from-transparent via-white/30 to-transparent animate-progress-shimmer" />
                 </motion.div>
             </div>
             {showLabel && (

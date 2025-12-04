@@ -5,10 +5,13 @@ import { Loader2, RefreshCw } from 'lucide-react'
 import toast from 'react-hot-toast'
 import api from '../../services/api'
 
+import { LayoutGrid, List } from 'lucide-react'
+
 export default function WatchlistManager() {
     const [watchlist, setWatchlist] = useState<any[]>([])
     const [isLoading, setIsLoading] = useState(true)
     const [isChecking, setIsChecking] = useState(false)
+    const [viewMode, setViewMode] = useState<'list' | 'grid'>('list')
 
     const fetchWatchlist = async () => {
         try {
@@ -54,7 +57,24 @@ export default function WatchlistManager() {
 
     return (
         <div className="space-y-6">
-            <div className="flex justify-end">
+            <div className="flex justify-between items-center">
+                <div className="flex bg-white/5 rounded-lg p-1 border border-white/10">
+                    <button
+                        onClick={() => setViewMode('list')}
+                        className={`p-2 rounded-md transition-all ${viewMode === 'list' ? 'bg-white/10 text-white shadow-sm' : 'text-gray-400 hover:text-white'}`}
+                        title="List View"
+                    >
+                        <List size={18} />
+                    </button>
+                    <button
+                        onClick={() => setViewMode('grid')}
+                        className={`p-2 rounded-md transition-all ${viewMode === 'grid' ? 'bg-white/10 text-white shadow-sm' : 'text-gray-400 hover:text-white'}`}
+                        title="Grid View"
+                    >
+                        <LayoutGrid size={18} />
+                    </button>
+                </div>
+
                 <button
                     onClick={handleCheckUpdates}
                     disabled={isChecking}
@@ -64,14 +84,20 @@ export default function WatchlistManager() {
                     {isChecking ? "Checking..." : "Check for Updates"}
                 </button>
             </div>
-            <div className="grid gap-4">
+
+            <div className={viewMode === 'grid' ? "grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4" : "grid gap-4"}>
                 {watchlist.length === 0 ? (
-                    <div className="text-center py-12 text-muted-foreground border border-dashed border-border rounded-lg">
+                    <div className="col-span-full text-center py-12 text-muted-foreground border border-dashed border-border rounded-lg">
                         Your watchlist is empty. Add artists or playlists to track new releases.
                     </div>
                 ) : (
                     watchlist.map((item) => (
-                        <WatchlistItem key={item.id} item={item} onRemove={handleRemove} />
+                        <WatchlistItem
+                            key={item.id}
+                            item={item}
+                            onRemove={handleRemove}
+                            viewMode={viewMode}
+                        />
                     ))
                 )}
             </div>

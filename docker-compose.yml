@@ -13,6 +13,7 @@ services:
     environment:
       - DATABASE_URL=postgresql://postgres:postgres@db:5432/spotizerr
       - REDIS_URL=redis://redis:6379/0
+      - DOWNLOAD_DIR=/downloads
     depends_on:
       - db
       - redis

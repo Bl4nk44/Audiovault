@@ -67,7 +67,14 @@ export default function Dashboard() {
         const fetchStats = async () => {
             try {
                 const response = await api.get('/dashboard/stats')
-                setDashboardStats(response.data)
+                setDashboardStats(prev => {
+                    const newData = response.data
+                    // Preserve local progress if ID matches
+                    if (prev.active_download && newData.active_download && prev.active_download.id === newData.active_download.id) {
+                        newData.active_download.progress = Math.max(prev.active_download.progress, newData.active_download.progress)
+                    }
+                    return newData
+                })
             } catch (error) {
                 console.error('Failed to fetch dashboard stats', error)
             }
@@ -78,13 +85,24 @@ export default function Dashboard() {
 
         // WebSocket listeners for real-time progress
         const handleProgress = (e: any) => {
-            const { download_id, progress, status } = e.detail
+            const { download_id, progress, status, track } = e.detail
             setDashboardStats(prev => {
-                // Only update if we have an active download or if this is a new one starting
-                // But usually dashboard stats active_download is populated by fetchStats.
-                // If we receive progress, it means something is downloading.
+                // If we have track info, we can construct/update the active download immediately
+                if (track) {
+                    return {
+                        ...prev,
+                        active_download: {
+                            id: download_id,
+                            title: track.title,
+                            artist: track.artist,
+                            image_url: track.image_url,
+                            status: status,
+                            progress: progress
+                        }
+                    }
+                }
 
-                // If current active download matches, update it
+                // Fallback for legacy events (shouldn't happen with new backend)
                 if (prev.active_download && prev.active_download.id === download_id) {
                     return {
                         ...prev,
@@ -95,10 +113,9 @@ export default function Dashboard() {
                         }
                     }
                 }
-                // If no active download shown but we get progress, we might want to fetch stats to get the full object (title, image etc)
-                // Or if the ID is different (new download started)
+
+                // If we don't have track info and it's a new download, we must fetch
                 if (!prev.active_download || prev.active_download.id !== download_id) {
-                    // Trigger fetch to get metadata for the new download
                     fetchStats()
                     return prev
                 }

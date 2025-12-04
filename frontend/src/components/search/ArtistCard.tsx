@@ -27,6 +27,7 @@ export default function ArtistCard({ artist }: ArtistCardProps) {
                 source: artist.source,
                 source_id: artist.id,
                 source_name: artist.name,
+                image_url: artist.image_url,
                 auto_download: true // Default to true for convenience
             })
             setIsAdded(true)

@@ -1,4 +1,5 @@
 import asyncio
+import os
 import logging
 from typing import List, Optional
 from datetime import datetime
@@ -84,7 +85,7 @@ class DownloadManager:
             from app.models.user import User
             result = await db.execute(
                 select(Download)
-                .options(selectinload(Download.user))
+                .options(selectinload(Download.user), selectinload(Download.track))
                 .where(Download.id == download_id)
             )
             download = result.scalar_one_or_none()
@@ -104,7 +105,12 @@ class DownloadManager:
                 await socket_manager.emit('download:progress', {
                     'download_id': str(download.id),
                     'progress': 0,
-                    'status': 'downloading'
+                    'status': 'downloading',
+                    'track': {
+                        'title': download.track.title,
+                        'artist': download.track.artist,
+                        'image_url': download.track.metadata_content.get('image_url') if download.track.metadata_content else None
+                    }
                 })
 
                 loop = asyncio.get_running_loop()
@@ -119,7 +125,12 @@ class DownloadManager:
                                 socket_manager.emit('download:progress', {
                                     'download_id': str(download_id),
                                     'progress': progress,
-                                    'status': 'downloading'
+                                    'status': 'downloading',
+                                    'track': {
+                                        'title': download.track.title,
+                                        'artist': download.track.artist,
+                                        'image_url': download.track.metadata_content.get('image_url') if download.track.metadata_content else None
+                                    }
                                 }),
                                 loop
                             )
@@ -146,13 +157,18 @@ class DownloadManager:
                     download.completed_at = datetime.utcnow()
                     
                     if final_filename_container['path']:
-                        download.file_path = final_filename_container['path']
+                        # Ensure extension matches the converted format (mp3)
+                        base, ext = os.path.splitext(final_filename_container['path'])
+                        if ext != '.mp3':
+                            download.file_path = base + '.mp3'
+                        else:
+                            download.file_path = final_filename_container['path']
                     else:
                         download.file_path = f"{settings.DOWNLOAD_DIR}/{output_template}.mp3"
 
                     await db.commit()
                     
-                    import os
+
                     actual_filename = os.path.basename(download.file_path) if download.file_path else f"{download.track_id}.mp3"
 
                     await socket_manager.emit('download:completed', {

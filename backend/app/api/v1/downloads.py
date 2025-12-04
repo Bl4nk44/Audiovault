@@ -12,6 +12,7 @@ from app.models.download import Download
 from pydantic import BaseModel
 from uuid import UUID
 import os
+from app.core.config import settings
 
 router = APIRouter()
 
@@ -173,11 +174,33 @@ async def get_library(
     downloads = result.scalars().all()
     
     items = []
+    updates_made = False
+    
     for d in downloads:
         image_url = None
         if d.track.metadata_content:
             image_url = d.track.metadata_content.get('image_url') or d.track.metadata_content.get('album_art')
             
+        # Auto-fix for extension mismatch (e.g. webm in DB but mp3 on disk)
+        if d.file_path and not os.path.exists(d.file_path):
+            base, ext = os.path.splitext(d.file_path)
+            if ext != '.mp3':
+                potential_path = base + '.mp3'
+                if os.path.exists(potential_path):
+                    d.file_path = potential_path
+                    updates_made = True
+
+        filename = None
+        if d.file_path:
+            try:
+                rel_path = os.path.relpath(d.file_path, settings.DOWNLOAD_DIR).replace("\\", "/")
+                if rel_path.startswith(".."):
+                    filename = os.path.basename(d.file_path)
+                else:
+                    filename = rel_path
+            except Exception:
+                filename = os.path.basename(d.file_path)
+
         items.append({
             "id": str(d.id),
             "track_id": str(d.track_id),
@@ -189,9 +212,12 @@ async def get_library(
                 "artist": d.track.artist,
                 "album": d.track.album,
                 "image_url": image_url,
-                "filename": os.path.basename(d.file_path) if d.file_path else None
+                "filename": filename
             }
         })
+    
+    if updates_made:
+        await db.commit()
     
     return {
         "items": items,
@@ -268,6 +294,17 @@ async def get_queue(
         if d.track.metadata_content:
             image_url = d.track.metadata_content.get('image_url') or d.track.metadata_content.get('album_art')
             
+        filename = None
+        if d.file_path:
+            try:
+                rel_path = os.path.relpath(d.file_path, settings.DOWNLOAD_DIR).replace("\\", "/")
+                if rel_path.startswith(".."):
+                    filename = os.path.basename(d.file_path)
+                else:
+                    filename = rel_path
+            except Exception:
+                filename = os.path.basename(d.file_path)
+
         response_data.append({
             "id": str(d.id),
             "track_id": str(d.track_id),
@@ -278,7 +315,7 @@ async def get_queue(
                 "title": d.track.title,
                 "artist": d.track.artist,
                 "image_url": image_url,
-                "filename": os.path.basename(d.file_path) if d.file_path else None
+                "filename": filename
             }
         })
         

@@ -5,6 +5,9 @@ import { cn } from '../../lib/utils'
 
 import { useStore } from '../../store/useStore'
 
+import { useState } from 'react'
+import ConfirmModal from '../ui/ConfirmModal'
+
 interface DownloadItemProps {
     item: {
         id: string
@@ -23,6 +26,7 @@ interface DownloadItemProps {
 
 export default function DownloadItem({ item }: DownloadItemProps) {
     const { playTrack } = useStore()
+    const [showDeleteModal, setShowDeleteModal] = useState(false)
 
     const handlePlay = () => {
         if (item.status === 'completed') {
@@ -159,9 +163,7 @@ export default function DownloadItem({ item }: DownloadItemProps) {
                         <button
                             onClick={(e) => {
                                 e.stopPropagation()
-                                if (confirm('Are you sure you want to delete this file?')) {
-                                    import('../../services/api').then(m => m.default.delete(`/downloads/remove/${item.id}`))
-                                }
+                                setShowDeleteModal(true)
                             }}
                             className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center hover:bg-red-500/20 hover:text-red-400 text-gray-400 transition-all"
                             title="Delete file"
@@ -171,6 +173,19 @@ export default function DownloadItem({ item }: DownloadItemProps) {
                     </div>
                 )}
             </div>
+
+            <ConfirmModal
+                isOpen={showDeleteModal}
+                onClose={() => setShowDeleteModal(false)}
+                onConfirm={() => {
+                    import('../../services/api').then(m => m.default.delete(`/downloads/remove/${item.id}`))
+                }}
+                title="Delete File"
+                message="Are you sure you want to delete this file? This cannot be undone."
+                confirmText="Delete"
+                cancelText="Cancel"
+                variant="danger"
+            />
         </motion.div>
     )
 }
