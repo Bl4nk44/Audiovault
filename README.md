@@ -61,6 +61,16 @@ If you prefer to run it locally without Docker:
 2.  Install dependencies: `npm install`.
 3.  Start the development server: `npm run dev`.
 
+## Credits & Acknowledgments
+
+This project wouldn't be possible without these amazing open-source projects:
+
+*   **[yt-dlp](https://github.com/yt-dlp/yt-dlp):** A command-line program to download videos from YouTube.com and other video sites.
+*   **[FastAPI](https://fastapi.tiangolo.com/):** High performance, easy to learn, fast to code, ready for production web framework.
+*   **[React](https://react.dev/):** The library for web and native user interfaces.
+*   **[Spotipy](https://spotipy.readthedocs.io/):** A lightweight Python library for the Spotify Web API.
+*   **[SQLAlchemy](https://www.sqlalchemy.org/):** The Python SQL Toolkit and Object Relational Mapper.
+
 ## Author
 
 Bl4nk44
