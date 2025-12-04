@@ -71,6 +71,11 @@ This project wouldn't be possible without these amazing open-source projects:
 *   **[Spotipy](https://spotipy.readthedocs.io/):** A lightweight Python library for the Spotify Web API.
 *   **[SQLAlchemy](https://www.sqlalchemy.org/):** The Python SQL Toolkit and Object Relational Mapper.
 
+## Development Workflow
+
+*   **`main`**: The stable, production-ready branch. Contains the application code without development utilities and tests.
+*   **`dev`**: The active development branch. Contains all source code including tests (`backend/tests`), debugging tools, and experimental features.
+
 ## Author
 
 Bl4nk44
