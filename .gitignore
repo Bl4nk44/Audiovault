@@ -28,3 +28,6 @@ postgres_data/
 
 # Cache
 backend/.cache/
+
+# Private Documentation
+JAK_TO_DZIALA.md
