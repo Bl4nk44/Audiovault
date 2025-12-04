@@ -231,12 +231,12 @@ export default function SettingsPanel() {
                                     value={settings.filenameSchema}
                                     onChange={(e) => setSettings({ ...settings, filenameSchema: e.target.value })}
                                     className="w-full px-4 py-3 rounded-xl bg-black/20 border border-white/10 text-white focus:outline-none focus:border-primary/50 font-mono text-sm"
-                                    placeholder="{artist} - {title}"
+                                    placeholder="{user}/{service}/{playlist}/{artist} - {title}"
                                 />
                                 <p className="text-xs text-gray-500 ml-1 leading-relaxed">
-                                    Available tags: <code className="text-primary">{'{artist}'}</code>, <code className="text-primary">{'{title}'}</code>, <code className="text-primary">{'{album}'}</code>, <code className="text-primary">{'{id}'}</code>, <code className="text-primary">{'{year}'}</code>, <code className="text-primary">{'{track_number}'}</code>, <code className="text-primary">{'{playlist}'}</code>, <code className="text-primary">{'{service}'}</code>
+                                    Available tags: <code className="text-primary">{'{artist}'}</code>, <code className="text-primary">{'{title}'}</code>, <code className="text-primary">{'{album}'}</code>, <code className="text-primary">{'{id}'}</code>, <code className="text-primary">{'{year}'}</code>, <code className="text-primary">{'{track_number}'}</code>, <code className="text-primary">{'{playlist}'}</code>, <code className="text-primary">{'{service}'}</code>, <code className="text-primary">{'{user}'}</code>
                                     <br />
-                                    Use <code className="text-primary">/</code> to create folders (e.g. <code className="text-gray-300">{'{service}/{playlist}/{artist} - {title}'}</code>)
+                                    Use <code className="text-primary">/</code> to create folders (e.g. <code className="text-gray-300">{'{user}/{service}/{playlist}/{artist} - {title}'}</code>)
                                 </p>
 
                                 <div className="mt-2 p-3 rounded-lg bg-black/30 border border-white/5 text-sm text-gray-400 font-mono">
@@ -258,6 +258,7 @@ export default function SettingsPanel() {
                                                     .replace('{track_number}', '01')
                                                     .replace('{playlist}', 'Top Hits')
                                                     .replace('{service}', 'spotify')
+                                                    .replace('{user}', 'mati')
                                                 }
                                                 {index === array.length - 1 ? '.mp3' : ''}
                                             </span>
