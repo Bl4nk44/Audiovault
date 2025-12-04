@@ -222,6 +222,7 @@ class DownloadManager:
             '{year}': '%(release_date>%Y)s',
             '{track_number}': '%(playlist_index)s',
             '{playlist}': '%(playlist)s',
+            '{user}': download.user.username,
         }
         
         output_template = filename_schema.replace('{service}', download.source)
@@ -229,7 +230,7 @@ class DownloadManager:
             output_template = output_template.replace(tag, replacement)
         
         if not output_template or '%' not in output_template:
-             output_template = '%(artist)s - %(title)s'
+             output_template = f'{download.user.username}/{download.source}/%(artist)s - %(title)s'
 
         ydl_opts['outtmpl'] = f'{settings.DOWNLOAD_DIR}/{output_template}.%(ext)s'
         return ydl_opts, output_template

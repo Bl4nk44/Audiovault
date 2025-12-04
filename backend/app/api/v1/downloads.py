@@ -115,13 +115,15 @@ async def rescan_library(
 
 
 
-from sqlalchemy import text
+from sqlalchemy import update, text
 
 @router.post("/clear-history")
 async def clear_history(
     current_user: User = Depends(get_current_active_user),
     db: AsyncSession = Depends(get_db)
 ):
+    user_id = current_user.id # Capture ID before potential rollback expires the user object
+
     # Auto-migration hack (safe to run multiple times)
     try:
         # Check if column exists is hard in generic SQL, so just try adding it and ignore error
@@ -134,11 +136,17 @@ async def clear_history(
         await db.rollback()
         pass
 
-    # Archive all completed downloads
-    await db.execute(
-        text("UPDATE downloads SET archived = 1 WHERE user_id = :user_id AND status = 'completed'"),
-        {"user_id": str(current_user.id)}
+    # Archive all completed downloads using ORM to handle UUID conversion correctly
+    stmt = (
+        update(Download)
+        .where(
+            Download.user_id == user_id,
+            Download.status == 'completed'
+        )
+        .values(archived=True)
     )
+    
+    await db.execute(stmt)
     await db.commit()
     return {"status": "success"}
 

@@ -26,5 +26,6 @@ class User(Base):
         "theme": "dark",
         "quality": "high",
         "auto_download": False,
-        "language": "en"
+        "language": "en",
+        "filename_schema": "{user}/{service}/{playlist}/{artist} - {title}"
     })
