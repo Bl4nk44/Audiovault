@@ -1,38 +1,66 @@
 # SpotizerrNew
 
-SpotizerrNew to nowoczesna aplikacja webowa umożliwiająca pobieranie, zarządzanie i odtwarzanie muzyki z różnych źródeł (Spotify, YouTube).
+SpotizerrNew is a modern web application that allows you to download, manage, and play music from various sources (Spotify, YouTube).
 
-## Główne Funkcjonalności
+## Key Features
 
-*   **Pobieranie Muzyki:** Pobieranie utworów, albumów i playlist ze Spotify oraz YouTube.
-*   **Biblioteka:** Zarządzanie pobranymi utworami z możliwością wyszukiwania i filtrowania.
-*   **Odtwarzacz:** Wbudowany odtwarzacz audio z wizualizacją i obsługą playlist.
-*   **Watchlist:** Automatyczne monitorowanie i pobieranie nowych utworów od ulubionych artystów.
-*   **Streaming:** Możliwość streamowania utworów przed pobraniem.
+*   **Music Download:** Download tracks, albums, and playlists from Spotify and YouTube.
+*   **Library:** Manage downloaded tracks with search and filtering capabilities.
+*   **Player:** Built-in audio player with visualization and playlist support.
+*   **Watchlist:** Automatically monitor and download new releases from your favorite artists.
+*   **Streaming:** Stream tracks directly before downloading.
 
-## Technologie
+## Technology Stack
 
 *   **Backend:** Python, FastAPI, SQLAlchemy, yt-dlp
 *   **Frontend:** React, TypeScript, TailwindCSS, Zustand
-*   **Baza Danych:** SQLite (Dev) / PostgreSQL (Prod)
-*   **Cache:** Redis (opcjonalnie)
+*   **Database:** SQLite (Dev) / PostgreSQL (Prod)
+*   **Cache:** Redis (optional)
+*   **Containerization:** Docker, Docker Compose
 
-## Instalacja i Uruchomienie
+## Installation and Usage
 
-### Backend
+The application is designed to run in Docker by default.
 
-1.  Przejdź do katalogu `backend`.
-2.  Utwórz wirtualne środowisko: `python -m venv venv`.
-3.  Aktywuj środowisko: `venv\Scripts\activate` (Windows) lub `source venv/bin/activate` (Linux).
-4.  Zainstaluj zależności: `pip install -r requirements.txt`.
-5.  Uruchom serwer: `uvicorn app.main:app --reload`.
+### Prerequisites
 
-### Frontend
+*   [Docker](https://www.docker.com/get-started)
+*   [Docker Compose](https://docs.docker.com/compose/install/)
 
-1.  Przejdź do katalogu `frontend`.
-2.  Zainstaluj zależności: `npm install`.
-3.  Uruchom aplikację: `npm run dev`.
+### Running with Docker (Recommended)
 
-## Autor
+1.  Clone the repository.
+2.  Create a `.env` file in the root directory (or use the provided example if available).
+3.  Build and start the containers:
+
+    ```bash
+    docker-compose up --build
+    ```
+
+4.  Access the application:
+    *   **Frontend:** http://localhost:5173
+    *   **Backend API:** http://localhost:8000/docs
+
+### Manual Installation (Development)
+
+If you prefer to run it locally without Docker:
+
+#### Backend
+
+1.  Navigate to the `backend` directory.
+2.  Create a virtual environment: `python -m venv venv`.
+3.  Activate the environment:
+    *   Windows: `venv\Scripts\activate`
+    *   Linux/Mac: `source venv/bin/activate`
+4.  Install dependencies: `pip install -r requirements.txt`.
+5.  Start the server: `uvicorn app.main:app --reload`.
+
+#### Frontend
+
+1.  Navigate to the `frontend` directory.
+2.  Install dependencies: `npm install`.
+3.  Start the development server: `npm run dev`.
+
+## Author
 
 Bl4nk44
