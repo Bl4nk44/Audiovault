@@ -5,9 +5,6 @@ import { Link } from 'react-router-dom'
 export default function Login() {
     return (
         <div className="min-h-screen flex items-center justify-center bg-background text-foreground relative overflow-hidden">
-            {/* Ambient Background Effects */}
-            <div className="absolute top-[-20%] left-[-10%] w-[50%] h-[50%] bg-primary/10 rounded-full blur-[150px] animate-blob" />
-            <div className="absolute bottom-[-20%] right-[-10%] w-[50%] h-[50%] bg-purple-500/10 rounded-full blur-[150px] animate-blob animation-delay-2000" />
 
             <motion.div
                 initial={{ opacity: 0, y: 20, scale: 0.95 }}

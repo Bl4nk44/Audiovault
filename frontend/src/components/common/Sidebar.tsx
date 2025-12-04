@@ -1,4 +1,4 @@
-import { Home, Search, Download, Library, PlusSquare, Heart } from 'lucide-react'
+import { Home, Search, Download, Library, Music, Eye } from 'lucide-react'
 import { NavLink } from 'react-router-dom'
 import { cn } from '../../lib/utils'
 import { motion } from 'framer-motion'
@@ -6,13 +6,9 @@ import { motion } from 'framer-motion'
 const navItems = [
     { icon: Home, label: 'Home', path: '/' },
     { icon: Search, label: 'Search', path: '/search' },
-    { icon: Library, label: 'Watchlist', path: '/watchlist' },
-]
-
-const libraryItems = [
-    { icon: PlusSquare, label: 'Create Playlist', path: '/create-playlist', className: 'text-gray-400 group-hover:text-white' },
-    { icon: Heart, label: 'Liked Songs', path: '/liked', className: 'text-purple-400 group-hover:text-purple-300' },
-    { icon: Download, label: 'Downloads', path: '/queue', className: 'text-green-500 group-hover:text-green-400' },
+    { icon: Eye, label: 'Watchlist', path: '/watchlist' },
+    { icon: Music, label: 'My Library', path: '/library' },
+    { icon: Download, label: 'Downloads', path: '/queue' },
 ]
 
 const container = {
@@ -75,6 +71,8 @@ export default function Sidebar() {
                             )}
                         </NavLink>
                     ))}
+
+
                 </nav>
 
                 <div className="h-px bg-gradient-to-r from-transparent via-white/10 to-transparent my-2" />
@@ -85,18 +83,6 @@ export default function Sidebar() {
                             <Library size={18} className="group-hover:text-primary transition-colors" />
                             Watchlist
                         </h2>
-                        <motion.button
-                            whileHover={{ scale: 1.1, rotate: 90 }}
-                            whileTap={{ scale: 0.9 }}
-                            className="text-gray-400 hover:text-white p-1.5 rounded-full hover:bg-white/10 transition-colors"
-                        >
-                            <PlusSquare size={20} />
-                        </motion.button>
-                    </div>
-
-                    <div className="flex gap-2 mb-6 px-1 overflow-x-auto no-scrollbar">
-                        <span className="bg-white/5 border border-white/5 px-4 py-1.5 rounded-full text-xs font-medium cursor-pointer hover:bg-white/10 hover:border-white/20 transition-all text-gray-300 hover:text-white whitespace-nowrap">Playlists</span>
-                        <span className="bg-white/5 border border-white/5 px-4 py-1.5 rounded-full text-xs font-medium cursor-pointer hover:bg-white/10 hover:border-white/20 transition-all text-gray-300 hover:text-white whitespace-nowrap">Artists</span>
                     </div>
 
                     <motion.div
@@ -105,22 +91,6 @@ export default function Sidebar() {
                         animate="show"
                         className="flex-1 overflow-y-auto pr-2 -mr-2 custom-scrollbar space-y-1"
                     >
-                        {libraryItems.map((item) => (
-                            <NavLink
-                                key={item.path}
-                                to={item.path}
-                                className={({ isActive }) => cn(
-                                    "flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all group hover:bg-white/5 border border-transparent",
-                                    isActive ? "bg-white/10 text-white border-white/5" : "text-gray-400"
-                                )}
-                            >
-                                <div className={cn("w-8 h-8 flex items-center justify-center bg-gradient-to-br from-gray-800 to-black rounded-lg shadow-inner group-hover:shadow-lg transition-all", item.className && "bg-none shadow-none p-0")}>
-                                    <item.icon size={18} className={cn("transition-transform group-hover:scale-110", item.className || "text-white")} />
-                                </div>
-                                <span className="group-hover:translate-x-1 transition-transform">{item.label}</span>
-                            </NavLink>
-                        ))}
-
                         {/* Playlists will be listed here */}
                     </motion.div>
                 </div>

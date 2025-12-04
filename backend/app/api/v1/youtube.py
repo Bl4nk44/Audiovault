@@ -11,6 +11,7 @@ async def search_youtube(
     q: str, 
     limit: int = 20,
     offset: int = 0,
+    type: str = 'song',
     current_user: User = Depends(get_current_active_user)
 ):
     # YouTube Music API doesn't support simple offset pagination for search
@@ -19,4 +20,4 @@ async def search_youtube(
         return []
         
     service = YouTubeService()
-    return service.search(q, limit)
+    return service.search(q, limit, type)

@@ -82,7 +82,7 @@ export default function TrackCard({ track }: TrackCardProps) {
                         <Music className="text-gray-600" />
                     </div>
                 )}
-                <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center backdrop-blur-sm">
+                <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
                     <Play className="text-white fill-white" size={24} />
                 </div>
             </div>

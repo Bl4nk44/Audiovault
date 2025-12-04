@@ -158,18 +158,6 @@ spotizerr-3.0/
 │   │   ├── api/
 │   │   │   ├── v1/
 │   │   │   │   ├── __init__.py
-│   │   │   │   ├── auth.py           # Authentication endpoints
-│   │   │   │   ├── spotify.py        # Spotify routes
-│   │   │   │   ├── youtube.py        # YouTube routes
-│   │   │   │   ├── deezer.py         # Deezer routes
-│   │   │   │   ├── downloads.py      # Download queue routes
-│   │   │   │   ├── watchlist.py      # Watchlist routes
-│   │   │   │   └── metadata.py       # Metadata routes
-│   │   │   └── websocket.py          # WebSocket handler
-│   │   │
-│   │   ├── core/
-│   │   │   ├── config.py             # Pydantic settings
-│   │   │   ├── security.py           # JWT + encryption
 │   │   │   ├── dependencies.py       # FastAPI dependencies
 │   │   │   └── constants.py          # App constants
 │   │   │
@@ -181,7 +169,9 @@ spotizerr-3.0/
 │   │   │   ├── download_manager.py   # Async queue
 │   │   │   ├── watchlist_engine.py   # Cron jobs
 │   │   │   ├── metadata_service.py   # Unified model
-│   │   │   └── cache_manager.py      # Redis cache
+│   │   │   ├── cache_manager.py      # Redis cache
+│   │   │   ├── ai_service.py         # AI recommendations & analysis
+│   │   │   └── socket_manager.py     # WebSocket manager
 │   │   │
 │   │   ├── models/
 │   │   │   ├── user.py               # User model
@@ -252,6 +242,9 @@ spotizerr-3.0/
 │   │   │   ├── Watchlist.tsx
 │   │   │   ├── Settings.tsx
 │   │   │   ├── Login.tsx
+│   │   │   ├── NotFound.tsx
+│   │   │   ├── CreatePlaylist.tsx
+│   │   │   ├── LikedSongs.tsx
 │   │   │   └── NotFound.tsx
 │   │   │
 │   │   ├── services/

@@ -12,21 +12,28 @@ export default function LoginForm() {
     const { register, handleSubmit, formState: { errors } } = useForm()
     const [isLoading, setIsLoading] = useState(false)
     const navigate = useNavigate()
-    const { setToken, setUser } = useStore()
+    const { addSession, setToken } = useStore()
 
     const onSubmit = async (data: any) => {
         setIsLoading(true)
         try {
-            const { access_token } = await login(data)
-            setToken(access_token)
+            const response = await login(data)
+            const { access_token } = response
 
+            // Fetch user details immediately after login to get full profile
+            // We temporarily set token to allow the request
+            setToken(access_token)
             const user = await getMe()
-            setUser(user)
+
+            // Now add full session
+            addSession(user, access_token)
 
             toast.success('Logged in successfully')
             navigate('/')
         } catch (error: any) {
-            toast.error(error.response?.data?.detail || 'Login failed')
+            console.error('Login error:', error)
+            const errorMessage = error.response?.data?.detail || error.message || 'Login failed. Please check your connection.'
+            toast.error(errorMessage)
         } finally {
             setIsLoading(false)
         }

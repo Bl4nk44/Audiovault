@@ -1,7 +1,7 @@
 import { useRef, useEffect, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { useStore } from '../../store/useStore'
-import { Play, Pause, SkipBack, SkipForward, Volume2, VolumeX, Maximize2 } from 'lucide-react'
+import { Play, Pause, SkipBack, SkipForward, Volume2, VolumeX, Maximize2, X, Activity } from 'lucide-react'
 import { motion } from 'framer-motion'
 import { cn } from '../../lib/utils'
 
@@ -10,6 +10,7 @@ export default function Player() {
     const audioRef = useRef<HTMLAudioElement>(null)
     const canvasRef = useRef<HTMLCanvasElement>(null)
     const [isExpanded, setIsExpanded] = useState(false)
+    const [showVisualizer, setShowVisualizer] = useState(true)
     const [currentTime, setCurrentTime] = useState(0)
     const [duration, setDuration] = useState(0)
     const hasRecordedRef = useRef(false)
@@ -104,7 +105,7 @@ export default function Player() {
                     ctx.moveTo(0, height)
 
                     for (let i = 0; i < bufferLength; i++) {
-                        const barHeight = (dataArray[i] / 255) * height * 0.5
+                        const barHeight = (dataArray[i] / 255) * height * 0.8 // Increased height multiplier
 
                         // Smooth curve
                         const y = height - barHeight
@@ -127,9 +128,9 @@ export default function Player() {
                     ctx.closePath()
 
                     const gradient = ctx.createLinearGradient(0, height * 0.5, 0, height)
-                    gradient.addColorStop(0, 'rgba(34, 197, 94, 0.1)') // Green top
-                    gradient.addColorStop(0.5, 'rgba(168, 85, 247, 0.2)') // Purple middle
-                    gradient.addColorStop(1, 'rgba(59, 130, 246, 0.3)') // Blue bottom
+                    gradient.addColorStop(0, 'rgba(34, 197, 94, 0.8)') // Green top (more visible)
+                    gradient.addColorStop(0.5, 'rgba(168, 85, 247, 0.6)') // Purple middle
+                    gradient.addColorStop(1, 'rgba(59, 130, 246, 0.4)') // Blue bottom
 
                     ctx.fillStyle = gradient
                     ctx.fill()
@@ -148,7 +149,7 @@ export default function Player() {
         return () => {
             if (animationId) cancelAnimationFrame(animationId)
         }
-    }, [isPlaying])
+    }, [isPlaying, showVisualizer])
 
     // Playback Control
     useEffect(() => {
@@ -184,9 +185,11 @@ export default function Player() {
     if (!currentTrack) return null
 
     // Construct stream URL
-    // Assuming backend serves files at /stream/{track_id}.mp3
-    // We need to know the file extension, but for now assuming mp3 or using the source
-    const streamUrl = `${import.meta.env.VITE_API_URL}/stream/${currentTrack.id}.mp3`
+    // Use filename if available (for downloads), otherwise fallback to ID (might not work if file has extension)
+    // Ideally backend should handle ID lookup if filename is missing, but filename is safer.
+    const streamUrl = currentTrack.filename
+        ? `${import.meta.env.VITE_API_URL}/stream/${encodeURIComponent(currentTrack.filename)}`
+        : `${import.meta.env.VITE_API_URL}/stream/${currentTrack.id}.mp3`
 
     return (
         <motion.div
@@ -199,12 +202,12 @@ export default function Player() {
             )}
         >
             {/* Global Visualizer Background */}
-            {createPortal(
+            {showVisualizer && createPortal(
                 <canvas
                     ref={canvasRef}
                     width={window.innerWidth}
                     height={window.innerHeight}
-                    className="fixed inset-0 w-full h-full pointer-events-none z-[5] opacity-20 mix-blend-screen"
+                    className="fixed inset-0 w-full h-full pointer-events-none z-[5] opacity-80 mix-blend-screen"
                 />,
                 document.body
             )}
@@ -234,7 +237,7 @@ export default function Player() {
                 </div>
 
                 {/* Controls */}
-                <div className={cn("flex flex-col items-center gap-2", isExpanded ? "w-full max-w-2xl" : "flex-1")}>
+                <div className={cn("flex flex-col items-center gap-2", isExpanded ? "w-full max-w-lg mx-auto" : "flex-1")}>
                     <div className="flex items-center gap-6">
                         <button className="text-gray-400 hover:text-white transition-colors">
                             <SkipBack size={isExpanded ? 32 : 24} />
@@ -265,7 +268,7 @@ export default function Player() {
                     </div>
                 </div>
 
-                {/* Volume & Expand */}
+                {/* Volume & Expand/Close */}
                 <div className={cn("flex items-center justify-end gap-4", isExpanded ? "absolute top-8 right-8" : "w-1/3")}>
                     <div className="flex items-center gap-2 group">
                         <button onClick={() => setVolume(volume === 0 ? 1 : 0)} className="text-gray-400 hover:text-white">
@@ -287,10 +290,23 @@ export default function Player() {
                         </div>
                     </div>
                     <button
+                        onClick={() => setShowVisualizer(!showVisualizer)}
+                        className={cn(
+                            "flex items-center gap-2 px-3 py-1.5 rounded-full transition-all text-sm font-medium",
+                            showVisualizer
+                                ? "text-primary bg-primary/10 border border-primary/20 shadow-[0_0_10px_rgba(34,197,94,0.2)]"
+                                : "text-gray-400 bg-white/5 border border-white/5 hover:bg-white/10 hover:text-white"
+                        )}
+                        title="Toggle Visualizer"
+                    >
+                        <Activity size={16} />
+                        <span>Visualizer</span>
+                    </button>
+                    <button
                         onClick={() => setIsExpanded(!isExpanded)}
                         className="text-gray-400 hover:text-white p-2 hover:bg-white/10 rounded-full transition-colors"
                     >
-                        <Maximize2 size={20} />
+                        {isExpanded ? <X size={24} /> : <Maximize2 size={20} />}
                     </button>
                 </div>
             </div>

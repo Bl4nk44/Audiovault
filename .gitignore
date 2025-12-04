@@ -25,3 +25,6 @@ Thumbs.db
 # Project specific
 downloads/
 postgres_data/
+
+# Cache
+backend/.cache/

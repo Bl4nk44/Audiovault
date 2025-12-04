@@ -1,6 +1,10 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.core.config import settings
+from app.utils.logger import setup_logging
+
+# Setup logging before app startup
+setup_logging()
 
 app = FastAPI(
     title=settings.PROJECT_NAME,
@@ -54,8 +58,7 @@ from app.models.download import Download
 from app.models.credentials import ServiceCredentials
 from app.models.watchlist import Watchlist
 from app.models.history import ListeningHistory
-from app.models.recommendation import PlaylistRecommendation
-from app.models.profile import ListenerProfile
+
 
 @app.on_event("startup")
 async def startup_event():
@@ -80,3 +83,21 @@ async def startup_event():
     # Init data
     async with AsyncSessionLocal() as session:
         await init_db(session)
+        
+        # Resume pending downloads
+        from app.services.download_manager import download_manager
+        await download_manager.resume_pending_downloads(session)
+
+    # Connect to Redis
+    from app.core.cache import cache_manager
+    await cache_manager.connect()
+    
+    # Init Rate Limiter
+    from fastapi_limiter import FastAPILimiter
+    if cache_manager.redis:
+        await FastAPILimiter.init(cache_manager.redis)
+
+@app.on_event("shutdown")
+async def shutdown_event():
+    from app.core.cache import cache_manager
+    await cache_manager.close()
