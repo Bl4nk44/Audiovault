@@ -34,7 +34,8 @@ class WatchlistEngine:
             source=item['source'],
             source_id=item['source_id'],
             source_name=item['source_name'],
-            auto_download=item.get('auto_download', False)
+            auto_download=item.get('auto_download', False),
+            metadata_content={'image_url': item.get('image_url')} if item.get('image_url') else {}
         )
         db.add(watchlist_item)
         await db.commit()

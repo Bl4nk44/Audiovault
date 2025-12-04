@@ -43,6 +43,14 @@ import os
 if not os.path.exists(settings.DOWNLOAD_DIR):
     os.makedirs(settings.DOWNLOAD_DIR)
 
+# Debug: List files in download directory on startup
+print(f"📂 Mounting StaticFiles from: {settings.DOWNLOAD_DIR}")
+try:
+    files = os.listdir(settings.DOWNLOAD_DIR)
+    print(f"📂 Files in {settings.DOWNLOAD_DIR}: {files}")
+except Exception as e:
+    print(f"❌ Error listing files: {e}")
+
 app.mount("/stream", StaticFiles(directory=settings.DOWNLOAD_DIR), name="stream")
 
 from app.services.socket_manager import socket_manager

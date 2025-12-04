@@ -29,4 +29,7 @@ export interface WatchlistItem {
     source: string
     type: 'artist' | 'playlist' | 'channel'
     name: string
+    metadata?: {
+        image_url?: string
+    }
 }

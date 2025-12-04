@@ -28,6 +28,7 @@ export default function PlaylistCard({ playlist }: PlaylistCardProps) {
                 source: playlist.source,
                 source_id: playlist.id,
                 source_name: playlist.title,
+                image_url: playlist.image_url,
                 auto_download: true // Default to true
             })
             setIsAdded(true)

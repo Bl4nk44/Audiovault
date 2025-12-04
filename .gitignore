@@ -37,3 +37,4 @@ JAK_TO_DZIALA.md
 logs.txt
 logs_full.txt
 backend/logs/
+deploy.ps1

@@ -4,6 +4,7 @@ import { Play, Trash2, Edit2, Search, Music } from 'lucide-react'
 import { useStore } from '../store/useStore'
 import api from '../services/api'
 
+import ConfirmModal from '../components/ui/ConfirmModal'
 
 interface LibraryItem {
     id: string
@@ -26,6 +27,7 @@ export default function Library() {
     const [searchQuery, setSearchQuery] = useState('')
     const { playTrack } = useStore()
     const [editingItem, setEditingItem] = useState<LibraryItem | null>(null)
+    const [deleteId, setDeleteId] = useState<string | null>(null)
 
     // Pagination state
     const [page, setPage] = useState(1)
@@ -58,11 +60,15 @@ export default function Library() {
         fetchLibrary()
     }, [page]) // Refetch when page changes
 
-    const handleDelete = async (id: string) => {
-        if (!confirm("Are you sure you want to delete this file? This cannot be undone.")) return
+    const handleDelete = (id: string) => {
+        setDeleteId(id)
+    }
+
+    const confirmDelete = async () => {
+        if (!deleteId) return
         try {
-            await api.delete(`/downloads/remove/${id}`)
-            setItems(items.filter(i => i.id !== id))
+            await api.delete(`/downloads/remove/${deleteId}`)
+            setItems(items.filter(i => i.id !== deleteId))
         } catch (e) {
             console.error("Failed to delete item", e)
             alert("Failed to delete item")
@@ -289,6 +295,17 @@ export default function Library() {
                     </motion.div>
                 </div>
             )}
+
+            <ConfirmModal
+                isOpen={!!deleteId}
+                onClose={() => setDeleteId(null)}
+                onConfirm={confirmDelete}
+                title="Delete File"
+                message="Are you sure you want to delete this file? This cannot be undone."
+                confirmText="Delete"
+                cancelText="Cancel"
+                variant="danger"
+            />
         </div>
     )
 }

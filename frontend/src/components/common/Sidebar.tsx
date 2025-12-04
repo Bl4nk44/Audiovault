@@ -1,4 +1,4 @@
-import { Home, Search, Download, Library, Music, Eye } from 'lucide-react'
+import { Home, Search, Download, Music, Eye, Settings as SettingsIcon } from 'lucide-react'
 import { NavLink } from 'react-router-dom'
 import { cn } from '../../lib/utils'
 import { motion } from 'framer-motion'
@@ -9,17 +9,8 @@ const navItems = [
     { icon: Eye, label: 'Watchlist', path: '/watchlist' },
     { icon: Music, label: 'My Library', path: '/library' },
     { icon: Download, label: 'Downloads', path: '/queue' },
+    { icon: SettingsIcon, label: 'Settings', path: '/settings' },
 ]
-
-const container = {
-    hidden: { opacity: 0 },
-    show: {
-        opacity: 1,
-        transition: {
-            staggerChildren: 0.05
-        }
-    }
-}
 
 
 
@@ -75,25 +66,7 @@ export default function Sidebar() {
 
                 </nav>
 
-                <div className="h-px bg-gradient-to-r from-transparent via-white/10 to-transparent my-2" />
-
-                <div className="flex-1 flex flex-col overflow-hidden">
-                    <div className="flex items-center justify-between mb-4 px-2">
-                        <h2 className="text-gray-400 font-bold text-sm hover:text-white transition-colors cursor-pointer flex items-center gap-2 group uppercase tracking-wider">
-                            <Library size={18} className="group-hover:text-primary transition-colors" />
-                            Watchlist
-                        </h2>
-                    </div>
-
-                    <motion.div
-                        variants={container}
-                        initial="hidden"
-                        animate="show"
-                        className="flex-1 overflow-y-auto pr-2 -mr-2 custom-scrollbar space-y-1"
-                    >
-                        {/* Playlists will be listed here */}
-                    </motion.div>
-                </div>
+                {/* Watchlist section removed */}
             </div>
         </motion.aside>
     )

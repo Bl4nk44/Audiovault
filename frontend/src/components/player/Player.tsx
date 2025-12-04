@@ -187,9 +187,14 @@ export default function Player() {
     // Construct stream URL
     // Use filename if available (for downloads), otherwise fallback to ID (might not work if file has extension)
     // Ideally backend should handle ID lookup if filename is missing, but filename is safer.
+
+    // Fix: Remove /api/v1 from base URL for static files served from root /stream
+    const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8000/api/v1'
+    const baseUrl = apiUrl.replace(/\/api\/v1\/?$/, '')
+
     const streamUrl = currentTrack.filename
-        ? `${import.meta.env.VITE_API_URL}/stream/${encodeURIComponent(currentTrack.filename)}`
-        : `${import.meta.env.VITE_API_URL}/stream/${currentTrack.id}.mp3`
+        ? `${baseUrl}/stream/${currentTrack.filename.split('/').map(encodeURIComponent).join('/')}`
+        : `${apiUrl}/stream/${currentTrack.id}.mp3`
 
     return (
         <motion.div
@@ -256,7 +261,19 @@ export default function Player() {
                     {/* Progress Bar */}
                     <div className="w-full flex items-center gap-3 text-xs text-gray-400 font-medium">
                         <span>{formatTime(currentTime)}</span>
-                        <div className="flex-1 h-1 bg-white/10 rounded-full cursor-pointer group relative">
+                        <div
+                            className="flex-1 h-1 bg-white/10 rounded-full cursor-pointer group relative"
+                            onClick={(e) => {
+                                if (audioRef.current && duration) {
+                                    const rect = e.currentTarget.getBoundingClientRect()
+                                    const x = e.clientX - rect.left
+                                    const percentage = Math.max(0, Math.min(1, x / rect.width))
+                                    const newTime = percentage * duration
+                                    audioRef.current.currentTime = newTime
+                                    setCurrentTime(newTime)
+                                }
+                            }}
+                        >
                             <div
                                 className="absolute top-0 left-0 h-full bg-primary rounded-full group-hover:bg-green-400 transition-colors"
                                 style={{ width: `${(currentTime / duration) * 100}%` }}

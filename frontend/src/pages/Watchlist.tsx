@@ -1,9 +1,25 @@
 import WatchlistManager from '../components/watchlist/WatchlistManager'
-
+import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import ConfirmModal from '../components/ui/ConfirmModal'
+import toast from 'react-hot-toast'
+import api from '../services/api'
 
 export default function Watchlist() {
     const navigate = useNavigate()
+    const [showRescanModal, setShowRescanModal] = useState(false)
+
+    const handleRescan = async () => {
+        try {
+            const res = await api.post('/downloads/rescan')
+            toast.success(`Rescan complete. Found ${res.data.rescanned_count} missing files.`)
+            setShowRescanModal(false)
+        } catch (e) {
+            console.error("Rescan failed", e)
+            toast.error("Rescan failed")
+            setShowRescanModal(false)
+        }
+    }
 
     return (
         <div className="space-y-6">
@@ -14,16 +30,7 @@ export default function Watchlist() {
                 </div>
                 <div className="flex gap-3">
                     <button
-                        onClick={async () => {
-                            try {
-                                const api = (await import('../services/api')).default
-                                const res = await api.post('/downloads/rescan')
-                                alert(`Rescan complete. Found ${res.data.rescanned_count} missing files. They have been re-queued.`)
-                            } catch (e) {
-                                console.error("Rescan failed", e)
-                                alert("Rescan failed")
-                            }
-                        }}
+                        onClick={() => setShowRescanModal(true)}
                         className="bg-white/10 text-white px-4 py-2 rounded-lg hover:bg-white/20 transition-colors border border-white/10"
                     >
                         Rescan Library
@@ -38,6 +45,15 @@ export default function Watchlist() {
             </div>
 
             <WatchlistManager />
+
+            <ConfirmModal
+                isOpen={showRescanModal}
+                onClose={() => setShowRescanModal(false)}
+                onConfirm={handleRescan}
+                title="Rescan Library"
+                message="This will check for missing files and re-queue them for download. Are you sure?"
+                confirmText="Rescan"
+            />
         </div>
     )
 }
