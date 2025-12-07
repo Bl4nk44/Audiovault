@@ -1,4 +1,4 @@
-from sqlalchemy import Column, String, Integer, JSON, DateTime
+from sqlalchemy import Column, String, Integer, JSON, DateTime, ForeignKey
 from sqlalchemy import Uuid
 from sqlalchemy.orm import relationship
 from datetime import datetime
@@ -10,8 +10,13 @@ class Track(Base):
     
     id = Column(Uuid(as_uuid=True), primary_key=True, default=uuid4)
     title = Column(String(500), index=True, nullable=False)
-    artist = Column(String(500), index=True, nullable=False)
-    album = Column(String(500))
+    artist = Column(String(500), index=True, nullable=True) # Kept for simple search/display, nullable if using rel
+    album = Column(String(500), nullable=True) # Kept for simple search/display
+    
+    # Foreign Keys
+    artist_id = Column(Uuid(as_uuid=True), ForeignKey("artists.id"), nullable=True)
+    album_id = Column(Uuid(as_uuid=True), ForeignKey("albums.id"), nullable=True)
+    
     duration_ms = Column(Integer)  # milliseconds
     
     # Service IDs (for cross-platform lookup)
@@ -34,3 +39,5 @@ class Track(Base):
     
     # Relationships
     downloads = relationship("Download", back_populates="track")
+    artist_rel = relationship("Artist", back_populates="tracks")
+    album_rel = relationship("Album", back_populates="tracks")

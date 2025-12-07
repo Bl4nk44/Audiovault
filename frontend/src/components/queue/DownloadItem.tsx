@@ -1,4 +1,4 @@
-import { AlertCircle, CheckCircle, Loader2, Music, Trash2 } from 'lucide-react'
+import { AlertCircle, CheckCircle, Loader2, Music, Trash2, Pause, Play, RotateCcw } from 'lucide-react'
 
 import { motion } from 'framer-motion'
 import { cn } from '../../lib/utils'
@@ -7,6 +7,7 @@ import { useStore } from '../../store/useStore'
 
 import { useState } from 'react'
 import ConfirmModal from '../ui/ConfirmModal'
+import { downloadsApi } from '../../api/downloads'
 
 interface DownloadItemProps {
     item: {
@@ -25,7 +26,7 @@ interface DownloadItemProps {
 }
 
 export default function DownloadItem({ item }: DownloadItemProps) {
-    const { playTrack } = useStore()
+    const { playTrack, pauseDownload, resumeDownload, retryDownload, removeFromQueue } = useStore()
     const [showDeleteModal, setShowDeleteModal] = useState(false)
 
     const handlePlay = () => {
@@ -65,6 +66,12 @@ export default function DownloadItem({ item }: DownloadItemProps) {
                 return (
                     <span className="px-2 py-1 rounded-full bg-blue-500/20 text-blue-400 text-xs font-medium border border-blue-500/20 flex items-center gap-1">
                         <Loader2 size={12} className="animate-spin" /> Processing
+                    </span>
+                )
+            case 'paused':
+                return (
+                    <span className="px-2 py-1 rounded-full bg-yellow-500/20 text-yellow-400 text-xs font-medium border border-yellow-500/20 flex items-center gap-1">
+                        <Pause size={12} /> Paused
                     </span>
                 )
             default:
@@ -158,7 +165,47 @@ export default function DownloadItem({ item }: DownloadItemProps) {
                     </div>
                 )}
 
-                {(item.status === 'completed' || item.status === 'failed') && (
+                {/* Control Actions */}
+                {item.status === 'downloading' && (
+                    <button
+                        onClick={(e) => {
+                            e.stopPropagation()
+                            pauseDownload(item.id)
+                        }}
+                        className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center hover:bg-yellow-500/20 hover:text-yellow-400 text-gray-400 transition-all"
+                        title="Pause"
+                    >
+                        <Pause size={20} />
+                    </button>
+                )}
+
+                {item.status === 'paused' && (
+                    <button
+                        onClick={(e) => {
+                            e.stopPropagation()
+                            resumeDownload(item.id)
+                        }}
+                        className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center hover:bg-green-500/20 hover:text-green-400 text-gray-400 transition-all"
+                        title="Resume"
+                    >
+                        <Play size={20} />
+                    </button>
+                )}
+
+                {item.status === 'failed' && (
+                    <button
+                        onClick={(e) => {
+                            e.stopPropagation()
+                            retryDownload(item.id)
+                        }}
+                        className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center hover:bg-blue-500/20 hover:text-blue-400 text-gray-400 transition-all"
+                        title="Retry"
+                    >
+                        <RotateCcw size={20} />
+                    </button>
+                )}
+
+                {(item.status === 'completed' || item.status === 'failed' || item.status === 'paused') && (
                     <div className="opacity-0 group-hover:opacity-100 transition-opacity">
                         <button
                             onClick={(e) => {
@@ -178,7 +225,9 @@ export default function DownloadItem({ item }: DownloadItemProps) {
                 isOpen={showDeleteModal}
                 onClose={() => setShowDeleteModal(false)}
                 onConfirm={() => {
-                    import('../../services/api').then(m => m.default.delete(`/downloads/remove/${item.id}`))
+                    removeFromQueue(item.id)
+                    downloadsApi.remove(item.id)
+                    setShowDeleteModal(false)
                 }}
                 title="Delete File"
                 message="Are you sure you want to delete this file? This cannot be undone."

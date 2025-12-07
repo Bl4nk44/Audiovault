@@ -43,7 +43,55 @@
   .dark {
     --background: 240 10% 3.9%;
     --foreground: 0 0% 98%;
-    /* ... same as root for now, enforcing dark mode feel */
+  }
+
+  .midnight {
+    --background: 222 47% 11%;
+    --foreground: 210 40% 98%;
+    --card: 222 47% 10%;
+    --popover: 222 47% 10%;
+    --secondary: 217 33% 17%;
+    --muted: 217 33% 17%;
+    --accent: 210 40% 96%; /* brighter accent */
+  }
+
+  .ocean {
+    --background: 201 50% 10%;
+    --foreground: 210 40% 98%;
+    --card: 201 50% 9%;
+    --popover: 201 50% 9%;
+    --primary: 190 90% 50%; /* Cyan */
+  }
+
+  .forest {
+    --background: 150 50% 8%;
+    --foreground: 150 20% 98%;
+    --card: 150 50% 7%;
+    --primary: 142 70% 45%; 
+  }
+
+  .sunset {
+    --background: 0 50% 8%;
+    --foreground: 0 20% 98%;
+    --primary: 10 80% 60%; /* Orange/Red */
+    --accent: 40 90% 60%;
+  }
+
+  .neon {
+    --background: 0 0% 5%;
+    --foreground: 0 0% 98%;
+    --card: 0 0% 8%;
+    --primary: 300 100% 50%; /* Magenta/Neon */
+    --accent: 180 100% 50%; /* Cyan */
+  }
+
+  .classic {
+    --background: 240 5% 10%; /* Zinc 900 #18181b */
+    --foreground: 0 0% 95%;
+    --card: 240 5% 12%;
+    --primary: 142 76% 36%; /* Classic Green #1DB954 */
+    --primary-foreground: 0 0% 100%;
+    --radius: 0.3rem; /* Less rounded */
   }
 }
 

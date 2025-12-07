@@ -5,8 +5,12 @@ import { motion } from 'framer-motion'
 import { Save, FolderOpen, Download, Palette, Globe, FileText, Key, User, CheckCircle, XCircle, Loader2 } from 'lucide-react'
 import api from '../../services/api'
 import AccountSettings from './AccountSettings'
+import { useTranslation } from '../../hooks/useTranslation'
+import { useStore } from '../../store/useStore'
 
 export default function SettingsPanel() {
+    const { t } = useTranslation()
+    const updateUserPreferences = useStore(state => state.updateUserPreferences)
     const [activeTab, setActiveTab] = useState('general')
     const [settings, setSettings] = useState({
         spotifyClientId: '',
@@ -39,7 +43,7 @@ export default function SettingsPanel() {
             setSettings(prev => ({ ...prev, ...response.data }))
         } catch (error) {
             console.error('Failed to fetch settings:', error)
-            toast.error('Failed to load settings')
+            toast.error(t('common.error'))
         } finally {
             setLoading(false)
         }
@@ -48,10 +52,11 @@ export default function SettingsPanel() {
     const handleSave = async () => {
         try {
             await api.post('/settings/', settings)
-            toast.success('Settings saved successfully')
+            updateUserPreferences(settings)
+            toast.success(t('common.saved'))
         } catch (error) {
             console.error('Failed to save settings:', error)
-            toast.error('Failed to save settings')
+            toast.error(t('common.error'))
         }
     }
 
@@ -87,11 +92,11 @@ export default function SettingsPanel() {
     }
 
     const tabs = [
-        { id: 'general', label: 'General', icon: Globe },
-        { id: 'account', label: 'Account', icon: User },
-        { id: 'appearance', label: 'Appearance', icon: Palette },
-        { id: 'files', label: 'Files & Storage', icon: FileText },
-        { id: 'integrations', label: 'Integrations', icon: Key },
+        { id: 'general', label: t('settings.general'), icon: Globe },
+        { id: 'account', label: t('settings.account'), icon: User },
+        { id: 'appearance', label: t('settings.appearance'), icon: Palette },
+        { id: 'files', label: t('settings.files'), icon: FileText },
+        { id: 'integrations', label: t('settings.integrations'), icon: Key },
     ]
 
     const container = {
@@ -104,7 +109,7 @@ export default function SettingsPanel() {
         show: { opacity: 1, y: 0 }
     }
 
-    if (loading) return <div className="text-white text-center py-10">Loading settings...</div>
+    if (loading) return <div className="text-white text-center py-10">{t('common.loading')}</div>
 
     return (
         <div className="flex flex-col md:flex-row gap-8 pb-20 max-w-6xl">
@@ -139,34 +144,31 @@ export default function SettingsPanel() {
 
                 {activeTab === 'general' && (
                     <motion.div variants={item} className="space-y-6 p-8 rounded-3xl border border-white/10 bg-white/5 backdrop-blur-xl shadow-xl">
-                        <h3 className="text-xl font-bold text-white border-b border-white/10 pb-4">General Preferences</h3>
+                        <h3 className="text-xl font-bold text-white border-b border-white/10 pb-4">{t('settings.general')}</h3>
 
                         <div className="grid gap-6">
                             <div className="space-y-2">
-                                <label className="text-sm font-medium text-gray-300 ml-1">Language</label>
+                                <label className="text-sm font-medium text-gray-300 ml-1">{t('settings.language')}</label>
                                 <select
                                     value={settings.language}
                                     onChange={(e) => setSettings({ ...settings, language: e.target.value })}
                                     className="w-full px-4 py-3 rounded-xl bg-black/20 border border-white/10 text-white focus:outline-none focus:border-primary/50"
                                 >
                                     <option value="en">English</option>
-                                    <option value="pl">Polish</option>
-                                    <option value="de">German</option>
-                                    <option value="es">Spanish</option>
+                                    <option value="pl">Polski</option>
                                 </select>
                             </div>
 
                             <div className="space-y-2">
-                                <label className="text-sm font-medium text-gray-300 ml-1">Audio Quality</label>
+                                <label className="text-sm font-medium text-gray-300 ml-1">{t('settings.audioQuality')}</label>
                                 <select
                                     value={settings.audioQuality}
                                     onChange={(e) => setSettings({ ...settings, audioQuality: e.target.value })}
                                     className="w-full px-4 py-3 rounded-xl bg-black/20 border border-white/10 text-white focus:outline-none focus:border-primary/50"
                                 >
-                                    <option value="low">Low (128kbps)</option>
-                                    <option value="medium">Medium (192kbps)</option>
-                                    <option value="high">High (320kbps)</option>
-                                    <option value="lossless">Lossless (FLAC)</option>
+                                    <option value="low">{t('quality.low')}</option>
+                                    <option value="normal">{t('quality.normal')}</option>
+                                    <option value="high">{t('quality.high')}</option>
                                 </select>
                             </div>
                         </div>
@@ -175,16 +177,17 @@ export default function SettingsPanel() {
 
                 {activeTab === 'appearance' && (
                     <motion.div variants={item} className="space-y-6 p-8 rounded-3xl border border-white/10 bg-white/5 backdrop-blur-xl shadow-xl">
-                        <h3 className="text-xl font-bold text-white border-b border-white/10 pb-4">Appearance</h3>
+                        <h3 className="text-xl font-bold text-white border-b border-white/10 pb-4">{t('settings.appearance')}</h3>
 
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                             {[
-                                { id: 'dark', name: 'Default Dark', color: 'bg-[#09090b]' },
-                                { id: 'midnight', name: 'Midnight Blue', color: 'bg-[#0f172a]' },
-                                { id: 'ocean', name: 'Deep Ocean', color: 'bg-[#0c4a6e]' },
-                                { id: 'forest', name: 'Dark Forest', color: 'bg-[#052e16]' },
-                                { id: 'sunset', name: 'Sunset Vibes', color: 'bg-[#450a0a]' },
-                                { id: 'neon', name: 'Cyber Neon', color: 'bg-[#171717]' },
+                                { id: 'dark', name: t('themes.dark'), color: 'bg-[#09090b]' },
+                                { id: 'midnight', name: t('themes.midnight'), color: 'bg-[#0f172a]' },
+                                { id: 'ocean', name: t('themes.ocean'), color: 'bg-[#0c4a6e]' },
+                                { id: 'forest', name: t('themes.forest'), color: 'bg-[#052e16]' },
+                                { id: 'sunset', name: t('themes.sunset'), color: 'bg-[#450a0a]' },
+                                { id: 'neon', name: t('themes.neon'), color: 'bg-[#171717]' },
+                                { id: 'classic', name: t('themes.classic'), color: 'bg-[#18181b]' },
                             ].map((theme) => (
                                 <button
                                     key={theme.id}
@@ -207,12 +210,12 @@ export default function SettingsPanel() {
 
                 {activeTab === 'files' && (
                     <motion.div variants={item} className="space-y-6 p-8 rounded-3xl border border-white/10 bg-white/5 backdrop-blur-xl shadow-xl">
-                        <h3 className="text-xl font-bold text-white border-b border-white/10 pb-4">Files & Storage</h3>
+                        <h3 className="text-xl font-bold text-white border-b border-white/10 pb-4">{t('settings.files')}</h3>
 
                         <div className="space-y-6">
                             <div className="space-y-2">
                                 <label className="text-sm font-medium text-gray-300 ml-1 flex items-center gap-2">
-                                    <FolderOpen size={16} /> Download Path
+                                    <FolderOpen size={16} /> {t('settings.downloadPath')}
                                 </label>
                                 <input
                                     type="text"
@@ -224,7 +227,7 @@ export default function SettingsPanel() {
 
                             <div className="space-y-2">
                                 <label className="text-sm font-medium text-gray-300 ml-1 flex items-center gap-2">
-                                    <FileText size={16} /> Filename Schema
+                                    <FileText size={16} /> {t('settings.filenameSchema')}
                                 </label>
                                 <input
                                     type="text"
@@ -269,7 +272,7 @@ export default function SettingsPanel() {
 
                             <div className="space-y-2">
                                 <label className="text-sm font-medium text-gray-300 ml-1 flex items-center gap-2">
-                                    <Download size={16} /> Max Parallel Downloads
+                                    <Download size={16} /> {t('settings.maxDownloads')}
                                 </label>
                                 <input
                                     type="number"
@@ -286,7 +289,7 @@ export default function SettingsPanel() {
 
                 {activeTab === 'integrations' && (
                     <motion.div variants={item} className="space-y-6 p-8 rounded-3xl border border-white/10 bg-white/5 backdrop-blur-xl shadow-xl">
-                        <h3 className="text-xl font-bold text-white border-b border-white/10 pb-4">API Integrations</h3>
+                        <h3 className="text-xl font-bold text-white border-b border-white/10 pb-4">{t('settings.integrations')}</h3>
 
                         <div className="space-y-6">
 
@@ -294,7 +297,7 @@ export default function SettingsPanel() {
                             <div className="space-y-4 pt-4 border-t border-white/5">
                                 <div className="flex items-center justify-between">
                                     <h4 className="font-medium text-white flex items-center gap-2">
-                                        <span className="w-1.5 h-6 rounded-full bg-green-500" /> Spotify
+                                        <span className="w-1.5 h-6 rounded-full bg-green-500" /> {t('settings.spotify')}
                                     </h4>
                                     <div className="flex items-center gap-2">
                                         {spotifyStatus === 'loading' && <Loader2 className="animate-spin text-primary" size={18} />}
@@ -304,13 +307,13 @@ export default function SettingsPanel() {
                                             onClick={verifySpotify}
                                             className="text-xs bg-white/10 hover:bg-white/20 px-3 py-1.5 rounded-lg transition-colors"
                                         >
-                                            Verify
+                                            {t('common.verify')}
                                         </button>
                                     </div>
                                 </div>
                                 <div className="grid gap-4">
                                     <APIKeyInput
-                                        label="Client ID"
+                                        label={t('settings.clientId')}
                                         value={settings.spotifyClientId}
                                         onChange={(v) => {
                                             setSettings({ ...settings, spotifyClientId: v })
@@ -318,7 +321,7 @@ export default function SettingsPanel() {
                                         }}
                                     />
                                     <APIKeyInput
-                                        label="Client Secret"
+                                        label={t('settings.clientSecret')}
                                         value={settings.spotifyClientSecret}
                                         onChange={(v) => {
                                             setSettings({ ...settings, spotifyClientSecret: v })
@@ -331,7 +334,7 @@ export default function SettingsPanel() {
                             <div className="space-y-4 pt-4 border-t border-white/5">
                                 <div className="flex items-center justify-between">
                                     <h4 className="font-medium text-white flex items-center gap-2">
-                                        <span className="w-1.5 h-6 rounded-full bg-red-500" /> YouTube
+                                        <span className="w-1.5 h-6 rounded-full bg-red-500" /> {t('settings.youtube')}
                                     </h4>
                                     <div className="flex items-center gap-2">
                                         {youtubeStatus === 'loading' && <Loader2 className="animate-spin text-primary" size={18} />}
@@ -341,12 +344,12 @@ export default function SettingsPanel() {
                                             onClick={verifyYouTube}
                                             className="text-xs bg-white/10 hover:bg-white/20 px-3 py-1.5 rounded-lg transition-colors"
                                         >
-                                            Verify
+                                            {t('common.verify')}
                                         </button>
                                     </div>
                                 </div>
                                 <APIKeyInput
-                                    label="API Key"
+                                    label={t('settings.apiKey')}
                                     value={settings.youtubeApiKey}
                                     onChange={(v) => {
                                         setSettings({ ...settings, youtubeApiKey: v })
@@ -366,7 +369,7 @@ export default function SettingsPanel() {
                         className="flex items-center gap-2 bg-primary text-black font-bold px-8 py-4 rounded-xl shadow-[0_0_20px_rgba(34,197,94,0.3)] hover:shadow-[0_0_30px_rgba(34,197,94,0.5)] transition-all"
                     >
                         <Save size={20} />
-                        Save Changes
+                        {t('common.save')}
                     </motion.button>
                 </motion.div>
             </motion.div>

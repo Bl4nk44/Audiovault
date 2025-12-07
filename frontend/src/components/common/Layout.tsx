@@ -3,6 +3,8 @@ import Sidebar from './Sidebar'
 import Navbar from './Navbar'
 import Player from '../player/Player'
 
+import Footer from './Footer'
+
 export default function Layout() {
     return (
         <div className="flex h-screen bg-black text-foreground overflow-hidden p-2 gap-2 relative group">
@@ -13,6 +15,7 @@ export default function Layout() {
                 <Navbar />
                 <main className="flex-1 overflow-y-auto p-6 scroll-smooth custom-scrollbar pb-24">
                     <Outlet />
+                    <Footer />
                 </main>
                 <Player />
             </div>

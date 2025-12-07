@@ -11,6 +11,9 @@ from app.db.database import AsyncSessionLocal
 from app.core.config import settings
 import yt_dlp
 
+from app.services.fallback_service import fallback_service
+import logging
+
 logger = logging.getLogger(__name__)
 
 class DownloadManager:
@@ -18,6 +21,8 @@ class DownloadManager:
         self.active_downloads = 0
         self.queue = asyncio.Queue()
         self.processing_task = None
+        self.paused_downloads = set() # Set of download IDs that are paused
+        self.active_tasks = {} # Map download_id -> asyncio.Task
 
     async def start_worker(self):
         if self.processing_task is None or self.processing_task.done():
@@ -26,11 +31,21 @@ class DownloadManager:
     async def process_queue(self):
         while True:
             download_id = await self.queue.get()
+            if download_id in self.paused_downloads:
+                self.queue.task_done()
+                continue
+            
+            # Create a task for this download to allow cancellation/pause
+            task = asyncio.create_task(self.process_download(download_id))
+            self.active_tasks[download_id] = task
             try:
-                await self.process_download(download_id)
+                await task
+            except asyncio.CancelledError:
+                logger.info(f"Download task {download_id} cancelled")
             except Exception as e:
                 logger.error(f"Error processing download {download_id}: {e}")
             finally:
+                self.active_tasks.pop(download_id, None)
                 self.queue.task_done()
 
     async def resume_pending_downloads(self, db: AsyncSession):
@@ -118,9 +133,16 @@ class DownloadManager:
 
                 def progress_hook(d):
                     if d['status'] == 'downloading':
+                        # Check if paused (this is a bit hacky for yt-dlp, relying on raising exception to stop)
+                        if download_id in self.paused_downloads:
+                            raise Exception("DOWNLOAD_PAUSED")
+
                         try:
                             p = d.get('_percent_str', '0%').replace('%', '')
                             progress = float(p)
+                            # Update progress in DB every 5% or so to avoid spamming DB? 
+                            # tracking internal state might be better
+                            
                             asyncio.run_coroutine_threadsafe(
                                 socket_manager.emit('download:progress', {
                                     'download_id': str(download_id),
@@ -187,9 +209,18 @@ class DownloadManager:
                     raise Exception("Could not resolve download URL")
                 
             except Exception as e:
+                if str(e) == "DOWNLOAD_PAUSED":
+                    logger.info(f"Download {download_id} paused by user")
+                    download.status = "paused"
+                    await db.commit()
+                    await socket_manager.emit('download:paused', {'download_id': str(download.id)})
+                    return
+
                 logger.error(f"Download failed for {download_id}: {e}", exc_info=True)
                 download.status = "failed"
                 download.error_message = str(e)
+                # Increment retry count
+                download.retry_count = (download.retry_count or 0) + 1
                 await db.commit()
                 
                 await socket_manager.emit('download:error', {
@@ -197,13 +228,66 @@ class DownloadManager:
                     'error': str(e)
                 })
 
+    async def pause_download(self, download_id: str):
+        self.paused_downloads.add(download_id)
+        # If it's currently running, we can't easily stop yt-dlp except via the hook exception
+        # The hook will raise exception and process_download will catch it and update DB
+        logger.info(f"Requested pause for {download_id}")
+
+    async def resume_download(self, db: AsyncSession, download_id: str):
+        if download_id in self.paused_downloads:
+            self.paused_downloads.remove(download_id)
+        
+        # Check current status
+        result = await db.execute(select(Download).where(Download.id == download_id))
+        download = result.scalar_one_or_none()
+        
+        if download and download.status in ['paused', 'failed', 'pending']:
+            download.status = 'pending'
+            await db.commit()
+            await self.queue.put(download.id)
+            await self.start_worker()
+            logger.info(f"Resumed download {download_id}")
+
+    async def cancel_download(self, db: AsyncSession, download_id: str):
+        # Remove from pause list if there
+        if download_id in self.paused_downloads:
+            self.paused_downloads.remove(download_id)
+            
+        # Cancel active task if exists
+        if download_id in self.active_tasks:
+            self.active_tasks[download_id].cancel()
+            
+        result = await db.execute(select(Download).where(Download.id == download_id))
+        download = result.scalar_one_or_none()
+        
+        if download:
+            await db.delete(download)
+            await db.commit()
+            logger.info(f"Cancelled and deleted download {download_id}")
+            
+            from app.services.socket_manager import socket_manager
+            await socket_manager.emit('download:cancelled', {'download_id': download_id})
+
+    async def retry_download(self, db: AsyncSession, download_id: str):
+        await self.resume_download(db, download_id)
+
     def _get_ydl_options(self, download: Download, progress_hook):
+        quality_setting = download.user.preferences.get('quality', 'high')
+        quality_map = {
+            'low': '128',
+            'normal': '192',
+            'high': '320', # Let's bump high to 320
+            'best': '320'
+        }
+        bitrate = quality_map.get(quality_setting, '192')
+
         ydl_opts = {
             'format': 'bestaudio/best',
             'writethumbnail': True,
             'socket_timeout': 30,
             'postprocessors': [
-                {'key': 'FFmpegExtractAudio', 'preferredcodec': 'mp3', 'preferredquality': '192'},
+                {'key': 'FFmpegExtractAudio', 'preferredcodec': 'mp3', 'preferredquality': bitrate},
                 {'key': 'FFmpegMetadata', 'add_metadata': True},
                 {'key': 'EmbedThumbnail'},
             ],
@@ -232,17 +316,33 @@ class DownloadManager:
         if not output_template or '%' not in output_template:
              output_template = f'{download.user.username}/{download.source}/%(artist)s - %(title)s'
 
-        ydl_opts['outtmpl'] = f'{settings.DOWNLOAD_DIR}/{output_template}.%(ext)s'
+        download_path = download.user.preferences.get('downloadPath') or settings.DOWNLOAD_DIR
+        ydl_opts['outtmpl'] = f'{download_path}/{output_template}.%(ext)s'
         return ydl_opts, output_template
 
     async def _resolve_url(self, db: AsyncSession, download: Download) -> str:
+        # Check retry count to determine strategy
+        attempt = (download.retry_count or 0) + 1
+        
         if download.source == "youtube":
-            return f"https://www.youtube.com/watch?v={download.track_id}"
+            url = f"https://www.youtube.com/watch?v={download.track_id}"
+            # If we had failures, maybe try Invidious? (Experimental)
+            if attempt > 2:
+                proxy_url = fallback_service.get_proxy_url(url)
+                if proxy_url:
+                    logger.info(f"Using fallback proxy URL: {proxy_url}")
+                    return proxy_url
+            return url
+            
         elif download.source == "spotify":
             track_info = await self.get_track_info(db, str(download.track_id))
             if track_info:
-                search_query = f"{track_info.artist} - {track_info.title}"
+                # Use fallback service to generate query based on attempt
+                search_query = fallback_service.get_search_query(track_info, attempt)
+                logger.info(f"Resolving Spotify track using query: {search_query} (Attempt {attempt})")
                 return f"ytsearch1:{search_query}"
+        
+        # Default fallback
         return ""
 
     async def get_track_info(self, db: AsyncSession, track_id: str) -> Optional[Track]:

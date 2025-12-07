@@ -43,30 +43,59 @@ async def add_download(
 ):
     return await download_manager.add_download(db, current_user.id, request.track_id, request.source, request.playlist_name)
 
-@router.delete("/remove/{download_id}")
+@router.post("/{download_id}/pause")
+async def pause_download(
+    download_id: UUID,
+    current_user: User = Depends(get_current_active_user)
+):
+    await download_manager.pause_download(str(download_id))
+    return {"status": "success"}
+
+@router.post("/{download_id}/resume")
+async def resume_download(
+    download_id: UUID,
+    current_user: User = Depends(get_current_active_user),
+    db: AsyncSession = Depends(get_db)
+):
+    await download_manager.resume_download(db, str(download_id))
+    return {"status": "success"}
+
+@router.post("/{download_id}/retry")
+async def retry_download(
+    download_id: UUID,
+    current_user: User = Depends(get_current_active_user),
+    db: AsyncSession = Depends(get_db)
+):
+    await download_manager.retry_download(db, str(download_id))
+    return {"status": "success"}
+
+@router.delete("/{download_id}") # Standardized path
 async def remove_download(
     download_id: UUID,
     current_user: User = Depends(get_current_active_user),
     db: AsyncSession = Depends(get_db)
 ):
+    # First check if file exists to delete it (as cancel_download deletes the DB record)
     result = await db.execute(select(Download).where(Download.id == download_id, Download.user_id == current_user.id))
     download = result.scalar_one_or_none()
     
     if not download:
         raise HTTPException(status_code=404, detail="Download not found")
         
-    # Delete physical file if exists
-    if download.file_path and os.path.exists(download.file_path):
+    file_path = download.file_path
+    
+    # Use manager to cancel task and delete from DB
+    await download_manager.cancel_download(db, str(download_id))
+    
+    # Delete physical file
+    if file_path and os.path.exists(file_path):
         try:
-            os.remove(download.file_path)
+            os.remove(file_path)
         except Exception as e:
             import logging
             logger = logging.getLogger(__name__)
-            logger.error(f"Error deleting file {download.file_path}: {e}")
-            # We don't raise here to ensure DB record is deleted, but we log it.
+            logger.error(f"Error deleting file {file_path}: {e}")
 
-    await db.delete(download)
-    await db.commit()
     return {"status": "success"}
 
 @router.post("/rescan")

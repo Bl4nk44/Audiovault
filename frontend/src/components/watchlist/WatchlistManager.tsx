@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { getWatchlist, removeFromWatchlist } from '../../services/watchlist'
+import { useStore } from '../../store/useStore'
 import WatchlistItem from './WatchlistItem'
 import { Loader2, RefreshCw } from 'lucide-react'
 import toast from 'react-hot-toast'
@@ -8,30 +8,18 @@ import api from '../../services/api'
 import { LayoutGrid, List } from 'lucide-react'
 
 export default function WatchlistManager() {
-    const [watchlist, setWatchlist] = useState<any[]>([])
+    const { watchlist, syncWatchlist, removeFromWatchlist } = useStore()
     const [isLoading, setIsLoading] = useState(true)
     const [isChecking, setIsChecking] = useState(false)
     const [viewMode, setViewMode] = useState<'list' | 'grid'>('list')
 
-    const fetchWatchlist = async () => {
-        try {
-            const data = await getWatchlist()
-            setWatchlist(data)
-        } catch (error) {
-            toast.error('Failed to load watchlist')
-        } finally {
-            setIsLoading(false)
-        }
-    }
-
     useEffect(() => {
-        fetchWatchlist()
-    }, [])
+        syncWatchlist().finally(() => setIsLoading(false))
+    }, [syncWatchlist])
 
     const handleRemove = async (id: string) => {
         try {
             await removeFromWatchlist(id)
-            setWatchlist(prev => prev.filter(item => item.id !== id))
             toast.success('Removed from watchlist')
         } catch (error) {
             toast.error('Failed to remove item')
@@ -43,7 +31,7 @@ export default function WatchlistManager() {
         try {
             const res = await api.post('/watchlist/check-updates')
             toast.success(`Check complete. ${res.data.new_downloads} new items found.`)
-            fetchWatchlist() // Refresh list to update counts/dates
+            syncWatchlist() // Refresh list to update counts/dates
         } catch (error) {
             toast.error('Failed to check for updates')
         } finally {

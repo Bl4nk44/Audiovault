@@ -61,6 +61,21 @@ export const createAuthSlice: StateCreator<AuthSlice> = (set, get) => ({
         }
     },
 
+    updateUserPreferences: (prefs: Record<string, any>) => {
+        const user = get().user
+        if (user) {
+            const updatedUser = { ...user, preferences: { ...user.preferences, ...prefs } }
+            set({ user: updatedUser })
+
+            // Also update session in localStorage
+            const sessions = { ...get().sessions }
+            if (sessions[user.id]) {
+                sessions[user.id].user = updatedUser
+                localStorage.setItem('sessions', JSON.stringify(sessions))
+            }
+        }
+    },
+
     logout: () => {
         localStorage.removeItem('access_token')
         set({ user: null, token: null, isAuthenticated: false })

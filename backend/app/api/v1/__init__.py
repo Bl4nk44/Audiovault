@@ -1,5 +1,5 @@
 from fastapi import APIRouter
-from app.api.v1 import auth, spotify, downloads, settings, watchlist, history, youtube, dashboard, stream, metadata, users, deezer
+from app.api.v1 import auth, spotify, downloads, settings, watchlist, history, youtube, dashboard, stream, metadata, users, deezer, artists
 
 api_router = APIRouter()
 api_router.include_router(auth.router, prefix="/auth", tags=["auth"])
@@ -14,3 +14,4 @@ api_router.include_router(stream.router, prefix="/stream", tags=["stream"])
 api_router.include_router(metadata.router, prefix="/metadata", tags=["metadata"])
 api_router.include_router(users.router, prefix="/users", tags=["users"])
 api_router.include_router(deezer.router, prefix="/deezer", tags=["deezer"])
+api_router.include_router(artists.router, prefix="/artists", tags=["artists"])
