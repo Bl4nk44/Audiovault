@@ -7,6 +7,11 @@ export const downloadsApi = {
         return response.data;
     },
 
+    add: async (data: { track_id: string; source: string; playlist_name?: string }) => {
+        const response = await apiClient.post('/downloads/add', data);
+        return response.data;
+    },
+
     pause: async (id: string) => {
         const response = await apiClient.post(`/downloads/${id}/pause`);
         return response.data;

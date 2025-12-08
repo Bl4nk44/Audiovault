@@ -12,6 +12,7 @@ export interface QueueSlice {
     pauseDownload: (downloadId: string) => Promise<void>
     resumeDownload: (downloadId: string) => Promise<void>
     retryDownload: (downloadId: string) => Promise<void>
+    fetchDownloads: () => Promise<void>
 }
 
 export const createQueueSlice: StateCreator<QueueSlice> = (set) => ({
@@ -63,6 +64,7 @@ export const createQueueSlice: StateCreator<QueueSlice> = (set) => ({
             console.error("Failed to resume", error);
         }
     },
+
     retryDownload: async (downloadId: string) => {
         set((state: QueueSlice) => ({
             downloadQueue: state.downloadQueue.map((d: Download) =>
@@ -73,6 +75,14 @@ export const createQueueSlice: StateCreator<QueueSlice> = (set) => ({
             await downloadsApi.retry(downloadId);
         } catch (error) {
             console.error("Failed to retry", error);
+        }
+    },
+    fetchDownloads: async () => {
+        try {
+            const downloads = await downloadsApi.getAll();
+            set({ downloadQueue: downloads });
+        } catch (error) {
+            console.error("Failed to fetch downloads", error);
         }
     }
 })

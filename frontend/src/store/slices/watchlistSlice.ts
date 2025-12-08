@@ -7,7 +7,9 @@ const WATCHLIST_STORAGE_KEY = 'spotizerr_watchlist';
 const loadFromStorage = (): WatchlistItem[] => {
     try {
         const stored = localStorage.getItem(WATCHLIST_STORAGE_KEY);
-        return stored ? JSON.parse(stored) : [];
+        if (!stored) return [];
+        const parsed = JSON.parse(stored);
+        return Array.isArray(parsed) ? parsed : [];
     } catch (e) {
         return [];
     }
@@ -33,8 +35,12 @@ export const createWatchlistSlice: StateCreator<WatchlistSlice> = (set, get) => 
     syncWatchlist: async () => {
         try {
             const items = await watchlistApi.getAll();
-            set({ watchlist: items });
-            saveToStorage(items);
+            if (Array.isArray(items)) {
+                set({ watchlist: items });
+                saveToStorage(items);
+            } else {
+                console.error('Sync failed: Received non-array watchlist', items);
+            }
         } catch (error) {
             console.error('Failed to sync watchlist', error);
             // On error, we keep local storage state which acts as offline cache

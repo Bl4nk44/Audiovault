@@ -2,18 +2,11 @@ import { Play, Download, Plus, MoreHorizontal, Music } from 'lucide-react'
 import api from '../../services/api'
 import toast from 'react-hot-toast'
 import { motion } from 'framer-motion'
+import { type Track } from '../../types' // Import global Track
 
 import { useStore } from '../../store/useStore'
 
-interface Track {
-    id: string
-    title: string
-    artist: string
-    album: string
-    image_url: string | null
-    source: 'spotify' | 'youtube' | 'deezer'
-    duration_ms: number
-}
+// Local interface removed
 
 interface TrackCardProps {
     track: Track
@@ -27,10 +20,10 @@ export default function TrackCard({ track }: TrackCardProps) {
             id: track.id,
             title: track.title,
             artist: track.artist,
-            cover: track.image_url || undefined,
-            source: track.source,
-            duration: track.duration_ms / 1000
-        })
+            cover: track.cover, // Use cover
+            source: track.source as any, // Cast source if types mismatch slightly (global has string, local had union)
+            duration_ms: track.duration_ms // Use duration_ms
+        } as any) // Cast to any or strict Track if needed, playTrack expects Track
     }
 
     const handleDownload = async (e: React.MouseEvent) => {
@@ -75,8 +68,8 @@ export default function TrackCard({ track }: TrackCardProps) {
             className="group relative flex items-center gap-4 p-3 rounded-xl bg-white/5 border border-white/5 hover:border-white/10 transition-all cursor-pointer overflow-hidden"
         >
             <div className="relative w-16 h-16 rounded-lg overflow-hidden flex-shrink-0 shadow-lg group-hover:shadow-primary/20 transition-all">
-                {track.image_url ? (
-                    <img src={track.image_url} alt={track.title} className="w-full h-full object-cover" />
+                {track.cover ? (
+                    <img src={track.cover} alt={track.title} className="w-full h-full object-cover" />
                 ) : (
                     <div className="w-full h-full bg-gradient-to-br from-gray-800 to-gray-900 flex items-center justify-center">
                         <Music className="text-gray-600" />
@@ -93,7 +86,7 @@ export default function TrackCard({ track }: TrackCardProps) {
             </div>
 
             <div className="flex items-center gap-4 mr-2">
-                <span className="text-xs text-gray-500 font-medium hidden sm:block">{formatDuration(track.duration_ms)}</span>
+                <span className="text-xs text-gray-500 font-medium hidden sm:block">{formatDuration(track.duration_ms || 0)}</span>
 
                 <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity translate-x-4 group-hover:translate-x-0">
                     <motion.button

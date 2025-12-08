@@ -16,6 +16,7 @@ class WatchlistAddRequest(BaseModel):
     source_id: str
     source_name: str
     image_url: str | None = None
+    metadata_content: dict | None = {}
     auto_download: bool = False
 
 @router.post("/add")

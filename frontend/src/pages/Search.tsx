@@ -25,13 +25,9 @@ export default function Search() {
 
         if (query.includes('spotify.com') || query.includes('spotify:')) {
             effectiveSource = 'spotify'
-            console.log('Auto-detected source: Spotify')
         } else if (query.includes('youtube.com') || query.includes('youtu.be')) {
             effectiveSource = 'youtube'
-            console.log('Auto-detected source: YouTube')
         }
-
-        console.log(`Searching: query="${query}", source="${effectiveSource}", type="${effectiveType}"`)
 
         setCurrentQuery(query)
         setCurrentSource(effectiveSource)

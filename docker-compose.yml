@@ -15,8 +15,10 @@ services:
       - REDIS_URL=redis://redis:6379/0
       - DOWNLOAD_DIR=/downloads
     depends_on:
-      - db
-      - redis
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
     networks:
       - spotizerr-network
 
@@ -44,6 +46,11 @@ services:
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=postgres
       - POSTGRES_DB=spotizerr
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U postgres" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
     ports:
       - "5432:5432"
     networks:
@@ -52,6 +59,11 @@ services:
   redis:
     image: redis:7-alpine
     container_name: spotizerr-redis
+    healthcheck:
+      test: [ "CMD", "redis-cli", "ping" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
     ports:
       - "6379:6379"
     networks:

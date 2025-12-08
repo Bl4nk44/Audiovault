@@ -54,3 +54,34 @@ async def fetch_metadata(
         "album": track.album,
         "image_url": track.metadata_content.get("image_url") if track.metadata_content else None
     }
+
+class ResolveMetadataRequest(BaseModel):
+    title: str
+    artist: str
+    album: str | None = None
+    image_url: str | None = None
+
+@router.post("/resolve")
+async def resolve_track(
+    request: ResolveMetadataRequest,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_active_user)
+):
+    """
+    Rozwiązuje metadane (title, artist) na obiekt Track w bazie (UUID).
+    Tworzy utwór/artystę/album jeśli nie istnieją.
+    """
+    service = MetadataService(db)
+    track = await service.resolve_and_save_track(
+        request.title, 
+        request.artist, 
+        request.album, 
+        request.image_url
+    )
+    
+    return {
+        "id": track.id,
+        "title": track.title,
+        "artist": track.artist,
+        "album": track.album
+    }

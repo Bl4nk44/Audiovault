@@ -340,7 +340,16 @@ class DownloadManager:
                 # Use fallback service to generate query based on attempt
                 search_query = fallback_service.get_search_query(track_info, attempt)
                 logger.info(f"Resolving Spotify track using query: {search_query} (Attempt {attempt})")
+                search_query = fallback_service.get_search_query(track_info, attempt)
+                logger.info(f"Resolving Spotify track using query: {search_query} (Attempt {attempt})")
                 return f"ytsearch1:{search_query}"
+        
+        elif download.source == "imported":
+            # For imported tracks (from Generic provider), we just have metadata
+            # Use artist and title for search
+            search_query = f"{download.track.artist} - {download.track.title}"
+            logger.info(f"Resolving imported track using query: {search_query}")
+            return f"ytsearch1:{search_query}"
         
         # Default fallback
         return ""

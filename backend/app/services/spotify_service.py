@@ -176,6 +176,7 @@ class SpotifyService:
             "id": item['id'],
             "title": item['name'],
             "artist": ", ".join([artist['name'] for artist in item['artists']]),
+            "artist_id": item['artists'][0]['id'] if item.get('artists') else None,
             "album": album_name,
             "duration_ms": item['duration_ms'],
             "image_url": image_url,

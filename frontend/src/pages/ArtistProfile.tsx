@@ -53,8 +53,9 @@ export default function ArtistProfile() {
                 source_id: artist.spotify_id || artist.id,
                 source_name: artist.name,
                 watch_type: 'artist',
-                name: artist.name,
-                metadata: { image_url: heroImage }
+                auto_download: false,
+                new_items_count: 0,
+                metadata_content: { image_url: heroImage }
             })
             toast.success("Added to watchlist")
         }
@@ -88,7 +89,7 @@ export default function ArtistProfile() {
 
                     <div className="absolute top-4 right-4">
                         <Button
-                            variant={isWatched ? "secondary" : "default"}
+                            variant={isWatched ? "secondary" : "primary"}
                             onClick={handleWatchlistToggle}
                             className="gap-2"
                         >
@@ -126,7 +127,7 @@ export default function ArtistProfile() {
                     </h2>
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
                         {artist.tracks.map(track => (
-                            <TrackCard key={track.id} track={{ ...track, source: 'spotify', image_url: track.cover || artist.images?.url || null }} />
+                            <TrackCard key={track.id} track={{ ...track, source: 'spotify', duration_ms: track.duration_ms, cover: track.cover || (artist.images ? (artist.images as any).url : null) || undefined }} />
                         ))}
                     </div>
                 </div>

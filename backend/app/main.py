@@ -11,8 +11,23 @@ app = FastAPI(
     openapi_url=f"{settings.API_V1_STR}/openapi.json"
 )
 
-from app.api.v1 import api_router
-app.include_router(api_router, prefix=settings.API_V1_STR)
+from app.api.v1 import artists, downloads, metadata, watchlist, import_routes, auth, dashboard, history, youtube, users, stream, spotify, deezer
+from app.api.v1 import settings as settings_router
+
+app.include_router(auth.router, prefix="/api/v1/auth", tags=["auth"])
+app.include_router(dashboard.router, prefix="/api/v1/dashboard", tags=["dashboard"])
+app.include_router(downloads.router, prefix="/api/v1/downloads", tags=["downloads"])
+app.include_router(metadata.router, prefix="/api/v1/metadata", tags=["metadata"])
+app.include_router(artists.router, prefix="/api/v1/artists", tags=["artists"])
+app.include_router(watchlist.router, prefix="/api/v1/watchlist", tags=["watchlist"])
+app.include_router(import_routes.router, prefix="/api/v1/import", tags=["import"])
+app.include_router(settings_router.router, prefix="/api/v1/settings", tags=["settings"])
+app.include_router(history.router, prefix="/api/v1/history", tags=["history"])
+app.include_router(youtube.router, prefix="/api/v1/youtube", tags=["youtube"])
+app.include_router(users.router, prefix="/api/v1/users", tags=["users"])
+app.include_router(stream.router, prefix="/api/v1/stream", tags=["stream"])
+app.include_router(spotify.router, prefix="/api/v1/spotify", tags=["spotify"])
+app.include_router(deezer.router, prefix="/api/v1/deezer", tags=["deezer"])
 
 # CORS
 origins = [
@@ -57,7 +72,7 @@ except Exception as e:
 app.mount("/stream", StaticFiles(directory=settings.DOWNLOAD_DIR), name="stream")
 
 from app.services.socket_manager import socket_manager
-app.mount("/", socket_manager.app)
+app.mount("/socket.io", socket_manager.app)
 
 from app.db.database import AsyncSessionLocal
 from app.db.init_data import init_db

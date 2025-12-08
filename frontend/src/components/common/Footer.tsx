@@ -1,5 +1,5 @@
 import { Github } from 'lucide-react'
-import { useTranslation } from '../../hooks/useTranslation'
+// import { useTranslation } from '../../hooks/useTranslation'
 
 export default function Footer() {
     // We can use translation if we want, but "Spotizerr" and "GitHub" are universal.

@@ -1,4 +1,4 @@
-import { Home, Search, Download, Music, Eye, Settings as SettingsIcon } from 'lucide-react'
+import { Home, Search, Settings as SettingsIcon, Eye, Music, Download } from 'lucide-react'
 import { NavLink } from 'react-router-dom'
 import { cn } from '../../lib/utils'
 import { motion } from 'framer-motion'
@@ -62,12 +62,10 @@ export default function Sidebar() {
                             )}
                         </NavLink>
                     ))}
-
-
                 </nav>
 
                 {/* Watchlist section removed */}
             </div>
-        </motion.aside>
+        </motion.aside >
     )
 }

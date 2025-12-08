@@ -1,6 +1,6 @@
 import { useState } from 'react'
-import { PlusSquare, Music, Image as ImageIcon } from 'lucide-react'
-import { motion } from 'framer-motion'
+import { Music } from 'lucide-react'
+// import { motion } from 'framer-motion'
 import Button from '../components/ui/Button'
 import { useForm } from 'react-hook-form'
 import toast from 'react-hot-toast'

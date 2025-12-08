@@ -16,7 +16,7 @@ export const initializeWebSocket = () => {
     })
 
     socket.on('connect', () => {
-        console.log('Connected to WebSocket')
+
     })
 
     socket.on('download:progress', (data) => {

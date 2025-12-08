@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { User, LogOut, Settings, ChevronDown, Plus, Users } from 'lucide-react'
+import { User, LogOut, Settings, ChevronDown, Plus } from 'lucide-react'
 import { useStore } from '../../store/useStore'
 import { useNavigate } from 'react-router-dom'
 

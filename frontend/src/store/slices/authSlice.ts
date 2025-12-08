@@ -11,6 +11,7 @@ export interface AuthSlice {
     addSession: (user: User, token: string) => void
     switchSession: (userId: string) => void
     removeSession: (userId: string) => void
+    updateUserPreferences: (prefs: Record<string, any>) => void
     logout: () => void
 }
 

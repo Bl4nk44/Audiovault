@@ -73,11 +73,15 @@ class MetadataService:
         # We might need to fetch artist details or just fuzzy match by name if we don't have ID.
         # For better data quality, let's just use Name for now or improve SpotifyService later.
         
-        # Check if artist exists by name (simple for now)
-        # TODO: Add spotify_id to artist model and use that for lookup if we enhance SpotifyService
+        # Check if artist exists by spotify_id or name
+        # TODO: Add spotify_id to artist model and use that for lookup if we enhance SpotifyService (DONE)
         
-        # Checking by name for now
-        artist = await self._get_or_create_artist(primary_artist_name, simple=True)
+        # Checking by ID then name
+        artist = await self._get_or_create_artist(
+            primary_artist_name, 
+            spotify_id=track_data.get('artist_id'), 
+            simple=True
+        )
         
         # 2. Handle Album
         album_name = track_data['album']
@@ -120,14 +124,28 @@ class MetadataService:
         await self.db.refresh(track)
         return track
 
-    async def _get_or_create_artist(self, name: str, simple: bool = False) -> Artist:
-        # Try to find by name (case insensitive ideally, but strict for now)
-        query = select(Artist).where(Artist.name == name)
-        result = await self.db.execute(query)
-        artist = result.scalar_one_or_none()
+    async def _get_or_create_artist(self, name: str, spotify_id: str = None, simple: bool = False) -> Artist:
+        # Try to find by spotify_id first if provided
+        artist = None
+        if spotify_id:
+            query = select(Artist).where(Artist.spotify_id == spotify_id)
+            result = await self.db.execute(query)
+            artist = result.scalar_one_or_none()
+
+        if not artist:
+            # Try to find by name (case insensitive ideally, but strict for now)
+            query = select(Artist).where(Artist.name == name)
+            result = await self.db.execute(query)
+            artist = result.scalar_one_or_none()
+            
+            # If found by name but we have a spotify_id, update it
+            if artist and spotify_id and not artist.spotify_id:
+                artist.spotify_id = spotify_id
+                self.db.add(artist)
+                await self.db.flush()
         
         if not artist:
-            artist = Artist(name=name)
+            artist = Artist(name=name, spotify_id=spotify_id)
             self.db.add(artist)
             # await self.db.commit() # Commit handled by caller usually or flush?
             # We need ID for Album creation so flush
@@ -148,5 +166,48 @@ class MetadataService:
             self.db.add(album)
             await self.db.flush()
         return album
+
+    async def resolve_and_save_track(self, title: str, artist: str, album: str = None, image_url: str = None) -> Track:
+        """
+        Creates or returns an existing track based on basic metadata (without external ID).
+        """
+        # 1. Get or Create Artist
+        artist_obj = await self._get_or_create_artist(artist, simple=True)
+        
+        # 2. Get or Create Album (optional)
+        album_obj = None
+        if album:
+            album_obj = await self._get_or_create_album(album, artist_obj, image_url)
+            
+        # 3. Check if track exists
+        # Using join to filter by related artist
+        query = select(Track).join(Track.artist_rel).where(
+            Track.title == title, 
+            Artist.id == artist_obj.id
+        )
+        result = await self.db.execute(query)
+        track = result.scalar_one_or_none()
+        
+        if not track:
+            track = Track(
+                title=title,
+                artist=artist,
+                album=album,
+                metadata_content={
+                    "image_url": image_url,
+                    "source": "imported"
+                },
+                artist_rel=artist_obj,
+                album_rel=album_obj
+            )
+            self.db.add(track)
+            await self.db.flush() # Ensure ID is generated
+            logger.info(f"Resolved new track: {title} by {artist}")
+        else:
+            logger.info(f"Resolved existing track: {title} by {artist}")
+            
+        await self.db.commit()
+        await self.db.refresh(track)
+        return track
 
 metadata_service = MetadataService

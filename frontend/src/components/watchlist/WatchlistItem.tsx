@@ -2,20 +2,10 @@ import { Trash2, DownloadCloud } from 'lucide-react'
 import { useState } from 'react'
 import api from '../../services/api'
 import toast from 'react-hot-toast'
+import { type WatchlistItem } from '../../types'
 
 interface WatchlistItemProps {
-    item: {
-        id: string
-        source_name: string
-        source: string
-        watch_type: string
-        new_items_count: number
-        last_checked_at: string
-        auto_download: boolean
-        metadata?: {
-            image_url?: string
-        }
-    }
+    item: WatchlistItem
     onRemove: (id: string) => void
     viewMode?: 'list' | 'grid'
 }
@@ -37,7 +27,7 @@ export default function WatchlistItem({ item, onRemove, viewMode = 'list' }: Wat
         }
     }
 
-    const imageUrl = item.metadata?.image_url
+    const imageUrl = item.metadata_content?.image_url
 
     if (viewMode === 'grid') {
         return (
@@ -52,7 +42,7 @@ export default function WatchlistItem({ item, onRemove, viewMode = 'list' }: Wat
                         />
                     ) : (
                         <div className="w-full h-full bg-secondary flex items-center justify-center text-4xl font-bold text-muted-foreground uppercase">
-                            {item.source[0]}
+                            {item.source?.[0] || '?'}
                         </div>
                     )}
 
@@ -105,7 +95,7 @@ export default function WatchlistItem({ item, onRemove, viewMode = 'list' }: Wat
                         />
                     ) : (
                         <div className="w-full h-full flex items-center justify-center text-xl font-bold text-muted-foreground uppercase">
-                            {item.source[0]}
+                            {item.source?.[0] || '?'}
                         </div>
                     )}
                 </div>

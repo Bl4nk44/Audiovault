@@ -4,10 +4,13 @@ SpotizerrNew is a modern web application that allows you to download, manage, an
 
 ## Key Features
 
-*   **Music Download:** Download tracks, albums, and playlists from Spotify and YouTube.
-*   **Library:** Manage downloaded tracks with search and filtering capabilities.
+*   **Music Download:** Download tracks, albums, and playlists from Spotify, YouTube, and other services.
+*   **Universal Import:** Import playlists from virtually any music service (Tidal, Apple Music, SoundCloud, etc.) via URL.
+*   **Library:** Manage downloaded tracks with search, filtering, and sort capabilities.
+*   **Artist Profiles:** Explore artists, view their discography, and download entire albums/top tracks.
 *   **Player:** Built-in audio player with visualization and playlist support.
 *   **Watchlist:** Automatically monitor and download new releases from your favorite artists.
+*   **Settings:** Customize audio quality (Low/Normal/High), application theme (Standard/Classic), and language (EN/PL).
 *   **Streaming:** Stream tracks directly before downloading.
 
 ## Technology Stack

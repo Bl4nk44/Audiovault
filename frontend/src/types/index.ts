@@ -11,9 +11,12 @@ export interface Track {
     artist: string
     cover?: string
     source: string
-    duration?: number
+    duration_ms?: number
     album?: string
     filename?: string
+    spotify_id?: string
+    youtube_id?: string
+    deezer_id?: string
 }
 
 export interface Download {
@@ -23,15 +26,22 @@ export interface Download {
     status: 'pending' | 'downloading' | 'completed' | 'failed' | 'paused'
     error?: string
     retry_count?: number
+    playlist_name?: string
 }
 
 export interface WatchlistItem {
     id: string
+    user_id?: string
+    watch_type: 'artist' | 'playlist' | 'channel'
+    source: 'spotify' | 'youtube' | 'deezer'
     source_id: string
-    source: string
-    type: 'artist' | 'playlist' | 'channel'
-    name: string
-    metadata?: {
+    source_name: string
+    auto_download: boolean
+    check_interval_hours?: number
+    last_checked_at?: string
+    new_items_count: number
+    created_at?: string
+    metadata_content?: {
         image_url?: string
     }
 }
