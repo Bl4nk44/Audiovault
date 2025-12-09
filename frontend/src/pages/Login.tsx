@@ -19,7 +19,7 @@ export default function Login() {
                         transition={{ type: "spring", stiffness: 260, damping: 20, delay: 0.1 }}
                         className="w-16 h-16 bg-gradient-to-br from-primary to-green-600 rounded-2xl mx-auto mb-4 flex items-center justify-center shadow-[0_0_25px_rgba(34,197,94,0.4)]"
                     >
-                        <span className="text-3xl font-bold text-black">S</span>
+                        <span className="text-3xl font-bold text-black">A</span>
                     </motion.div>
                     <motion.h1
                         initial={{ opacity: 0, y: 10 }}
@@ -27,7 +27,7 @@ export default function Login() {
                         transition={{ delay: 0.2 }}
                         className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-white to-gray-400"
                     >
-                        Welcome Back
+                        Login to Audiovault
                     </motion.h1>
                     <motion.p
                         initial={{ opacity: 0 }}
@@ -35,7 +35,7 @@ export default function Login() {
                         transition={{ delay: 0.3 }}
                         className="text-muted-foreground mt-2"
                     >
-                        Sign in to continue to Spotizerr
+                        Sign in to continue to Audiovault
                     </motion.p>
                 </div>
 

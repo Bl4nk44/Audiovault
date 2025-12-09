@@ -30,10 +30,10 @@ export default function Sidebar() {
                     <div className="relative">
                         <div className="absolute inset-0 bg-primary/50 blur-lg rounded-full" />
                         <span className="relative w-10 h-10 bg-gradient-to-br from-primary to-green-600 rounded-xl flex items-center justify-center text-black shadow-lg">
-                            S
+                            A
                         </span>
                     </div>
-                    <span className="bg-clip-text text-transparent bg-gradient-to-r from-white to-gray-400 tracking-tight">Spotizerr</span>
+                    <span className="bg-clip-text text-transparent bg-gradient-to-r from-white to-gray-400 tracking-tight">Audiovault</span>
                 </motion.h1>
 
                 <nav className="flex flex-col gap-2">

@@ -1,7 +1,10 @@
 services:
   backend:
-    build: ./backend
-    container_name: spotizerr-backend
+    build:
+      context: ./backend
+    image: audiovault-backend
+    container_name: audiovault-backend
+    restart: always
     command: uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
     volumes:
       - ./backend:/app
@@ -11,67 +14,73 @@ services:
     env_file:
       - .env
     environment:
-      - DATABASE_URL=postgresql://postgres:postgres@db:5432/spotizerr
+      - DATABASE_URL=postgresql+asyncpg://postgres:postgres@db:5432/audiovault
       - REDIS_URL=redis://redis:6379/0
-      - DOWNLOAD_DIR=/downloads
     depends_on:
       db:
         condition: service_healthy
       redis:
         condition: service_healthy
     networks:
-      - spotizerr-network
+      - audiovault-network
 
   frontend:
-    build: ./frontend
-    container_name: spotizerr-frontend
+    build:
+      context: ./frontend
+    image: audiovault-frontend
+    container_name: audiovault-frontend
+    restart: always
     volumes:
       - ./frontend:/app
       - /app/node_modules
     ports:
       - "3000:5173"
-    environment:
-      - VITE_API_URL=http://localhost:8000/api/v1
     depends_on:
       - backend
     networks:
-      - spotizerr-network
+      - audiovault-network
 
   db:
     image: postgres:16-alpine
-    container_name: spotizerr-db
+    container_name: audiovault-db
+    restart: always
     volumes:
-      - postgres_data:/var/lib/postgresql/data
+      - audiovault-db-data:/var/lib/postgresql/data
     environment:
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=postgres
-      - POSTGRES_DB=spotizerr
+      - POSTGRES_DB=audiovault
     healthcheck:
-      test: [ "CMD-SHELL", "pg_isready -U postgres" ]
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
       interval: 10s
       timeout: 5s
       retries: 5
     ports:
       - "5432:5432"
     networks:
-      - spotizerr-network
+      - audiovault-network
 
   redis:
     image: redis:7-alpine
-    container_name: spotizerr-redis
+    container_name: audiovault-redis
+    restart: always
+    command: redis-server --appendonly yes
+    volumes:
+      - audiovault-redis-data:/data
     healthcheck:
-      test: [ "CMD", "redis-cli", "ping" ]
+      test: ["CMD", "redis-cli", "ping"]
       interval: 10s
       timeout: 5s
       retries: 5
     ports:
       - "6379:6379"
     networks:
-      - spotizerr-network
+      - audiovault-network
 
 networks:
-  spotizerr-network:
+  audiovault-network:
     driver: bridge
 
 volumes:
-  postgres_data:
+  audiovault-db-data:
+  audiovault-redis-data:

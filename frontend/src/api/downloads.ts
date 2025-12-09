@@ -3,7 +3,14 @@ import type { Download } from '../types';
 
 export const downloadsApi = {
     getAll: async () => {
-        const response = await apiClient.get<Download[]>('/downloads');
+        // Pointing to /queue to get active/pending/failed downloads
+        const response = await apiClient.get<Download[]>('/downloads/queue');
+        return response.data;
+    },
+    
+    getLibrary: async () => {
+        // Fetch completed downloads
+        const response = await apiClient.get<Download[]>('/downloads/library');
         return response.data;
     },
 

@@ -2,7 +2,7 @@ import { type StateCreator } from 'zustand'
 import { type WatchlistItem } from '../../types'
 import { watchlistApi } from '../../api/watchlist'
 
-const WATCHLIST_STORAGE_KEY = 'spotizerr_watchlist';
+const WATCHLIST_STORAGE_KEY = 'audiovault_watchlist';
 
 const loadFromStorage = (): WatchlistItem[] => {
     try {

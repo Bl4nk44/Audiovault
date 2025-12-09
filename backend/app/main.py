@@ -8,6 +8,8 @@ setup_logging()
 
 app = FastAPI(
     title=settings.PROJECT_NAME,
+    description="Audiovault API for downloading and managing music",
+    version="1.0.0",
     openapi_url=f"{settings.API_V1_STR}/openapi.json"
 )
 
@@ -48,7 +50,7 @@ app.add_middleware(GZipMiddleware, minimum_size=1000)
 
 @app.get("/")
 async def root():
-    return {"message": "Welcome to Spotizerr 3.0 API"}
+    return {"message": "Welcome to Audiovault API"}
 
 @app.get("/health")
 async def health_check():
@@ -62,12 +64,15 @@ if not os.path.exists(settings.DOWNLOAD_DIR):
     os.makedirs(settings.DOWNLOAD_DIR)
 
 # Debug: List files in download directory on startup
-print(f"📂 Mounting StaticFiles from: {settings.DOWNLOAD_DIR}")
+import logging
+logger = logging.getLogger(__name__)
+
+logger.info(f"📂 Mounting StaticFiles from: {settings.DOWNLOAD_DIR}")
 try:
     files = os.listdir(settings.DOWNLOAD_DIR)
-    print(f"📂 Files in {settings.DOWNLOAD_DIR}: {files}")
+    logger.info(f"📂 Files in {settings.DOWNLOAD_DIR}: {files}")
 except Exception as e:
-    print(f"❌ Error listing files: {e}")
+    logger.error(f"❌ Error listing files: {e}")
 
 app.mount("/stream", StaticFiles(directory=settings.DOWNLOAD_DIR), name="stream")
 
@@ -103,7 +108,7 @@ async def startup_event():
         except Exception as e:
             if i == retries - 1:
                 raise e
-            print(f"Database not ready, retrying in 2 seconds... ({i+1}/{retries})")
+            logger.info(f"Database not ready, retrying in 2 seconds... ({i+1}/{retries})")
             await asyncio.sleep(2)
 
     # Init data

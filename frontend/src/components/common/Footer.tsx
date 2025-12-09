@@ -7,7 +7,7 @@ export default function Footer() {
     return (
         <footer className="mt-12 pb-8 text-center text-sm text-muted-foreground border-t border-white/5 pt-8">
             <div className="flex items-center justify-center gap-4">
-                <p>Spotizerr v1.0.0</p>
+                <p>Audiovault v1.0.0</p>
                 <span className="text-white/10">|</span>
                 <a
                     href="https://github.com/Bl4nk44/SpotizerrNew"
@@ -19,9 +19,9 @@ export default function Footer() {
                     GitHub
                 </a>
             </div>
-            <div className="mt-2 text-xs text-white/20">
-                Created with ❤️ by Antigravity
-            </div>
+            <p className="text-sm text-base-content/60">
+                © {new Date().getFullYear()} Audiovault. All rights reserved.
+            </p>
         </footer>
     )
 }
