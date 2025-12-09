@@ -9,7 +9,7 @@ setup_logging()
 app = FastAPI(
     title=settings.PROJECT_NAME,
     description="Audiovault API for downloading and managing music",
-    version="1.0.0",
+    version=settings.VERSION,
     openapi_url=f"{settings.API_V1_STR}/openapi.json"
 )
 
@@ -55,6 +55,10 @@ async def root():
 @app.get("/health")
 async def health_check():
     return {"status": "healthy"}
+
+@app.get("/api/version")
+async def get_version():
+    return {"version": settings.VERSION}
 
 from fastapi.staticfiles import StaticFiles
 import os

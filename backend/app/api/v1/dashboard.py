@@ -80,14 +80,27 @@ async def get_dashboard_stats(
         metadata = d.track.metadata_content or {}
         image_url = metadata.get('image_url') or metadata.get('album_art')
 
+        # Calculate filename relative to download dir for streaming
+        filename = None
+        if d.file_path:
+            try:
+                rel_path = os.path.relpath(d.file_path, settings.DOWNLOAD_DIR).replace("\\", "/")
+                if rel_path.startswith(".."):
+                    filename = os.path.basename(d.file_path)
+                else:
+                    filename = rel_path
+            except Exception:
+                filename = os.path.basename(d.file_path)
+
         recent_activity.append({
             "id": str(d.id),
+            "track_id": str(d.track_id),
             "title": d.track.title if d.track else "Unknown Title",
             "artist": d.track.artist if d.track else "Unknown Artist",
             "time_ago": time_ago,
             "progress": 100,
             "image_url": image_url,
-            "filename": os.path.basename(d.file_path) if d.file_path else None
+            "filename": filename
         })
 
     # Active Download Logic

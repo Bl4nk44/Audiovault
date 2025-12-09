@@ -5,6 +5,7 @@ import os
 
 class Settings(BaseSettings):
     PROJECT_NAME: str = "Audiovault"
+    VERSION: str = Path(__file__).parent.parent.parent.joinpath("VERSION").read_text().strip()
     API_V1_STR: str = "/api/v1"
     
     DATABASE_URL: str

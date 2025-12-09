@@ -9,6 +9,7 @@ services:
     volumes:
       - ./backend:/app
       - ./downloads:/downloads
+      - ./VERSION:/app/VERSION
     ports:
       - "8000:8000"
     env_file:
@@ -33,6 +34,7 @@ services:
     volumes:
       - ./frontend:/app
       - /app/node_modules
+      - ./VERSION:/VERSION
     ports:
       - "3000:5173"
     depends_on:

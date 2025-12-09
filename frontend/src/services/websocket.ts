@@ -1,49 +1,59 @@
-import { io, Socket } from 'socket.io-client'
-import { useStore } from '../store/useStore'
-import toast from 'react-hot-toast'
+import { io, Socket } from "socket.io-client";
+import { useStore } from "../store/useStore";
+import toast from "react-hot-toast";
 
-let socket: Socket | null = null
+let socket: Socket | null = null;
 
 export const initializeWebSocket = () => {
-    const token = useStore.getState().token
-    if (!token) return
+  const token = useStore.getState().token;
+  if (!token) return;
 
-    socket = io(import.meta.env.VITE_WS_URL || 'http://localhost:8000', {
-        auth: {
-            token: token,
-        },
-        transports: ['websocket'],
-    })
+  socket = io(import.meta.env.VITE_WS_URL || "http://localhost:8000", {
+    auth: {
+      token: token,
+    },
+    transports: ["websocket"],
+  });
 
-    socket.on('connect', () => {
+  socket.on("connect", () => {});
 
-    })
+  socket.on("download:progress", (data) => {
+    // Dispatch to store if we had a slice for it, or just emit event
+    // For now, we might handle this in the component or store
+    // Let's assume we dispatch a custom event or use store
+    window.dispatchEvent(
+      new CustomEvent("download:progress", { detail: data })
+    );
+  });
 
-    socket.on('download:progress', (data) => {
-        // Dispatch to store if we had a slice for it, or just emit event
-        // For now, we might handle this in the component or store
-        // Let's assume we dispatch a custom event or use store
-        window.dispatchEvent(new CustomEvent('download:progress', { detail: data }))
-    })
+  socket.on("download:completed", (data) => {
+    toast.success(`Download completed: ${data.filename}`);
+    window.dispatchEvent(
+      new CustomEvent("download:completed", { detail: data })
+    );
+  });
 
-    socket.on('download:completed', (data) => {
-        toast.success(`Download completed: ${data.filename}`)
-        window.dispatchEvent(new CustomEvent('download:completed', { detail: data }))
-    })
+  socket.on("download:error", (data) => {
+    toast.error(`Download failed: ${data.error}`);
+    window.dispatchEvent(new CustomEvent("download:error", { detail: data }));
+  });
 
-    socket.on('download:error', (data) => {
-        toast.error(`Download failed: ${data.error}`)
-        window.dispatchEvent(new CustomEvent('download:error', { detail: data }))
-    })
+  socket.on("disconnect", () => {
+    console.log("Disconnected from WebSocket");
+  });
 
-    socket.on('disconnect', () => {
-        console.log('Disconnected from WebSocket')
-    })
-}
+  socket.on("connect_error", (err) => {
+    console.error("WebSocket connection error:", err);
+  });
+
+  socket.io.on("error", (error) => {
+    console.error("Socket.io error:", error);
+  });
+};
 
 export const disconnectWebSocket = () => {
-    if (socket) {
-        socket.disconnect()
-        socket = null
-    }
-}
+  if (socket) {
+    socket.disconnect();
+    socket = null;
+  }
+};

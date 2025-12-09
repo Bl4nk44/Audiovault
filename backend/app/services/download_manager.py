@@ -5,6 +5,7 @@ from typing import List, Optional
 from datetime import datetime
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
+from sqlalchemy.orm import selectinload
 from app.models.download import Download
 from app.models.track import Track
 from app.db.database import AsyncSessionLocal
@@ -96,7 +97,6 @@ class DownloadManager:
     async def process_download(self, download_id: str):
         async with AsyncSessionLocal() as db:
             # Eager load user to get preferences
-            from sqlalchemy.orm import selectinload
             from app.models.user import User
             result = await db.execute(
                 select(Download)
@@ -153,9 +153,19 @@ class DownloadManager:
                                         'artist': download.track.artist,
                                         'image_url': download.track.metadata_content.get('image_url') if download.track.metadata_content else None
                                     }
-                                }),
+                                    }
+                                ),
                                 loop
                             )
+
+                            # Update DB periodically (every ~5%) to support polling fallback
+                            # We can't do async db commit here easily in sync hook
+                            # But we can verify if we should fire a separate async task to update DB
+                            if progress % 5 == 0:
+                                asyncio.run_coroutine_threadsafe(
+                                    self.update_progress_db(download_id, progress),
+                                    loop
+                                )
                         except Exception as e:
                             logger.error(f"Progress hook error: {e}")
                     elif d['status'] == 'finished':
@@ -186,7 +196,8 @@ class DownloadManager:
                         else:
                             download.file_path = final_filename_container['path']
                     else:
-                        download.file_path = f"{settings.DOWNLOAD_DIR}/{output_template}.mp3"
+                        download_path = download.user.preferences.get('downloadPath') or settings.DOWNLOAD_DIR
+                        download.file_path = f"{download_path}/{output_template}.mp3"
 
                     await db.commit()
                     
@@ -297,24 +308,46 @@ class DownloadManager:
             'no_warnings': True,
         }
 
-        filename_schema = download.user.preferences.get('filename_schema', '{artist} - {title}')
         schema_map = {
             '{artist}': '%(artist)s',
             '{title}': '%(title)s',
-            '{album}': '%(album)s',
+            '{album}': '%(album|Single)s',
             '{id}': '%(id)s',
-            '{year}': '%(release_date>%Y)s',
+            '{year}': '%(release_date>%Y|Unknown)s',
             '{track_number}': '%(playlist_index)s',
-            '{playlist}': '%(playlist)s',
             '{user}': download.user.username,
         }
+        # Updated default schema as requested
+        filename_schema = download.user.preferences.get('filename_schema', '{artist} - {title}')
         
         output_template = filename_schema.replace('{service}', download.source)
+        if not output_template or '%' not in output_template:
+             # This fallback seems redundant if we set a robust default above, but good for safety.
+             # Use the new default structure as fallback too
+             output_template = f'%(artist)s - %(title)s'
+
+        # Pre-process playlist tag manually because yt-dlp might not know it (e.g. single track form Spotify)
+        if '{playlist}' in output_template:
+            playlist_val = download.playlist_name
+            if playlist_val:
+                # Sanitize to avoid accidental subdirs
+                playlist_val = playlist_val.replace('/', '-').replace('\\', '-')
+            else:
+                # If no playlist, we remove the {playlist} tag and any preceding slash to avoid empty folder
+                # Simple approach: replace with empty string. 
+                # Better approach: if schema is .../{playlist}/... -> ...//... -> .../...
+                playlist_val = ""
+            
+            output_template = output_template.replace('{playlist}', playlist_val)
+            # Cleanup double slashes if playlist was empty
+            output_template = output_template.replace('//', '/')
+
         for tag, replacement in schema_map.items():
+            if tag == '{playlist}': continue # Handled above
             output_template = output_template.replace(tag, replacement)
         
         if not output_template or '%' not in output_template:
-             output_template = f'{download.user.username}/{download.source}/%(artist)s - %(title)s'
+             output_template = f'%(artist)s - %(title)s'
 
         download_path = download.user.preferences.get('downloadPath') or settings.DOWNLOAD_DIR
         ydl_opts['outtmpl'] = f'{download_path}/{output_template}.%(ext)s'
@@ -360,9 +393,11 @@ class DownloadManager:
 
     async def update_playlist_m3u(self, db: AsyncSession, user_id: str, playlist_name: str):
         try:
+            from app.models.user import User
             # Get all completed downloads for this playlist
             result = await db.execute(
                 select(Download)
+                .options(selectinload(Download.user))
                 .where(
                     Download.user_id == user_id,
                     Download.playlist_name == playlist_name,
@@ -379,43 +414,37 @@ class DownloadManager:
             # We try to put it in the same folder as the first track if possible, 
             # otherwise in the root download dir
             
+            download_path = downloads[0].user.preferences.get('downloadPath') or settings.DOWNLOAD_DIR
+
             # Simple heuristic: Use the playlist name as filename
             safe_playlist_name = playlist_name.replace('/', '-').replace('\\', '-')
-            playlist_file_path = f"{settings.DOWNLOAD_DIR}/{safe_playlist_name}.m3u8"
-            
-            # If tracks are in a subfolder (e.g. Spotify/PlaylistName/...), 
-            # we might want the m3u8 there too.
-            # But since file_path in DB might be absolute or relative, we need to be careful.
-            # For now, let's put it in the root download dir for simplicity and reliability.
+            playlist_file_path = f"{download_path}/{safe_playlist_name}.m3u8"
             
             with open(playlist_file_path, 'w', encoding='utf-8') as f:
                 f.write("#EXTM3U\n")
                 for d in downloads:
                     if d.file_path:
-                        # Make path relative to the playlist file if possible
-                        # For now, just write the filename/relative path from download dir
-                        # Assuming d.file_path is absolute or relative to app root?
-                        # Let's assume d.file_path stores the full path as saved in process_download
-                        
-                        # We need to extract the relative path from DOWNLOAD_DIR
-                        # d.file_path is currently: f"{settings.DOWNLOAD_DIR}/{download.track_id}.mp3" (from line 175)
-                        # BUT we changed line 151 to use output_template.
-                        # We need to update line 175 to reflect the actual path used!
-                        
-                        # Wait, line 175 in original code was: download.file_path = f"{settings.DOWNLOAD_DIR}/{download.track_id}.mp3"
-                        # This is WRONG if we use output_template. 
-                        # I need to fix line 175 first to store the correct path.
-                        
-                        # Assuming line 175 is fixed (I will fix it in next step),
-                        # we write the path relative to DOWNLOAD_DIR
-                        
-                        rel_path = d.file_path.replace(f"{settings.DOWNLOAD_DIR}/", "")
-                        f.write(f"#EXTINF:-1,{d.playlist_name} - Track\n") # We don't have title here easily without join
+                        rel_path = d.file_path.replace(f"{download_path}/", "")
+                        f.write(f"#EXTINF:-1,{d.playlist_name} - Track\n")
                         f.write(f"{rel_path}\n")
                         
             logger.info(f"Updated playlist {playlist_file_path}")
             
         except Exception as e:
             logger.error(f"Failed to update playlist m3u: {e}")
+
+
+    async def update_progress_db(self, download_id: str, progress: float):
+        """Update download progress in DB to support polling fallback"""
+        try:
+            async with AsyncSessionLocal() as db:
+                result = await db.execute(select(Download).where(Download.id == download_id))
+                download = result.scalar_one_or_none()
+                
+                if download:
+                    download.progress = progress
+                    await db.commit()
+        except Exception as e:
+            logger.error(f"Failed to update progress in DB for {download_id}: {e}")
 
 download_manager = DownloadManager()
