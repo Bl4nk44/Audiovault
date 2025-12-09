@@ -4,6 +4,7 @@ import Button from '../components/ui/Button'
 import { useEffect, useState } from 'react'
 import api from '../services/api'
 import { useNavigate } from 'react-router-dom'
+import { useTranslation } from '../hooks/useTranslation'
 
 
 interface RecentActivityItem {
@@ -54,6 +55,7 @@ const item = {
 export default function Dashboard() {
     const navigate = useNavigate()
     const { playTrack } = useStore()
+    const { t } = useTranslation()
     const [dashboardStats, setDashboardStats] = useState<DashboardStats>({
         total_downloads: '-',
         tracks_in_library: '-',
@@ -139,10 +141,10 @@ export default function Dashboard() {
     }, [])
 
     const stats = [
-        { label: 'Total Downloads', value: dashboardStats.total_downloads, icon: Download, color: 'text-blue-400', gradient: 'from-blue-500/20 to-blue-600/5' },
-        { label: 'Tracks in Library', value: dashboardStats.tracks_in_library, icon: Music, color: 'text-green-400', gradient: 'from-green-500/20 to-green-600/5' },
-        { label: 'Pending Queue', value: dashboardStats.pending_queue, icon: Clock, color: 'text-orange-400', gradient: 'from-orange-500/20 to-orange-600/5' },
-        { label: 'Storage Free', value: dashboardStats.storage_free, icon: HardDrive, color: 'text-purple-400', gradient: 'from-purple-500/20 to-purple-600/5' },
+        { label: t('dashboard.stats.totalDownloads'), value: dashboardStats.total_downloads, icon: Download, color: 'text-blue-400', gradient: 'from-blue-500/20 to-blue-600/5' },
+        { label: t('dashboard.stats.tracksLibrary'), value: dashboardStats.tracks_in_library, icon: Music, color: 'text-green-400', gradient: 'from-green-500/20 to-green-600/5' },
+        { label: t('dashboard.stats.pendingQueue'), value: dashboardStats.pending_queue, icon: Clock, color: 'text-orange-400', gradient: 'from-orange-500/20 to-orange-600/5' },
+        { label: t('dashboard.stats.storageFree'), value: dashboardStats.storage_free, icon: HardDrive, color: 'text-purple-400', gradient: 'from-purple-500/20 to-purple-600/5' },
     ]
 
     return (
@@ -154,8 +156,8 @@ export default function Dashboard() {
                 className="relative z-10 space-y-8 p-6"
             >
                 <motion.div variants={item}>
-                    <h2 className="text-4xl font-bold tracking-tight text-white drop-shadow-[0_0_10px_rgba(255,255,255,0.3)]">Dashboard</h2>
-                    <p className="text-gray-400 mt-2 text-lg">Overview of your music collection and downloads.</p>
+                    <h2 className="text-4xl font-bold tracking-tight text-white drop-shadow-[0_0_10px_rgba(255,255,255,0.3)]">{t('dashboard.title')}</h2>
+                    <p className="text-gray-400 mt-2 text-lg">{t('dashboard.subtitle')}</p>
                 </motion.div>
 
                 <motion.div
@@ -190,11 +192,11 @@ export default function Dashboard() {
                         <div>
                             <h3 className="font-bold mb-8 text-2xl text-white flex items-center gap-3">
                                 <span className="w-1.5 h-8 bg-primary rounded-full shadow-[0_0_10px_rgba(34,197,94,0.5)]"></span>
-                                Recent Activity
+                                {t('dashboard.recentActivity')}
                             </h3>
                             <div className="space-y-4">
                                 {dashboardStats.recent_activity.length === 0 ? (
-                                    <p className="text-gray-400 text-center py-8">No recent activity</p>
+                                    <p className="text-gray-400 text-center py-8">{t('dashboard.noActivity')}</p>
                                 ) : (
                                     dashboardStats.recent_activity.map((activity) => (
                                         <motion.div
@@ -248,7 +250,7 @@ export default function Dashboard() {
                                                     <div className="h-1 flex-1 bg-white/10 rounded-full overflow-hidden">
                                                         <div className="h-full bg-green-500/50 w-full rounded-full" />
                                                     </div>
-                                                    <span className="text-xs text-green-400 font-medium">Completed</span>
+                                                    <span className="text-xs text-green-400 font-medium">{t('dashboard.activeDownload.completed')}</span>
                                                 </div>
                                             </div>
                                         </motion.div>
@@ -265,7 +267,7 @@ export default function Dashboard() {
                         <div className="rounded-3xl border border-white/10 bg-black/20 backdrop-blur-xl p-8 shadow-2xl">
                             <h3 className="font-bold mb-6 text-2xl text-white flex items-center gap-3">
                                 <span className="w-1.5 h-8 bg-purple-500 rounded-full shadow-[0_0_10px_rgba(168,85,247,0.5)]"></span>
-                                Quick Actions
+                                {t('dashboard.quickActions')}
                             </h3>
                             <div className="space-y-4">
                                 <Button
@@ -274,7 +276,7 @@ export default function Dashboard() {
                                     size="lg"
                                     onClick={() => navigate('/search')}
                                 >
-                                    <Download className="mr-3 h-6 w-6" /> Add New Download
+                                    <Download className="mr-3 h-6 w-6" /> {t('dashboard.actions.addDownload')}
                                 </Button>
                                 <Button
                                     variant="secondary"
@@ -282,7 +284,7 @@ export default function Dashboard() {
                                     size="lg"
                                     onClick={() => navigate('/search')}
                                 >
-                                    <Music className="mr-3 h-6 w-6" /> Import Playlist
+                                    <Music className="mr-3 h-6 w-6" /> {t('dashboard.actions.importPlaylist')}
                                 </Button>
                                 <Button
                                     variant="outline"
@@ -290,7 +292,7 @@ export default function Dashboard() {
                                     size="lg"
                                     onClick={() => navigate('/watchlist')}
                                 >
-                                    <Clock className="mr-3 h-6 w-6" /> View Watchlist
+                                    <Clock className="mr-3 h-6 w-6" /> {t('dashboard.actions.viewWatchlist')}
                                 </Button>
                             </div>
                         </div>
@@ -331,10 +333,10 @@ export default function Dashboard() {
 
                                     <div>
                                         <span className="font-bold text-white text-lg block">
-                                            {dashboardStats.active_download.status === 'downloading' ? 'Downloading...' : 'Pending...'}
+                                            {dashboardStats.active_download.status === 'downloading' ? t('dashboard.activeDownload.downloading') : t('dashboard.activeDownload.pending')}
                                         </span>
                                         <span className="text-xs text-primary/80 font-medium tracking-wide uppercase">
-                                            {Math.round(dashboardStats.active_download.progress)}% Completed
+                                            {Math.round(dashboardStats.active_download.progress)}% {t('dashboard.activeDownload.completed')}
                                         </span>
                                     </div>
                                 </div>
@@ -364,8 +366,8 @@ export default function Dashboard() {
                                 <div className="w-12 h-12 rounded-full bg-white/5 flex items-center justify-center text-gray-600">
                                     <Download size={24} />
                                 </div>
-                                <p className="text-gray-500 font-medium">No active downloads</p>
-                                <p className="text-xs text-gray-600 max-w-[150px]">Start downloading music to see progress here</p>
+                                <p className="text-gray-500 font-medium">{t('dashboard.activeDownload.noActive')}</p>
+                                <p className="text-xs text-gray-600 max-w-[150px]">{t('dashboard.activeDownload.startDownloading')}</p>
                             </div>
                         )}
                     </motion.div>

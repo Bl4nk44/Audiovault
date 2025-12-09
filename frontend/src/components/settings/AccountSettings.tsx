@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 import { useForm } from 'react-hook-form'
 import { useStore } from '../../store/useStore'
 import api from '../../services/api'
@@ -10,10 +10,25 @@ import Button from '../ui/Button'
 export default function AccountSettings() {
     const { user, setUser } = useStore()
     const [isLoading, setIsLoading] = useState(false)
-    const { register, handleSubmit, formState: { errors } } = useForm({
+    const { register, handleSubmit, setValue, watch, formState: { errors } } = useForm({
         defaultValues: {
             username: user?.username || '',
-            avatar_url: user?.preferences?.avatar_url || ''
+            avatar_url: ''
+        }
+    })
+
+    // Populate form with user data, effectively hiding internal paths
+    useState(() => {
+        if (user?.username) setValue('username', user.username)
+        if (user?.preferences?.avatar_url) {
+            // Only show the URL if it is an external link (starts with http)
+            // If it's internal (starts with /), keep the input empty to avoid showing raw path
+            const url = user.preferences.avatar_url
+            if (url.startsWith('http')) {
+                setValue('avatar_url', url)
+            } else {
+                setValue('avatar_url', '')
+            }
         }
     })
 
@@ -22,7 +37,14 @@ export default function AccountSettings() {
     const onUpdateProfile = async (data: any) => {
         setIsLoading(true)
         try {
-            const response = await api.put('/users/me', data)
+            // Filter out empty avatar_url to prevent overwriting existing avatar with empty string
+            // unless we want to allow clearing? For now assuming empty input means "keep current"
+            const payload = { ...data }
+            if (!payload.avatar_url) {
+                delete payload.avatar_url
+            }
+            
+            const response = await api.put('/users/me', payload)
             setUser({ ...user!, ...response.data.user })
             toast.success('Profile updated successfully')
         } catch (error: any) {
@@ -47,6 +69,48 @@ export default function AccountSettings() {
             setIsLoading(false)
         }
     }
+    
+    // Setup file input ref
+    const fileInputRef = useRef<HTMLInputElement>(null)
+
+    const handleAvatarClick = () => {
+        fileInputRef.current?.click()
+    }
+
+    const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
+        const file = event.target.files?.[0]
+        if (!file) return
+
+        const formData = new FormData()
+        formData.append('file', file)
+
+        setIsLoading(true)
+        try {
+            const response = await api.post('/users/me/avatar', formData, {
+                headers: {
+                    'Content-Type': 'multipart/form-data'
+                }
+            })
+            // Update local state with new avatar URL
+            setUser({ ...user!, ...response.data.user })
+            
+            // Also update the form value for avatar_url
+            // Clear the input field because we have an internal path now
+            setValue('avatar_url', '')
+            toast.success('Avatar updated successfully')
+        } catch (error: any) {
+            toast.error(error.response?.data?.detail || 'Failed to upload avatar')
+        } finally {
+            setIsLoading(false)
+        }
+    }
+
+    const getAvatarSrc = (url?: string) => {
+        if (!url) return undefined
+        if (url.startsWith('http')) return url
+        // If it's a relative path from our backend (e.g. /stream/...)
+        return `${import.meta.env.VITE_API_URL?.replace('/api/v1', '') || 'http://localhost:8000'}${url}`
+    }
 
     return (
         <div className="space-y-8">
@@ -66,12 +130,23 @@ export default function AccountSettings() {
                         <div className="relative group">
                             <div className="w-24 h-24 rounded-full bg-gradient-to-br from-primary to-green-600 flex items-center justify-center shadow-lg overflow-hidden">
                                 {user?.preferences?.avatar_url ? (
-                                    <img src={user.preferences.avatar_url} alt="Avatar" className="w-full h-full object-cover" />
+                                    <img src={getAvatarSrc(user.preferences.avatar_url)} alt="Avatar" className="w-full h-full object-cover" />
                                 ) : (
                                     <User size={40} className="text-black" />
                                 )}
                             </div>
-                            <button type="button" className="absolute inset-0 bg-black/50 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer">
+                            <input 
+                                type="file" 
+                                ref={fileInputRef} 
+                                onChange={handleFileChange} 
+                                className="hidden" 
+                                accept="image/*"
+                            />
+                            <button 
+                                type="button" 
+                                onClick={handleAvatarClick}
+                                className="absolute inset-0 bg-black/50 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
+                            >
                                 <Camera className="text-white" size={24} />
                             </button>
                         </div>
@@ -94,8 +169,8 @@ export default function AccountSettings() {
                             <label className="text-sm font-medium text-gray-300 ml-1">Avatar URL</label>
                             <input
                                 {...register('avatar_url')}
-                                placeholder="https://example.com/avatar.jpg"
-                                className="w-full px-4 py-3 rounded-xl bg-black/20 border border-white/10 text-white focus:outline-none focus:border-primary/50"
+                                placeholder={user?.preferences?.avatar_url && !user.preferences.avatar_url.startsWith('http') ? 'Uploaded Image Activity (Enter URL to override)' : "https://example.com/avatar.jpg"}
+                                className="w-full px-4 py-3 rounded-xl bg-black/20 border border-white/10 text-white focus:outline-none focus:border-primary/50 placeholder:text-gray-600"
                             />
                         </div>
                     </div>

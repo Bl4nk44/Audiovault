@@ -2,6 +2,9 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { X, CheckCircle, AlertCircle, Info, AlertTriangle, Trash2, Bell } from 'lucide-react'
 import { useStore } from '../../store/useStore'
 import { formatDistanceToNow } from 'date-fns'
+import { pl, enUS } from 'date-fns/locale'
+import { useTranslation } from '../../hooks/useTranslation'
+import { useMemo } from 'react'
 
 interface NotificationCenterProps {
     isOpen: boolean
@@ -9,7 +12,12 @@ interface NotificationCenterProps {
 }
 
 export default function NotificationCenter({ isOpen, onClose }: NotificationCenterProps) {
-    const { notifications, markAllAsRead, clearNotifications, removeNotification } = useStore()
+    const { notifications, markAllAsRead, clearNotifications, removeNotification, user } = useStore() // Added user
+    const { t } = useTranslation()
+
+    const locale = useMemo(() => {
+        return user?.preferences?.language === 'pl' ? pl : enUS
+    }, [user?.preferences?.language])
 
     const getIcon = (type: string) => {
         switch (type) {
@@ -40,7 +48,7 @@ export default function NotificationCenter({ isOpen, onClose }: NotificationCent
                         <div className="p-4 border-b border-white/5 flex items-center justify-between bg-white/5">
                             <div className="flex items-center gap-2">
                                 <Bell size={18} className="text-primary" />
-                                <h3 className="font-bold text-white">Notifications</h3>
+                                <h3 className="font-bold text-white">{t('notifications.title')}</h3>
                                 <span className="bg-white/10 text-xs px-2 py-0.5 rounded-full text-gray-400">
                                     {notifications.length}
                                 </span>
@@ -52,12 +60,12 @@ export default function NotificationCenter({ isOpen, onClose }: NotificationCent
                                             onClick={markAllAsRead}
                                             className="text-xs text-gray-400 hover:text-white px-2 py-1 rounded hover:bg-white/10 transition-colors"
                                         >
-                                            Mark all read
+                                            {t('notifications.markAllRead')}
                                         </button>
                                         <button
                                             onClick={clearNotifications}
                                             className="p-1.5 text-gray-400 hover:text-red-400 rounded hover:bg-white/10 transition-colors"
-                                            title="Clear all"
+                                            title={t('notifications.clearAll')}
                                         >
                                             <Trash2 size={16} />
                                         </button>
@@ -70,7 +78,7 @@ export default function NotificationCenter({ isOpen, onClose }: NotificationCent
                             {notifications.length === 0 ? (
                                 <div className="flex flex-col items-center justify-center py-12 text-gray-500">
                                     <Bell size={40} className="mb-3 opacity-20" />
-                                    <p className="text-sm">No notifications yet</p>
+                                    <p className="text-sm">{t('notifications.empty')}</p>
                                 </div>
                             ) : (
                                 notifications.map((notification) => (
@@ -91,13 +99,13 @@ export default function NotificationCenter({ isOpen, onClose }: NotificationCent
                                                     {notification.message}
                                                 </p>
                                                 <p className="text-xs text-gray-500 mt-1">
-                                                    {formatDistanceToNow(notification.timestamp, { addSuffix: true })}
+                                                    {formatDistanceToNow(new Date(notification.timestamp), { addSuffix: true, locale })}
                                                 </p>
                                             </div>
                                             <button
                                                 onClick={(e) => {
                                                     e.stopPropagation()
-                                                    removeNotification(notification.id)
+                                                        removeNotification(notification.id)
                                                 }}
                                                 className="opacity-0 group-hover:opacity-100 p-1 text-gray-500 hover:text-red-400 transition-all absolute top-2 right-2"
                                             >

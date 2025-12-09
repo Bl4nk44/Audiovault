@@ -3,18 +3,20 @@ import { NavLink } from 'react-router-dom'
 import { cn } from '../../lib/utils'
 import { motion } from 'framer-motion'
 
-const navItems = [
-    { icon: Home, label: 'Home', path: '/' },
-    { icon: Search, label: 'Search', path: '/search' },
-    { icon: Eye, label: 'Watchlist', path: '/watchlist' },
-    { icon: Music, label: 'My Library', path: '/library' },
-    { icon: Download, label: 'Downloads', path: '/queue' },
-    { icon: SettingsIcon, label: 'Settings', path: '/settings' },
-]
-
-
+import { useTranslation } from '../../hooks/useTranslation'
 
 export default function Sidebar() {
+    const { t } = useTranslation()
+
+    const navItems = [
+        { icon: Home, label: t('sidebar.home'), path: '/' },
+        { icon: Search, label: t('sidebar.search'), path: '/search' },
+        { icon: Eye, label: t('sidebar.watchlist'), path: '/watchlist' },
+        { icon: Music, label: t('sidebar.library'), path: '/library' },
+        { icon: Download, label: t('sidebar.downloads'), path: '/queue' },
+        { icon: SettingsIcon, label: t('sidebar.settings'), path: '/settings' },
+    ]
+
     return (
         <motion.aside
             initial={{ x: -100, opacity: 0 }}
@@ -22,16 +24,18 @@ export default function Sidebar() {
             transition={{ duration: 0.5, ease: "easeOut" }}
             className="w-full h-full flex flex-col gap-4 z-30"
         >
-            <div className="bg-black/40 backdrop-blur-2xl border border-white/10 rounded-3xl p-6 flex flex-col gap-6 shadow-2xl h-full">
+            <div className="glass rounded-[var(--radius)] p-6 flex flex-col gap-6 shadow-2xl h-full bg-card/60">
                 <motion.h1
                     whileHover={{ scale: 1.02 }}
                     className="text-2xl font-bold flex items-center gap-3 text-white cursor-default px-2"
                 >
                     <div className="relative">
                         <div className="absolute inset-0 bg-primary/50 blur-lg rounded-full" />
-                        <span className="relative w-10 h-10 bg-gradient-to-br from-primary to-green-600 rounded-xl flex items-center justify-center text-black shadow-lg">
-                            A
-                        </span>
+                        <img 
+                            src="/ikona.png" 
+                            alt="Audiovault Logo" 
+                            className="relative w-10 h-10 rounded-xl shadow-lg object-cover bg-black"
+                        />
                     </div>
                     <span className="bg-clip-text text-transparent bg-gradient-to-r from-white to-gray-400 tracking-tight">Audiovault</span>
                 </motion.h1>

@@ -7,102 +7,110 @@
 
 @layer base {
   :root {
-    /* Modern Dark Theme - Neon Glass */
-    --background: 240 10% 3.9%;
-    /* Deep dark background */
+    /* Audiovault Default (Cyber/Neon/Glass) */
+    --glass-opacity: 0.6;
+    --blur: 20px;
+    --radius: 1rem;
+    --border-opacity: 0.1;
+
+    /* Deep Void Style - Matches Logo (Black/Cyan/Green/Purple) */
+    --background: 240 10% 2%;  /* Almost pure black */
     --foreground: 0 0% 98%;
 
-    --card: 240 10% 3.9%;
+    --card: 240 10% 4%;
     --card-foreground: 0 0% 98%;
 
-    --popover: 240 10% 3.9%;
+    --popover: 240 10% 4%;
     --popover-foreground: 0 0% 98%;
 
-    --primary: 142 70% 50%;
-    /* Electric Green */
-    --primary-foreground: 144 90% 5%;
+    --primary: 160 85% 45%; /* Vibrant Teal/Green from Logo */
+    --primary-foreground: 0 0% 0%;
 
-    --secondary: 240 4% 16%;
+    --secondary: 240 5% 10%;
     --secondary-foreground: 0 0% 98%;
 
-    --muted: 240 4% 16%;
-    --muted-foreground: 240 5% 65%;
+    --muted: 240 5% 10%;
+    --muted-foreground: 240 5% 60%;
 
-    --accent: 260 50% 50%;
-    /* Neon Purple Accent */
+    --accent: 270 90% 60%; /* Electric Purple from Logo */
     --accent-foreground: 0 0% 98%;
 
-    --destructive: 0 62.8% 30.6%;
+    --destructive: 0 80% 50%;
     --destructive-foreground: 0 0% 98%;
 
-    --border: 240 4% 16%;
-    --input: 240 4% 16%;
-    --ring: 142 70% 50%;
-
-    --radius: 0.75rem;
-    /* More rounded */
+    --border: 240 5% 15%;
+    --input: 240 5% 10%;
+    --ring: 160 85% 45%;
   }
 
   .dark {
-    --background: 240 10% 3.9%;
+    /* Re-affirm root values for dark mode */
+    --background: 240 10% 2%; 
     --foreground: 0 0% 98%;
   }
 
   .midnight {
-    --background: 222 47% 11%;
+    --glass-opacity: 0.5;
+    --blur: 16px;
+    --background: 222 47% 8%; /* Darker Midnight */
     --foreground: 210 40% 98%;
-    --card: 222 47% 10%;
-    --popover: 222 47% 10%;
-    --secondary: 217 33% 17%;
-    --muted: 217 33% 17%;
-    --accent: 210 40% 96%;
-    /* brighter accent */
+    --card: 222 47% 6%;
+    --popover: 222 47% 6%;
+    --primary: 190 90% 50%;
+    --radius: 0.75rem;
   }
 
   .ocean {
-    --background: 201 50% 10%;
+    --glass-opacity: 0.5;
+    --blur: 16px;
+    --background: 201 50% 6%;
     --foreground: 210 40% 98%;
-    --card: 201 50% 9%;
-    --popover: 201 50% 9%;
+    --card: 201 50% 5%;
+    --popover: 201 50% 5%;
     --primary: 190 90% 50%;
-    /* Cyan */
   }
 
   .forest {
-    --background: 150 50% 8%;
+    --glass-opacity: 0.5;
+    --blur: 16px;
+    --background: 150 50% 4%;
     --foreground: 150 20% 98%;
-    --card: 150 50% 7%;
+    --card: 150 50% 3%;
     --primary: 142 70% 45%;
   }
 
-  .sunset {
-    --background: 0 50% 8%;
-    --foreground: 0 20% 98%;
-    --primary: 10 80% 60%;
-    /* Orange/Red */
-    --accent: 40 90% 60%;
-  }
-
-  .neon {
-    --background: 0 0% 5%;
-    --foreground: 0 0% 98%;
-    --card: 0 0% 8%;
-    --primary: 300 100% 50%;
-    /* Magenta/Neon */
-    --accent: 180 100% 50%;
-    /* Cyan */
-  }
-
+  /* CLASSIC / PERFORMANCE MODE (Terminal/Win98) */
   .classic {
-    --background: 240 5% 10%;
-    /* Zinc 900 #18181b */
-    --foreground: 0 0% 95%;
-    --card: 240 5% 12%;
-    --primary: 142 76% 36%;
-    /* Classic Green #1DB954 */
-    --primary-foreground: 0 0% 100%;
-    --radius: 0.3rem;
-    /* Less rounded */
+    /* Disable all effects */
+    --glass-opacity: 1; /* Solid */
+    --blur: 0px;        /* No Blur */
+    --radius: 0px;      /* Sharp Corners */
+    --border-opacity: 1;
+
+    --background: 0 0% 0%; /* Pure Black */
+    --foreground: 120 100% 50%; /* Terminal Green Text */
+
+    --card: 0 0% 5%;    /* Very dark gray */
+    --card-foreground: 120 100% 50%;
+
+    --popover: 0 0% 5%;
+    --popover-foreground: 120 100% 50%;
+
+    --primary: 120 100% 50%; /* Terminal Green */
+    --primary-foreground: 0 0% 0%;
+
+    --secondary: 0 0% 15%;
+    --secondary-foreground: 120 100% 50%;
+
+    --muted: 0 0% 15%;
+    --muted-foreground: 120 60% 50%;
+
+    --accent: 0 0% 20%;
+    --accent-foreground: 120 100% 50%;
+
+    --border: 120 100% 25%; /* Green borders */
+    --input: 0 0% 0%;
+    --ring: 120 100% 50%;
   }
 }
 
@@ -113,20 +121,35 @@
 
   body {
     @apply bg-background text-foreground antialiased selection:bg-primary/30 selection:text-primary-foreground;
-    background-image:
-      radial-gradient(circle at 15% 50%, rgba(76, 29, 149, 0.08), transparent 25%),
-      radial-gradient(circle at 85% 30%, rgba(22, 163, 74, 0.08), transparent 25%);
+    background-image: 
+        radial-gradient(circle at 15% 50%, rgba(76, 29, 149, 0.4), transparent 45%),
+        radial-gradient(circle at 85% 30%, rgba(22, 163, 74, 0.25), transparent 40%),
+        radial-gradient(circle at 50% 80%, rgba(6, 182, 212, 0.15), transparent 40%);
     background-attachment: fixed;
   }
 }
 
 @layer utilities {
   .glass {
-    @apply bg-white/5 backdrop-blur-md border border-white/10 shadow-xl;
+    @apply bg-black/[var(--glass-opacity)] border border-white/[var(--border-opacity)] shadow-xl;
+    backdrop-filter: blur(var(--blur));
   }
 
   .glass-hover {
-    @apply hover:bg-white/10 transition-all duration-300;
+    @apply hover:bg-white/[0.05] transition-all duration-300;
+  }
+
+  /* Disable animations in classic mode */
+  .classic * {
+    animation: none !important;
+    transition: none !important;
+    box-shadow: none !important;
+    background-image: none !important; /* Force solid backgrounds */
+  }
+  
+  /* Helper to hide "Fancy" elements in classic mode */
+  .classic .fancy-only {
+    display: none !important;
   }
 
   .text-glow {
@@ -192,10 +215,10 @@
 }
 
 ::-webkit-scrollbar-thumb {
-  background: hsla(0, 0%, 100%, .1);
+  background: hsla(0, 0%, 100%, 0.1);
   border-radius: 10px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: hsla(0, 0%, 100%, .2);
+  background: hsla(0, 0%, 100%, 0.2);
 }

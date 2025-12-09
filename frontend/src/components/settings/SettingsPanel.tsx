@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react'
-import APIKeyInput from './APIKeyInput'
+
 import toast from 'react-hot-toast'
 import { motion } from 'framer-motion'
-import { Save, FolderOpen, Download, Palette, Globe, FileText, Key, User, CheckCircle, XCircle, Loader2 } from 'lucide-react'
+import { Save, FolderOpen, Download, Palette, Globe, FileText, User, CheckCircle, XCircle, Loader2 } from 'lucide-react'
 import api from '../../services/api'
 import AccountSettings from './AccountSettings'
 import { useTranslation } from '../../hooks/useTranslation'
@@ -25,8 +25,7 @@ export default function SettingsPanel() {
         audioQuality: 'high'
     })
     const [loading, setLoading] = useState(true)
-    const [spotifyStatus, setSpotifyStatus] = useState<'idle' | 'loading' | 'valid' | 'invalid'>('idle')
-    const [youtubeStatus, setYoutubeStatus] = useState<'idle' | 'loading' | 'valid' | 'invalid'>('idle')
+
 
     useEffect(() => {
         fetchSettings()
@@ -60,43 +59,14 @@ export default function SettingsPanel() {
         }
     }
 
-    const verifySpotify = async () => {
-        if (!settings.spotifyClientId || !settings.spotifyClientSecret) return
-        setSpotifyStatus('loading')
-        try {
-            await api.post('/settings/verify/spotify', {
-                clientId: settings.spotifyClientId,
-                clientSecret: settings.spotifyClientSecret
-            })
-            setSpotifyStatus('valid')
-            toast.success('Spotify credentials verified!')
-        } catch (error) {
-            setSpotifyStatus('invalid')
-            toast.error('Invalid Spotify credentials')
-        }
-    }
 
-    const verifyYouTube = async () => {
-        if (!settings.youtubeApiKey) return
-        setYoutubeStatus('loading')
-        try {
-            await api.post('/settings/verify/youtube', {
-                apiKey: settings.youtubeApiKey
-            })
-            setYoutubeStatus('valid')
-            toast.success('YouTube API Key verified!')
-        } catch (error) {
-            setYoutubeStatus('invalid')
-            toast.error('Invalid YouTube API Key')
-        }
-    }
 
     const tabs = [
         { id: 'general', label: t('settings.general'), icon: Globe },
         { id: 'account', label: t('settings.account'), icon: User },
         { id: 'appearance', label: t('settings.appearance'), icon: Palette },
         { id: 'files', label: t('settings.files'), icon: FileText },
-        { id: 'integrations', label: t('settings.integrations'), icon: Key },
+
     ]
 
     const container = {
@@ -143,51 +113,66 @@ export default function SettingsPanel() {
                 )}
 
                 {activeTab === 'general' && (
-                    <motion.div variants={item} className="space-y-6 p-8 rounded-3xl border border-white/10 bg-white/5 backdrop-blur-xl shadow-xl">
+                    <motion.div variants={item} className="space-y-6 p-8 rounded-[var(--radius)] glass">
                         <h3 className="text-xl font-bold text-white border-b border-white/10 pb-4">{t('settings.general')}</h3>
 
                         <div className="grid gap-6">
-                            <div className="space-y-2">
-                                <label className="text-sm font-medium text-gray-300 ml-1">{t('settings.language')}</label>
-                                <select
-                                    value={settings.language}
-                                    onChange={(e) => setSettings({ ...settings, language: e.target.value })}
-                                    className="w-full px-4 py-3 rounded-xl bg-black/20 border border-white/10 text-white focus:outline-none focus:border-primary/50"
-                                >
-                                    <option value="en">English</option>
-                                    <option value="pl">Polski</option>
-                                </select>
-                            </div>
+                                <div className="space-y-2">
+                                    <label className="text-sm font-medium text-gray-300 ml-1">{t('settings.language')}</label>
+                                    <div className="relative">
+                                        <select
+                                            value={settings.language}
+                                            onChange={(e) => setSettings({ ...settings, language: e.target.value })}
+                                            className="w-full px-4 py-3 rounded-xl bg-secondary/50 border border-white/10 text-white focus:outline-none focus:border-primary/50 appearance-none cursor-pointer"
+                                        >
+                                            <option value="en" className="bg-zinc-900 text-white">English</option>
+                                            <option value="pl" className="bg-zinc-900 text-white">Polski</option>
+                                            <option value="de" className="bg-zinc-900 text-white">Deutsch</option>
+                                            <option value="fr" className="bg-zinc-900 text-white">Français</option>
+                                            <option value="es" className="bg-zinc-900 text-white">Español</option>
+                                        </select>
+                                        {/* Custom Arrow Icon */}
+                                        <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-white/50">
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m6 9 6 6 6-6" /></svg>
+                                        </div>
+                                    </div>
+                                </div>
 
                             <div className="space-y-2">
                                 <label className="text-sm font-medium text-gray-300 ml-1">{t('settings.audioQuality')}</label>
-                                <select
-                                    value={settings.audioQuality}
-                                    onChange={(e) => setSettings({ ...settings, audioQuality: e.target.value })}
-                                    className="w-full px-4 py-3 rounded-xl bg-black/20 border border-white/10 text-white focus:outline-none focus:border-primary/50"
-                                >
-                                    <option value="low">{t('quality.low')}</option>
-                                    <option value="normal">{t('quality.normal')}</option>
-                                    <option value="high">{t('quality.high')}</option>
-                                </select>
+                                <div className="relative">
+                                    <select
+                                        value={settings.audioQuality}
+                                        onChange={(e) => setSettings({ ...settings, audioQuality: e.target.value })}
+                                        className="w-full px-4 py-3 rounded-xl bg-secondary/50 border border-white/10 text-white focus:outline-none focus:border-primary/50 appearance-none cursor-pointer"
+                                    >
+                                        <option value="low" className="bg-zinc-900 text-white">{t('quality.low')}</option>
+                                        <option value="normal" className="bg-zinc-900 text-white">{t('quality.normal')}</option>
+                                        <option value="high" className="bg-zinc-900 text-white">{t('quality.high')}</option>
+                                    </select>
+                                    {/* Custom Arrow Icon */}
+                                    <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-white/50">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m6 9 6 6 6-6" /></svg>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </motion.div>
                 )}
 
                 {activeTab === 'appearance' && (
-                    <motion.div variants={item} className="space-y-6 p-8 rounded-3xl border border-white/10 bg-white/5 backdrop-blur-xl shadow-xl">
+                    <motion.div variants={item} className="space-y-6 p-8 rounded-[var(--radius)] glass">
                         <h3 className="text-xl font-bold text-white border-b border-white/10 pb-4">{t('settings.appearance')}</h3>
 
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                             {[
-                                { id: 'dark', name: t('themes.dark'), color: 'bg-[#09090b]' },
-                                { id: 'midnight', name: t('themes.midnight'), color: 'bg-[#0f172a]' },
-                                { id: 'ocean', name: t('themes.ocean'), color: 'bg-[#0c4a6e]' },
-                                { id: 'forest', name: t('themes.forest'), color: 'bg-[#052e16]' },
-                                { id: 'sunset', name: t('themes.sunset'), color: 'bg-[#450a0a]' },
-                                { id: 'neon', name: t('themes.neon'), color: 'bg-[#171717]' },
-                                { id: 'classic', name: t('themes.classic'), color: 'bg-[#18181b]' },
+                                { id: 'dark', name: t('settings.themes.dark'), color: 'bg-[#09090b]' },
+                                { id: 'midnight', name: t('settings.themes.midnight'), color: 'bg-[#0f172a]' },
+                                { id: 'ocean', name: t('settings.themes.ocean'), color: 'bg-[#0c4a6e]' },
+                                { id: 'forest', name: t('settings.themes.forest'), color: 'bg-[#052e16]' },
+                                { id: 'sunset', name: t('settings.themes.sunset'), color: 'bg-[#450a0a]' },
+                                { id: 'neon', name: t('settings.themes.neon'), color: 'bg-[#171717]' },
+                                { id: 'classic', name: t('settings.themes.classic'), color: 'bg-[#18181b]' },
                             ].map((theme) => (
                                 <button
                                     key={theme.id}
@@ -209,7 +194,7 @@ export default function SettingsPanel() {
                 )}
 
                 {activeTab === 'files' && (
-                    <motion.div variants={item} className="space-y-6 p-8 rounded-3xl border border-white/10 bg-white/5 backdrop-blur-xl shadow-xl">
+                    <motion.div variants={item} className="space-y-6 p-8 rounded-[var(--radius)] glass">
                         <h3 className="text-xl font-bold text-white border-b border-white/10 pb-4">{t('settings.files')}</h3>
 
                         <div className="space-y-6">
@@ -287,79 +272,7 @@ export default function SettingsPanel() {
                     </motion.div>
                 )}
 
-                {activeTab === 'integrations' && (
-                    <motion.div variants={item} className="space-y-6 p-8 rounded-3xl border border-white/10 bg-white/5 backdrop-blur-xl shadow-xl">
-                        <h3 className="text-xl font-bold text-white border-b border-white/10 pb-4">{t('settings.integrations')}</h3>
 
-                        <div className="space-y-6">
-
-
-                            <div className="space-y-4 pt-4 border-t border-white/5">
-                                <div className="flex items-center justify-between">
-                                    <h4 className="font-medium text-white flex items-center gap-2">
-                                        <span className="w-1.5 h-6 rounded-full bg-green-500" /> {t('settings.spotify')}
-                                    </h4>
-                                    <div className="flex items-center gap-2">
-                                        {spotifyStatus === 'loading' && <Loader2 className="animate-spin text-primary" size={18} />}
-                                        {spotifyStatus === 'valid' && <CheckCircle className="text-green-500" size={18} />}
-                                        {spotifyStatus === 'invalid' && <XCircle className="text-red-500" size={18} />}
-                                        <button
-                                            onClick={verifySpotify}
-                                            className="text-xs bg-white/10 hover:bg-white/20 px-3 py-1.5 rounded-lg transition-colors"
-                                        >
-                                            {t('common.verify')}
-                                        </button>
-                                    </div>
-                                </div>
-                                <div className="grid gap-4">
-                                    <APIKeyInput
-                                        label={t('settings.clientId')}
-                                        value={settings.spotifyClientId}
-                                        onChange={(v) => {
-                                            setSettings({ ...settings, spotifyClientId: v })
-                                            setSpotifyStatus('idle')
-                                        }}
-                                    />
-                                    <APIKeyInput
-                                        label={t('settings.clientSecret')}
-                                        value={settings.spotifyClientSecret}
-                                        onChange={(v) => {
-                                            setSettings({ ...settings, spotifyClientSecret: v })
-                                            setSpotifyStatus('idle')
-                                        }}
-                                    />
-                                </div>
-                            </div>
-
-                            <div className="space-y-4 pt-4 border-t border-white/5">
-                                <div className="flex items-center justify-between">
-                                    <h4 className="font-medium text-white flex items-center gap-2">
-                                        <span className="w-1.5 h-6 rounded-full bg-red-500" /> {t('settings.youtube')}
-                                    </h4>
-                                    <div className="flex items-center gap-2">
-                                        {youtubeStatus === 'loading' && <Loader2 className="animate-spin text-primary" size={18} />}
-                                        {youtubeStatus === 'valid' && <CheckCircle className="text-green-500" size={18} />}
-                                        {youtubeStatus === 'invalid' && <XCircle className="text-red-500" size={18} />}
-                                        <button
-                                            onClick={verifyYouTube}
-                                            className="text-xs bg-white/10 hover:bg-white/20 px-3 py-1.5 rounded-lg transition-colors"
-                                        >
-                                            {t('common.verify')}
-                                        </button>
-                                    </div>
-                                </div>
-                                <APIKeyInput
-                                    label={t('settings.apiKey')}
-                                    value={settings.youtubeApiKey}
-                                    onChange={(v) => {
-                                        setSettings({ ...settings, youtubeApiKey: v })
-                                        setYoutubeStatus('idle')
-                                    }}
-                                />
-                            </div>
-                        </div>
-                    </motion.div>
-                )}
 
                 <motion.div variants={item} className="flex justify-end pt-4">
                     <motion.button

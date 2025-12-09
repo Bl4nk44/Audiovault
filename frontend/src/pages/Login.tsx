@@ -1,26 +1,15 @@
 import LoginForm from '../components/auth/LoginForm'
 import { motion } from 'framer-motion'
 import { Link } from 'react-router-dom'
-
 export default function Login() {
     return (
-        <div className="min-h-screen flex items-center justify-center bg-background text-foreground relative overflow-hidden">
-
+        <div className="min-h-screen w-full flex items-center justify-center p-4 bg-background">
             <motion.div
-                initial={{ opacity: 0, y: 20, scale: 0.95 }}
-                animate={{ opacity: 1, y: 0, scale: 1 }}
-                transition={{ duration: 0.5, ease: "easeOut" }}
-                className="w-full max-w-md p-8 rounded-3xl border border-white/10 bg-black/40 backdrop-blur-xl shadow-2xl relative z-10 mx-4"
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                className="w-full max-w-md p-8 glass rounded-[var(--radius)]"
             >
                 <div className="text-center mb-8">
-                    <motion.div
-                        initial={{ scale: 0 }}
-                        animate={{ scale: 1 }}
-                        transition={{ type: "spring", stiffness: 260, damping: 20, delay: 0.1 }}
-                        className="w-16 h-16 bg-gradient-to-br from-primary to-green-600 rounded-2xl mx-auto mb-4 flex items-center justify-center shadow-[0_0_25px_rgba(34,197,94,0.4)]"
-                    >
-                        <span className="text-3xl font-bold text-black">A</span>
-                    </motion.div>
                     <motion.h1
                         initial={{ opacity: 0, y: 10 }}
                         animate={{ opacity: 1, y: 0 }}

@@ -15,11 +15,24 @@ export interface AuthSlice {
     logout: () => void
 }
 
-export const createAuthSlice: StateCreator<AuthSlice> = (set, get) => ({
-    user: null,
-    isAuthenticated: !!localStorage.getItem('access_token'),
-    token: localStorage.getItem('access_token'),
-    sessions: JSON.parse(localStorage.getItem('sessions') || '{}'),
+export const createAuthSlice: StateCreator<AuthSlice> = (set, get) => {
+    // Attempt to restore user from sessions based on active token
+    const token = localStorage.getItem('access_token')
+    const sessions = JSON.parse(localStorage.getItem('sessions') || '{}')
+    let user = null
+
+    if (token) {
+        const session = Object.values(sessions).find((s: any) => s.token === token) as { user: User; token: string } | undefined
+        if (session) {
+            user = session.user
+        }
+    }
+
+    return {
+        user,
+        isAuthenticated: !!token,
+        token,
+        sessions,
 
     setUser: (user) => set({ user }),
 
@@ -81,4 +94,5 @@ export const createAuthSlice: StateCreator<AuthSlice> = (set, get) => ({
         localStorage.removeItem('access_token')
         set({ user: null, token: null, isAuthenticated: false })
     }
-})
+    }
+}
