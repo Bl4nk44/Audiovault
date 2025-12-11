@@ -1,6 +1,7 @@
 from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
-from jose import jwt, JWTError
+import jwt
+from jwt.exceptions import InvalidTokenError
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 from app.db.database import get_db
@@ -25,7 +26,7 @@ async def get_current_user(
         token_type: str = payload.get("type")
         if user_id is None or token_type != "access":
             raise credentials_exception
-    except JWTError:
+    except InvalidTokenError:
         raise credentials_exception
         
     from uuid import UUID
