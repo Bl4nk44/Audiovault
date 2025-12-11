@@ -63,7 +63,8 @@ class AuthManager:
         }
 
     async def refresh_access_token(self, refresh_token: str):
-        from jose import jwt, JWTError
+        import jwt
+        from jwt import InvalidTokenError
         from app.core.config import settings
         
         try:
@@ -116,7 +117,7 @@ class AuthManager:
                 "expires_in": settings.ACCESS_TOKEN_EXPIRE_MINUTES * 60
             }
             
-        except JWTError:
+        except InvalidTokenError:
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
                 detail="Could not validate credentials",
