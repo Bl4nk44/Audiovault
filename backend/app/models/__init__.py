@@ -4,5 +4,6 @@ from .album import Album
 from .track import Track
 from .download import Download
 from .watchlist import Watchlist
+from .watchlist_item import WatchlistItem
 from .credentials import ServiceCredentials
 from .history import ListeningHistory

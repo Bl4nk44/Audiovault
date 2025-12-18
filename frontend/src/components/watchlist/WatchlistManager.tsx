@@ -4,14 +4,18 @@ import WatchlistItem from "./WatchlistItem";
 import { Loader2, RefreshCw } from "lucide-react";
 import toast from "react-hot-toast";
 import api from "../../services/api";
+import SyncModal from "../sync/SyncModal";
 
 import { LayoutGrid, List } from "lucide-react";
+import { type WatchlistItem as WatchlistItemType } from "../../types";
 
 export default function WatchlistManager() {
   const { watchlist, syncWatchlist, removeFromWatchlist } = useStore();
   const [isLoading, setIsLoading] = useState(true);
   const [isChecking, setIsChecking] = useState(false);
   const [viewMode, setViewMode] = useState<"list" | "grid">("grid");
+  const [selectedSyncItem, setSelectedSyncItem] =
+    useState<WatchlistItemType | null>(null);
 
   useEffect(() => {
     syncWatchlist().finally(() => setIsLoading(false));
@@ -24,6 +28,10 @@ export default function WatchlistManager() {
     } catch {
       toast.error("Failed to remove item");
     }
+  };
+
+  const handleSync = (item: WatchlistItemType) => {
+    setSelectedSyncItem(item);
   };
 
   const handleCheckUpdates = async () => {
@@ -105,11 +113,17 @@ export default function WatchlistManager() {
               key={item.id}
               item={item}
               onRemove={handleRemove}
+              onSync={handleSync}
               viewMode={viewMode}
             />
           ))
         )}
       </div>
+
+      <SyncModal
+        item={selectedSyncItem}
+        onClose={() => setSelectedSyncItem(null)}
+      />
     </div>
   );
 }

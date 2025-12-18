@@ -1,0 +1,58 @@
+from fastapi import APIRouter, Depends, HTTPException, Body
+from sqlalchemy.ext.asyncio import AsyncSession
+from typing import List, Dict
+from uuid import UUID
+
+from app.db.database import get_db
+from app.core.dependencies import get_current_active_user
+from app.models.user import User
+from app.services.sync_manager import sync_manager
+
+router = APIRouter()
+
+@router.post("/{watchlist_id}/analyze")
+async def analyze_sync(
+    watchlist_id: UUID,
+    current_user: User = Depends(get_current_active_user),
+    db: AsyncSession = Depends(get_db)
+):
+    """
+    Analyzes watchlist synchronization status.
+    Returns list of items to be removed and safety warnings.
+    """
+    try:
+        report = await sync_manager.analyze_watchlist(db, str(current_user.id), str(watchlist_id))
+        return report
+    except ValueError as e:
+        raise HTTPException(status_code=404, detail=str(e))
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        raise HTTPException(status_code=500, detail=str(e))
+
+@router.post("/{watchlist_id}/execute")
+async def execute_sync(
+    watchlist_id: UUID,
+    payload: dict = Body(...),
+    current_user: User = Depends(get_current_active_user),
+    db: AsyncSession = Depends(get_db)
+):
+    """
+    Executes synchronization (deletion).
+    Payload must include:
+    - sync_token: str
+    - approved_removals: List[str] (Track UUIDs)
+    """
+    sync_token = payload.get("sync_token")
+    approved_removals = payload.get("approved_removals", [])
+    
+    if not sync_token:
+        raise HTTPException(status_code=400, detail="Missing sync_token")
+        
+    try:
+        result = await sync_manager.execute_sync(db, str(current_user.id), sync_token, approved_removals)
+        return result
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))

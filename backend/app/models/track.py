@@ -41,3 +41,4 @@ class Track(Base):
     downloads = relationship("Download", back_populates="track")
     artist_rel = relationship("Artist", back_populates="tracks")
     album_rel = relationship("Album", back_populates="tracks")
+    watchlist_items = relationship("WatchlistItem", back_populates="track")

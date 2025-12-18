@@ -32,6 +32,7 @@ class Watchlist(Base):
     
     # Relationships
     user = relationship("User", back_populates="watchlist")
+    items = relationship("WatchlistItem", back_populates="watchlist", cascade="all, delete-orphan")
     
     __table_args__ = (
         UniqueConstraint('user_id', 'source_id', 'source', name='unique_watch'),

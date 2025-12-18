@@ -1,4 +1,4 @@
-import { Trash2, DownloadCloud } from "lucide-react";
+import { Trash2, DownloadCloud, RefreshCcw } from "lucide-react";
 import { useState } from "react";
 import api from "../../services/api";
 import toast from "react-hot-toast";
@@ -7,12 +7,14 @@ import { type WatchlistItem } from "../../types";
 interface WatchlistItemProps {
   item: WatchlistItem;
   onRemove: (id: string) => void;
+  onSync?: (item: WatchlistItem) => void;
   viewMode?: "list" | "grid";
 }
 
 export default function WatchlistItem({
   item,
   onRemove,
+  onSync,
   viewMode = "list",
 }: WatchlistItemProps) {
   const [autoDownload, setAutoDownload] = useState(item.auto_download);
@@ -68,6 +70,15 @@ export default function WatchlistItem({
             >
               <DownloadCloud size={20} />
             </button>
+            {onSync && item.watch_type === "playlist" && (
+              <button
+                onClick={() => onSync(item)}
+                className="p-3 rounded-full bg-secondary/80 text-foreground hover:bg-white hover:text-black transition-colors"
+                title="Sync Deletions"
+              >
+                <RefreshCcw size={20} />
+              </button>
+            )}
             <button
               onClick={() => onRemove(item.id)}
               className="p-3 rounded-full bg-secondary/80 text-foreground hover:bg-destructive/80 hover:text-white transition-colors"
@@ -152,6 +163,15 @@ export default function WatchlistItem({
         >
           <Trash2 size={18} />
         </button>
+        {onSync && item.watch_type === "playlist" && (
+          <button
+            onClick={() => onSync(item)}
+            className="p-2 text-muted-foreground hover:text-foreground transition-colors opacity-0 group-hover:opacity-100"
+            title="Sync Deletions"
+          >
+            <RefreshCcw size={18} />
+          </button>
+        )}
       </div>
     </div>
   );

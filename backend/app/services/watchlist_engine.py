@@ -274,6 +274,27 @@ class WatchlistEngine:
                         await db.refresh(new_track)
                         track_uuid = new_track.id
                     
+                    # Ensure WatchlistItem exists (Self-healing Reference Count)
+                    from app.models.watchlist_item import WatchlistItem
+                    
+                    # Check if connection exists
+                    wl_item_check = await db.execute(
+                        select(WatchlistItem).where(
+                            WatchlistItem.watchlist_id == item.id,
+                            WatchlistItem.track_id == track_uuid
+                        )
+                    )
+                    existing_wl_item = wl_item_check.scalar_one_or_none()
+                    
+                    if not existing_wl_item:
+                        new_wl_item = WatchlistItem(
+                            watchlist_id=item.id,
+                            track_id=track_uuid,
+                            position=None # We could store position from playlist_metadata if available
+                        )
+                        db.add(new_wl_item)
+                        await db.commit()
+                    
                     # Double check download existence for this user
                     download_exists_result = await db.execute(
                         select(Download).where(Download.user_id == user_id, Download.track_id == track_uuid)
