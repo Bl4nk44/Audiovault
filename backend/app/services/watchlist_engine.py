@@ -103,8 +103,13 @@ class WatchlistEngine:
     async def check_for_updates(self, db: AsyncSession, user_id: str):
         logger.info(f"Checking for updates for user {user_id}")
         watchlist_items = await self.get_watchlist(db, user_id)
+        from app.providers import provider_manager, SpotifyProvider, YouTubeProvider, DeezerProvider
+        
+        # Legacy services for Artist support (until providers support artists)
         spotify_service = SpotifyService()
         youtube_service = YouTubeService()
+        from app.services.deezer_service import DeezerService
+        deezer_service = DeezerService()
         
         new_downloads_count = 0
         
@@ -112,33 +117,54 @@ class WatchlistEngine:
             logger.info(f"Checking item: {item.source_name} ({item.source_id}) - Auto download: {item.auto_download}")
             try:
                 tracks = []
-                if item.source == 'spotify':
-                    if item.watch_type == 'playlist':
-                        tracks = spotify_service.get_playlist_tracks(item.source_id)
-                    elif item.watch_type == 'artist':
+                provider = provider_manager.get_provider_by_name(item.source)
+                
+                # Fetch tracks logic
+                if item.watch_type == 'playlist':
+                    if provider:
+                        # For new services, source_id might be a URL. Providers handle both IDs and URLs usually.
+                        playlist_metadata = await provider.extract_playlist(item.source_id)
+                        if playlist_metadata and playlist_metadata.tracks:
+                            # Convert TrackMetadata to dicts if needed, or use objects
+                            # The loop below expects dicts currently (track_data['id'])
+                            # Let's standardize on using TrackMetadata objects or dicts.
+                            # Existing logic uses dicts. Let's convert metadata to dicts.
+                            for t in playlist_metadata.tracks:
+                                tracks.append({
+                                    "id": t.source_id,
+                                    "title": t.title,
+                                    "artist": t.artist,
+                                    "album": t.album,
+                                    "duration_ms": t.duration_ms,
+                                    "image_url": t.image_url,
+                                    "isrc": t.isrc,
+                                    "source_url": t.source_url # Important for direct download (SoundCloud)
+                                })
+                    else:
+                         logger.warning(f"No provider found for source: {item.source}")
+
+                elif item.watch_type in ['artist', 'channel']:
+                    # Fallback to legacy service calls for Artists as Provider interface doesn't support them yet
+                    if item.source == 'spotify':
                         albums = spotify_service.get_artist_albums(item.source_id)
                         for album in albums:
                              album_tracks = spotify_service.get_album_tracks(album['id'])
                              tracks.extend(album_tracks)
-                elif item.source == 'youtube':
-                    if item.watch_type == 'playlist':
-                         tracks = youtube_service.get_playlist_tracks(item.source_id)
-                    elif item.watch_type == 'artist' or item.watch_type == 'channel':
+                    elif item.source == 'youtube':
                          tracks = youtube_service.get_artist_tracks(item.source_id)
+                    elif item.source == 'deezer':
+                         # Deezer artist implementation missing in original code, skipping or keeping what might be added
+                         pass
                 
                 logger.info(f"Found {len(tracks)} tracks for {item.source_name}")
                 
                 if not tracks:
                     continue
 
-                # Note: Download.track_id is UUID of the Track model.
-                # We need to check if we have downloaded this track based on the source ID.
-                # Since Track model uses specific columns (spotify_id, youtube_id), we need to check those.
-                
                 from app.models.track import Track
-                from sqlalchemy import or_
+                from sqlalchemy import or_, func
                 
-                # Get all downloaded tracks for this user (excluding archived ones)
+                # Get all downloaded tracks for this user (to avoid re-downloading things user already has)
                 downloaded_tracks_query = select(Track).join(Download, Download.track_id == Track.id).where(
                     Download.user_id == user_id,
                     Download.archived == False
@@ -148,6 +174,10 @@ class WatchlistEngine:
                 
                 # Create a set of existing IDs for the current source
                 existing_source_ids = set()
+                
+                # Determine identification logic
+                is_legacy_source = item.source in ['spotify', 'youtube', 'deezer']
+                
                 for t in downloaded_tracks:
                     if item.source == 'spotify' and t.spotify_id:
                         existing_source_ids.add(t.spotify_id)
@@ -155,11 +185,17 @@ class WatchlistEngine:
                         existing_source_ids.add(t.youtube_id)
                     elif item.source == 'deezer' and t.deezer_id:
                         existing_source_ids.add(t.deezer_id)
+                    else:
+                        # For new services, check metadata_content
+                        # We store e.g. 'soundcloud_id' or 'apple_music_id' in metadata
+                        source_id_key = f"{item.source}_id"
+                        if t.metadata_content and source_id_key in t.metadata_content:
+                            existing_source_ids.add(t.metadata_content[source_id_key])
                 
                 for track_data in tracks:
-                    logger.info(f"Processing track: {track_data.get('title')} ({track_data.get('id')})")
+                    # logger.info(f"Processing track: {track_data.get('title')} ({track_data.get('id')})")
                     if track_data['id'] in existing_source_ids:
-                        logger.info("Skipped (in existing_source_ids)")
+                        # logger.info("Skipped (in existing_source_ids)")
                         continue
                     
                     # Check if track exists in DB (globally)
@@ -170,21 +206,59 @@ class WatchlistEngine:
                         track_query = track_query.where(Track.youtube_id == track_data['id'])
                     elif item.source == 'deezer':
                         track_query = track_query.where(Track.deezer_id == track_data['id'])
+                    else:
+                        # JSON query for new sources
+                        # Postgres/SQLite compatible way via text cast or simple retrieval?
+                        # Since we don't have many tracks, we could verify after retrieval if query is complex.
+                        # But let's try to use JSON operator if possible.
+                        # SQLite JSON is valid.
+                        # track_query = track_query.where(func.json_extract(Track.metadata_content, f'$.{item.source}_id') == track_data['id'])
+                        source_id_key = f"{item.source}_id"
+                        # Fallback: We might not be able to easily query JSON in generic way without native JSON type support details in Alembic/SQLAlchemy for this project.
+                        # Safest approach: Don't check global DB for valid deduplication on new services? 
+                        # OR: Retrieve duplicates by title/artist?
+                        # Let's try basic title/artist match to minimize duplicates?
+                        # No, that's risky.
+                        # Let's skip global DB check for new services for now OR fetch potential candidates.
+                        # Actually, if we just create a new track, it's fine. 
+                        # But we duplicate tracks.
+                        # Let's try to match by exact title + artist.
+                        track_query = track_query.where(
+                            Track.title == track_data['title'], 
+                            Track.artist == track_data['artist']
+                        )
                         
                     track_result = await db.execute(track_query)
                     existing_track = track_result.scalar_one_or_none()
                     
                     track_uuid = None
                     if existing_track:
+                        # If found by title/artist, update the ID in metadata if missing
+                        if not is_legacy_source:
+                            source_id_key = f"{item.source}_id"
+                            meta = dict(existing_track.metadata_content or {})
+                            if source_id_key not in meta:
+                                meta[source_id_key] = track_data['id']
+                                existing_track.metadata_content = meta
+                                db.add(existing_track) # Update
                         track_uuid = existing_track.id
                     else:
                         # Create track
+                        # Prepare metadata
+                        meta = {"image_url": track_data.get('image_url')}
+                        # Add source ID to metadata for new serivces
+                        if not is_legacy_source:
+                             meta[f"{item.source}_id"] = track_data['id']
+                             # Store direct source_url if available (SoundCloud)
+                             if track_data.get('source_url'):
+                                 meta['source_url'] = track_data['source_url']
+
                         track_kwargs = {
                             "title": track_data['title'],
                             "artist": track_data['artist'],
                             "album": track_data.get('album'),
                             "duration_ms": track_data.get('duration_ms'),
-                            "metadata_content": {"image_url": track_data.get('image_url')}
+                            "metadata_content": meta
                         }
                         
                         if item.source == 'spotify':

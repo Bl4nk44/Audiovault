@@ -1,0 +1,82 @@
+from typing import List, Optional
+from app.providers.base import MusicProvider
+from app.schemas.metadata import TrackMetadata, PlaylistMetadata
+from app.services.youtube_service import YouTubeService
+import re
+
+class YouTubeProvider(MusicProvider):
+    def __init__(self):
+        self.service = YouTubeService()
+
+    @property
+    def name(self) -> str:
+        return "youtube"
+
+    @property
+    def domains(self) -> List[str]:
+        return ["youtube.com", "youtu.be", "music.youtube.com"]
+
+    def can_handle(self, url: str) -> bool:
+        return any(domain in url for domain in self.domains)
+
+    async def extract_playlist(self, url: str) -> Optional[PlaylistMetadata]:
+        # Handle ID or URL
+        playlist_id = url
+        match = re.search(r'[?&]list=([a-zA-Z0-9_-]+)', url)
+        if match:
+            playlist_id = match.group(1)
+        
+        # Get tracks
+        tracks_data = self.service.get_playlist_tracks(playlist_id)
+        if not tracks_data:
+            return None
+            
+        tracks = []
+        for t in tracks_data:
+            tracks.append(TrackMetadata(
+                title=t['title'],
+                artist=t['artist'],
+                album=t['album'],
+                duration_ms=t['duration_ms'],
+                image_url=t['image_url'],
+                source='youtube',
+                source_id=t['id'],
+                source_url=f"https://www.youtube.com/watch?v={t['id']}"
+            ))
+            
+        # Get basic playlist info - YouTubeService methods allow searching by ID for playlist
+        # but get_playlist_tracks uses yt-dlp which has info?
+        # Actually existing get_playlist_tracks in YouTubeService uses yt-dlp flat extraction 
+        # but doesn't return playlist title easily unless we modify it.
+        # But wait, looking at YouTubeService.get_playlist_tracks, it gets info = ydl.extract_info
+        # and info.get('title') IS the playlist title. 
+        # But it returns list of dicts...
+        
+        # We might need to fetch playlist info separately using ytmusicapi or standard search
+        # Or instantiate proper metadata.
+        
+        # For Watchlist overhaul, we just need tracks usually.
+        # But extract_playlist expects PlaylistMetadata.
+        
+        title = "Unknown Playlist"
+        # Try fetching playlist title via YTMusic if possible
+        try:
+             pl_info = self.service.yt.get_playlist(playlist_id, limit=1)
+             title = pl_info.get('title', "YouTube Playlist")
+        except:
+             pass
+
+        return PlaylistMetadata(
+            title=title,
+            description=None,
+            author=None,
+            image_url=None, 
+            tracks=tracks,
+            source='youtube',
+            source_id=playlist_id
+        )
+
+    async def get_track(self, url: str) -> Optional[TrackMetadata]:
+        # Not implemented for generic YT link yet, usually used for search
+        # But if needed:
+        return None

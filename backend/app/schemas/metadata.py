@@ -21,6 +21,7 @@ class TrackMetadata(BaseModel):
     source_url: Optional[str] = None
     image_url: Optional[str] = None
     isrc: Optional[str] = None
+    source: Optional[str] = None
     
 class PlaylistMetadata(BaseModel):
     title: str

@@ -95,6 +95,18 @@ export default function SearchBar({ onSearch, isLoading }: SearchBarProps) {
               <option value="deezer" className="bg-gray-900">
                 Deezer
               </option>
+              <option value="apple_music" className="bg-gray-900">
+                Apple Music
+              </option>
+              <option value="tidal" className="bg-gray-900">
+                Tidal
+              </option>
+              <option value="amazon_music" className="bg-gray-900">
+                Amazon Music
+              </option>
+              <option value="soundcloud" className="bg-gray-900">
+                SoundCloud
+              </option>
             </select>
             <Filter
               className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none"

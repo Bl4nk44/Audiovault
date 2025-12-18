@@ -26,11 +26,39 @@ class SpotifyService:
         
         logger.info(f"Spotify search query: {query}, type: {type}")
         
-        from urllib.parse import unquote
-        decoded_query = unquote(query)
+        # Handle short links / redirects first
+        if "spotify.link" in query or "spoti.fi" in query:
+             from app.utils.url_helper import resolve_redirects
+             import asyncio
+             # We need to run async function in sync method (search is sync here? No, let's check)
+             # Wait, SpotifyService.search is standard sync? Fastapi runs it in threadpool usually if not async def.
+             # But let's check if we can make search async or use run_until_complete.
+             # Usually standard def in FastAPI is run in threadpool.
+             # We can use a loop runner. 
+             # Actually, it's better to just resolve it using requests or httpx sync if this is a sync method.
+             # Checking file... it is `def search`.
+             # Let's import requests for sync resolution for now to avoid async loop issues in threadpool, 
+             # or better yet, verify if we can make it async.
+             # Most other services are async (DeezerService async def search). SpotifyService from legacy code is sync using spotipy.
+             # Let's stick to sync resolution for SpotifyService for consistency.
+             try:
+                 import requests
+                 resp = requests.head(query, allow_redirects=True, timeout=5)
+                 decoded_query = resp.url
+                 logger.info(f"Resolved Spotify short link to: {decoded_query}")
+             except Exception as e:
+                 logger.warning(f"Failed to resolve spotify link {query}: {e}")
+                 decoded_query = query
+        else:
+             from urllib.parse import unquote
+             decoded_query = unquote(query)
+        
         logger.info(f"Decoded query: {decoded_query}")
         
-        url_match = re.search(r'(?:https?://)?(?:www\.)?(?:open\.spotify\.com/|spotify:)(track|artist|playlist|album)[:/]([a-zA-Z0-9_-]+)', decoded_query)
+        # Updated Regex to handle intl-xx and other variants
+        # e.g. open.spotify.com/intl-pl/track/...
+        # e.g. open.spotify.com/track/...
+        url_match = re.search(r'(?:https?://)?(?:www\.)?(?:open\.spotify\.com/(?:intl-\w+/)?|spotify:)(track|artist|playlist|album)[:/]([a-zA-Z0-9_-]+)', decoded_query)
         if url_match:
             resource_type, resource_id = url_match.groups()
             logger.info(f"Detected Spotify URL: type={resource_type}, id={resource_id}")
@@ -55,7 +83,6 @@ class SpotifyService:
             elif resource_type == 'album':
                  try:
                     album = self.client.album(resource_id)
-                    # Treat album as playlist for consistency in frontend if needed, or add _format_album
                     return [self._format_playlist(album, is_album=True)]
                  except Exception:
                     return []

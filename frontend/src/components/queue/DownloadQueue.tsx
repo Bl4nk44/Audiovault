@@ -14,7 +14,7 @@ export default function DownloadQueue() {
   const fetchQueue = async () => {
     try {
       const response = await api.get("/downloads/queue");
-      setQueue(response.data);
+      setQueue(response.data || []);
     } catch (error) {
       console.error("Failed to fetch queue", error);
       addNotification("error", "Failed to refresh download queue");
@@ -62,7 +62,7 @@ export default function DownloadQueue() {
     );
   }
 
-  if (queue.length === 0) {
+  if (!queue || queue.length === 0) {
     return (
       <motion.div
         initial={{ opacity: 0, scale: 0.95 }}

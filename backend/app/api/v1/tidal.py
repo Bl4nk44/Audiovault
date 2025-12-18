@@ -1,0 +1,24 @@
+from fastapi import APIRouter, Depends
+from typing import List
+from app.services.tidal_service import tidal_service
+from app.core.dependencies import get_current_active_user
+from app.models.user import User
+
+router = APIRouter()
+
+@router.get("/search")
+async def search_tidal(
+    q: str, 
+    limit: int = 20,
+    offset: int = 0,
+    current_user: User = Depends(get_current_active_user)
+):
+    # Tidal Service currently only supports URL extraction via yt-dlp
+    if "tidal.com" in q:
+        if "/playlist/" in q or "/album/" in q:
+            playlist_info = await tidal_service.get_playlist_info(q)
+            if playlist_info:
+                return [playlist_info]
+
+        return await tidal_service.get_tracks(q)
+    return []

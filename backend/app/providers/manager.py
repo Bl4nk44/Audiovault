@@ -17,6 +17,13 @@ class ProviderManager:
                 return provider
         return None
 
+    def get_provider_by_name(self, name: str) -> Optional[MusicProvider]:
+        """Find a provider by its name (e.g. 'spotify', 'tidal')"""
+        for provider in self.providers:
+            if provider.name == name:
+                return provider
+        return None
+
     async def extract_playlist(self, url: str) -> Optional[PlaylistMetadata]:
         provider = self.get_provider(url)
         if not provider:

@@ -354,37 +354,70 @@ class DownloadManager:
         return ydl_opts, output_template
 
     async def _resolve_url(self, db: AsyncSession, download: Download) -> str:
-        # Check retry count to determine strategy
+        # Check retry count to determine attempt number
         attempt = (download.retry_count or 0) + 1
         
-        if download.source == "youtube":
+        # Get Track info for metadata access
+        track_info = None
+        if download.track_id:
+             track_info = await self.get_track_info(db, str(download.track_id))
+        
+        # Get instruction from FallbackService
+        instruction = fallback_service.get_fallback_instruction(download.source, attempt, track_info)
+        logger.info(f"Fallback instruction for {download.source} (Attempt {attempt}): {instruction}")
+        
+        resp_type = instruction.get('type')
+        value = instruction.get('value')
+        
+        if resp_type == 'yt_search':
+            return f"ytsearch1:{value}"
+            
+        elif resp_type == 'sc_search':
+            return f"scsearch1:{value}"
+            
+        elif resp_type == 'direct_youtube':
+            # Original logic for direct YT
             url = f"https://www.youtube.com/watch?v={download.track_id}"
-            # If we had failures, maybe try Invidious? (Experimental)
-            if attempt > 2:
-                proxy_url = fallback_service.get_proxy_url(url)
-                if proxy_url:
-                    logger.info(f"Using fallback proxy URL: {proxy_url}")
-                    return proxy_url
             return url
             
-        elif download.source == "spotify":
-            track_info = await self.get_track_info(db, str(download.track_id))
+        elif resp_type == 'proxy':
+            url = f"https://www.youtube.com/watch?v={download.track_id}"
+            proxy_url = fallback_service.get_proxy_url(url)
+            if proxy_url:
+                logger.info(f"Using fallback proxy URL: {proxy_url}")
+                return proxy_url
+            else:
+                # If proxy fails, return original or maybe raise? 
+                # Behaving safe: return original
+                return url
+                
+        elif resp_type == 'direct_soundcloud':
+            if track_info and track_info.source_url:
+                 # Check if we have source_url in metadata
+                 # Actually track_info might handle metadata_content
+                 meta = track_info.metadata_content or {}
+                 url = meta.get('source_url') or track_info.source_url # track model has source_url column? No, generic
+                 # Track model usually has source_url if we look at updated models? 
+                 # Let's rely on stored metadata or re-reconstruction logic if ID is URL.
+                 
+                 # If download.track_id looks like URL, use it
+                 if "soundcloud.com" in str(download.track_id):
+                     return str(download.track_id)
+                 
+                 if url: 
+                     return url
+            
+            # Fallback to search if direct fails/missing
             if track_info:
-                # Use fallback service to generate query based on attempt
-                search_query = fallback_service.get_search_query(track_info, attempt)
-                logger.info(f"Resolving Spotify track using query: {search_query} (Attempt {attempt})")
-                search_query = fallback_service.get_search_query(track_info, attempt)
-                logger.info(f"Resolving Spotify track using query: {search_query} (Attempt {attempt})")
-                return f"ytsearch1:{search_query}"
+                return f"scsearch1:{track_info.artist} - {track_info.title}"
+            return None
+            
+        elif resp_type == 'none':
+            # Try default legacy logic if no instruction covers it (shouldn't happen with new logic covering all known sources)
+            # Default for imports etc.
+            if track_info:
+                 return f"ytsearch1:{track_info.artist} - {track_info.title}"
         
-        elif download.source == "imported":
-            # For imported tracks (from Generic provider), we just have metadata
-            # Use artist and title for search
-            search_query = f"{download.track.artist} - {download.track.title}"
-            logger.info(f"Resolving imported track using query: {search_query}")
-            return f"ytsearch1:{search_query}"
-        
-        # Default fallback
         return ""
 
     async def get_track_info(self, db: AsyncSession, track_id: str) -> Optional[Track]:

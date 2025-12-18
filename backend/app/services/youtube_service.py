@@ -13,10 +13,13 @@ class YouTubeService:
         logger.info(f"YouTube search query: {query}, type: {type}")
         
         # Check for YouTube URLs
-        video_match = re.search(r'(?:youtube\.com/watch\?v=|youtu\.be/)([a-zA-Z0-9_-]+)', query)
+        # Check for YouTube URLs (including music.youtube.com and shorts)
+        # Handle music.youtube.com same as youtube.com
+        # Handle shorts/ in URL
+        video_match = re.search(r'(?:youtube\.com/(?:watch\?v=|shorts/)|youtu\.be/|music\.youtube\.com/watch\?v=)([a-zA-Z0-9_-]+)', query)
         # Match list parameter in any YouTube URL (e.g. watch?v=...&list=... or playlist?list=...)
         playlist_match = re.search(r'[?&]list=([a-zA-Z0-9_-]+)', query)
-        channel_match = re.search(r'youtube\.com/(?:channel/|@)([a-zA-Z0-9_-]+)', query)
+        channel_match = re.search(r'(?:youtube\.com|music\.youtube\.com)/(?:channel/|@)([a-zA-Z0-9_-]+)', query)
 
         if video_match and (type == 'song' or type == 'track' or not playlist_match):
             # Only return video if type matches or is generic

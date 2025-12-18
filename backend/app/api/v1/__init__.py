@@ -15,3 +15,10 @@ api_router.include_router(metadata.router, prefix="/metadata", tags=["metadata"]
 api_router.include_router(users.router, prefix="/users", tags=["users"])
 api_router.include_router(deezer.router, prefix="/deezer", tags=["deezer"])
 api_router.include_router(artists.router, prefix="/artists", tags=["artists"])
+from app.api.v1 import apple_music, tidal
+api_router.include_router(apple_music.router, prefix="/apple_music", tags=["apple_music"])
+api_router.include_router(tidal.router, prefix="/tidal", tags=["tidal"])
+from app.api.v1 import amazon_music
+api_router.include_router(amazon_music.router, prefix="/amazon_music", tags=["amazon_music"])
+from app.api.v1 import soundcloud
+api_router.include_router(soundcloud.router, prefix="/soundcloud", tags=["soundcloud"])

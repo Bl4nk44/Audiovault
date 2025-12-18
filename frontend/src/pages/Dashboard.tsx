@@ -1,6 +1,15 @@
-import { Download, Music, Clock, HardDrive, Play } from "lucide-react";
+import {
+  Download,
+  Music,
+  Clock,
+  HardDrive,
+  Play,
+  Search,
+  ArrowRight,
+  Settings,
+  List,
+} from "lucide-react";
 import { motion } from "framer-motion";
-import Button from "../components/ui/Button";
 import { useEffect, useState } from "react";
 import api from "../services/api";
 import { useNavigate } from "react-router-dom";
@@ -56,6 +65,7 @@ export default function Dashboard() {
   const navigate = useNavigate();
   const { playTrack } = useStore();
   const { t } = useTranslation();
+  const [searchQuery, setSearchQuery] = useState("");
   const [dashboardStats, setDashboardStats] = useState<DashboardStats>({
     total_downloads: "-",
     tracks_in_library: "-",
@@ -187,17 +197,24 @@ export default function Dashboard() {
         variants={container}
         initial="hidden"
         animate="show"
-        className="relative z-10 space-y-8 p-6"
+        className="relative z-10 space-y-8 p-6 max-w-7xl mx-auto"
       >
-        <motion.div variants={item}>
-          <h2 className="text-4xl font-bold tracking-tight text-white drop-shadow-[0_0_10px_rgba(255,255,255,0.3)]">
-            {t("dashboard.title")}
-          </h2>
-          <p className="text-gray-400 mt-2 text-lg">
-            {t("dashboard.subtitle")}
-          </p>
+        {/* Header Section */}
+        <motion.div
+          variants={item}
+          className="flex flex-col md:flex-row justify-between items-end gap-4"
+        >
+          <div>
+            <h2 className="text-4xl font-bold tracking-tight text-white drop-shadow-[0_0_15px_rgba(255,255,255,0.4)]">
+              {t("dashboard.title")}
+            </h2>
+            <p className="text-gray-400 mt-2 text-lg">
+              {t("dashboard.subtitle")}
+            </p>
+          </div>
         </motion.div>
 
+        {/* Stats Grid */}
         <motion.div
           variants={container}
           className="grid gap-6 md:grid-cols-2 lg:grid-cols-4"
@@ -225,248 +242,275 @@ export default function Dashboard() {
           ))}
         </motion.div>
 
-        <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
-          <motion.div
-            variants={item}
-            className="col-span-2 rounded-3xl border border-white/10 bg-black/20 backdrop-blur-xl p-8 shadow-2xl space-y-8"
-          >
-            <div>
-              <h3 className="font-bold mb-8 text-2xl text-white flex items-center gap-3">
-                <span className="w-1.5 h-8 bg-primary rounded-full shadow-[0_0_10px_rgba(var(--primary-rgb),0.5)] shadow-primary/50"></span>
-                {t("dashboard.recentActivity")}
-              </h3>
-              <div className="space-y-4">
-                {dashboardStats.recent_activity.length === 0 ? (
-                  <p className="text-gray-400 text-center py-8">
-                    {t("dashboard.noActivity")}
-                  </p>
-                ) : (
-                  dashboardStats.recent_activity.map(
-                    (activity: RecentActivityItem) => (
-                      <motion.div
-                        key={activity.id}
-                        initial={{ opacity: 0, x: -20 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        onClick={() => {
-                          // Toggle Logic: Check if currently matching track is playing
-                          const currentTrack = useStore.getState().currentTrack;
-                          const isCurrent =
-                            (activity.track_id &&
-                              currentTrack?.id === activity.track_id) ||
-                            currentTrack?.id === activity.id;
+        {/* Hero Input Section */}
+        <motion.div variants={item} className="relative z-20">
+          <div className="relative group rounded-2xl">
+            <div className="absolute -inset-0.5 bg-gradient-to-r from-primary to-purple-600 rounded-2xl blur opacity-30 group-hover:opacity-60 transition duration-500"></div>
+            <form
+              onSubmit={(e) => {
+                e.preventDefault();
+                if (searchQuery.trim()) {
+                  navigate(`/search?q=${encodeURIComponent(searchQuery)}`);
+                }
+              }}
+              className="relative bg-black/40 rounded-2xl p-2 flex items-center border border-white/10 backdrop-blur-xl"
+            >
+              <Search className="ml-4 text-gray-400" size={24} />
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Paste URL (YouTube, Spotify...) or search for music..."
+                className="w-full bg-transparent border-none text-white text-lg placeholder:text-gray-500 px-4 py-4 focus:outline-none focus:ring-0"
+              />
+              <button
+                type="submit"
+                disabled={!searchQuery.trim()}
+                className="bg-primary hover:bg-primary/80 disabled:opacity-50 disabled:cursor-not-allowed text-black font-bold p-3 rounded-xl transition-all"
+              >
+                <ArrowRight size={24} />
+              </button>
+            </form>
+          </div>
+        </motion.div>
 
-                          if (isCurrent && useStore.getState().isPlaying) {
-                            useStore.getState().togglePlay();
-                          } else {
-                            playTrack(
-                              {
-                                id: activity.track_id || activity.id,
-                                title: activity.title,
-                                artist: activity.artist,
-                                cover: activity.image_url,
-                                source: "local",
-                                filename: activity.filename,
-                                album: "Recent Activity",
-                              },
-                              dashboardStats.recent_activity.map((a) => ({
-                                id: a.track_id || a.id,
-                                title: a.title,
-                                artist: a.artist,
-                                cover: a.image_url,
-                                source: "local",
-                                filename: a.filename,
-                                album: "Recent Activity",
-                              }))
-                            );
-                          }
-                        }}
-                        className="flex items-center gap-5 p-4 rounded-2xl bg-white/5 hover:bg-white/10 transition-all group cursor-pointer border border-white/5 hover:border-white/10 hover:scale-[1.01]"
-                      >
-                        <div className="w-12 h-12 rounded-xl bg-linear-to-br from-primary to-primary/60 flex items-center justify-center shadow-lg shadow-primary/20 group-hover:scale-110 transition-transform duration-300 relative overflow-hidden shrink-0">
-                          {activity.image_url ? (
-                            <img
-                              src={activity.image_url}
-                              alt={activity.title}
-                              className="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity"
-                            />
-                          ) : (
-                            <>
-                              <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity backdrop-blur-[1px] z-10">
-                                <Play
-                                  size={28}
-                                  className="text-white fill-white drop-shadow-md"
-                                />
-                              </div>
-                              <Music
-                                size={28}
-                                className="text-gray-500 group-hover:opacity-0 transition-opacity"
+        {/* Main Content Grid */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-stretch">
+          {/* Recent Activity (Left Column, 2 spans) */}
+          <motion.div variants={item} className="lg:col-span-2 flex flex-col">
+            <div className="rounded-3xl border border-white/10 bg-black/20 backdrop-blur-xl p-8 shadow-2xl flex-1 flex flex-col justify-between min-h-[420px]">
+              <div>
+                <h3 className="font-bold mb-6 text-2xl text-white flex items-center gap-3">
+                  <span className="w-1.5 h-8 bg-primary rounded-full shadow-[0_0_10px_rgba(var(--primary-rgb),0.5)] shadow-primary/50"></span>
+                  {t("dashboard.recentActivity")}
+                </h3>
+                <div className="space-y-3">
+                  {dashboardStats.recent_activity.length === 0 ? (
+                    <div className="flex flex-col items-center justify-center p-12 text-gray-400">
+                      <Music size={48} className="mb-4 opacity-20" />
+                      <p className="text-lg">{t("dashboard.noActivity")}</p>
+                    </div>
+                  ) : (
+                    dashboardStats.recent_activity
+                      .slice(0, 3)
+                      .map((activity: RecentActivityItem) => (
+                        <motion.div
+                          key={activity.id}
+                          whileHover={{
+                            scale: 1.01,
+                            backgroundColor: "rgba(255,255,255,0.08)",
+                          }}
+                          onClick={() => {
+                            const currentTrack =
+                              useStore.getState().currentTrack;
+                            const isCurrent =
+                              (activity.track_id &&
+                                currentTrack?.id === activity.track_id) ||
+                              currentTrack?.id === activity.id;
+
+                            if (isCurrent && useStore.getState().isPlaying) {
+                              useStore.getState().togglePlay();
+                            } else {
+                              playTrack(
+                                {
+                                  id: activity.track_id || activity.id,
+                                  title: activity.title,
+                                  artist: activity.artist,
+                                  cover: activity.image_url,
+                                  source: "local",
+                                  filename: activity.filename,
+                                  album: "Recent Activity",
+                                },
+                                dashboardStats.recent_activity.map((a) => ({
+                                  id: a.track_id || a.id,
+                                  title: a.title,
+                                  artist: a.artist,
+                                  cover: a.image_url,
+                                  source: "local",
+                                  filename: a.filename,
+                                  album: "Recent Activity",
+                                }))
+                              );
+                            }
+                          }}
+                          className="flex items-center gap-4 p-3 rounded-2xl bg-white/5 transition-all group cursor-pointer border border-white/5 hover:border-white/10"
+                        >
+                          <div className="w-12 h-12 rounded-xl bg-linear-to-br from-primary to-primary/60 flex items-center justify-center shadow-lg shadow-primary/20 group-hover:scale-110 transition-transform duration-300 relative overflow-hidden shrink-0">
+                            {activity.image_url ? (
+                              <img
+                                src={activity.image_url}
+                                alt={activity.title}
+                                className="w-full h-full object-cover opacity-90 group-hover:opacity-100 transition-opacity"
                               />
-                            </>
-                          )}
-                          {activity.image_url && (
-                            <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity backdrop-blur-[1px] z-10">
+                            ) : (
+                              <Music size={24} className="text-black/50" />
+                            )}
+                            <div className="absolute inset-0 bg-black/30 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity backdrop-blur-[1px] z-10">
                               <Play
-                                size={28}
+                                size={20}
                                 className="text-white fill-white drop-shadow-md"
                               />
                             </div>
-                          )}
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <div className="flex justify-between items-start">
-                            <div>
-                              <p className="font-bold text-lg text-white group-hover:text-primary transition-colors truncate">
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <div className="flex justify-between items-center mb-0.5">
+                              <p className="font-bold text-base text-white group-hover:text-primary transition-colors truncate pr-2">
                                 {activity.title}
                               </p>
-                              <p className="text-sm text-gray-400 truncate font-medium">
-                                {activity.artist}
-                              </p>
+                              <span className="text-[10px] text-gray-500 bg-black/40 px-1.5 py-0.5 rounded-md border border-white/5 whitespace-nowrap">
+                                {activity.time_ago}
+                              </span>
                             </div>
-                            <span className="text-xs text-gray-500 bg-white/5 px-2 py-1 rounded-full border border-white/5 whitespace-nowrap ml-2">
-                              {activity.time_ago}
-                            </span>
+                            <p className="text-xs text-gray-400 truncate font-medium">
+                              {activity.artist}
+                            </p>
                           </div>
-                          <div className="mt-2 flex items-center gap-2">
-                            <div className="h-1 flex-1 bg-white/10 rounded-full overflow-hidden">
-                              <div className="h-full bg-primary/50 w-full rounded-full" />
-                            </div>
-                            <span className="text-xs text-primary font-medium">
-                              {t("dashboard.activeDownload.completed")}
-                            </span>
-                          </div>
-                        </div>
-                      </motion.div>
-                    )
-                  )
-                )}
+                        </motion.div>
+                      ))
+                  )}
+                </div>
               </div>
             </div>
           </motion.div>
 
-          <motion.div variants={item} className="col-span-1 space-y-6">
-            <div className="rounded-3xl border border-white/10 bg-black/20 backdrop-blur-xl p-8 shadow-2xl">
-              <h3 className="font-bold mb-6 text-2xl text-white flex items-center gap-3">
-                <span className="w-1.5 h-8 bg-purple-500 rounded-full shadow-[0_0_10px_rgba(168,85,247,0.5)]"></span>
-                {t("dashboard.quickActions")}
-              </h3>
-              <div className="space-y-4">
-                <Button
-                  variant="primary"
-                  className="w-full justify-start h-14 text-lg font-bold shadow-lg shadow-primary/20"
-                  size="lg"
-                  onClick={() => navigate("/search")}
+          {/* Quick Links Grid (Right Column, 1 span) */}
+          <motion.div variants={item} className="flex flex-col">
+            <div className="grid grid-cols-2 gap-4 h-full">
+              {[
+                {
+                  label: "Library",
+                  icon: Music,
+                  color: "text-green-400",
+                  bg: "bg-green-500/10",
+                  border: "border-green-500/20",
+                  path: "/library",
+                },
+                {
+                  label: "Watchlist",
+                  icon: Clock,
+                  color: "text-orange-400",
+                  bg: "bg-orange-500/10",
+                  border: "border-orange-500/20",
+                  path: "/watchlist",
+                },
+                {
+                  label: "Queue",
+                  icon: List,
+                  color: "text-blue-400",
+                  bg: "bg-blue-500/10",
+                  border: "border-blue-500/20",
+                  path: "/queue",
+                },
+                {
+                  label: "Settings",
+                  icon: Settings,
+                  color: "text-gray-400",
+                  bg: "bg-white/5",
+                  border: "border-white/10",
+                  path: "/settings",
+                },
+              ].map((link) => (
+                <motion.button
+                  key={link.label}
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  onClick={() => navigate(link.path)}
+                  className={`flex flex-col items-center justify-center p-4 rounded-3xl border ${link.border} ${link.bg} hover:bg-opacity-20 transition-all gap-3 w-full h-full min-h-[190px]`}
                 >
-                  <Download className="mr-3 h-6 w-6" />{" "}
-                  {t("dashboard.actions.addDownload")}
-                </Button>
-                <Button
-                  variant="secondary"
-                  className="w-full justify-start h-14 text-lg bg-purple-500/20 hover:bg-purple-500/30 text-purple-100 border border-purple-500/20 shadow-[0_0_15px_rgba(168,85,247,0.1)] transition-all"
-                  size="lg"
-                  onClick={() => navigate("/search")}
-                >
-                  <Music className="mr-3 h-6 w-6" />{" "}
-                  {t("dashboard.actions.importPlaylist")}
-                </Button>
-                <Button
-                  variant="outline"
-                  className="w-full justify-start h-14 text-lg border-white/10 hover:bg-white/5 text-gray-300 hover:text-white"
-                  size="lg"
-                  onClick={() => navigate("/watchlist")}
-                >
-                  <Clock className="mr-3 h-6 w-6" />{" "}
-                  {t("dashboard.actions.viewWatchlist")}
-                </Button>
-              </div>
-            </div>
-
-            {/* Active Download Widget */}
-            {dashboardStats.active_download ? (
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="rounded-3xl border border-primary/30 bg-linear-to-b from-black/80 to-black/60 backdrop-blur-xl p-6 shadow-[0_0_30px_rgba(var(--primary-rgb),0.1)] shadow-primary/10 relative overflow-hidden group"
-              >
-                {/* Background Image Blur Effect */}
-                {dashboardStats.active_download.image_url && (
                   <div
-                    className="absolute inset-0 opacity-20 bg-cover bg-center blur-xl pointer-events-none"
-                    style={{
-                      backgroundImage: `url(${dashboardStats.active_download.image_url})`,
-                    }}
-                  />
-                )}
-                <div className="w-24 h-1 bg-linear-to-r from-transparent via-primary/50 to-transparent mx-auto mt-8 rounded-full opacity-50 absolute bottom-0 left-1/2 -translate-x-1/2 blur-sm" />
-
-                <div className="flex items-center gap-4 mb-4 relative z-10">
-                  <div className="relative">
-                    {dashboardStats.active_download.image_url ? (
-                      <img
-                        src={dashboardStats.active_download.image_url}
-                        alt="Cover"
-                        className="w-12 h-12 rounded-xl object-cover border border-white/10 shadow-lg"
-                      />
-                    ) : (
-                      <div className="p-3 rounded-xl bg-primary/20 text-primary border border-primary/20 shadow-[0_0_15px_rgba(var(--primary-rgb),0.3)] shadow-primary/30 animate-pulse">
-                        <Download size={24} />
-                      </div>
-                    )}
-                    {dashboardStats.active_download.status ===
-                      "downloading" && (
-                      <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-primary rounded-full border-2 border-black animate-pulse" />
-                    )}
+                    className={`p-4 rounded-full bg-black/20 ${link.color} shadow-lg`}
+                  >
+                    <link.icon size={32} />
                   </div>
+                  <span className="text-white font-bold text-lg">
+                    {link.label}
+                  </span>
+                </motion.button>
+              ))}
+            </div>
+          </motion.div>
+        </div>
 
-                  <div>
-                    <span className="font-bold text-white text-lg block">
-                      {dashboardStats.active_download.status === "downloading"
-                        ? t("dashboard.activeDownload.downloading")
-                        : t("dashboard.activeDownload.pending")}
-                    </span>
-                    <span className="text-xs text-primary/80 font-medium tracking-wide uppercase">
-                      {Math.round(dashboardStats.active_download.progress)}%{" "}
-                      {t("dashboard.activeDownload.completed")}
-                    </span>
-                  </div>
+        {/* Active Download - Full Width Bottom Section */}
+        {dashboardStats.active_download && (
+          <motion.div variants={item} className="mt-6">
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="rounded-3xl border border-primary/30 bg-linear-to-b from-black/80 to-black/60 backdrop-blur-xl p-8 shadow-[0_0_30px_rgba(var(--primary-rgb),0.15)] shadow-primary/20 relative overflow-hidden group flex flex-col justify-center"
+            >
+              {/* Background Image Blur Effect */}
+              {dashboardStats.active_download.image_url && (
+                <div
+                  className="absolute inset-0 opacity-20 bg-cover bg-center blur-2xl pointer-events-none"
+                  style={{
+                    backgroundImage: `url(${dashboardStats.active_download.image_url})`,
+                  }}
+                />
+              )}
+
+              <div className="flex flex-col md:flex-row items-center gap-8 relative z-10">
+                {/* Album Art */}
+                <div className="relative shrink-0">
+                  {dashboardStats.active_download.image_url ? (
+                    <img
+                      src={dashboardStats.active_download.image_url}
+                      alt="Cover"
+                      className="w-24 h-24 rounded-2xl object-cover border border-white/10 shadow-2xl animate-[spin_8s_linear_infinite]"
+                    />
+                  ) : (
+                    <div className="w-24 h-24 rounded-2xl bg-primary/20 text-primary flex items-center justify-center border border-primary/20 animate-pulse shadow-2xl">
+                      <Download size={40} />
+                    </div>
+                  )}
+                  {dashboardStats.active_download.status === "downloading" && (
+                    <div className="absolute -bottom-2 -right-2 bg-black/60 backdrop-blur-md border border-white/10 rounded-full p-2">
+                      <div className="w-3 h-3 bg-primary rounded-full animate-pulse shadow-[0_0_10px_rgba(var(--primary-rgb),1)]"></div>
+                    </div>
+                  )}
                 </div>
 
-                <div className="relative z-10 space-y-3">
-                  <div>
-                    <p className="text-white font-bold text-lg truncate leading-tight">
-                      {dashboardStats.active_download.title}
-                    </p>
-                    <p className="text-gray-400 text-sm truncate">
-                      {dashboardStats.active_download.artist}
-                    </p>
+                {/* Info & Progress */}
+                <div className="flex-1 w-full min-w-0 space-y-5">
+                  <div className="flex justify-between items-end">
+                    <div>
+                      <span className="text-sm text-primary font-bold uppercase tracking-widest mb-1 block">
+                        {dashboardStats.active_download.status === "downloading"
+                          ? t("dashboard.activeDownload.downloading")
+                          : t("dashboard.activeDownload.pending")}
+                      </span>
+                      <h4 className="text-3xl font-bold text-white truncate leading-tight mb-1">
+                        {dashboardStats.active_download.title}
+                      </h4>
+                      <p className="text-gray-400 text-xl truncate">
+                        {dashboardStats.active_download.artist}
+                      </p>
+                    </div>
+                    <div className="text-right hidden md:block">
+                      <span className="text-4xl font-bold text-white tabular-nums">
+                        {Math.round(dashboardStats.active_download.progress)}%
+                      </span>
+                    </div>
                   </div>
 
-                  <div className="h-2 bg-white/10 rounded-full overflow-hidden border border-white/5">
+                  {/* Large Nice Progress Bar */}
+                  <div className="h-5 bg-white/10 rounded-full overflow-hidden border border-white/5 relative shadow-inner">
                     <motion.div
                       initial={{ width: 0 }}
                       animate={{
                         width: `${dashboardStats.active_download.progress}%`,
                       }}
                       transition={{ ease: "linear" }}
-                      className="h-full bg-linear-to-r from-primary to-primary/80 shadow-[0_0_10px_rgba(var(--primary-rgb),0.5)] shadow-primary/50"
-                    />
+                      className="h-full bg-gradient-to-r from-primary via-purple-500 to-primary background-animate bg-[length:200%_auto] shadow-[0_0_20px_rgba(var(--primary-rgb),0.6)] relative"
+                    >
+                      <div className="absolute inset-0 bg-white/20 animate-[shimmer_2s_infinite] transform -skew-x-12"></div>
+                    </motion.div>
                   </div>
                 </div>
-              </motion.div>
-            ) : (
-              <div className="rounded-3xl border border-white/5 bg-white/5 p-6 flex flex-col items-center justify-center text-center space-y-3 min-h-[180px]">
-                <div className="w-12 h-12 rounded-full bg-white/5 flex items-center justify-center text-gray-600">
-                  <Download size={24} />
-                </div>
-                <p className="text-gray-500 font-medium">
-                  {t("dashboard.activeDownload.noActive")}
-                </p>
-                <p className="text-xs text-gray-600 max-w-[150px]">
-                  {t("dashboard.activeDownload.startDownloading")}
-                </p>
               </div>
-            )}
+            </motion.div>
           </motion.div>
-        </div>
+        )}
       </motion.div>
     </div>
   );
