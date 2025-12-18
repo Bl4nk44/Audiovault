@@ -30,7 +30,7 @@ export default function SearchBar({ onSearch, isLoading }: SearchBarProps) {
       >
         <div className="relative flex-1 w-full">
           <SearchIcon
-            className="absolute left-5 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none"
+            className="absolute left-5 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none"
             size={22}
           />
           <input
@@ -38,13 +38,13 @@ export default function SearchBar({ onSearch, isLoading }: SearchBarProps) {
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder="What do you want to listen to?"
-            className="w-full pl-14 pr-12 py-5 rounded-2xl bg-white/5 backdrop-blur-xl border border-white/10 text-white placeholder:text-gray-500 focus:outline-none focus:border-primary/50 focus:bg-white/10 transition-all shadow-lg focus:shadow-primary/20 focus:ring-1 focus:ring-primary/50 text-lg"
+            className="w-full pl-14 pr-12 py-5 rounded-2xl bg-card/60 backdrop-blur-xl border border-border text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/50 focus:bg-card/80 transition-all shadow-lg focus:shadow-primary/20 focus:ring-1 focus:ring-primary/50 text-lg"
           />
           {query && (
             <button
               type="button"
               onClick={() => setQuery("")}
-              className="absolute right-5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white transition-colors"
+              className="absolute right-5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
             >
               <X size={20} />
             </button>
@@ -56,23 +56,35 @@ export default function SearchBar({ onSearch, isLoading }: SearchBarProps) {
             <select
               value={type}
               onChange={(e) => setType(e.target.value)}
-              className="w-full appearance-none px-6 py-5 rounded-2xl bg-white/5 backdrop-blur-xl border border-white/10 text-white font-medium focus:outline-none focus:border-primary/50 cursor-pointer hover:bg-white/10 transition-all"
+              className="w-full appearance-none px-6 py-5 rounded-2xl bg-card/60 backdrop-blur-xl border border-border text-foreground font-medium focus:outline-none focus:border-primary/50 cursor-pointer hover:bg-card/80 transition-all"
             >
-              <option value="all" className="bg-gray-900">
+              <option
+                value="all"
+                className="bg-popover text-popover-foreground"
+              >
                 All Types
               </option>
-              <option value="artist" className="bg-gray-900">
+              <option
+                value="artist"
+                className="bg-popover text-popover-foreground"
+              >
                 Artists
               </option>
-              <option value="playlist" className="bg-gray-900">
+              <option
+                value="playlist"
+                className="bg-popover text-popover-foreground"
+              >
                 Playlists
               </option>
-              <option value="track" className="bg-gray-900">
+              <option
+                value="track"
+                className="bg-popover text-popover-foreground"
+              >
                 Tracks
               </option>
             </select>
             <Filter
-              className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none"
+              className="absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none"
               size={18}
             />
           </div>
@@ -81,35 +93,59 @@ export default function SearchBar({ onSearch, isLoading }: SearchBarProps) {
             <select
               value={source}
               onChange={(e) => setSource(e.target.value)}
-              className="w-full appearance-none px-6 py-5 rounded-2xl bg-white/5 backdrop-blur-xl border border-white/10 text-white font-medium focus:outline-none focus:border-primary/50 cursor-pointer hover:bg-white/10 transition-all"
+              className="w-full appearance-none px-6 py-5 rounded-2xl bg-card/60 backdrop-blur-xl border border-border text-foreground font-medium focus:outline-none focus:border-primary/50 cursor-pointer hover:bg-card/80 transition-all"
             >
-              <option value="all" className="bg-gray-900">
+              <option
+                value="all"
+                className="bg-popover text-popover-foreground"
+              >
                 All Sources
               </option>
-              <option value="spotify" className="bg-gray-900">
+              <option
+                value="spotify"
+                className="bg-popover text-popover-foreground"
+              >
                 Spotify
               </option>
-              <option value="youtube" className="bg-gray-900">
+              <option
+                value="youtube"
+                className="bg-popover text-popover-foreground"
+              >
                 YouTube
               </option>
-              <option value="deezer" className="bg-gray-900">
+              <option
+                value="deezer"
+                className="bg-popover text-popover-foreground"
+              >
                 Deezer
               </option>
-              <option value="apple_music" className="bg-gray-900">
+              <option
+                value="apple_music"
+                className="bg-popover text-popover-foreground"
+              >
                 Apple Music
               </option>
-              <option value="tidal" className="bg-gray-900">
+              <option
+                value="tidal"
+                className="bg-popover text-popover-foreground"
+              >
                 Tidal
               </option>
-              <option value="amazon_music" className="bg-gray-900">
+              <option
+                value="amazon_music"
+                className="bg-popover text-popover-foreground"
+              >
                 Amazon Music
               </option>
-              <option value="soundcloud" className="bg-gray-900">
+              <option
+                value="soundcloud"
+                className="bg-popover text-popover-foreground"
+              >
                 SoundCloud
               </option>
             </select>
             <Filter
-              className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none"
+              className="absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none"
               size={18}
             />
           </div>
@@ -119,7 +155,7 @@ export default function SearchBar({ onSearch, isLoading }: SearchBarProps) {
             whileTap={{ scale: 0.95 }}
             type="submit"
             disabled={isLoading}
-            className="px-10 py-5 rounded-2xl bg-primary text-black font-bold shadow-lg shadow-primary/30 hover:shadow-primary/50 transition-all disabled:opacity-50 disabled:pointer-events-none whitespace-nowrap"
+            className="px-10 py-5 rounded-2xl bg-primary text-primary-foreground font-bold shadow-lg shadow-primary/30 hover:shadow-primary/50 transition-all disabled:opacity-50 disabled:pointer-events-none whitespace-nowrap"
           >
             {isLoading ? "Searching..." : "Search"}
           </motion.button>

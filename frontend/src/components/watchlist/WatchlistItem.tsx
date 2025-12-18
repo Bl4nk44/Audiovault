@@ -59,8 +59,8 @@ export default function WatchlistItem({
               onClick={toggleAutoDownload}
               className={`p-3 rounded-full transition-colors ${
                 autoDownload
-                  ? "bg-primary text-black"
-                  : "bg-white/10 text-white hover:bg-white/20"
+                  ? "bg-primary text-primary-foreground"
+                  : "bg-secondary/80 text-foreground hover:bg-secondary"
               }`}
               title={
                 autoDownload ? "Auto-download enabled" : "Enable auto-download"
@@ -70,7 +70,7 @@ export default function WatchlistItem({
             </button>
             <button
               onClick={() => onRemove(item.id)}
-              className="p-3 rounded-full bg-white/10 text-white hover:bg-red-500/80 hover:text-white transition-colors"
+              className="p-3 rounded-full bg-secondary/80 text-foreground hover:bg-destructive/80 hover:text-white transition-colors"
               title="Remove from watchlist"
             >
               <Trash2 size={20} />
@@ -131,7 +131,7 @@ export default function WatchlistItem({
           className={`p-2 rounded-full transition-colors ${
             autoDownload
               ? "bg-primary/20 text-primary"
-              : "bg-secondary text-muted-foreground hover:text-white"
+              : "bg-secondary text-muted-foreground hover:text-foreground"
           }`}
           title={
             autoDownload ? "Auto-download enabled" : "Enable auto-download"

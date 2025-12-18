@@ -58,7 +58,7 @@ async def get_dashboard_stats(
     recent_query = select(Download).options(selectinload(Download.track)).where(
         Download.user_id == current_user.id,
         Download.status == 'completed'
-    ).order_by(Download.completed_at.desc()).limit(3)
+    ).order_by(Download.completed_at.desc()).limit(20)
     recent_result = await db.execute(recent_query)
     recent_downloads = recent_result.scalars().all()
     

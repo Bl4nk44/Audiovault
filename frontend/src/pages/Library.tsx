@@ -211,10 +211,10 @@ export default function Library() {
   // Breadcrumbs
   const renderBreadcrumbs = () => {
     return (
-      <div className="flex items-center gap-2 text-sm text-gray-400 mb-6">
+      <div className="flex items-center gap-2 text-sm text-muted-foreground mb-6">
         <span
-          className={`cursor-pointer hover:text-white ${
-            viewMode === "root" ? "text-white font-bold" : ""
+          className={`cursor-pointer hover:text-foreground ${
+            viewMode === "root" ? "text-foreground font-bold" : ""
           }`}
           onClick={() => {
             setViewMode("root");
@@ -228,8 +228,8 @@ export default function Library() {
           <>
             <span>/</span>
             <span
-              className={`cursor-pointer hover:text-white ${
-                viewMode === "service" ? "text-white font-bold" : ""
+              className={`cursor-pointer hover:text-foreground ${
+                viewMode === "service" ? "text-foreground font-bold" : ""
               }`}
               onClick={() => {
                 setViewMode("service");
@@ -244,7 +244,7 @@ export default function Library() {
         {selectedPlaylist && (
           <>
             <span>/</span>
-            <span className="text-white font-bold">
+            <span className="text-foreground font-bold">
               {selectedPlaylist === "__none__"
                 ? "Uncategorized"
                 : selectedPlaylist}
@@ -265,7 +265,7 @@ export default function Library() {
           whileHover="hover"
           whileTap="tap"
           onClick={() => handleServiceClick(source)}
-          className="bg-white/5 border border-white/10 rounded-2xl p-6 cursor-pointer hover:bg-white/10 transition-colors flex flex-col items-center justify-center gap-6 text-center aspect-square group"
+          className="bg-card/40 border border-border rounded-2xl p-6 cursor-pointer hover:bg-card/60 transition-colors flex flex-col items-center justify-center gap-6 text-center aspect-square group"
         >
           <motion.div
             variants={{
@@ -277,7 +277,7 @@ export default function Library() {
               },
               tap: { scale: 0.9 },
             }}
-            className="p-6 bg-black/20 rounded-full"
+            className="p-6 bg-secondary/50 rounded-full"
           >
             <SourceIcon source={source} size={72} />
           </motion.div>
@@ -287,11 +287,11 @@ export default function Library() {
                 rest: { y: 0 },
                 hover: { y: -2 },
               }}
-              className="text-2xl font-bold text-white capitalize mb-1"
+              className="text-2xl font-bold text-foreground capitalize mb-1"
             >
               {source}
             </motion.h3>
-            <p className="text-sm text-gray-400">
+            <p className="text-sm text-muted-foreground">
               {folders[source].length + (folders[source].includes("") ? 0 : 1)}{" "}
               playlists
             </p>
@@ -338,7 +338,7 @@ export default function Library() {
             whileHover="hover"
             whileTap="tap"
             onClick={() => handlePlaylistClick(playlist || "__none__")}
-            className="bg-white/5 border border-white/10 rounded-2xl p-6 cursor-pointer hover:bg-white/10 transition-colors flex flex-col items-center justify-center gap-6 text-center aspect-square"
+            className="bg-card/40 border border-border rounded-2xl p-6 cursor-pointer hover:bg-card/60 transition-colors flex flex-col items-center justify-center gap-6 text-center aspect-square"
           >
             <motion.div
               variants={{
@@ -346,12 +346,12 @@ export default function Library() {
                 hover: { scale: 1.1, rotate: -3 },
                 tap: { scale: 0.95 },
               }}
-              className="p-5 bg-black/20 rounded-full"
+              className="p-5 bg-secondary/50 rounded-full"
             >
               <Folder size={56} className="text-blue-400" />
             </motion.div>
             <div>
-              <h3 className="text-xl font-bold text-white line-clamp-2">
+              <h3 className="text-xl font-bold text-foreground line-clamp-2">
                 {playlist || "Uncategorized"}
               </h3>
             </div>
@@ -415,98 +415,150 @@ export default function Library() {
                 </thead>
                 <tbody className="divide-y divide-white/5">
                   <AnimatePresence>
-                    {filteredItems.map((item) => (
-                      <motion.tr
-                        key={item.id}
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        exit={{ opacity: 0 }}
-                        className="group hover:bg-white/5 transition-colors"
-                      >
-                        <td className="px-6 py-4">
-                          <div className="flex items-center gap-4">
-                            <div
-                              className="relative w-10 h-10 rounded overflow-hidden cursor-pointer group/img"
-                              onClick={() => {
-                                if (
-                                  currentTrack?.id === item.track_id &&
-                                  isPlaying
-                                ) {
-                                  togglePlay();
-                                } else {
-                                  const queue = filteredItems.map((i) => ({
-                                    id: i.track_id,
-                                    title: i.track.title,
-                                    artist: i.track.artist,
-                                    cover: i.track.image_url,
-                                    source: "local",
-                                    album: i.track.album,
-                                    filename: i.track.filename,
-                                  }));
-                                  playTrack(
-                                    {
-                                      id: item.track_id,
-                                      title: item.track.title,
-                                      artist: item.track.artist,
-                                      cover: item.track.image_url,
+                    {filteredItems.map((item) => {
+                      const isCurrent = currentTrack?.id === item.track_id;
+                      const isPlayingCurrent = isCurrent && isPlaying;
+
+                      return (
+                        <motion.tr
+                          key={item.id}
+                          layout
+                          initial={{ opacity: 0 }}
+                          animate={{ opacity: 1 }}
+                          exit={{ opacity: 0 }}
+                          className={`
+                            group transition-colors relative border-b border-white/5 cursor-pointer
+                            ${
+                              isPlayingCurrent
+                                ? "bg-primary/10 border-l-4 border-l-primary"
+                                : "hover:bg-white/5 border-l-4 border-l-transparent"
+                            }
+                          `}
+                        >
+                          <td className="px-6 py-4">
+                            <div className="flex items-center gap-4">
+                              <div
+                                className={`relative w-10 h-10 rounded overflow-hidden cursor-pointer group/img shrink-0 ${
+                                  isCurrent
+                                    ? "shadow-[0_0_10px_rgba(var(--primary-rgb),0.5)]"
+                                    : ""
+                                }`}
+                                onClick={() => {
+                                  if (
+                                    currentTrack?.id === item.track_id &&
+                                    isPlaying
+                                  ) {
+                                    togglePlay();
+                                  } else {
+                                    const queue = filteredItems.map((i) => ({
+                                      id: i.track_id,
+                                      title: i.track.title,
+                                      artist: i.track.artist,
+                                      cover: i.track.image_url,
                                       source: "local",
-                                      album: item.track.album,
-                                      filename: item.track.filename,
-                                    },
-                                    queue
-                                  );
-                                }
-                              }}
-                            >
-                              {item.track.image_url ? (
-                                <img
-                                  src={item.track.image_url}
-                                  alt={item.track.title}
-                                  className="w-full h-full object-cover"
-                                />
-                              ) : (
-                                <div className="w-full h-full bg-gray-800 flex items-center justify-center">
-                                  <Music size={16} />
-                                </div>
-                              )}
-                              <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover/img:opacity-100 transition-opacity">
-                                <Play
-                                  size={16}
-                                  className="text-white fill-white"
-                                />
+                                      album: i.track.album,
+                                      filename: i.track.filename,
+                                    }));
+                                    playTrack(
+                                      {
+                                        id: item.track_id,
+                                        title: item.track.title,
+                                        artist: item.track.artist,
+                                        cover: item.track.image_url,
+                                        source: "local",
+                                        album: item.track.album,
+                                        filename: item.track.filename,
+                                      },
+                                      queue
+                                    );
+                                  }
+                                }}
+                              >
+                                {item.track.image_url ? (
+                                  <img
+                                    src={item.track.image_url}
+                                    alt={item.track.title}
+                                    className="w-full h-full object-cover"
+                                  />
+                                ) : (
+                                  <div className="w-full h-full bg-gray-800 flex items-center justify-center">
+                                    <Music size={16} />
+                                  </div>
+                                )}
+                                {isPlayingCurrent ? (
+                                  <div className="absolute inset-0 bg-black/60 flex items-center justify-center gap-0.5">
+                                    {[1, 2, 3].map((i) => (
+                                      <motion.div
+                                        key={i}
+                                        animate={{ height: [3, 12, 3] }}
+                                        transition={{
+                                          duration: 0.5,
+                                          repeat: Infinity,
+                                          repeatType: "reverse",
+                                          delay: i * 0.1,
+                                          ease: "easeInOut",
+                                        }}
+                                        className="w-1 bg-primary rounded-full"
+                                      />
+                                    ))}
+                                  </div>
+                                ) : (
+                                  <div
+                                    className={`absolute inset-0 bg-black/40 flex items-center justify-center transition-opacity ${
+                                      isCurrent
+                                        ? "opacity-100"
+                                        : "opacity-0 group-hover/img:opacity-100"
+                                    }`}
+                                  >
+                                    <Play
+                                      size={16}
+                                      className={`fill-white ${
+                                        isCurrent
+                                          ? "text-primary"
+                                          : "text-white"
+                                      }`}
+                                    />
+                                  </div>
+                                )}
                               </div>
+                              <span
+                                className={`font-medium transition-colors ${
+                                  isCurrent
+                                    ? "text-primary font-bold"
+                                    : "text-white"
+                                }`}
+                              >
+                                {item.track.title}
+                              </span>
                             </div>
-                            <span className="font-medium text-white">
-                              {item.track.title}
-                            </span>
-                          </div>
-                        </td>
-                        <td className="px-6 py-4 text-gray-300">
-                          {item.track.artist}
-                        </td>
-                        <td className="px-6 py-4 text-gray-400">
-                          {item.track.album || "-"}
-                        </td>
-                        <td className="px-6 py-4 text-right">
-                          <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                            <button
-                              onClick={() => setEditingItem(item)}
-                              className="p-2 text-gray-400 hover:text-white hover:bg-white/10 rounded-full transition-colors"
-                              title="Edit Info"
-                            >
-                              <Edit2 size={16} />
-                            </button>
-                            <button
-                              onClick={() => handleDelete(item.id)}
-                              className="p-2 text-gray-400 hover:text-red-400 hover:bg-red-400/10 rounded-full transition-colors"
-                              title="Delete File"
-                            >
-                              <Trash2 size={16} />
-                            </button>
-                          </div>
-                        </td>
-                      </motion.tr>
-                    ))}
+                          </td>
+                          <td className="px-6 py-4 text-gray-300">
+                            {item.track.artist}
+                          </td>
+                          <td className="px-6 py-4 text-gray-400">
+                            {item.track.album || "-"}
+                          </td>
+                          <td className="px-6 py-4 text-right">
+                            <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                              <button
+                                onClick={() => setEditingItem(item)}
+                                className="p-2 text-gray-400 hover:text-white hover:bg-white/10 rounded-full transition-colors"
+                                title="Edit Info"
+                              >
+                                <Edit2 size={16} />
+                              </button>
+                              <button
+                                onClick={() => handleDelete(item.id)}
+                                className="p-2 text-gray-400 hover:text-red-400 hover:bg-red-400/10 rounded-full transition-colors"
+                                title="Delete File"
+                              >
+                                <Trash2 size={16} />
+                              </button>
+                            </div>
+                          </td>
+                        </motion.tr>
+                      );
+                    })}
                   </AnimatePresence>
                 </tbody>
               </table>
@@ -543,10 +595,10 @@ export default function Library() {
     <div className="space-y-6 pb-24">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight text-white">
+          <h1 className="text-3xl font-bold tracking-tight text-foreground">
             My Library
           </h1>
-          <p className="text-gray-400">Manage your downloaded music.</p>
+          <p className="text-muted-foreground">Manage your downloaded music.</p>
         </div>
       </div>
 

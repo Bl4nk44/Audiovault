@@ -6,7 +6,7 @@
 /* @tailwind utilities; - Removed for v4 */
 
 @layer base {
-    :root {
+  :root {
     /* Audiovault Default (Cyber Cyan/Black) */
     --glass-opacity: 0.6;
     --blur: 20px;
@@ -43,7 +43,7 @@
   }
 
   .dark {
-    --background: 240 10% 2%; 
+    --background: 240 10% 2%;
     --foreground: 0 0% 98%;
   }
 
@@ -84,7 +84,7 @@
     --foreground: 10 20% 98%;
     --card: 0 40% 3%;
     --popover: 0 40% 3%;
-    --primary: 15 90% 55%; 
+    --primary: 15 90% 55%;
     --primary-foreground: 0 0% 100%;
     --accent: 35 100% 50%;
     --radius: 1.25rem;
@@ -104,19 +104,30 @@
   }
 }
 
-
-
 @layer base {
   * {
     @apply border-border;
   }
 
   body {
-    @apply bg-background text-foreground antialiased selection:bg-primary/30 selection:text-primary-foreground;
+    @apply text-foreground antialiased selection:bg-primary/30 selection:text-primary-foreground;
+    
+    min-height: 100vh;
+    /* Ensure base color is set but allow transparency if needed */
+    background-color: hsl(var(--background));
+    
+    /* Dynamic layered background - VISIBLE */
     background-image: 
-        radial-gradient(circle at 15% 50%, rgba(76, 29, 149, 0.4), transparent 45%),
-        radial-gradient(circle at 85% 30%, rgba(22, 163, 74, 0.25), transparent 40%),
-        radial-gradient(circle at 50% 80%, rgba(6, 182, 212, 0.15), transparent 40%);
+        /* Grid Pattern - Top Layer */
+        linear-gradient(to right, hsl(var(--primary) / 0.08) 1px, transparent 1px),
+        linear-gradient(to bottom, hsl(var(--primary) / 0.08) 1px, transparent 1px),
+        
+        /* Vibrant Spotlights */
+        radial-gradient(circle at 0% 0%, hsl(var(--primary) / 0.3), transparent 60%),
+        radial-gradient(circle at 100% 0%, hsl(var(--accent) / 0.3), transparent 60%),
+        radial-gradient(circle at 50% 100%, hsl(var(--primary) / 0.2), transparent 60%);
+        
+    background-size: 60px 60px, 60px 60px, 100% 100%, 100% 100%, 100% 100%;
     background-attachment: fixed;
   }
 }
@@ -130,8 +141,6 @@
   .glass-hover {
     @apply hover:bg-white/5 transition-colors duration-200;
   }
-
-
 
   .text-glow {
     text-shadow: 0 0 10px rgba(255, 255, 255, 0.3);

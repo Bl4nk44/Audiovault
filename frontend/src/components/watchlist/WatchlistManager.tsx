@@ -21,7 +21,7 @@ export default function WatchlistManager() {
     try {
       await removeFromWatchlist(id);
       toast.success("Removed from watchlist");
-    } catch (error) {
+    } catch {
       toast.error("Failed to remove item");
     }
   };
@@ -34,7 +34,7 @@ export default function WatchlistManager() {
         `Check complete. ${res.data.new_downloads} new items found.`
       );
       syncWatchlist(); // Refresh list to update counts/dates
-    } catch (error) {
+    } catch {
       toast.error("Failed to check for updates");
     } finally {
       setIsChecking(false);
@@ -52,13 +52,13 @@ export default function WatchlistManager() {
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
-        <div className="flex bg-white/5 rounded-lg p-1 border border-white/10">
+        <div className="flex bg-card/40 rounded-lg p-1 border border-border">
           <button
             onClick={() => setViewMode("list")}
             className={`p-2 rounded-md transition-all ${
               viewMode === "list"
-                ? "bg-white/10 text-white shadow-sm"
-                : "text-gray-400 hover:text-white"
+                ? "bg-secondary text-foreground shadow-sm"
+                : "text-muted-foreground hover:text-foreground"
             }`}
             title="List View"
           >
@@ -68,8 +68,8 @@ export default function WatchlistManager() {
             onClick={() => setViewMode("grid")}
             className={`p-2 rounded-md transition-all ${
               viewMode === "grid"
-                ? "bg-white/10 text-white shadow-sm"
-                : "text-gray-400 hover:text-white"
+                ? "bg-secondary text-foreground shadow-sm"
+                : "text-muted-foreground hover:text-foreground"
             }`}
             title="Grid View"
           >

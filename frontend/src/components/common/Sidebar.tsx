@@ -5,6 +5,7 @@ import {
   Eye,
   Music,
   Download,
+  Github,
 } from "lucide-react";
 import { NavLink } from "react-router-dom";
 import { cn } from "../../lib/utils";
@@ -31,7 +32,7 @@ export default function Sidebar() {
       transition={{ duration: 0.5, ease: "easeOut" }}
       className="w-full h-full flex flex-col gap-4 z-30"
     >
-      <aside className="w-64 bg-black/40 backdrop-blur-xl h-screen border-r border-white/5 fixed left-0 top-0 z-50 rounded-(--radius) p-6 flex flex-col gap-6 shadow-2xl">
+      <aside className="w-full bg-black/40 backdrop-blur-xl h-full border border-white/5 rounded-xl p-6 flex flex-col gap-6 shadow-2xl">
         <motion.div
           whileHover={{ scale: 1.02 }}
           className="cursor-default px-2"
@@ -75,6 +76,25 @@ export default function Sidebar() {
             </NavLink>
           ))}
         </nav>
+
+        <div className="mt-auto pt-6 border-t border-white/5 text-center px-2">
+          <div className="flex items-center justify-center gap-3 mb-2 text-xs text-muted-foreground font-medium">
+            <span>v{__APP_VERSION__}</span>
+            <span className="text-white/10">|</span>
+            <a
+              href="https://github.com/Bl4nk44/Audiovault"
+              target="_blank"
+              rel="noreferrer"
+              className="flex items-center gap-1.5 hover:text-primary transition-colors"
+            >
+              <Github size={12} />
+              GitHub
+            </a>
+          </div>
+          <p className="text-[10px] text-muted-foreground/60">
+            © {new Date().getFullYear()} Audiovault. {t("footer.rights")}
+          </p>
+        </div>
       </aside>
     </motion.aside>
   );

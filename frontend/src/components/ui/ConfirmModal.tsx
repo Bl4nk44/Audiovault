@@ -47,7 +47,7 @@ export default function ConfirmModal({
               exit={{ opacity: 0, scale: 0.95, y: 20 }}
               className="w-full max-w-md mx-4 pointer-events-auto"
             >
-              <div className="bg-card border border-white/10 rounded-2xl shadow-2xl overflow-hidden relative">
+              <div className="bg-card border border-border rounded-2xl shadow-2xl overflow-hidden relative">
                 {/* Header Gradient Line */}
                 <div
                   className={cn(
@@ -72,7 +72,7 @@ export default function ConfirmModal({
                       {/* Changed size prop to className */}
                     </div>
                     <div className="flex-1">
-                      <h3 className="text-xl font-bold text-white mb-2">
+                      <h3 className="text-xl font-bold text-foreground mb-2">
                         {title}
                       </h3>
                       <p className="text-muted-foreground leading-relaxed">
@@ -81,7 +81,7 @@ export default function ConfirmModal({
                     </div>
                     <button
                       onClick={onClose}
-                      className="text-muted-foreground hover:text-white transition-colors"
+                      className="text-muted-foreground hover:text-foreground transition-colors"
                     >
                       <X size={20} />
                     </button>
@@ -102,8 +102,8 @@ export default function ConfirmModal({
                       className={cn(
                         "px-4 py-2 rounded-lg text-white transition-all shadow-lg font-medium text-sm flex items-center gap-2", // Updated classes
                         variant === "danger"
-                          ? "bg-destructive! hover:bg-destructive/80! shadow-destructive/20" // Fixed important modifier syntax
-                          : "bg-primary! hover:bg-primary/80! text-black shadow-primary/20" // Fixed important modifier syntax and text color
+                          ? "bg-destructive! hover:bg-destructive/80! shadow-destructive/20 text-destructive-foreground" // Fixed important modifier syntax
+                          : "bg-primary! hover:bg-primary/80! text-primary-foreground shadow-primary/20" // Fixed important modifier syntax and text color
                       )}
                     >
                       {variant === "danger" && <Trash2 size={16} />}{" "}

@@ -318,7 +318,7 @@ export default function Player() {
             <button
               onClick={togglePlay}
               className={cn(
-                "rounded-full bg-primary text-black flex items-center justify-center hover:scale-105 transition-all shadow-[0_0_15px_rgba(34,197,94,0.5)]",
+                "rounded-full bg-primary text-black flex items-center justify-center hover:scale-105 transition-all shadow-[0_0_15px_hsl(var(--primary)/0.5)]",
                 isExpanded ? "w-16 h-16" : "w-10 h-10"
               )}
             >
@@ -357,7 +357,7 @@ export default function Player() {
               }}
             >
               <div
-                className="absolute top-0 left-0 h-full bg-primary rounded-full group-hover:bg-green-400 transition-colors"
+                className="absolute top-0 left-0 h-full bg-primary rounded-full transition-colors"
                 style={{ width: `${(currentTime / duration) * 100}%` }}
               >
                 <div className="absolute right-0 top-1/2 -translate-y-1/2 w-3 h-3 bg-white rounded-full opacity-0 group-hover:opacity-100 shadow-lg transform scale-0 group-hover:scale-100 transition-all" />
@@ -401,7 +401,7 @@ export default function Player() {
             className={cn(
               "flex items-center gap-2 px-3 py-1.5 rounded-full transition-all text-sm font-medium",
               showVisualizer
-                ? "text-primary bg-primary/10 border border-primary/20 shadow-[0_0_10px_rgba(34,197,94,0.2)]"
+                ? "text-primary bg-primary/10 border border-primary/20 shadow-[0_0_10px_hsl(var(--primary)/0.2)]"
                 : "text-gray-400 bg-white/5 border border-white/5 hover:bg-white/10 hover:text-white"
             )}
             title="Toggle Visualizer"

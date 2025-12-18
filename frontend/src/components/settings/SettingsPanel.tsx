@@ -101,8 +101,8 @@ export default function SettingsPanel() {
             onClick={() => setActiveTab(tab.id)}
             className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${
               activeTab === tab.id
-                ? "bg-primary text-black font-bold shadow-[0_0_15px_rgba(34,197,94,0.4)]"
-                : "text-gray-400 hover:text-white hover:bg-white/5"
+                ? "bg-primary text-primary-foreground font-bold shadow-[0_0_15px_hsl(var(--primary)/0.4)]"
+                : "text-muted-foreground hover:text-foreground hover:bg-white/5"
             }`}
           >
             <tab.icon size={18} />
@@ -132,7 +132,7 @@ export default function SettingsPanel() {
 
             <div className="grid gap-6">
               <div className="space-y-2">
-                <label className="text-sm font-medium text-gray-300 ml-1">
+                <label className="text-sm font-medium text-muted-foreground ml-1">
                   {t("settings.language")}
                 </label>
                 <div className="relative">
@@ -141,21 +141,36 @@ export default function SettingsPanel() {
                     onChange={(e) =>
                       setSettings({ ...settings, language: e.target.value })
                     }
-                    className="w-full px-4 py-3 rounded-xl bg-secondary/50 border border-white/10 text-white focus:outline-none focus:border-primary/50 appearance-none cursor-pointer"
+                    className="w-full px-4 py-3 rounded-xl bg-secondary/50 border border-border text-foreground focus:outline-none focus:border-primary/50 appearance-none cursor-pointer"
                   >
-                    <option value="en" className="bg-zinc-900 text-white">
+                    <option
+                      value="en"
+                      className="bg-popover text-popover-foreground"
+                    >
                       English
                     </option>
-                    <option value="pl" className="bg-zinc-900 text-white">
+                    <option
+                      value="pl"
+                      className="bg-popover text-popover-foreground"
+                    >
                       Polski
                     </option>
-                    <option value="de" className="bg-zinc-900 text-white">
+                    <option
+                      value="de"
+                      className="bg-popover text-popover-foreground"
+                    >
                       Deutsch
                     </option>
-                    <option value="fr" className="bg-zinc-900 text-white">
+                    <option
+                      value="fr"
+                      className="bg-popover text-popover-foreground"
+                    >
                       Français
                     </option>
-                    <option value="es" className="bg-zinc-900 text-white">
+                    <option
+                      value="es"
+                      className="bg-popover text-popover-foreground"
+                    >
                       Español
                     </option>
                   </select>
@@ -190,13 +205,22 @@ export default function SettingsPanel() {
                     }
                     className="w-full px-4 py-3 rounded-xl bg-secondary/50 border border-white/10 text-white focus:outline-none focus:border-primary/50 appearance-none cursor-pointer"
                   >
-                    <option value="low" className="bg-zinc-900 text-white">
+                    <option
+                      value="low"
+                      className="bg-popover text-popover-foreground"
+                    >
                       {t("quality.low")}
                     </option>
-                    <option value="normal" className="bg-zinc-900 text-white">
+                    <option
+                      value="normal"
+                      className="bg-popover text-popover-foreground"
+                    >
                       {t("quality.normal")}
                     </option>
-                    <option value="high" className="bg-zinc-900 text-white">
+                    <option
+                      value="high"
+                      className="bg-popover text-popover-foreground"
+                    >
                       {t("quality.high")}
                     </option>
                   </select>
@@ -227,7 +251,7 @@ export default function SettingsPanel() {
             variants={item}
             className="space-y-6 p-8 rounded-(--radius) glass"
           >
-            <h3 className="text-xl font-bold text-white border-b border-white/10 pb-4">
+            <h3 className="text-xl font-bold text-foreground border-b border-border pb-4">
               {t("settings.appearance")}
             </h3>
 
@@ -269,16 +293,18 @@ export default function SettingsPanel() {
                   onClick={() => setSettings({ ...settings, theme: theme.id })}
                   className={`relative p-4 rounded-2xl border-2 transition-all overflow-hidden group ${
                     settings.theme === theme.id
-                      ? "border-primary shadow-[0_0_20px_rgba(34,197,94,0.2)]"
-                      : "border-white/5 hover:border-white/20"
+                      ? "border-primary shadow-[0_0_20px_hsl(var(--primary)/0.2)]"
+                      : "border-border hover:border-primary/50"
                   }`}
                 >
                   <div
                     className={`absolute inset-0 ${theme.color} opacity-80`}
                   />
                   <div className="relative z-10 flex flex-col items-center gap-2">
-                    <div className="w-full h-12 rounded-lg bg-white/10 backdrop-blur-sm border border-white/10" />
-                    <span className="font-medium text-white">{theme.name}</span>
+                    <div className="w-full h-12 rounded-lg bg-card/10 backdrop-blur-sm border border-white/10" />
+                    <span className="font-medium text-white shadow-black drop-shadow-md">
+                      {theme.name}
+                    </span>
                   </div>
                 </button>
               ))}

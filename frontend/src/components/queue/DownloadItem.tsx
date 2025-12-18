@@ -72,6 +72,7 @@ export default function DownloadItem({ item, queue }: DownloadItemProps) {
           </span>
         );
       case "failed":
+      case "error":
         return (
           <span className="px-2 py-1 rounded-full bg-destructive/20 text-destructive text-xs font-medium border border-destructive/20 flex items-center gap-1">
             <AlertCircle size={12} /> Failed
@@ -229,17 +230,18 @@ export default function DownloadItem({ item, queue }: DownloadItemProps) {
           </button>
         )}
 
-        {item.status === "failed" && (
+        {(item.status === "failed" || item.status === "error") && (
           <button
             onClick={(e) => {
               e.stopPropagation();
               e.nativeEvent.stopImmediatePropagation();
               retryDownload(item.id);
             }}
-            className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center hover:bg-primary/20 hover:text-primary text-gray-400 transition-all"
-            title="Retry"
+            className="px-4 py-2 rounded-full bg-primary/20 hover:bg-primary/30 text-primary flex items-center gap-2 transition-all font-bold border border-primary/20 shadow-[0_0_10px_rgba(var(--primary),0.2)]"
+            title="Retry Download"
           >
-            <RotateCcw size={20} />
+            <RotateCcw size={18} />
+            <span>Retry</span>
           </button>
         )}
 

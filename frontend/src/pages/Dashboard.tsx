@@ -167,6 +167,7 @@ export default function Dashboard() {
       icon: Download,
       color: "text-blue-400",
       gradient: "from-blue-500/20 to-blue-600/5",
+      depth: "border-b-blue-500/20",
     },
     {
       label: t("dashboard.stats.tracksLibrary"),
@@ -174,6 +175,7 @@ export default function Dashboard() {
       icon: Music,
       color: "text-green-400",
       gradient: "from-green-500/20 to-green-600/5",
+      depth: "border-b-green-500/20",
     },
     {
       label: t("dashboard.stats.pendingQueue"),
@@ -181,6 +183,7 @@ export default function Dashboard() {
       icon: Clock,
       color: "text-orange-400",
       gradient: "from-orange-500/20 to-orange-600/5",
+      depth: "border-b-orange-500/20",
     },
     {
       label: t("dashboard.stats.storageFree"),
@@ -188,6 +191,7 @@ export default function Dashboard() {
       icon: HardDrive,
       color: "text-purple-400",
       gradient: "from-purple-500/20 to-purple-600/5",
+      depth: "border-b-purple-500/20",
     },
   ];
 
@@ -223,8 +227,8 @@ export default function Dashboard() {
             <motion.div
               key={stat.label}
               variants={item}
-              whileHover={{ scale: 1.02, y: -5 }}
-              className={`p-6 rounded-3xl border border-white/10 bg-linear-to-br ${stat.gradient} backdrop-blur-xl shadow-xl relative overflow-hidden group`}
+              whileHover={{ y: -5 }}
+              className={`p-6 rounded-3xl border border-white/10 border-b-[6px] ${stat.depth} bg-linear-to-br ${stat.gradient} backdrop-blur-xl shadow-xl relative overflow-hidden group`}
             >
               <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity transform group-hover:scale-110 duration-500">
                 <stat.icon size={100} />
@@ -263,13 +267,19 @@ export default function Dashboard() {
                 placeholder="Paste URL (YouTube, Spotify...) or search for music..."
                 className="w-full bg-transparent border-none text-white text-lg placeholder:text-gray-500 px-4 py-4 focus:outline-none focus:ring-0"
               />
-              <button
+              <motion.button
                 type="submit"
                 disabled={!searchQuery.trim()}
-                className="bg-primary hover:bg-primary/80 disabled:opacity-50 disabled:cursor-not-allowed text-black font-bold p-3 rounded-xl transition-all"
+                whileHover={{ y: -1 }}
+                whileTap={{
+                  y: 2,
+                  borderBottomWidth: "0px",
+                  marginBottom: "2px",
+                }}
+                className="bg-primary hover:bg-primary/80 disabled:opacity-50 disabled:cursor-not-allowed text-black font-bold p-3 rounded-xl transition-all border-b-4 border-black/20"
               >
                 <ArrowRight size={24} />
-              </button>
+              </motion.button>
             </form>
           </div>
         </motion.div>
@@ -297,8 +307,12 @@ export default function Dashboard() {
                         <motion.div
                           key={activity.id}
                           whileHover={{
-                            scale: 1.01,
-                            backgroundColor: "rgba(255,255,255,0.08)",
+                            y: -2,
+                          }}
+                          whileTap={{
+                            y: 2,
+                            borderBottomWidth: "0px",
+                            marginBottom: "2px",
                           }}
                           onClick={() => {
                             const currentTrack =
@@ -333,7 +347,7 @@ export default function Dashboard() {
                               );
                             }
                           }}
-                          className="flex items-center gap-4 p-3 rounded-2xl bg-white/5 transition-all group cursor-pointer border border-white/5 hover:border-white/10"
+                          className="flex items-center gap-4 p-3 rounded-2xl bg-white/5 border-b-4 border-white/5 transition-all group cursor-pointer border-t border-r border-l hover:border-white/10 hover:bg-white/10"
                         >
                           <div className="w-12 h-12 rounded-xl bg-linear-to-br from-primary to-primary/60 flex items-center justify-center shadow-lg shadow-primary/20 group-hover:scale-110 transition-transform duration-300 relative overflow-hidden shrink-0">
                             {activity.image_url ? (
@@ -381,41 +395,50 @@ export default function Dashboard() {
                   label: "Library",
                   icon: Music,
                   color: "text-green-400",
-                  bg: "bg-green-500/10",
+                  bg: "bg-green-500/10 hover:bg-green-500/20",
                   border: "border-green-500/20",
+                  depth: "border-b-green-900/50",
                   path: "/library",
                 },
                 {
                   label: "Watchlist",
                   icon: Clock,
                   color: "text-orange-400",
-                  bg: "bg-orange-500/10",
+                  bg: "bg-orange-500/10 hover:bg-orange-500/20",
                   border: "border-orange-500/20",
+                  depth: "border-b-orange-900/50",
                   path: "/watchlist",
                 },
                 {
                   label: "Queue",
                   icon: List,
                   color: "text-blue-400",
-                  bg: "bg-blue-500/10",
+                  bg: "bg-blue-500/10 hover:bg-blue-500/20",
                   border: "border-blue-500/20",
+                  depth: "border-b-blue-900/50",
                   path: "/queue",
                 },
                 {
                   label: "Settings",
                   icon: Settings,
                   color: "text-gray-400",
-                  bg: "bg-white/5",
+                  bg: "bg-white/5 hover:bg-white/10",
                   border: "border-white/10",
+                  depth: "border-b-white/10",
                   path: "/settings",
                 },
               ].map((link) => (
                 <motion.button
                   key={link.label}
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
+                  whileHover={{ y: -2 }}
+                  whileTap={{
+                    y: 4,
+                    borderBottomWidth: "0px",
+                    marginBottom: "4px",
+                  }}
+                  transition={{ type: "spring", stiffness: 400, damping: 15 }}
                   onClick={() => navigate(link.path)}
-                  className={`flex flex-col items-center justify-center p-4 rounded-3xl border ${link.border} ${link.bg} hover:bg-opacity-20 transition-all gap-3 w-full h-full min-h-[190px]`}
+                  className={`flex flex-col items-center justify-center p-4 rounded-3xl border border-b-[6px] ${link.border} ${link.depth} ${link.bg} transition-colors gap-3 w-full h-full min-h-[190px] backdrop-blur-sm`}
                 >
                   <div
                     className={`p-4 rounded-full bg-black/20 ${link.color} shadow-lg`}
@@ -437,7 +460,7 @@ export default function Dashboard() {
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              className="rounded-3xl border border-primary/30 bg-linear-to-b from-black/80 to-black/60 backdrop-blur-xl p-8 shadow-[0_0_30px_rgba(var(--primary-rgb),0.15)] shadow-primary/20 relative overflow-hidden group flex flex-col justify-center"
+              className="rounded-3xl border border-primary/30 border-b-[6px] border-b-primary/30 bg-linear-to-b from-black/80 to-black/60 backdrop-blur-xl p-8 shadow-[0_0_30px_rgba(var(--primary-rgb),0.15)] shadow-primary/20 relative overflow-hidden group flex flex-col justify-center"
             >
               {/* Background Image Blur Effect */}
               {dashboardStats.active_download.image_url && (
