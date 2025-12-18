@@ -1,6 +1,7 @@
 import { Search as SearchIcon, X, Filter } from "lucide-react";
 import { useState } from "react";
 import { motion } from "framer-motion";
+import { useTranslation } from "../../hooks/useTranslation";
 
 interface SearchBarProps {
   onSearch: (query: string, source: string, type: string) => void;
@@ -8,6 +9,7 @@ interface SearchBarProps {
 }
 
 export default function SearchBar({ onSearch, isLoading }: SearchBarProps) {
+  const { t } = useTranslation();
   const [query, setQuery] = useState("");
   const [source, setSource] = useState("all");
   const [type, setType] = useState("all");
@@ -37,7 +39,7 @@ export default function SearchBar({ onSearch, isLoading }: SearchBarProps) {
             type="text"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder="What do you want to listen to?"
+            placeholder={t("search.placeholder")}
             className="w-full pl-14 pr-12 py-5 rounded-2xl bg-card/60 backdrop-blur-xl border border-border text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/50 focus:bg-card/80 transition-all shadow-lg focus:shadow-primary/20 focus:ring-1 focus:ring-primary/50 text-lg"
           />
           {query && (
@@ -62,25 +64,25 @@ export default function SearchBar({ onSearch, isLoading }: SearchBarProps) {
                 value="all"
                 className="bg-popover text-popover-foreground"
               >
-                All Types
+                {t("filters.allTypes")}
               </option>
               <option
                 value="artist"
                 className="bg-popover text-popover-foreground"
               >
-                Artists
+                {t("filters.artists")}
               </option>
               <option
                 value="playlist"
                 className="bg-popover text-popover-foreground"
               >
-                Playlists
+                {t("filters.playlists")}
               </option>
               <option
                 value="track"
                 className="bg-popover text-popover-foreground"
               >
-                Tracks
+                {t("filters.tracks")}
               </option>
             </select>
             <Filter
@@ -99,7 +101,7 @@ export default function SearchBar({ onSearch, isLoading }: SearchBarProps) {
                 value="all"
                 className="bg-popover text-popover-foreground"
               >
-                All Sources
+                {t("filters.allSources")}
               </option>
               <option
                 value="spotify"
@@ -157,7 +159,7 @@ export default function SearchBar({ onSearch, isLoading }: SearchBarProps) {
             disabled={isLoading}
             className="px-10 py-5 rounded-2xl bg-primary text-primary-foreground font-bold shadow-lg shadow-primary/30 hover:shadow-primary/50 transition-all disabled:opacity-50 disabled:pointer-events-none whitespace-nowrap"
           >
-            {isLoading ? "Searching..." : "Search"}
+            {isLoading ? t("search.searching") : t("filters.search")}
           </motion.button>
         </div>
       </motion.form>

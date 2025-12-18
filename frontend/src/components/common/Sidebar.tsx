@@ -23,8 +23,7 @@ export default function Sidebar() {
     { icon: Eye, label: t("sidebar.watchlist"), path: "/watchlist" },
     { icon: Music, label: t("sidebar.library"), path: "/library" },
     { icon: Download, label: t("sidebar.downloads"), path: "/queue" },
-    { icon: Download, label: t("sidebar.downloads"), path: "/queue" },
-    { icon: Shield, label: "Network", path: "/network" },
+    { icon: Shield, label: t("sidebar.network"), path: "/network" },
     { icon: SettingsIcon, label: t("sidebar.settings"), path: "/settings" },
   ];
 

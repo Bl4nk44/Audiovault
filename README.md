@@ -71,6 +71,17 @@ The recommended way to run Audiovault is via **Docker**.
 - [Docker Desktop](https://www.docker.com/products/docker-desktop/) installed and running.
 - [Git](https://git-scm.com/) installed.
 
+### 🖥️ System Requirements
+
+- **OS**: Windows, macOS, or Linux (any OS running Docker).
+- **CPU**: 2 vCPU cores (Minimum). `yt-dlp` benefits from faster CPUs during encoding.
+- **RAM**:
+  - **Minimum**: 2 GB
+  - **Recommended**: 4 GB (Smooth operation with VPN + Tor + Database)
+- **Storage**:
+  - Application: ~2 GB (Docker Images & Database)
+  - Content: Depends on your music library size.
+
 ### Installation
 
 1.  **Clone the repository**:

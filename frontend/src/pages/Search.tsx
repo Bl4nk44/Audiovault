@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useTranslation } from "../hooks/useTranslation";
 import SearchBar from "../components/search/SearchBar";
 import SearchResults from "../components/search/SearchResults";
 import api from "../services/api";
@@ -13,6 +14,8 @@ export default function Search() {
   const [currentQuery, setCurrentQuery] = useState("");
   const [currentSource, setCurrentSource] = useState("all");
   const [currentType, setCurrentType] = useState("all");
+
+  const { t } = useTranslation();
 
   const handleSearch = async (query: string, source: string, type: string) => {
     setIsLoading(true);
@@ -159,11 +162,10 @@ export default function Search() {
   return (
     <div className="space-y-8">
       <div className="text-center space-y-4">
-        <h1 className="text-4xl font-bold tracking-tight">Search Music</h1>
-        <p className="text-muted-foreground">
-          Find your favorite tracks from Spotify, YouTube, Deezer, Apple Music,
-          Tidal, Amazon Music, and SoundCloud
-        </p>
+        <h1 className="text-4xl font-bold tracking-tight">
+          {t("search.title")}
+        </h1>
+        <p className="text-muted-foreground">{t("search.subtitle")}</p>
       </div>
 
       <SearchBar onSearch={handleSearch} isLoading={isLoading} />
@@ -181,7 +183,7 @@ export default function Search() {
               disabled={isLoading}
               className="px-8 py-3 rounded-full bg-white/10 hover:bg-white/20 text-white font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {isLoading ? "Loading..." : "Load More"}
+              {isLoading ? t("common.loading") : t("search.loadMore")}
             </button>
           </div>
         )}

@@ -2,6 +2,7 @@ import TrackCard from "./TrackCard";
 import ArtistCard from "./ArtistCard";
 import PlaylistCard from "./PlaylistCard";
 import { motion } from "framer-motion";
+import { useTranslation } from "../../hooks/useTranslation";
 
 interface SearchResultsProps {
   results: any[];
@@ -22,6 +23,8 @@ export default function SearchResults({
   results,
   isLoading,
 }: SearchResultsProps) {
+  const { t } = useTranslation();
+
   if (isLoading) {
     return (
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
@@ -42,9 +45,7 @@ export default function SearchResults({
         animate={{ opacity: 1 }}
         className="text-center py-20 text-muted-foreground"
       >
-        <p className="text-lg">
-          No results found. Try searching for something else.
-        </p>
+        <p className="text-lg">{t("search.noResults")}</p>
       </motion.div>
     );
   }
@@ -64,7 +65,9 @@ export default function SearchResults({
     >
       {tracks.length > 0 && (
         <section>
-          <h2 className="text-2xl font-bold mb-4 text-white">Tracks</h2>
+          <h2 className="text-2xl font-bold mb-4 text-white">
+            {t("search.headers.tracks")}
+          </h2>
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
             {tracks.map((item) => (
               <TrackCard
@@ -79,7 +82,9 @@ export default function SearchResults({
 
       {artists.length > 0 && (
         <section>
-          <h2 className="text-2xl font-bold mb-4 text-white">Artists</h2>
+          <h2 className="text-2xl font-bold mb-4 text-white">
+            {t("search.headers.artists")}
+          </h2>
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
             {artists.map((item) => (
               <ArtistCard key={`${item.source}-${item.id}`} artist={item} />
@@ -90,7 +95,9 @@ export default function SearchResults({
 
       {playlists.length > 0 && (
         <section>
-          <h2 className="text-2xl font-bold mb-4 text-white">Playlists</h2>
+          <h2 className="text-2xl font-bold mb-4 text-white">
+            {t("search.headers.playlists")}
+          </h2>
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
             {playlists.map((item) => (
               <PlaylistCard key={`${item.source}-${item.id}`} playlist={item} />

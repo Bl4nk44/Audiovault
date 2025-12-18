@@ -264,7 +264,7 @@ export default function Dashboard() {
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Paste URL (YouTube, Spotify...) or search for music..."
+                placeholder={t("dashboard.searchPlaceholder")}
                 className="w-full bg-transparent border-none text-white text-lg placeholder:text-gray-500 px-4 py-4 focus:outline-none focus:ring-0"
               />
               <motion.button
@@ -392,7 +392,7 @@ export default function Dashboard() {
             <div className="grid grid-cols-2 gap-4 h-full">
               {[
                 {
-                  label: "Library",
+                  label: t("dashboard.quickLinks.library"),
                   icon: Music,
                   color: "text-green-400",
                   bg: "bg-green-500/10 hover:bg-green-500/20",
@@ -401,7 +401,7 @@ export default function Dashboard() {
                   path: "/library",
                 },
                 {
-                  label: "Watchlist",
+                  label: t("dashboard.quickLinks.watchlist"),
                   icon: Clock,
                   color: "text-orange-400",
                   bg: "bg-orange-500/10 hover:bg-orange-500/20",
@@ -410,7 +410,7 @@ export default function Dashboard() {
                   path: "/watchlist",
                 },
                 {
-                  label: "Queue",
+                  label: t("dashboard.quickLinks.queue"),
                   icon: List,
                   color: "text-blue-400",
                   bg: "bg-blue-500/10 hover:bg-blue-500/20",
@@ -419,7 +419,7 @@ export default function Dashboard() {
                   path: "/queue",
                 },
                 {
-                  label: "Settings",
+                  label: t("dashboard.quickLinks.settings"),
                   icon: Settings,
                   color: "text-gray-400",
                   bg: "bg-white/5 hover:bg-white/10",
