@@ -80,6 +80,45 @@ services:
     networks:
       - audiovault-network
 
+  audiovault-vpn:
+    image: qmcgaw/gluetun:latest
+    container_name: audiovault-vpn
+    cap_add:
+      - NET_ADMIN
+    devices:
+      - /dev/net/tun:/dev/net/tun
+    ports:
+      - 8888:8888/tcp # HTTP Proxy
+      - 9050:9050/tcp # Tor Proxy (via attached container)
+    volumes:
+      - ./gluetun:/gluetun
+    env_file:
+      - ./gluetun/wg_env
+      - .env
+    environment:
+      - VPN_SERVICE_PROVIDER=custom
+      - VPN_TYPE=wireguard
+      # Proxy configurations
+      - HTTPPROXY=on
+      - HTTPPROXY_STEALTH=on
+      - HTTPPROXY_LOG=on
+      - SHADOWSOCKS=off
+      # Networking
+      - FIREWALL_VPN_INPUT_PORTS=9050 # Allow incoming Tor traffic
+    sysctls:
+      - net.ipv4.conf.all.src_valid_mark=1
+    restart: always
+    networks:
+      - audiovault-network
+
+  audiovault-tor:
+    image: osminogin/tor-simple:latest
+    container_name: audiovault-tor
+    restart: always
+    network_mode: "service:audiovault-vpn"
+    depends_on:
+      - audiovault-vpn
+
 networks:
   audiovault-network:
     driver: bridge

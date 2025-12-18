@@ -60,9 +60,20 @@ export default function Network() {
 
   useEffect(() => {
     checkStatus();
-    // Fetch initial config if possible? Or logic to fetch current mode
-    // checkMode();
-  }, [selectedMode]); // Added dependency to fix lint warning
+
+    // Fetch stored preference
+    const checkMode = async () => {
+      try {
+        const res = await api.get("/network/mode");
+        if (res.data?.mode) {
+          setSelectedMode(res.data.mode);
+        }
+      } catch (e) {
+        console.error("Failed to fetch network mode", e);
+      }
+    };
+    checkMode();
+  }, [checkStatus]);
 
   const handleSaveConfig = async () => {
     try {
@@ -206,7 +217,7 @@ export default function Network() {
             <div
               key={m.id}
               onClick={() => handleModeChange(m.id)}
-              className={`p-6 rounded-2xl border cursor-pointer transition-all ${
+              className={`p-6 rounded-2xl border cursor-pointer transition-all relative ${
                 selectedMode === m.id
                   ? "bg-primary/20 border-primary shadow-[0_0_20px_rgba(var(--primary-rgb),0.2)]"
                   : "bg-black/20 border-white/5 hover:border-white/20"
@@ -230,6 +241,22 @@ export default function Network() {
                   <p className="text-sm text-gray-400">{m.desc}</p>
                 </div>
               </div>
+
+              {selectedMode === m.id && (
+                <div className="absolute top-4 right-4 flex items-center gap-2">
+                  {loading ? (
+                    <div className="w-3 h-3 rounded-full bg-orange-500 shadow-[0_0_10px_rgba(249,115,22,0.6)] animate-pulse" />
+                  ) : statuses[m.id === "tor_vpn" ? "tor" : m.id]?.status ===
+                    "connected" ? (
+                    <div className="w-3 h-3 rounded-full bg-green-500 shadow-[0_0_10px_rgba(34,197,94,0.6)]" />
+                  ) : statuses[m.id === "tor_vpn" ? "tor" : m.id]?.status ===
+                      "error" ||
+                    statuses[m.id === "tor_vpn" ? "tor" : m.id]?.status ===
+                      "unreachable" ? (
+                    <div className="w-3 h-3 rounded-full bg-red-500 shadow-[0_0_10px_rgba(239,68,68,0.6)] animate-ping" />
+                  ) : null}
+                </div>
+              )}
             </div>
           ))}
         </div>
@@ -268,17 +295,55 @@ AllowedIPs = 0.0.0.0/0
             className="w-full h-64 bg-black/50 border border-white/10 rounded-xl p-4 font-mono text-sm text-gray-300 focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/50"
           />
         ) : (
-          <div className="w-full h-64 bg-black/20 border border-white/5 rounded-xl p-4 flex flex-col items-center justify-center text-center space-y-4">
-            <div className="p-4 bg-white/5 rounded-full text-gray-400">
-              <Key size={32} />
+          <div className="relative w-full h-64 border border-white/5 rounded-xl overflow-hidden group">
+            <textarea
+              readOnly
+              value={wireguardConfig || "Configuration content..."}
+              className="w-full h-full bg-black/20 p-4 font-mono text-sm text-gray-500 blur-sm select-none pointer-events-none resize-none"
+            />
+            <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/40 backdrop-blur-[2px] transition-all">
+              <div className="p-4 bg-white/5 rounded-full text-gray-400 mb-3">
+                <Key size={32} />
+              </div>
+              <p className="text-gray-200 font-medium">
+                {t("network.configHidden")}
+              </p>
             </div>
-            <p className="text-gray-400 max-w-sm">
-              {t("network.configHidden")}
-            </p>
           </div>
         )}
 
-        <div className="flex justify-end gap-4">
+        <div className="flex justify-end gap-3 flex-wrap">
+          <input
+            type="file"
+            id="config-upload"
+            className="hidden"
+            accept=".conf"
+            onChange={(e) => {
+              const file = e.target.files?.[0];
+              if (file) {
+                const reader = new FileReader();
+                reader.onload = (event) => {
+                  if (event.target?.result) {
+                    setWireguardConfig(event.target.result as string);
+                    setShowConfig(true);
+                    toast.success("Configuration loaded");
+                  }
+                };
+                reader.readAsText(file);
+              }
+              // Reset input value to allow selecting same file again
+              e.target.value = "";
+            }}
+          />
+
+          <button
+            onClick={() => document.getElementById("config-upload")?.click()}
+            className="flex items-center gap-2 px-4 py-3 bg-white/5 hover:bg-white/10 text-white font-bold rounded-xl transition-all border border-white/10"
+          >
+            <Key size={20} className="rotate-90" />
+            {t("network.loadConfig")}
+          </button>
+
           {!showConfig && (
             <button
               onClick={() => setShowConfig(true)}

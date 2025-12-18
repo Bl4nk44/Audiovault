@@ -13,6 +13,7 @@ export interface AuthSlice {
   switchSession: (userId: string) => void;
   removeSession: (userId: string) => void;
   updateUserPreferences: (prefs: Record<string, unknown>) => void;
+  syncUser: (user: User) => void;
   logout: () => void;
 }
 
@@ -120,6 +121,25 @@ export const createAuthSlice: StateCreator<AuthSlice> = (set, get) => {
           sessions[user.id].user = updatedUser;
           localStorage.setItem("sessions", JSON.stringify(sessions));
         }
+      }
+    },
+
+    syncUser: (user: User) => {
+      // Get current tokens (either from state or storage if state empty due to reload)
+      const token = get().token || localStorage.getItem("access_token");
+      const refreshToken =
+        get().refreshToken || localStorage.getItem("refresh_token");
+
+      if (token && refreshToken) {
+        set({ user });
+
+        const sessions = {
+          ...get().sessions,
+          [user.id]: { user, token, refreshToken },
+        };
+
+        localStorage.setItem("sessions", JSON.stringify(sessions));
+        set({ sessions });
       }
     },
 

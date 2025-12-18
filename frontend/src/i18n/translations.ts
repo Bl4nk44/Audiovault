@@ -113,12 +113,18 @@ export const translations = {
       wireguardDesc:
         "Paste your configuration file content here (e.g. wg0.conf). Container restart required after saving.",
       save: "Save Configuration",
+      editConfig: "Edit Configuration",
+      loadConfig: "Load Config File",
+      configHidden: "Configuration hidden for security. Click edit to view.",
       status: {
         checking: "Checking...",
         vpnOff: "VPN DISABLED",
         torOff: "TOR DISABLED",
         noConnection: "NO CONNECTION",
         refresh: "Refresh Status",
+        protected: "Protected",
+        connecting: "Connecting...",
+        error: "Error/Offline",
       },
       modes: {
         direct: { label: "Direct", desc: "Standard connection, no anonymity." },
@@ -277,6 +283,7 @@ export const translations = {
       wireguardDesc:
         "Wklej tutaj zawartość swojego pliku konfiguracyjnego (np. wg0.conf). Po zapisaniu wymagany jest restart kontenera VPN.",
       save: "Zapisz Konfigurację",
+      loadConfig: "Wczytaj Plik Konfiguracyjny",
       editConfig: "Edytuj Konfigurację",
       configHidden:
         "Konfiguracja ukryta dla bezpieczeństwa. Kliknij edytuj, aby zobaczyć.",
@@ -286,6 +293,9 @@ export const translations = {
         torOff: "TOR WYŁĄCZONY",
         noConnection: "BRAK POŁĄCZENIA",
         refresh: "Odśwież Status",
+        protected: "Chroniony",
+        connecting: "Łączenie...",
+        error: "Błąd/Offline",
       },
       modes: {
         direct: {
@@ -450,6 +460,7 @@ export const translations = {
       wireguardDesc:
         "Fügen Sie hier den Inhalt Ihrer Konfigurationsdatei ein (z. B. wg0.conf). Container-Neustart nach dem Speichern erforderlich.",
       save: "Konfiguration speichern",
+      loadConfig: "Konfigurationsdatei laden",
       editConfig: "Konfiguration bearbeiten",
       configHidden: "Konfiguration aus Sicherheitsgründen ausgeblendet.",
       status: {
@@ -622,6 +633,7 @@ export const translations = {
       wireguardDesc:
         "Collez ici le contenu de votre fichier de configuration (ex: wg0.conf). Redémarrage du conteneur requis après sauvegarde.",
       save: "Sauvegarder la configuration",
+      loadConfig: "Charger le fichier de configuration",
       editConfig: "Modifier la configuration",
       configHidden: "Configuration masquée pour la sécurité.",
       status: {
@@ -793,6 +805,7 @@ export const translations = {
       wireguardDesc:
         "Pega el contenido de tu archivo de configuración aquí (ej. wg0.conf). Se requiere reiniciar el contenedor tras guardar.",
       save: "Guardar Configuración",
+      loadConfig: "Cargar archivo de configuración",
       editConfig: "Editar Configuración",
       configHidden:
         "Configuración oculta por seguridad. Clic en editar para ver.",

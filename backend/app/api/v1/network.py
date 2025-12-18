@@ -42,6 +42,12 @@ async def save_wireguard_config(
         raise HTTPException(status_code=500, detail="Failed to save configuration")
     return {"status": "success", "message": "Configuration saved. Please restart the VPN container."}
 
+@router.get("/mode")
+async def get_network_mode(current_user: User = Depends(get_current_active_user)):
+    """Get preferred network mode"""
+    prefs = current_user.preferences or {}
+    return {"mode": prefs.get("network_mode", "direct")}
+
 @router.post("/mode")
 async def set_network_mode(
     update: NetworkModeUpdate,

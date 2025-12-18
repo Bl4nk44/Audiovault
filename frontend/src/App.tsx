@@ -78,10 +78,38 @@ function ThemeInit() {
   return null;
 }
 
+function SessionManager() {
+  const isAuthenticated = useStore((state) => state.isAuthenticated);
+  const syncUser = useStore((state) => state.syncUser);
+
+  React.useEffect(() => {
+    if (isAuthenticated) {
+      // Dynamic import to avoid circular dependency in some bundler setups,
+      // though here it's mainly to keep it cleanly separated or ensuring api is ready.
+      import("./services/api").then(({ default: api }) => {
+        api
+          .get("/users/me")
+          .then((res) => {
+            if (res.data) {
+              syncUser(res.data);
+            }
+          })
+          .catch((err) => {
+            console.error("Failed to restore session user data:", err);
+            // If 401, the interceptor will handle logout.
+          });
+      });
+    }
+  }, [isAuthenticated, syncUser]);
+
+  return null;
+}
+
 function App() {
   return (
     <Router>
       <ThemeInit />
+      <SessionManager />
       <div className="min-h-screen text-foreground font-sans antialiased relative">
         <Routes>
           <Route path="/login" element={<Login />} />

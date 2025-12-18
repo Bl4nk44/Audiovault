@@ -33,9 +33,10 @@ Never miss a track. If a download fails (e.g., due to geo-restrictions or broken
 Take control of your connection privacy directly from the app.
 
 - **WireGuard VPN**: Native integration with Gluetun. Bring your own config (`.conf`).
-- **Tor Network**: Anonymize your traffic through the Tor network.
+- **Tor Network**: Anonymize your traffic through the Tor network (SOCKS5 Proxy).
 - **Modes**: Choose between Direct, VPN, Tor, or **Tor over VPN** for maximum security.
 - **Kill Switch**: Architecture ensures no traffic leaks outside the tunnel.
+- **Persistence**: Remembers your preferred network mode across sessions (v0.5.0).
 
 ### 👁️ Watchlist & Automation
 
