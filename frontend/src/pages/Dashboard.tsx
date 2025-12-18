@@ -245,7 +245,7 @@ export default function Dashboard() {
         {/* Hero Input Section */}
         <motion.div variants={item} className="relative z-20">
           <div className="relative group rounded-2xl">
-            <div className="absolute -inset-0.5 bg-gradient-to-r from-primary to-purple-600 rounded-2xl blur opacity-30 group-hover:opacity-60 transition duration-500"></div>
+            <div className="absolute -inset-0.5 bg-linear-to-r from-primary to-purple-600 rounded-2xl blur opacity-30 group-hover:opacity-60 transition duration-500"></div>
             <form
               onSubmit={(e) => {
                 e.preventDefault();
@@ -501,7 +501,7 @@ export default function Dashboard() {
                         width: `${dashboardStats.active_download.progress}%`,
                       }}
                       transition={{ ease: "linear" }}
-                      className="h-full bg-gradient-to-r from-primary via-purple-500 to-primary background-animate bg-[length:200%_auto] shadow-[0_0_20px_rgba(var(--primary-rgb),0.6)] relative"
+                      className="h-full bg-linear-to-r from-primary via-purple-500 to-primary background-animate bg-size-[200%_auto] shadow-[0_0_20px_rgba(var(--primary-rgb),0.6)] relative"
                     >
                       <div className="absolute inset-0 bg-white/20 animate-[shimmer_2s_infinite] transform -skew-x-12"></div>
                     </motion.div>
