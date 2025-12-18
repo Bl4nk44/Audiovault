@@ -10,6 +10,7 @@ services:
       - ./backend:/app
       - ./downloads:/downloads
       - ./VERSION:/app/VERSION
+      - ./gluetun:/app/gluetun
     ports:
       - "8000:8000"
     env_file:

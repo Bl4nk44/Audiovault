@@ -28,9 +28,19 @@ Never miss a track. If a download fails (e.g., due to geo-restrictions or broken
 2.  Searches cross-platform (e.g., falls back to SoundCloud if YouTube fails).
 3.  Uses proxies (Invidious) to bypass region locks.
 
+### 🔐 Network & Privacy (New)
+
+Take control of your connection privacy directly from the app.
+
+- **WireGuard VPN**: Native integration with Gluetun. Bring your own config (`.conf`).
+- **Tor Network**: Anonymize your traffic through the Tor network.
+- **Modes**: Choose between Direct, VPN, Tor, or **Tor over VPN** for maximum security.
+- **Kill Switch**: Architecture ensures no traffic leaks outside the tunnel.
+
 ### 👁️ Watchlist & Automation
 
-- **Auto-Sync**: Monitor your favorite playlists. New tracks are detected and downloaded automatically.
+- **Auto-Sync**: Background scheduler checks for new tracks every 60 minutes.
+- **Safe Purge**: Automatically removes local tracks that were deleted from remote playlists (with specific user approval & dry-run safety).
 - **Smart De-duplication**: Prevents duplicate downloads by checking both ID3 tags and internal database history.
 - **Universal Search**: Unified search bar for all supported providers.
 
@@ -44,13 +54,12 @@ Never miss a track. If a download fails (e.g., due to geo-restrictions or broken
 
 - **Glassmorphism**: Stunning, responsive interface powered by React & TailwindCSS.
 - **Themes**: Deep Void (Default), Midnight, Ocean, Forest, Sunset, Neon.
-- **Classic Mode**: 'Terminal' style for low-resource environments.
 
 ## 🛠️ Tech Stack
 
-- **Backend**: Python, FastAPI, yt-dlp, SQLAlchemy (Async)
+- **Backend**: Python, FastAPI, yt-dlp, SQLAlchemy (Async), APScheduler
 - **Frontend**: React, TypeScript, TailwindCSS v4, Framer Motion
-- **Database**: SQLite (default) / PostgreSQL (supported)
+- **Database**: SQLite (default) / PostgreSQL (supported), Redis (Caching & Locking)
 - **Infrastructure**: Docker & Docker Compose
 
 ## 🚀 Getting Started
@@ -97,13 +106,6 @@ The recommended way to run Audiovault is via **Docker**.
     - The best quality audio source is located on YouTube or SoundCloud.
 4.  **Download & Tag**: Steps are executed asynchronously. The file is downloaded, converted to MP3/FLAC, and tagged with ID3v2 metadata.
 5.  **Library Organization**: The file is moved to your library and indexed in the database, available for streaming or export.
-
-## 🎨 Theming
-
-Audiovault comes with a robust theming engine.
-
-- **Standard Themes**: Midnight, Ocean, Forest, Sunset, Neon.
-- **Classic Mode**: Enable this in Settings > Appearance for a raw, high-performance interface with no animations or blur effects (Terminal style).
 
 ## 🤝 Contributing
 

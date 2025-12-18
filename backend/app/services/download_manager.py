@@ -306,7 +306,18 @@ class DownloadManager:
             'progress_hooks': [progress_hook],
             'quiet': True,
             'no_warnings': True,
+            'quiet': True,
+            'no_warnings': True,
         }
+
+        # Network / Proxy Configuration
+        from app.services.network_manager import network_manager
+        network_mode = download.user.preferences.get('network_mode', 'direct')
+        proxy_url = network_manager.get_proxy_url(network_mode)
+        
+        if proxy_url:
+            logger.info(f"Using Network Mode: {network_mode} (Proxy: {proxy_url})")
+            ydl_opts['proxy'] = proxy_url
 
         schema_map = {
             '{artist}': '%(artist)s',

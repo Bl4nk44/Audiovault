@@ -13,6 +13,7 @@ import Queue from "./pages/Queue";
 import Watchlist from "./pages/Watchlist";
 import Library from "./pages/Library";
 import Settings from "./pages/Settings";
+import Network from "./pages/Network";
 import CreatePlaylist from "./pages/CreatePlaylist";
 import LikedSongs from "./pages/LikedSongs";
 import ArtistProfile from "./pages/ArtistProfile";
@@ -42,15 +43,19 @@ function ThemeInit() {
           const sessions = JSON.parse(stored);
           const currentToken = localStorage.getItem("access_token");
           if (currentToken) {
+            // Define minimal interface for legacy session parsing
+            interface SessionData {
+              user?: { preferences?: { theme?: string } };
+            }
             const session = Object.values(sessions).find(
-              (s: any) => s.token === currentToken
-            ) as any;
+              (s: unknown) => (s as any).token === currentToken
+            ) as SessionData | undefined;
             if (session?.user?.preferences?.theme) {
               theme = session.user.preferences.theme;
             }
           }
         }
-      } catch (e) {
+      } catch {
         // Ignore parsing errors
       }
     }
@@ -95,6 +100,7 @@ function App() {
             <Route path="queue" element={<Queue />} />
             <Route path="watchlist" element={<Watchlist />} />
             <Route path="library" element={<Library />} />
+            <Route path="network" element={<Network />} />
             <Route path="settings" element={<Settings />} />
             <Route path="create-playlist" element={<CreatePlaylist />} />
             <Route path="liked" element={<LikedSongs />} />

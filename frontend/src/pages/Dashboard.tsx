@@ -438,7 +438,7 @@ export default function Dashboard() {
                   }}
                   transition={{ type: "spring", stiffness: 400, damping: 15 }}
                   onClick={() => navigate(link.path)}
-                  className={`flex flex-col items-center justify-center p-4 rounded-3xl border border-b-[6px] ${link.border} ${link.depth} ${link.bg} transition-colors gap-3 w-full h-full min-h-[190px] backdrop-blur-sm`}
+                  className={`flex flex-col items-center justify-center p-4 rounded-3xl border border-b-[6px] ${link.border} ${link.depth} ${link.bg} transition-colors gap-3 w-full h-full min-h-[190px] backdrop-blur-sm cursor-pointer`}
                 >
                   <div
                     className={`p-4 rounded-full bg-black/20 ${link.color} shadow-lg`}
