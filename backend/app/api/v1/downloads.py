@@ -478,7 +478,25 @@ async def scan_library(
     from app.models.track import Track
     from app.core.config import settings
     
-    root_dir = scan_path if scan_path else settings.DOWNLOAD_DIR
+    base_dir = os.path.abspath(settings.DOWNLOAD_DIR)
+    
+    if scan_path:
+        target_path = os.path.abspath(scan_path)
+        # Security check: MUST start with safe base_dir
+        # os.path.commonpath throws robust errors on mix of relative/abs, 
+        # but here we normalized both to abs.
+        try:
+            common = os.path.commonpath([base_dir, target_path])
+        except ValueError:
+            common = ""
+            
+        if common != base_dir:
+             raise HTTPException(status_code=403, detail="Access denied: Cannot scan directories outside of download library.")
+        
+        root_dir = target_path
+    else:
+        root_dir = base_dir
+
     if not os.path.exists(root_dir):
          return {"status": "error", "message": f"Directory {root_dir} does not exist"}
 
