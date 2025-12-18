@@ -39,5 +39,4 @@ logs_full.txt
 backend/logs/
 deploy.ps1
 gluetun/*.conf
-gluetun/wg_env
 gluetun/servers.json
