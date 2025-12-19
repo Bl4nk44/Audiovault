@@ -62,17 +62,6 @@ export default function WatchlistManager() {
       <div className="flex justify-between items-center">
         <div className="flex bg-card/40 rounded-lg p-1 border border-border">
           <button
-            onClick={() => setViewMode("list")}
-            className={`p-2 rounded-md transition-all ${
-              viewMode === "list"
-                ? "bg-secondary text-foreground shadow-sm"
-                : "text-muted-foreground hover:text-foreground"
-            }`}
-            title="List View"
-          >
-            <List size={18} />
-          </button>
-          <button
             onClick={() => setViewMode("grid")}
             className={`p-2 rounded-md transition-all ${
               viewMode === "grid"
@@ -82,6 +71,17 @@ export default function WatchlistManager() {
             title="Grid View"
           >
             <LayoutGrid size={18} />
+          </button>
+          <button
+            onClick={() => setViewMode("list")}
+            className={`p-2 rounded-md transition-all ${
+              viewMode === "list"
+                ? "bg-secondary text-foreground shadow-sm"
+                : "text-muted-foreground hover:text-foreground"
+            }`}
+            title="List View"
+          >
+            <List size={18} />
           </button>
         </div>
 

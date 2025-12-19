@@ -6,6 +6,7 @@ import {
   Music,
   Download,
   Github,
+  Terminal,
 } from "lucide-react";
 import { NavLink } from "react-router-dom";
 import { cn } from "../../lib/utils";
@@ -24,6 +25,7 @@ export default function Sidebar() {
     { icon: Download, label: t("sidebar.downloads"), path: "/queue" },
 
     { icon: SettingsIcon, label: t("sidebar.settings"), path: "/settings" },
+    { icon: Terminal, label: t("sidebar.logs"), path: "/logs" },
   ];
 
   return (

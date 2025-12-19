@@ -13,6 +13,7 @@ import Queue from "./pages/Queue";
 import Watchlist from "./pages/Watchlist";
 import Library from "./pages/Library";
 import Settings from "./pages/Settings";
+import Logs from "./pages/Logs";
 
 import ArtistProfile from "./pages/ArtistProfile";
 import Import from "./pages/Import";
@@ -135,11 +136,11 @@ function App() {
             <Route path="queue" element={<Queue />} />
             <Route path="watchlist" element={<Watchlist />} />
             <Route path="library" element={<Library />} />
-
             <Route path="settings" element={<Settings />} />
 
             <Route path="artist/:id" element={<ArtistProfile />} />
             <Route path="import" element={<Import />} />
+            <Route path="logs" element={<Logs />} />
           </Route>
 
           <Route path="*" element={<NotFound />} />
