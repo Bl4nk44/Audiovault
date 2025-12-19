@@ -117,4 +117,4 @@ Contributions are welcome! Please feel free to submit a Pull Request.
 
 ## 📜 License
 
-Distributed under the PolyForm Noncommercial License 1.0.0. See `LICENSE` for more information. This project is free for personal use but strictly prohibits commercial usage.
+Distributed under the MIT License. See `LICENSE` for more information.
