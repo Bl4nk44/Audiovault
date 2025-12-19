@@ -14,8 +14,6 @@ import Watchlist from "./pages/Watchlist";
 import Library from "./pages/Library";
 import Settings from "./pages/Settings";
 
-import CreatePlaylist from "./pages/CreatePlaylist";
-import LikedSongs from "./pages/LikedSongs";
 import ArtistProfile from "./pages/ArtistProfile";
 import Import from "./pages/Import";
 import NotFound from "./pages/NotFound";
@@ -130,8 +128,7 @@ function App() {
             <Route path="library" element={<Library />} />
 
             <Route path="settings" element={<Settings />} />
-            <Route path="create-playlist" element={<CreatePlaylist />} />
-            <Route path="liked" element={<LikedSongs />} />
+
             <Route path="artist/:id" element={<ArtistProfile />} />
             <Route path="import" element={<Import />} />
           </Route>
