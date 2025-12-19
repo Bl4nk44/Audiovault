@@ -78,11 +78,11 @@ class FallbackService:
                 # Should be direct, handled by manager usually, but let's be explicit
                 instruction = {"type": "direct_youtube", "value": None} 
             elif attempt == 2:
-                # Proxy
-                instruction = {"type": "proxy", "value": None}
-            elif attempt == 3:
-                # Cross-platform SC
+                # Cross-platform SC as fallback
                 instruction = {"type": "sc_search", "value": base_query}
+            elif attempt == 3:
+                # Final generic search
+                instruction = {"type": "yt_search", "value": base_query}
                 
         elif download_source == 'soundcloud':
             if attempt == 1:
@@ -94,23 +94,6 @@ class FallbackService:
                 
         return instruction
 
-    def get_proxy_url(self, original_url: str) -> Optional[str]:
-        """
-        Transform a YouTube URL to use an Invidious instance.
-        """
-        if "youtube.com" in original_url or "youtu.be" in original_url:
-            try:
-                vid_id = None
-                if "v=" in original_url:
-                    vid_id = original_url.split("v=")[1].split("&")[0]
-                elif "youtu.be/" in original_url:
-                    vid_id = original_url.split("youtu.be/")[1].split("?")[0]
-                
-                if vid_id:
-                    instance = random.choice(self.invidious_instances)
-                    return f"{instance}/watch?v={vid_id}"
-            except Exception:
-                return None
-        return None
+
 
 fallback_service = FallbackService()

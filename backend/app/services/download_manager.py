@@ -310,14 +310,7 @@ class DownloadManager:
             'no_warnings': True,
         }
 
-        # Network / Proxy Configuration
-        from app.services.network_manager import network_manager
-        network_mode = download.user.preferences.get('network_mode', 'direct')
-        proxy_url = network_manager.get_proxy_url(network_mode)
-        
-        if proxy_url:
-            logger.info(f"Using Network Mode: {network_mode} (Proxy: {proxy_url})")
-            ydl_opts['proxy'] = proxy_url
+
 
         schema_map = {
             '{artist}': '%(artist)s',
@@ -391,16 +384,7 @@ class DownloadManager:
             url = f"https://www.youtube.com/watch?v={download.track_id}"
             return url
             
-        elif resp_type == 'proxy':
-            url = f"https://www.youtube.com/watch?v={download.track_id}"
-            proxy_url = fallback_service.get_proxy_url(url)
-            if proxy_url:
-                logger.info(f"Using fallback proxy URL: {proxy_url}")
-                return proxy_url
-            else:
-                # If proxy fails, return original or maybe raise? 
-                # Behaving safe: return original
-                return url
+
                 
         elif resp_type == 'direct_soundcloud':
             if track_info and track_info.source_url:

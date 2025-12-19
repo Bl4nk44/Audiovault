@@ -17,7 +17,6 @@ export const translations = {
       library: "My Library",
       downloads: "Downloads",
       settings: "Settings",
-      network: "Network",
     },
     dashboard: {
       title: "Dashboard",
@@ -102,50 +101,7 @@ export const translations = {
       normal: "Normal (192kbps)",
       high: "High (320kbps)",
     },
-    network: {
-      title: "Network Protection",
-      subtitle: "Configure VPN, Tor and privacy modes",
-      yourIp: "Your IP",
-      vpnIp: "VPN IP",
-      torIp: "Tor IP",
-      mode: "Network Mode",
-      wireguardConfig: "WireGuard Configuration",
-      wireguardDesc:
-        "Paste your configuration file content here (e.g. wg0.conf). Container restart required after saving.",
-      save: "Save Configuration",
-      editConfig: "Edit Configuration",
-      loadConfig: "Load Config File",
-      configHidden: "Configuration hidden for security. Click edit to view.",
-      status: {
-        checking: "Checking...",
-        vpnOff: "VPN DISABLED",
-        torOff: "TOR DISABLED",
-        noConnection: "NO CONNECTION",
-        refresh: "Refresh Status",
-        protected: "Protected",
-        connecting: "Connecting...",
-        error: "Error/Offline",
-      },
-      modes: {
-        direct: { label: "Direct", desc: "Standard connection, no anonymity." },
-        vpn: {
-          label: "WireGuard VPN",
-          desc: "IP change, encryption, bypass blocks.",
-        },
-        tor: { label: "Tor Network", desc: "High anonymity, slower speed." },
-        tor_vpn: {
-          label: "Tor over VPN",
-          desc: "Max protection: Tor tunneled via VPN.",
-        },
-      },
-      toasts: {
-        configSaved: "Configuration saved. Please restart the VPN container.",
-        saveFailed: "Failed to save configuration",
-        modeChanged: "Network mode changed to {{mode}}",
-        modeFailed: "Failed to update network mode",
-        statusFailed: "Failed to fetch network status",
-      },
-    },
+
     filters: {
       allTypes: "All Types",
       artists: "Artists",
@@ -187,7 +143,6 @@ export const translations = {
       library: "Moja Biblioteka",
       downloads: "Pobrane",
       settings: "Ustawienia",
-      network: "Sieć",
     },
     dashboard: {
       title: "Panel Sterowania",
@@ -272,57 +227,7 @@ export const translations = {
       normal: "Normalna (192kbps)",
       high: "Wysoka (320kbps)",
     },
-    network: {
-      title: "Ochrona Sieci",
-      subtitle: "Konfiguracja VPN, Tor i trybów prywatności",
-      yourIp: "Twoje IP",
-      vpnIp: "VPN IP",
-      torIp: "Tor IP",
-      mode: "Tryb Pracy",
-      wireguardConfig: "Konfiguracja WireGuard",
-      wireguardDesc:
-        "Wklej tutaj zawartość swojego pliku konfiguracyjnego (np. wg0.conf). Po zapisaniu wymagany jest restart kontenera VPN.",
-      save: "Zapisz Konfigurację",
-      loadConfig: "Wczytaj Plik Konfiguracyjny",
-      editConfig: "Edytuj Konfigurację",
-      configHidden:
-        "Konfiguracja ukryta dla bezpieczeństwa. Kliknij edytuj, aby zobaczyć.",
-      status: {
-        checking: "Sprawdzanie...",
-        vpnOff: "VPN WYŁĄCZONY",
-        torOff: "TOR WYŁĄCZONY",
-        noConnection: "BRAK POŁĄCZENIA",
-        refresh: "Odśwież Status",
-        protected: "Chroniony",
-        connecting: "Łączenie...",
-        error: "Błąd/Offline",
-      },
-      modes: {
-        direct: {
-          label: "Bezpośrednie",
-          desc: "Standardowe połączenie, brak anonimowości.",
-        },
-        vpn: {
-          label: "WireGuard VPN",
-          desc: "Zmiana IP, szyfrowanie, omijanie blokad.",
-        },
-        tor: {
-          label: "Sieć Tor",
-          desc: "Wysoka anonimowość, wolniejsze działanie.",
-        },
-        tor_vpn: {
-          label: "Tor over VPN",
-          desc: "Maksymalna ochrona: Tor tunelowany przez VPN.",
-        },
-      },
-      toasts: {
-        configSaved: "Konfiguracja zapisana. Zrestartuj kontener VPN.",
-        saveFailed: "Nie udało się zapisać konfiguracji",
-        modeChanged: "Zmieniono tryb sieci na {{mode}}",
-        modeFailed: "Nie udało się zmienić trybu sieci",
-        statusFailed: "Nie udało się pobrać statusu sieci",
-      },
-    },
+
     filters: {
       allTypes: "Wszystkie typy",
       artists: "Artyści",
@@ -363,7 +268,6 @@ export const translations = {
       library: "Meine Bibliothek",
       downloads: "Downloads",
       settings: "Einstellungen",
-      network: "Netzwerk",
     },
     dashboard: {
       title: "Dashboard",
@@ -449,53 +353,6 @@ export const translations = {
       normal: "Normal (192kbps)",
       high: "Hoch (320kbps)",
     },
-    network: {
-      title: "Netzwerkschutz",
-      subtitle: "VPN, Tor und Datenschutzmodi konfigurieren",
-      yourIp: "Deine IP",
-      vpnIp: "VPN IP",
-      torIp: "Tor IP",
-      mode: "Netzwerkmodus",
-      wireguardConfig: "WireGuard Konfiguration",
-      wireguardDesc:
-        "Fügen Sie hier den Inhalt Ihrer Konfigurationsdatei ein (z. B. wg0.conf). Container-Neustart nach dem Speichern erforderlich.",
-      save: "Konfiguration speichern",
-      loadConfig: "Konfigurationsdatei laden",
-      editConfig: "Konfiguration bearbeiten",
-      configHidden: "Konfiguration aus Sicherheitsgründen ausgeblendet.",
-      status: {
-        checking: "Prüfe...",
-        vpnOff: "VPN DEAKTIVIERT",
-        torOff: "TOR DEAKTIVIERT",
-        noConnection: "KEINE VERBINDUNG",
-        refresh: "Status aktualisieren",
-      },
-      modes: {
-        direct: {
-          label: "Direkt",
-          desc: "Standardverbindung, keine Anonymität.",
-        },
-        vpn: {
-          label: "WireGuard VPN",
-          desc: "IP-Änderung, Verschlüsselung, Sperren umgehen.",
-        },
-        tor: {
-          label: "Tor Netzwerk",
-          desc: "Hohe Anonymität, langsame Geschwindigkeit.",
-        },
-        tor_vpn: {
-          label: "Tor über VPN",
-          desc: "Max. Schutz: Tor durch VPN getunnelt.",
-        },
-      },
-      toasts: {
-        configSaved: "Konfiguration gespeichert. VPN-Container neu starten.",
-        saveFailed: "Fehler beim Speichern",
-        modeChanged: "Modus geändert auf {{mode}}",
-        modeFailed: "Modus-Update fehlgeschlagen",
-        statusFailed: "Statusabruf fehlgeschlagen",
-      },
-    },
     filters: {
       allTypes: "Alle Typen",
       artists: "Künstler",
@@ -536,7 +393,6 @@ export const translations = {
       library: "Ma Bibliothèque",
       downloads: "Téléchargements",
       settings: "Paramètres",
-      network: "Réseau",
     },
     dashboard: {
       title: "Tableau de bord",
@@ -622,54 +478,7 @@ export const translations = {
       normal: "Normale (192kbps)",
       high: "Haute (320kbps)",
     },
-    network: {
-      title: "Protection Réseau",
-      subtitle: "Configurer VPN, Tor et modes de confidentialité",
-      yourIp: "Votre IP",
-      vpnIp: "IP VPN",
-      torIp: "IP Tor",
-      mode: "Mode Réseau",
-      wireguardConfig: "Configuration WireGuard",
-      wireguardDesc:
-        "Collez ici le contenu de votre fichier de configuration (ex: wg0.conf). Redémarrage du conteneur requis après sauvegarde.",
-      save: "Sauvegarder la configuration",
-      loadConfig: "Charger le fichier de configuration",
-      editConfig: "Modifier la configuration",
-      configHidden: "Configuration masquée pour la sécurité.",
-      status: {
-        checking: "Vérification...",
-        vpnOff: "VPN DÉSACTIVÉ",
-        torOff: "TOR DÉSACTIVÉ",
-        noConnection: "PAS DE CONNEXION",
-        refresh: "Actualiser le statut",
-      },
-      modes: {
-        direct: {
-          label: "Direct",
-          desc: "Connexion standard, pas d'anonymat.",
-        },
-        vpn: {
-          label: "WireGuard VPN",
-          desc: "Changement d'IP, chiffrement, contournement des blocages.",
-        },
-        tor: {
-          label: "Réseau Tor",
-          desc: "Haute anonymité, vitesse plus lente.",
-        },
-        tor_vpn: {
-          label: "Tor via VPN",
-          desc: "Protection max : Tor tunnelisé via VPN.",
-        },
-      },
-      toasts: {
-        configSaved:
-          "Configuration sauvegardée. Veuillez redémarrer le conteneur VPN.",
-        saveFailed: "Échec de la sauvegarde de la configuration",
-        modeChanged: "Mode réseau changé pour {{mode}}",
-        modeFailed: "Échec de la mise à jour du mode réseau",
-        statusFailed: "Échec de la récupération du statut réseau",
-      },
-    },
+
     filters: {
       allTypes: "Tous les types",
       artists: "Artistes",
@@ -710,7 +519,6 @@ export const translations = {
       library: "Mi Biblioteca",
       downloads: "Descargas",
       settings: "Ajustes",
-      network: "Red",
     },
     dashboard: {
       title: "Panel de control",
@@ -793,54 +601,6 @@ export const translations = {
       low: "Baja (128kbps)",
       normal: "Normal (192kbps)",
       high: "Alta (320kbps)",
-    },
-    network: {
-      title: "Protección de Red",
-      subtitle: "Configurar VPN, Tor y modos de privacidad",
-      yourIp: "Tu IP",
-      vpnIp: "IP VPN",
-      torIp: "IP Tor",
-      mode: "Modo de Red",
-      wireguardConfig: "Configuración WireGuard",
-      wireguardDesc:
-        "Pega el contenido de tu archivo de configuración aquí (ej. wg0.conf). Se requiere reiniciar el contenedor tras guardar.",
-      save: "Guardar Configuración",
-      loadConfig: "Cargar archivo de configuración",
-      editConfig: "Editar Configuración",
-      configHidden:
-        "Configuración oculta por seguridad. Clic en editar para ver.",
-      status: {
-        checking: "Comprobando...",
-        vpnOff: "VPN DESACTIVADO",
-        torOff: "TOR DESACTIVADO",
-        noConnection: "SIN CONEXIÓN",
-        refresh: "Actualizar Estado",
-      },
-      modes: {
-        direct: {
-          label: "Directo",
-          desc: "Conexión estándar, sin anonimato.",
-        },
-        vpn: {
-          label: "WireGuard VPN",
-          desc: "Cambio de IP, cifrado, evitar bloqueos.",
-        },
-        tor: {
-          label: "Red Tor",
-          desc: "Alta anonimidad, velocidad más lenta.",
-        },
-        tor_vpn: {
-          label: "Tor sobre VPN",
-          desc: "Protección máx: Tor tunelizado vía VPN.",
-        },
-      },
-      toasts: {
-        configSaved: "Configuración guardada. Reinicia VPN.",
-        saveFailed: "Error al guardar",
-        modeChanged: "Modo cambiado a {{mode}}",
-        modeFailed: "Error al actualizar modo",
-        statusFailed: "Error estado red",
-      },
     },
     filters: {
       allTypes: "Todos los tipos",

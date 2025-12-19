@@ -6,7 +6,6 @@ import {
   Music,
   Download,
   Github,
-  Shield,
 } from "lucide-react";
 import { NavLink } from "react-router-dom";
 import { cn } from "../../lib/utils";
@@ -23,7 +22,7 @@ export default function Sidebar() {
     { icon: Eye, label: t("sidebar.watchlist"), path: "/watchlist" },
     { icon: Music, label: t("sidebar.library"), path: "/library" },
     { icon: Download, label: t("sidebar.downloads"), path: "/queue" },
-    { icon: Shield, label: t("sidebar.network"), path: "/network" },
+
     { icon: SettingsIcon, label: t("sidebar.settings"), path: "/settings" },
   ];
 

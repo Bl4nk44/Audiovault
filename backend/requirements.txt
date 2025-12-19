@@ -31,4 +31,4 @@ urllib3>=2.6.0
 pytest-asyncio>=0.21.0
 aiosqlite>=0.19.0
 fakeredis[lua]>=2.20.0
-aiohttp-socks>=0.8.0
+

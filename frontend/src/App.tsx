@@ -13,7 +13,7 @@ import Queue from "./pages/Queue";
 import Watchlist from "./pages/Watchlist";
 import Library from "./pages/Library";
 import Settings from "./pages/Settings";
-import Network from "./pages/Network";
+
 import CreatePlaylist from "./pages/CreatePlaylist";
 import LikedSongs from "./pages/LikedSongs";
 import ArtistProfile from "./pages/ArtistProfile";
@@ -128,7 +128,7 @@ function App() {
             <Route path="queue" element={<Queue />} />
             <Route path="watchlist" element={<Watchlist />} />
             <Route path="library" element={<Library />} />
-            <Route path="network" element={<Network />} />
+
             <Route path="settings" element={<Settings />} />
             <Route path="create-playlist" element={<CreatePlaylist />} />
             <Route path="liked" element={<LikedSongs />} />
