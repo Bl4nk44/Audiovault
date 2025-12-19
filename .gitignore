@@ -25,6 +25,7 @@ Thumbs.db
 # Project specific
 downloads/
 postgres_data/
+scripts/
 
 # Cache
 backend/.cache
@@ -35,5 +36,4 @@ logs.txt
 logs_full.txt
 backend/logs/
 deploy.ps1
-gluetun/*.conf
-gluetun/servers.json
+
