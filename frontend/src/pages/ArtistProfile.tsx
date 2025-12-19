@@ -5,7 +5,7 @@ import { ArrowLeft, Music, Disc, Loader2, Plus, Check, PlayCircle } from 'lucide
 import { artistsApi } from '../api/artists'
 import Button from '../components/ui/Button'
 import { useStore } from '../store/useStore'
-import toast from 'react-hot-toast'
+import { notify as toast } from '../utils/notify';
 import TrackCard from '../components/search/TrackCard'
 
 export default function ArtistProfile() {
@@ -162,3 +162,4 @@ export default function ArtistProfile() {
         </div>
     )
 }
+

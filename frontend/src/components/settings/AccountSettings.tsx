@@ -2,7 +2,7 @@ import { useState, useRef } from "react";
 import { useForm } from "react-hook-form";
 import { useStore } from "../../store/useStore";
 import api from "../../services/api";
-import toast from "react-hot-toast";
+import { notify as toast } from '../../utils/notify';
 import { motion } from "framer-motion";
 import { User, Lock, Save, Camera } from "lucide-react";
 import Button from "../ui/Button";
@@ -296,3 +296,4 @@ export default function AccountSettings() {
     </div>
   );
 }
+

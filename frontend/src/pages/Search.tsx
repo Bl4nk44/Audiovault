@@ -3,7 +3,7 @@ import { useTranslation } from "../hooks/useTranslation";
 import SearchBar from "../components/search/SearchBar";
 import SearchResults from "../components/search/SearchResults";
 import api from "../services/api";
-import toast from "react-hot-toast";
+import { notify as toast } from '../utils/notify';
 
 export default function Search() {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -191,3 +191,4 @@ export default function Search() {
     </div>
   );
 }
+

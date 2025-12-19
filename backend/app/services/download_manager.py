@@ -194,9 +194,34 @@ class DownloadManager:
                         else:
                             download.file_path = final_filename_container['path']
                     else:
-                        download_path = download.user.preferences.get('downloadPath') or settings.DOWNLOAD_DIR
-                        download.file_path = f"{download_path}/{output_template}.mp3"
+                        download_path = download.user.preferences.get('downloadPath')
+                        if not download_path:
+                            # Default to user subdirectory
+                            download_path = os.path.join(settings.DOWNLOAD_DIR, download.user.username)
+                            if not os.path.exists(download_path):
+                                os.makedirs(download_path, exist_ok=True)
+                        elif not os.path.exists(download_path):
+                             # Create custom path if it doesn't exist (optional safety)
+                             os.makedirs(download_path, exist_ok=True)
 
+                        download.file_path = os.path.join(download_path, f"{output_template}.mp3")
+
+                    # Post-processing: Fix "NA" artifacts from yt-dlp (common when artist metadata is missing)
+                    if download.file_path and os.path.exists(download.file_path):
+                        directory, filename = os.path.split(download.file_path)
+                        # Check for "NA -" prefix
+                        if filename.startswith("NA -"):
+                             new_filename = filename[4:].strip() # Remove "NA -"
+                             if len(new_filename) > 0:
+                                  new_path = os.path.join(directory, new_filename)
+                                  try:
+                                      os.rename(download.file_path, new_path)
+                                      download.file_path = new_path
+                                      logger.info(f"Renamed file to remove NA prefix: {filename} -> {new_filename}")
+                                  except Exception as e:
+                                      logger.warning(f"Failed to rename NA file: {e}")
+
+                    logger.info(f"💾 Saving file for user '{download.user.username}' to: {download.file_path}")
                     await db.commit()
                     
 
@@ -311,7 +336,7 @@ class DownloadManager:
 
 
         schema_map = {
-            '{artist}': '%(artist)s',
+            '{artist}': '%(artist|uploader|creator)s', # Try hard to find an artist-like string
             '{title}': '%(title)s',
             '{album}': '%(album|Single)s',
             '{id}': '%(id)s',
@@ -351,7 +376,20 @@ class DownloadManager:
         if not output_template or '%' not in output_template:
              output_template = '%(artist)s - %(title)s'
 
-        download_path = download.user.preferences.get('downloadPath') or settings.DOWNLOAD_DIR
+        download_path = download.user.preferences.get('downloadPath')
+        if not download_path:
+            # Default to user subdirectory
+            download_path = os.path.join(settings.DOWNLOAD_DIR, download.user.username)
+        
+        # Ensure directory exists
+        if not os.path.exists(download_path):
+            try:
+                os.makedirs(download_path, exist_ok=True)
+            except Exception as e:
+                logger.error(f"Failed to create directory {download_path}: {e}")
+                # Fallback to root if creation fails (though unlikely if permissions are ok)
+                download_path = settings.DOWNLOAD_DIR
+
         ydl_opts['outtmpl'] = f'{download_path}/{output_template}.%(ext)s'
         return ydl_opts, output_template
 
@@ -439,7 +477,11 @@ class DownloadManager:
             # We try to put it in the same folder as the first track if possible, 
             # otherwise in the root download dir
             
-            download_path = downloads[0].user.preferences.get('downloadPath') or settings.DOWNLOAD_DIR
+            download_path = downloads[0].user.preferences.get('downloadPath')
+            if not download_path:
+                 download_path = os.path.join(settings.DOWNLOAD_DIR, downloads[0].user.username)
+            if not download_path: # Fallback just in case
+                 download_path = settings.DOWNLOAD_DIR
 
             # Simple heuristic: Use the playlist name as filename
             safe_playlist_name = playlist_name.replace('/', '-').replace('\\', '-')

@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 
-import toast from "react-hot-toast";
+import { notify as toast } from '../../utils/notify';
 import { motion } from "framer-motion";
 import {
   Save,
@@ -399,7 +399,7 @@ export default function SettingsPanel() {
                             .replace("{track_number}", "01")
                             .replace("{playlist}", "Top Hits")
                             .replace("{service}", "spotify")
-                            .replace("{user}", "mati")}
+                            .replace("{user}", "admin")}
                           {index === array.length - 1 ? ".mp3" : ""}
                         </span>
                       </div>
@@ -444,3 +444,4 @@ export default function SettingsPanel() {
     </div>
   );
 }
+

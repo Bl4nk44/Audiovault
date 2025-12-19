@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useStore } from "../../store/useStore";
 import WatchlistItem from "./WatchlistItem";
 import { Loader2, RefreshCw } from "lucide-react";
-import toast from "react-hot-toast";
+import { notify as toast } from '../../utils/notify';
 import api from "../../services/api";
 import SyncModal from "../sync/SyncModal";
 
@@ -127,3 +127,4 @@ export default function WatchlistManager() {
     </div>
   );
 }
+

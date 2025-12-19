@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { useNavigate } from 'react-router-dom'
 import { register as registerUser } from '../../services/auth'
-import toast from 'react-hot-toast'
+import { notify as toast } from '../../utils/notify';
 import { motion } from 'framer-motion'
 import Button from '../ui/Button'
 import { Mail, Lock, AlertCircle, User } from 'lucide-react'
@@ -178,3 +178,4 @@ export default function RegisterForm() {
         </form>
     )
 }
+

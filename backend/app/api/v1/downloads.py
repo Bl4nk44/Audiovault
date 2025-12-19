@@ -124,6 +124,7 @@ async def rescan_library(
     downloads = result.scalars().all()
     
     requeued_count = 0
+    requeued_ids = []
     for download in downloads:
         # Check if file exists
         file_missing = False
@@ -143,12 +144,17 @@ async def rescan_library(
             # We might want to clear file_path to avoid confusion until new one is set
             download.file_path = None
             
-            # Add to queue
-            await download_manager.queue.put(download.id)
+            # Add to list
+            requeued_ids.append(download.id)
             requeued_count += 1
             
     if requeued_count > 0:
         await db.commit()
+        
+        # Add to queue after commit to ensure worker sees updated status
+        for d_id in requeued_ids:
+            await download_manager.queue.put(d_id)
+            
         await download_manager.start_worker()
         
     return {"status": "success", "rescanned_count": requeued_count}

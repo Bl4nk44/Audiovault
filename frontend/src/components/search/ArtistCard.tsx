@@ -1,6 +1,6 @@
 import { Plus, Check, User } from 'lucide-react'
 import api from '../../services/api'
-import toast from 'react-hot-toast'
+import { notify as toast } from '../../utils/notify';
 import { motion } from 'framer-motion'
 import { useState } from 'react'
 
@@ -74,3 +74,4 @@ export default function ArtistCard({ artist }: ArtistCardProps) {
         </motion.div>
     )
 }
+

@@ -1,7 +1,7 @@
 import { Trash2, DownloadCloud, RefreshCcw } from "lucide-react";
 import { useState } from "react";
 import api from "../../services/api";
-import toast from "react-hot-toast";
+import { notify as toast } from '../../utils/notify';
 import { type WatchlistItem } from "../../types";
 
 interface WatchlistItemProps {
@@ -176,3 +176,4 @@ export default function WatchlistItem({
     </div>
   );
 }
+

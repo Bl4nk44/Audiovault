@@ -4,7 +4,7 @@ import { Search, Loader2, Download, Music, List } from 'lucide-react';
 import Button from '../ui/Button';
 import { importApi } from '../../api/import';
 import type { PlaylistMetadata } from '../../api/import';
-import toast from 'react-hot-toast';
+import { notify as toast } from '../../utils/notify';
 import { useStore } from '../../store/useStore';
 import { downloadsApi } from '../../api/downloads';
 
@@ -234,3 +234,4 @@ export default function PlaylistImport() {
         </div>
     );
 }
+

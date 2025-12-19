@@ -37,7 +37,7 @@ export const createAuthSlice: StateCreator<AuthSlice> = (set, get) => {
 
   return {
     user,
-    isAuthenticated: !!token,
+    isAuthenticated: !!user, // Only authenticated if we successfully restored a user session
     token,
     refreshToken,
     sessions,
@@ -140,6 +140,29 @@ export const createAuthSlice: StateCreator<AuthSlice> = (set, get) => {
 
         localStorage.setItem("sessions", JSON.stringify(sessions));
         set({ sessions });
+      }
+    },
+
+    checkAuth: async () => {
+      const token = localStorage.getItem("access_token");
+      if (!token) return;
+
+      try {
+        // Dynamic import to avoid circular dependency if api depends on store
+        const { default: api } = await import("../../services/api");
+        const response = await api.get<User>("/auth/me");
+        set({ user: response.data, isAuthenticated: true });
+
+        // Update session info if needed
+        const sessions = { ...get().sessions };
+        if (response.data.id && sessions[response.data.id]) {
+          sessions[response.data.id].user = response.data;
+          localStorage.setItem("sessions", JSON.stringify(sessions));
+          set({ sessions });
+        }
+      } catch (error) {
+        console.error("Token verification failed", error);
+        get().logout();
       }
     },
 

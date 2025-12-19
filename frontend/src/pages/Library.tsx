@@ -12,7 +12,7 @@ import {
 import { useStore } from "../store/useStore";
 import api from "../services/api";
 import ConfirmModal from "../components/ui/ConfirmModal";
-import toast from "react-hot-toast";
+import { notify as toast } from "../utils/notify";
 import { SiSpotify, SiYoutube, SiApplemusic, SiTidal } from "react-icons/si";
 // Using a generic icon for others
 import { FaMusic } from "react-icons/fa";
@@ -88,6 +88,452 @@ const SourceIcon = ({
   }
 };
 
+interface RootViewProps {
+  folders: FolderStructure;
+  onServiceClick: (source: string) => void;
+}
+
+const RootView = ({ folders, onServiceClick }: RootViewProps) => (
+  <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+    {Object.keys(folders).map((source) => (
+      <motion.button
+        key={source}
+        initial="rest"
+        whileHover="hover"
+        whileTap="tap"
+        onClick={() => onServiceClick(source)}
+        className="bg-card/40 border border-border rounded-2xl p-6 cursor-pointer hover:bg-card/60 transition-colors flex flex-col items-center justify-center gap-6 text-center aspect-square group w-full"
+      >
+        <motion.div
+          variants={{
+            rest: { scale: 1, rotate: 0 },
+            hover: {
+              scale: 1.2,
+              rotate: 5,
+              transition: { type: "spring", stiffness: 300 },
+            },
+            tap: { scale: 0.9 },
+          }}
+          className="p-6 bg-secondary/50 rounded-full"
+        >
+          <SourceIcon source={source} size={72} />
+        </motion.div>
+        <div>
+          <motion.h3
+            variants={{
+              rest: { y: 0 },
+              hover: { y: -2 },
+            }}
+            className="text-2xl font-bold text-foreground capitalize mb-1"
+          >
+            {source}
+          </motion.h3>
+          <p className="text-sm text-muted-foreground">
+            {folders[source].length}{" "}
+            {folders[source].length === 1 ? "playlist" : "playlists"}
+          </p>
+        </div>
+      </motion.button>
+    ))}
+  </div>
+);
+
+interface ServiceViewProps {
+  playlists: string[];
+  onAllTracksClick: () => void;
+  onPlaylistClick: (playlist: string) => void;
+  onPlaylistDelete: (e: React.MouseEvent, playlist: string) => void;
+}
+
+const ServiceView = ({
+  playlists,
+  onAllTracksClick,
+  onPlaylistClick,
+  onPlaylistDelete,
+}: ServiceViewProps) => {
+  return (
+    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+      {/* All Tracks Card */}
+      <motion.button
+        initial="rest"
+        whileHover="hover"
+        whileTap="tap"
+        onClick={onAllTracksClick}
+        className="bg-primary/20 border border-primary/30 rounded-2xl p-6 cursor-pointer hover:bg-primary/30 transition-colors flex flex-col items-center justify-center gap-6 text-center aspect-square w-full"
+      >
+        <motion.div
+          variants={{
+            rest: { scale: 1 },
+            hover: {
+              scale: 1.15,
+              transition: { type: "spring", stiffness: 400 },
+            },
+            tap: { scale: 0.95 },
+          }}
+          className="p-5 bg-black/20 rounded-full"
+        >
+          <Music size={56} className="text-white" />
+        </motion.div>
+        <h3 className="text-xl font-bold text-white">All Tracks</h3>
+      </motion.button>
+
+      {/* Playlist Cards */}
+      {playlists.map((playlist) => (
+        <motion.div
+          key={playlist || "uncategorized"}
+          initial="rest"
+          whileHover="hover"
+          whileTap="tap"
+          onClick={() => onPlaylistClick(playlist || "__none__")}
+          className="bg-card/40 border border-border rounded-2xl p-6 cursor-pointer hover:bg-card/60 transition-colors flex flex-col items-center justify-center gap-6 text-center aspect-square relative group w-full"
+          role="button"
+          tabIndex={0}
+          onKeyDown={(e) => {
+            if (e.key === "Enter" || e.key === " ") {
+              onPlaylistClick(playlist || "__none__");
+            }
+          }}
+        >
+          <motion.div
+            variants={{
+              rest: { scale: 1, rotate: 0 },
+              hover: { scale: 1.1, rotate: -3 },
+              tap: { scale: 0.95 },
+            }}
+            className="p-5 bg-secondary/50 rounded-full"
+          >
+            <Folder size={56} className="text-blue-400" />
+          </motion.div>
+          <div>
+            <h3 className="text-xl font-bold text-foreground line-clamp-2">
+              {playlist || "Uncategorized"}
+            </h3>
+          </div>
+
+          {/* Delete Playlist Button */}
+          {playlist && playlist !== "__none__" && (
+            <button
+              onClick={(e) => onPlaylistDelete(e, playlist)}
+              className="absolute top-3 right-3 p-2 bg-red-500/10 hover:bg-red-500 text-red-400 hover:text-white rounded-full opacity-0 group-hover:opacity-100 transition-all duration-200"
+              title="Delete Playlist"
+            >
+              <Trash2 size={16} />
+            </button>
+          )}
+        </motion.div>
+      ))}
+    </div>
+  );
+};
+
+interface LibraryBreadcrumbsProps {
+  viewMode: ViewMode;
+  selectedService: string | null;
+  selectedPlaylist: string | null;
+  onRootClick: () => void;
+  onServiceClick: () => void;
+}
+
+const LibraryBreadcrumbs = ({
+  viewMode,
+  selectedService,
+  selectedPlaylist,
+  onRootClick,
+  onServiceClick,
+}: LibraryBreadcrumbsProps) => (
+  <div className="flex items-center gap-2 text-sm text-muted-foreground mb-6">
+    <button
+      onClick={onRootClick}
+      className={`hover:text-foreground transition-colors ${
+        viewMode === "root" ? "text-foreground font-bold" : ""
+      }`}
+    >
+      Library
+    </button>
+    {selectedService && (
+      <>
+        <span>/</span>
+        <button
+          onClick={onServiceClick}
+          className={`hover:text-foreground transition-colors ${
+            viewMode === "service" ? "text-foreground font-bold" : ""
+          }`}
+        >
+          {selectedService.charAt(0).toUpperCase() + selectedService.slice(1)}
+        </button>
+      </>
+    )}
+    {selectedPlaylist && (
+      <>
+        <span>/</span>
+        <span className="text-foreground font-bold">
+          {selectedPlaylist === "__none__" ? "Uncategorized" : selectedPlaylist}
+        </span>
+      </>
+    )}
+  </div>
+);
+
+interface PlaylistViewProps {
+  items: LibraryItem[];
+  searchQuery: string;
+  setSearchQuery: (q: string) => void;
+  selectedPlaylist: string | null;
+  selectedService: string | null;
+  loading: boolean;
+  total: number;
+  limit: number;
+  page: number;
+  setPage: (p: number | ((prev: number) => number)) => void;
+  onEdit: (item: LibraryItem) => void;
+  onDelete: (id: string) => void;
+}
+
+const PlaylistView = ({
+  items,
+  searchQuery,
+  setSearchQuery,
+  selectedPlaylist,
+  selectedService,
+  loading,
+  total,
+  limit,
+  page,
+  setPage,
+  onEdit,
+  onDelete,
+}: PlaylistViewProps) => {
+  const { currentTrack, isPlaying, playTrack, togglePlay } = useStore();
+
+  // Standard table view
+  const filteredItems = items.filter(
+    (item) =>
+      item.track.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      item.track.artist.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+  const totalPages = Math.ceil(total / limit);
+
+  let headerTitle = `All ${selectedService || ""} Tracks`;
+  if (selectedPlaylist) {
+    headerTitle =
+      selectedPlaylist === "__none__" ? "Uncategorized" : selectedPlaylist;
+  }
+
+  return (
+    <>
+      <div className="flex items-center justify-between mb-6">
+        <h2 className="text-2xl font-bold text-white">{headerTitle}</h2>
+        <div className="relative w-64">
+          <Search
+            className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
+            size={18}
+          />
+          <input
+            type="text"
+            placeholder="Search tracks..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="w-full bg-white/5 border border-white/10 rounded-full py-2 pl-10 pr-4 text-white focus:outline-none focus:border-primary/50 transition-colors"
+          />
+        </div>
+      </div>
+
+      {loading && (
+        <div className="text-center py-20 text-gray-500">Loading tracks...</div>
+      )}
+
+      {!loading && filteredItems.length === 0 && (
+        <div className="text-center py-20 text-gray-500">No tracks found.</div>
+      )}
+
+      {!loading && filteredItems.length > 0 && (
+        <>
+          <div className="bg-black/20 border border-white/5 rounded-2xl overflow-hidden">
+            <table className="w-full text-left">
+              <thead className="bg-white/5 text-gray-400 text-sm uppercase font-medium">
+                <tr>
+                  <th className="px-6 py-4">Track</th>
+                  <th className="px-6 py-4">Artist</th>
+                  <th className="px-6 py-4">Album</th>
+                  <th className="px-6 py-4 text-right">Actions</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-white/5">
+                <AnimatePresence>
+                  {filteredItems.map((item) => {
+                    const isCurrent = currentTrack?.id === item.track_id;
+                    const isPlayingCurrent = isCurrent && isPlaying;
+
+                    return (
+                      <motion.tr
+                        key={item.id}
+                        layout
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        className={`
+                            group transition-colors relative border-b border-white/5 cursor-pointer
+                            ${
+                              isPlayingCurrent
+                                ? "bg-primary/10 border-l-4 border-l-primary"
+                                : "hover:bg-white/5 border-l-4 border-l-transparent"
+                            }
+                          `}
+                      >
+                        <td className="px-6 py-4">
+                          <div className="flex items-center gap-4">
+                            <button
+                              className={`relative w-10 h-10 rounded overflow-hidden cursor-pointer group/img shrink-0 border-0 p-0 m-0 ${
+                                isCurrent
+                                  ? "shadow-[0_0_10px_rgba(var(--primary-rgb),0.5)]"
+                                  : ""
+                              }`}
+                              onClick={() => {
+                                if (
+                                  currentTrack?.id === item.track_id &&
+                                  isPlaying
+                                ) {
+                                  togglePlay();
+                                } else {
+                                  const queue = filteredItems.map((i) => ({
+                                    id: i.track_id,
+                                    title: i.track.title,
+                                    artist: i.track.artist,
+                                    cover: i.track.image_url,
+                                    source: "local",
+                                    album: i.track.album,
+                                    filename: i.track.filename,
+                                  }));
+                                  playTrack(
+                                    {
+                                      id: item.track_id,
+                                      title: item.track.title,
+                                      artist: item.track.artist,
+                                      cover: item.track.image_url,
+                                      source: "local",
+                                      album: item.track.album,
+                                      filename: item.track.filename,
+                                    },
+                                    queue
+                                  );
+                                }
+                              }}
+                            >
+                              {item.track.image_url ? (
+                                <img
+                                  src={item.track.image_url}
+                                  alt={item.track.title}
+                                  className="w-full h-full object-cover"
+                                />
+                              ) : (
+                                <div className="w-full h-full bg-gray-800 flex items-center justify-center">
+                                  <Music size={16} />
+                                </div>
+                              )}
+                              {isPlayingCurrent ? (
+                                <div className="absolute inset-0 bg-black/60 flex items-center justify-center gap-0.5">
+                                  {[1, 2, 3].map((i) => (
+                                    <motion.div
+                                      key={i}
+                                      animate={{ height: [3, 12, 3] }}
+                                      transition={{
+                                        duration: 0.5,
+                                        repeat: Infinity,
+                                        repeatType: "reverse",
+                                        delay: i * 0.1,
+                                        ease: "easeInOut",
+                                      }}
+                                      className="w-1 bg-primary rounded-full"
+                                    />
+                                  ))}
+                                </div>
+                              ) : (
+                                <div
+                                  className={`absolute inset-0 bg-black/40 flex items-center justify-center transition-opacity ${
+                                    isCurrent
+                                      ? "opacity-100"
+                                      : "opacity-0 group-hover/img:opacity-100"
+                                  }`}
+                                >
+                                  <Play
+                                    size={16}
+                                    className={`fill-white ${
+                                      isCurrent ? "text-primary" : "text-white"
+                                    }`}
+                                  />
+                                </div>
+                              )}
+                            </button>
+                            <span
+                              className={`font-medium transition-colors ${
+                                isCurrent
+                                  ? "text-primary font-bold"
+                                  : "text-white"
+                              }`}
+                            >
+                              {item.track.title}
+                            </span>
+                          </div>
+                        </td>
+                        <td className="px-6 py-4 text-gray-300">
+                          {item.track.artist}
+                        </td>
+                        <td className="px-6 py-4 text-gray-400">
+                          {item.track.album || "-"}
+                        </td>
+                        <td className="px-6 py-4 text-right">
+                          <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                            <button
+                              onClick={() => onEdit(item)}
+                              className="p-2 text-gray-400 hover:text-white hover:bg-white/10 rounded-full transition-colors"
+                              title="Edit Info"
+                            >
+                              <Edit2 size={16} />
+                            </button>
+                            <button
+                              onClick={() => onDelete(item.id)}
+                              className="p-2 text-gray-400 hover:text-red-400 hover:bg-red-400/10 rounded-full transition-colors"
+                              title="Delete File"
+                            >
+                              <Trash2 size={16} />
+                            </button>
+                          </div>
+                        </td>
+                      </motion.tr>
+                    );
+                  })}
+                </AnimatePresence>
+              </tbody>
+            </table>
+          </div>
+          {/* Pagination Controls */}
+          {totalPages > 1 && (
+            <div className="flex justify-center gap-2 mt-6">
+              <button
+                onClick={() => setPage((p) => Math.max(1, p - 1))}
+                disabled={page === 1}
+                className="px-4 py-2 bg-white/5 rounded-lg disabled:opacity-50 hover:bg-white/10 transition-colors text-white"
+              >
+                Previous
+              </button>
+              <span className="px-4 py-2 text-gray-400">
+                Page {page} of {totalPages}
+              </span>
+              <button
+                onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+                disabled={page === totalPages}
+                className="px-4 py-2 bg-white/5 rounded-lg disabled:opacity-50 hover:bg-white/10 transition-colors text-white"
+              >
+                Next
+              </button>
+            </div>
+          )}
+        </>
+      )}
+    </>
+  );
+};
+
 export default function Library() {
   const [items, setItems] = useState<LibraryItem[]>([]);
   const [folders, setFolders] = useState<FolderStructure>({});
@@ -99,7 +545,6 @@ export default function Library() {
   const [selectedPlaylist, setSelectedPlaylist] = useState<string | null>(null);
 
   const [searchQuery, setSearchQuery] = useState("");
-  const { playTrack, currentTrack, isPlaying, togglePlay } = useStore();
   const [editingItem, setEditingItem] = useState<LibraryItem | null>(null);
 
   // Modals state
@@ -235,6 +680,9 @@ export default function Library() {
       );
       setShowRescanModal(false);
       fetchFolders(); // Refresh structure after rescan
+      if (viewMode === "playlist") {
+        fetchLibraryItems();
+      }
     } catch (e) {
       console.error("Rescan failed", e);
       toast.error("Rescan failed");
@@ -265,400 +713,6 @@ export default function Library() {
     }
   };
 
-  // Breadcrumbs
-  const renderBreadcrumbs = () => {
-    return (
-      <div className="flex items-center gap-2 text-sm text-muted-foreground mb-6">
-        <span
-          className={`cursor-pointer hover:text-foreground ${
-            viewMode === "root" ? "text-foreground font-bold" : ""
-          }`}
-          onClick={() => {
-            setViewMode("root");
-            setSelectedService(null);
-            setSelectedPlaylist(null);
-          }}
-        >
-          Library
-        </span>
-        {selectedService && (
-          <>
-            <span>/</span>
-            <span
-              className={`cursor-pointer hover:text-foreground ${
-                viewMode === "service" ? "text-foreground font-bold" : ""
-              }`}
-              onClick={() => {
-                setViewMode("service");
-                setSelectedPlaylist(null);
-              }}
-            >
-              {selectedService.charAt(0).toUpperCase() +
-                selectedService.slice(1)}
-            </span>
-          </>
-        )}
-        {selectedPlaylist && (
-          <>
-            <span>/</span>
-            <span className="text-foreground font-bold">
-              {selectedPlaylist === "__none__"
-                ? "Uncategorized"
-                : selectedPlaylist}
-            </span>
-          </>
-        )}
-      </div>
-    );
-  };
-
-  // View Components
-  const RootView = () => (
-    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-      {Object.keys(folders).map((source) => (
-        <motion.div
-          key={source}
-          initial="rest"
-          whileHover="hover"
-          whileTap="tap"
-          onClick={() => handleServiceClick(source)}
-          className="bg-card/40 border border-border rounded-2xl p-6 cursor-pointer hover:bg-card/60 transition-colors flex flex-col items-center justify-center gap-6 text-center aspect-square group"
-        >
-          <motion.div
-            variants={{
-              rest: { scale: 1, rotate: 0 },
-              hover: {
-                scale: 1.2,
-                rotate: 5,
-                transition: { type: "spring", stiffness: 300 },
-              },
-              tap: { scale: 0.9 },
-            }}
-            className="p-6 bg-secondary/50 rounded-full"
-          >
-            <SourceIcon source={source} size={72} />
-          </motion.div>
-          <div>
-            <motion.h3
-              variants={{
-                rest: { y: 0 },
-                hover: { y: -2 },
-              }}
-              className="text-2xl font-bold text-foreground capitalize mb-1"
-            >
-              {source}
-            </motion.h3>
-            <p className="text-sm text-muted-foreground">
-              {folders[source].length}{" "}
-              {folders[source].length === 1 ? "playlist" : "playlists"}
-            </p>
-            {/* Note: Logic above is rough approx, better to have counts from API */}
-          </div>
-        </motion.div>
-      ))}
-    </div>
-  );
-
-  const ServiceView = () => {
-    const playlists = folders[selectedService!] || [];
-    return (
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-        {/* All Tracks Card */}
-        <motion.div
-          initial="rest"
-          whileHover="hover"
-          whileTap="tap"
-          onClick={handleAllTracksClick}
-          className="bg-primary/20 border border-primary/30 rounded-2xl p-6 cursor-pointer hover:bg-primary/30 transition-colors flex flex-col items-center justify-center gap-6 text-center aspect-square"
-        >
-          <motion.div
-            variants={{
-              rest: { scale: 1 },
-              hover: {
-                scale: 1.15,
-                transition: { type: "spring", stiffness: 400 },
-              },
-              tap: { scale: 0.95 },
-            }}
-            className="p-5 bg-black/20 rounded-full"
-          >
-            <Music size={56} className="text-white" />
-          </motion.div>
-          <h3 className="text-xl font-bold text-white">All Tracks</h3>
-        </motion.div>
-
-        {/* Playlist Cards */}
-        {playlists.map((playlist) => (
-          <motion.div
-            key={playlist || "uncategorized"}
-            initial="rest"
-            whileHover="hover"
-            whileTap="tap"
-            onClick={() => handlePlaylistClick(playlist || "__none__")}
-            className="bg-card/40 border border-border rounded-2xl p-6 cursor-pointer hover:bg-card/60 transition-colors flex flex-col items-center justify-center gap-6 text-center aspect-square relative group"
-          >
-            <motion.div
-              variants={{
-                rest: { scale: 1, rotate: 0 },
-                hover: { scale: 1.1, rotate: -3 },
-                tap: { scale: 0.95 },
-              }}
-              className="p-5 bg-secondary/50 rounded-full"
-            >
-              <Folder size={56} className="text-blue-400" />
-            </motion.div>
-            <div>
-              <h3 className="text-xl font-bold text-foreground line-clamp-2">
-                {playlist || "Uncategorized"}
-              </h3>
-            </div>
-
-            {/* Delete Playlist Button */}
-            {playlist && playlist !== "__none__" && (
-              <button
-                onClick={(e) => handlePlaylistDeleteClick(e, playlist)}
-                className="absolute top-3 right-3 p-2 bg-red-500/10 hover:bg-red-500 text-red-400 hover:text-white rounded-full opacity-0 group-hover:opacity-100 transition-all duration-200"
-                title="Delete Playlist"
-              >
-                <Trash2 size={16} />
-              </button>
-            )}
-          </motion.div>
-        ))}
-      </div>
-    );
-  };
-
-  const PlaylistView = () => {
-    // Standard table view
-    const filteredItems = items.filter(
-      (item) =>
-        item.track.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        item.track.artist.toLowerCase().includes(searchQuery.toLowerCase())
-    );
-    const totalPages = Math.ceil(total / limit);
-
-    return (
-      <>
-        <div className="flex items-center justify-between mb-6">
-          <h2 className="text-2xl font-bold text-white">
-            {selectedPlaylist === "__none__"
-              ? "Uncategorized"
-              : selectedPlaylist || `All ${selectedService || ""} Tracks`}
-          </h2>
-          <div className="relative w-64">
-            <Search
-              className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
-              size={18}
-            />
-            <input
-              type="text"
-              placeholder="Search tracks..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full bg-white/5 border border-white/10 rounded-full py-2 pl-10 pr-4 text-white focus:outline-none focus:border-primary/50 transition-colors"
-            />
-          </div>
-        </div>
-
-        {loading ? (
-          <div className="text-center py-20 text-gray-500">
-            Loading tracks...
-          </div>
-        ) : filteredItems.length === 0 ? (
-          <div className="text-center py-20 text-gray-500">
-            No tracks found.
-          </div>
-        ) : (
-          <>
-            <div className="bg-black/20 border border-white/5 rounded-2xl overflow-hidden">
-              <table className="w-full text-left">
-                <thead className="bg-white/5 text-gray-400 text-sm uppercase font-medium">
-                  <tr>
-                    <th className="px-6 py-4">Track</th>
-                    <th className="px-6 py-4">Artist</th>
-                    <th className="px-6 py-4">Album</th>
-                    <th className="px-6 py-4 text-right">Actions</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-white/5">
-                  <AnimatePresence>
-                    {filteredItems.map((item) => {
-                      const isCurrent = currentTrack?.id === item.track_id;
-                      const isPlayingCurrent = isCurrent && isPlaying;
-
-                      return (
-                        <motion.tr
-                          key={item.id}
-                          layout
-                          initial={{ opacity: 0 }}
-                          animate={{ opacity: 1 }}
-                          exit={{ opacity: 0 }}
-                          className={`
-                            group transition-colors relative border-b border-white/5 cursor-pointer
-                            ${
-                              isPlayingCurrent
-                                ? "bg-primary/10 border-l-4 border-l-primary"
-                                : "hover:bg-white/5 border-l-4 border-l-transparent"
-                            }
-                          `}
-                        >
-                          <td className="px-6 py-4">
-                            <div className="flex items-center gap-4">
-                              <div
-                                className={`relative w-10 h-10 rounded overflow-hidden cursor-pointer group/img shrink-0 ${
-                                  isCurrent
-                                    ? "shadow-[0_0_10px_rgba(var(--primary-rgb),0.5)]"
-                                    : ""
-                                }`}
-                                onClick={() => {
-                                  if (
-                                    currentTrack?.id === item.track_id &&
-                                    isPlaying
-                                  ) {
-                                    togglePlay();
-                                  } else {
-                                    const queue = filteredItems.map((i) => ({
-                                      id: i.track_id,
-                                      title: i.track.title,
-                                      artist: i.track.artist,
-                                      cover: i.track.image_url,
-                                      source: "local",
-                                      album: i.track.album,
-                                      filename: i.track.filename,
-                                    }));
-                                    playTrack(
-                                      {
-                                        id: item.track_id,
-                                        title: item.track.title,
-                                        artist: item.track.artist,
-                                        cover: item.track.image_url,
-                                        source: "local",
-                                        album: item.track.album,
-                                        filename: item.track.filename,
-                                      },
-                                      queue
-                                    );
-                                  }
-                                }}
-                              >
-                                {item.track.image_url ? (
-                                  <img
-                                    src={item.track.image_url}
-                                    alt={item.track.title}
-                                    className="w-full h-full object-cover"
-                                  />
-                                ) : (
-                                  <div className="w-full h-full bg-gray-800 flex items-center justify-center">
-                                    <Music size={16} />
-                                  </div>
-                                )}
-                                {isPlayingCurrent ? (
-                                  <div className="absolute inset-0 bg-black/60 flex items-center justify-center gap-0.5">
-                                    {[1, 2, 3].map((i) => (
-                                      <motion.div
-                                        key={i}
-                                        animate={{ height: [3, 12, 3] }}
-                                        transition={{
-                                          duration: 0.5,
-                                          repeat: Infinity,
-                                          repeatType: "reverse",
-                                          delay: i * 0.1,
-                                          ease: "easeInOut",
-                                        }}
-                                        className="w-1 bg-primary rounded-full"
-                                      />
-                                    ))}
-                                  </div>
-                                ) : (
-                                  <div
-                                    className={`absolute inset-0 bg-black/40 flex items-center justify-center transition-opacity ${
-                                      isCurrent
-                                        ? "opacity-100"
-                                        : "opacity-0 group-hover/img:opacity-100"
-                                    }`}
-                                  >
-                                    <Play
-                                      size={16}
-                                      className={`fill-white ${
-                                        isCurrent
-                                          ? "text-primary"
-                                          : "text-white"
-                                      }`}
-                                    />
-                                  </div>
-                                )}
-                              </div>
-                              <span
-                                className={`font-medium transition-colors ${
-                                  isCurrent
-                                    ? "text-primary font-bold"
-                                    : "text-white"
-                                }`}
-                              >
-                                {item.track.title}
-                              </span>
-                            </div>
-                          </td>
-                          <td className="px-6 py-4 text-gray-300">
-                            {item.track.artist}
-                          </td>
-                          <td className="px-6 py-4 text-gray-400">
-                            {item.track.album || "-"}
-                          </td>
-                          <td className="px-6 py-4 text-right">
-                            <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                              <button
-                                onClick={() => setEditingItem(item)}
-                                className="p-2 text-gray-400 hover:text-white hover:bg-white/10 rounded-full transition-colors"
-                                title="Edit Info"
-                              >
-                                <Edit2 size={16} />
-                              </button>
-                              <button
-                                onClick={() => handleDelete(item.id)}
-                                className="p-2 text-gray-400 hover:text-red-400 hover:bg-red-400/10 rounded-full transition-colors"
-                                title="Delete File"
-                              >
-                                <Trash2 size={16} />
-                              </button>
-                            </div>
-                          </td>
-                        </motion.tr>
-                      );
-                    })}
-                  </AnimatePresence>
-                </tbody>
-              </table>
-            </div>
-            {/* Pagination Controls */}
-            {totalPages > 1 && (
-              <div className="flex justify-center gap-2 mt-6">
-                <button
-                  onClick={() => setPage((p) => Math.max(1, p - 1))}
-                  disabled={page === 1}
-                  className="px-4 py-2 bg-white/5 rounded-lg disabled:opacity-50 hover:bg-white/10 transition-colors text-white"
-                >
-                  Previous
-                </button>
-                <span className="px-4 py-2 text-gray-400">
-                  Page {page} of {totalPages}
-                </span>
-                <button
-                  onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-                  disabled={page === totalPages}
-                  className="px-4 py-2 bg-white/5 rounded-lg disabled:opacity-50 hover:bg-white/10 transition-colors text-white"
-                >
-                  Next
-                </button>
-              </div>
-            )}
-          </>
-        )}
-      </>
-    );
-  };
-
   return (
     <div className="space-y-6 pb-24">
       <div className="flex items-center justify-between">
@@ -679,11 +733,48 @@ export default function Library() {
         </button>
       </div>
 
-      {renderBreadcrumbs()}
+      <LibraryBreadcrumbs
+        viewMode={viewMode}
+        selectedService={selectedService}
+        selectedPlaylist={selectedPlaylist}
+        onRootClick={() => {
+          setViewMode("root");
+          setSelectedService(null);
+          setSelectedPlaylist(null);
+        }}
+        onServiceClick={() => {
+          setViewMode("service");
+          setSelectedPlaylist(null);
+        }}
+      />
 
-      {viewMode === "root" && <RootView />}
-      {viewMode === "service" && <ServiceView />}
-      {viewMode === "playlist" && <PlaylistView />}
+      {viewMode === "root" && (
+        <RootView folders={folders} onServiceClick={handleServiceClick} />
+      )}
+      {viewMode === "service" && selectedService && (
+        <ServiceView
+          playlists={folders[selectedService] || []}
+          onAllTracksClick={handleAllTracksClick}
+          onPlaylistClick={handlePlaylistClick}
+          onPlaylistDelete={handlePlaylistDeleteClick}
+        />
+      )}
+      {viewMode === "playlist" && (
+        <PlaylistView
+          items={items}
+          searchQuery={searchQuery}
+          setSearchQuery={setSearchQuery}
+          selectedPlaylist={selectedPlaylist}
+          selectedService={selectedService}
+          loading={loading}
+          total={total}
+          limit={limit}
+          page={page}
+          setPage={setPage}
+          onEdit={setEditingItem}
+          onDelete={handleDelete}
+        />
+      )}
 
       {/* Edit Modal (Same as before) */}
       {editingItem && (
@@ -698,40 +789,56 @@ export default function Library() {
             </h2>
             <form onSubmit={handleUpdate} className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-muted-foreground mb-1">
+                <label
+                  htmlFor="edit-title"
+                  className="block text-sm font-medium text-muted-foreground mb-1"
+                >
                   Title
                 </label>
                 <input
+                  id="edit-title"
                   name="title"
                   defaultValue={editingItem.track.title}
                   className="w-full bg-secondary/30 border border-white/10 rounded-lg px-3 py-2 text-foreground focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-muted-foreground mb-1">
+                <label
+                  htmlFor="edit-artist"
+                  className="block text-sm font-medium text-muted-foreground mb-1"
+                >
                   Artist
                 </label>
                 <input
+                  id="edit-artist"
                   name="artist"
                   defaultValue={editingItem.track.artist}
                   className="w-full bg-secondary/30 border border-white/10 rounded-lg px-3 py-2 text-foreground focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-muted-foreground mb-1">
+                <label
+                  htmlFor="edit-album"
+                  className="block text-sm font-medium text-muted-foreground mb-1"
+                >
                   Album
                 </label>
                 <input
+                  id="edit-album"
                   name="album"
                   defaultValue={editingItem.track.album}
                   className="w-full bg-secondary/30 border border-white/10 rounded-lg px-3 py-2 text-foreground focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-muted-foreground mb-1">
+                <label
+                  htmlFor="edit-filename"
+                  className="block text-sm font-medium text-muted-foreground mb-1"
+                >
                   Filename
                 </label>
                 <input
+                  id="edit-filename"
                   name="filename"
                   defaultValue={editingItem.track.filename}
                   className="w-full bg-secondary/30 border border-white/10 rounded-lg px-3 py-2 text-foreground focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"

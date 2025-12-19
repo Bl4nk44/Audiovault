@@ -3,7 +3,7 @@ import { createPortal } from "react-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { Loader2, AlertTriangle, CheckCircle, Trash2, X } from "lucide-react";
 import { syncApi, type SyncReport, type SyncResult } from "../../api/sync";
-import toast from "react-hot-toast";
+import { notify as toast } from '../../utils/notify';
 import { cn } from "../../lib/utils";
 import { type WatchlistItem } from "../../types";
 
@@ -292,3 +292,4 @@ export default function SyncModal({ item, onClose }: SyncModalProps) {
     document.body
   );
 }
+

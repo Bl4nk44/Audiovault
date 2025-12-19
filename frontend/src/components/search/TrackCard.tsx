@@ -1,6 +1,6 @@
 import { Play, Download, Plus, MoreHorizontal, Music } from "lucide-react";
 import api from "../../services/api";
-import toast from "react-hot-toast";
+import { notify as toast } from '../../utils/notify';
 import { motion } from "framer-motion";
 import { type Track } from "../../types"; // Import global Track
 
@@ -133,3 +133,4 @@ export default function TrackCard({ track, queue }: TrackCardProps) {
     </motion.div>
   );
 }
+
