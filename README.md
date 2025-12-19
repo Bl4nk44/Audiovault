@@ -28,16 +28,6 @@ Never miss a track. If a download fails (e.g., due to geo-restrictions or broken
 2.  Searches cross-platform (e.g., falls back to SoundCloud if YouTube fails).
 3.  Uses proxies (Invidious) to bypass region locks.
 
-### 🔐 Network & Privacy (New)
-
-Take control of your connection privacy directly from the app.
-
-- **WireGuard VPN**: Native integration with Gluetun. Bring your own config (`.conf`).
-- **Tor Network**: Anonymize your traffic through the Tor network (SOCKS5 Proxy).
-- **Modes**: Choose between Direct, VPN, Tor, or **Tor over VPN** for maximum security.
-- **Kill Switch**: Architecture ensures no traffic leaks outside the tunnel.
-- **Persistence**: Remembers your preferred network mode across sessions (v0.5.0).
-
 ### 👁️ Watchlist & Automation
 
 - **Auto-Sync**: Background scheduler checks for new tracks every 60 minutes.
@@ -50,11 +40,13 @@ Take control of your connection privacy directly from the app.
 - **Hierarchical View**: Browse by **Service -> Playlist -> Tracks**.
 - **Folders**: Organizational structure that keeps your library clean.
 - **Management**: Rename files, edit metadata, and manage storage directly from the UI.
+- **Rescan**: Detects manually added files or fixes missing entries.
 
 ### 🎨 Modern UI/UX
 
 - **Glassmorphism**: Stunning, responsive interface powered by React & TailwindCSS.
 - **Themes**: Deep Void (Default), Midnight, Ocean, Forest, Sunset, Neon.
+- **Feedback**: Real-time progress updates via global notifications.
 
 ## 🛠️ Tech Stack
 
@@ -78,7 +70,7 @@ The recommended way to run Audiovault is via **Docker**.
 - **CPU**: 2 vCPU cores (Minimum). `yt-dlp` benefits from faster CPUs during encoding.
 - **RAM**:
   - **Minimum**: 2 GB
-  - **Recommended**: 4 GB (Smooth operation with VPN + Tor + Database)
+  - **Recommended**: 4 GB (Smooth operation for heavy encoding tasks)
 - **Storage**:
   - Application: ~2 GB (Docker Images & Database)
   - Content: Depends on your music library size.
