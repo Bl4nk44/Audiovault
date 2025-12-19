@@ -1,9 +1,18 @@
 import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Play, Trash2, Edit2, Search, Music, Folder } from "lucide-react";
+import {
+  Play,
+  Trash2,
+  Edit2,
+  Search,
+  Music,
+  Folder,
+  RefreshCw,
+} from "lucide-react";
 import { useStore } from "../store/useStore";
 import api from "../services/api";
 import ConfirmModal from "../components/ui/ConfirmModal";
+import toast from "react-hot-toast";
 import { SiSpotify, SiYoutube, SiApplemusic, SiTidal } from "react-icons/si";
 // Using a generic icon for others
 import { FaMusic } from "react-icons/fa";
@@ -92,7 +101,14 @@ export default function Library() {
   const [searchQuery, setSearchQuery] = useState("");
   const { playTrack, currentTrack, isPlaying, togglePlay } = useStore();
   const [editingItem, setEditingItem] = useState<LibraryItem | null>(null);
+
+  // Modals state
   const [deleteId, setDeleteId] = useState<string | null>(null);
+  const [deletePlaylistTarget, setDeletePlaylistTarget] = useState<{
+    source: string;
+    playlist: string;
+  } | null>(null);
+  const [showRescanModal, setShowRescanModal] = useState(false);
 
   // Pagination state (for track list view)
   const [page, setPage] = useState(1);
@@ -180,9 +196,49 @@ export default function Library() {
       await api.delete(`/downloads/remove/${deleteId}`);
       setItems(items.filter((i) => i.id !== deleteId));
       fetchFolders(); // Update counts/structure if emptiness changes
+      toast.success("Track deleted");
     } catch (e) {
       console.error("Failed to delete item", e);
-      alert("Failed to delete item");
+      toast.error("Failed to delete item");
+    }
+  };
+
+  const handlePlaylistDeleteClick = (e: React.MouseEvent, playlist: string) => {
+    e.stopPropagation(); // Don't verify playlist
+    if (!selectedService) return;
+    setDeletePlaylistTarget({ source: selectedService, playlist });
+  };
+
+  const confirmPlaylistDelete = async () => {
+    if (!deletePlaylistTarget) return;
+    try {
+      await api.delete("/downloads/library/playlist", {
+        params: {
+          source: deletePlaylistTarget.source,
+          playlist_name: deletePlaylistTarget.playlist,
+        },
+      });
+      toast.success(`Playlist ${deletePlaylistTarget.playlist} deleted`);
+      fetchFolders();
+      setDeletePlaylistTarget(null);
+    } catch (e) {
+      console.error("Failed to delete playlist", e);
+      toast.error("Failed to delete playlist");
+    }
+  };
+
+  const handleRescan = async () => {
+    try {
+      const res = await api.post("/downloads/rescan");
+      toast.success(
+        `Rescan complete. Found ${res.data.rescanned_count} missing files.`
+      );
+      setShowRescanModal(false);
+      fetchFolders(); // Refresh structure after rescan
+    } catch (e) {
+      console.error("Rescan failed", e);
+      toast.error("Rescan failed");
+      setShowRescanModal(false);
     }
   };
 
@@ -202,9 +258,10 @@ export default function Library() {
       await api.put(`/downloads/library/${editingItem.id}`, updates);
       setEditingItem(null);
       fetchLibraryItems(); // Refresh
+      toast.success("Track updated");
     } catch (e) {
       console.error("Failed to update item", e);
-      alert("Failed to update item");
+      toast.error("Failed to update item");
     }
   };
 
@@ -292,8 +349,8 @@ export default function Library() {
               {source}
             </motion.h3>
             <p className="text-sm text-muted-foreground">
-              {folders[source].length + (folders[source].includes("") ? 0 : 1)}{" "}
-              playlists
+              {folders[source].length}{" "}
+              {folders[source].length === 1 ? "playlist" : "playlists"}
             </p>
             {/* Note: Logic above is rough approx, better to have counts from API */}
           </div>
@@ -338,7 +395,7 @@ export default function Library() {
             whileHover="hover"
             whileTap="tap"
             onClick={() => handlePlaylistClick(playlist || "__none__")}
-            className="bg-card/40 border border-border rounded-2xl p-6 cursor-pointer hover:bg-card/60 transition-colors flex flex-col items-center justify-center gap-6 text-center aspect-square"
+            className="bg-card/40 border border-border rounded-2xl p-6 cursor-pointer hover:bg-card/60 transition-colors flex flex-col items-center justify-center gap-6 text-center aspect-square relative group"
           >
             <motion.div
               variants={{
@@ -355,6 +412,17 @@ export default function Library() {
                 {playlist || "Uncategorized"}
               </h3>
             </div>
+
+            {/* Delete Playlist Button */}
+            {playlist && playlist !== "__none__" && (
+              <button
+                onClick={(e) => handlePlaylistDeleteClick(e, playlist)}
+                className="absolute top-3 right-3 p-2 bg-red-500/10 hover:bg-red-500 text-red-400 hover:text-white rounded-full opacity-0 group-hover:opacity-100 transition-all duration-200"
+                title="Delete Playlist"
+              >
+                <Trash2 size={16} />
+              </button>
+            )}
           </motion.div>
         ))}
       </div>
@@ -600,6 +668,15 @@ export default function Library() {
           </h1>
           <p className="text-muted-foreground">Manage your downloaded music.</p>
         </div>
+
+        {/* Rescan Button */}
+        <button
+          onClick={() => setShowRescanModal(true)}
+          className="flex items-center gap-2 bg-white/5 hover:bg-white/10 text-white px-4 py-2 rounded-lg border border-white/10 transition-all active:scale-95"
+        >
+          <RefreshCw size={16} />
+          Rescan Library
+        </button>
       </div>
 
       {renderBreadcrumbs()}
@@ -685,6 +762,7 @@ export default function Library() {
         </div>
       )}
 
+      {/* Delete Track Modal */}
       <ConfirmModal
         isOpen={!!deleteId}
         onClose={() => setDeleteId(null)}
@@ -694,6 +772,28 @@ export default function Library() {
         confirmText="Delete"
         cancelText="Cancel"
         variant="danger"
+      />
+
+      {/* Delete Playlist Modal */}
+      <ConfirmModal
+        isOpen={!!deletePlaylistTarget}
+        onClose={() => setDeletePlaylistTarget(null)}
+        onConfirm={confirmPlaylistDelete}
+        title="Delete Playlist"
+        message={`Are you sure you want to delete the playlist "${deletePlaylistTarget?.playlist}"? This will delete all files inside it.`}
+        confirmText="Delete Playlist"
+        cancelText="Cancel"
+        variant="danger"
+      />
+
+      {/* Rescan Modal */}
+      <ConfirmModal
+        isOpen={showRescanModal}
+        onClose={() => setShowRescanModal(false)}
+        onConfirm={handleRescan}
+        title="Rescan Library"
+        message="This will check for missing files and re-queue them for download. Are you sure?"
+        confirmText="Rescan"
       />
     </div>
   );

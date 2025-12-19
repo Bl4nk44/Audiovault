@@ -2,6 +2,7 @@ import { Outlet } from "react-router-dom";
 import Sidebar from "./Sidebar";
 import Navbar from "./Navbar";
 import Player from "../player/Player";
+import DownloadNotifications from "./DownloadNotifications";
 
 export default function Layout() {
   return (
@@ -15,6 +16,7 @@ export default function Layout() {
           <Outlet />
         </main>
         <Player />
+        <DownloadNotifications />
       </div>
     </div>
   );

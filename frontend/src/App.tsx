@@ -103,11 +103,20 @@ function SessionManager() {
   return null;
 }
 
+function WebSocketInit() {
+  React.useEffect(() => {
+    import("./services/websocket");
+  }, []);
+  return null;
+}
+
 function App() {
   return (
     <Router>
       <ThemeInit />
       <SessionManager />
+      {/* Initialize WebSocket */}
+      <WebSocketInit />
       <div className="min-h-screen text-foreground font-sans antialiased relative">
         <Routes>
           <Route path="/login" element={<Login />} />

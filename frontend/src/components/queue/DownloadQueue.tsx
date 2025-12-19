@@ -37,11 +37,9 @@ export default function DownloadQueue() {
       );
     };
 
-    const handleCompleted = (e: any) => {
+    const handleCompleted = () => {
       fetchQueue();
-      // Extract track title if available in event, otherwise generic message
-      const trackTitle = e.detail?.track?.title || "Track";
-      addNotification("success", `Download completed: ${trackTitle}`);
+      // Notification handled globally
     };
 
     window.addEventListener("download:progress", handleProgress as any);

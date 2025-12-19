@@ -98,6 +98,17 @@ async def remove_download(
 
     return {"status": "success"}
 
+@router.delete("/library/playlist")
+async def delete_playlist(
+    source: str,
+    playlist_name: str,
+    current_user: User = Depends(get_current_active_user),
+    db: AsyncSession = Depends(get_db)
+):
+    """Delete an entire playlist and its contents."""
+    await download_manager.delete_playlist(db, str(current_user.id), source, playlist_name)
+    return {"status": "success", "message": f"Playlist {playlist_name} deleted"}
+
 @router.post("/rescan")
 async def rescan_library(
     current_user: User = Depends(get_current_active_user),

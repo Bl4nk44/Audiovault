@@ -472,4 +472,62 @@ class DownloadManager:
         except Exception as e:
             logger.error(f"Failed to update progress in DB for {download_id}: {e}")
 
+    async def delete_playlist(self, db: AsyncSession, user_id: str, source: str, playlist_name: str):
+        """Delete an entire playlist, including files and DB records."""
+        try:
+            # 1. Get all downloads for this playlist
+            result = await db.execute(
+                select(Download).where(
+                    Download.user_id == user_id,
+                    Download.source == source,
+                    Download.playlist_name == playlist_name
+                )
+            )
+            downloads = result.scalars().all()
+            
+            if not downloads:
+                 logger.info(f"No downloads found for playlist {playlist_name} ({source})")
+                 return
+
+            # 2. Delete files
+            for download in downloads:
+                if download.file_path and os.path.exists(download.file_path):
+                    try:
+                        os.remove(download.file_path)
+                    except Exception as e:
+                        logger.error(f"Failed to delete file {download.file_path}: {e}")
+                
+                # Also remove from active tasks if downloading
+                if download.id in self.active_tasks:
+                     self.active_tasks[download.id].cancel()
+                     self.active_tasks.pop(download.id, None)
+
+            # 3. Clean up empty directory (heuristic)
+            # Assuming files are in DOWNLOAD_DIR/Artist - Title.mp3 or similar flat structure, 
+            # or grouped by playlist if schema was used.
+            # If files were in a folder named after the playlist, try to remove it.
+            # We check the directory of the first download.
+            if downloads and downloads[0].file_path:
+                 parent_dir = os.path.dirname(downloads[0].file_path)
+                 # Check if this dir name matches playlist name normalized
+                 safe_playlist_name = playlist_name.replace('/', '-').replace('\\', '-')
+                 if safe_playlist_name in os.path.basename(parent_dir):
+                      # Try to remove dir if empty
+                      try:
+                          os.rmdir(parent_dir)
+                          logger.info(f"Removed empty directory {parent_dir}")
+                      except Exception:
+                          pass # Not empty or other error
+
+            # 4. Delete DB records
+            for download in downloads:
+                await db.delete(download)
+            
+            await db.commit()
+            logger.info(f"Deleted playlist {playlist_name} for user {user_id}")
+
+        except Exception as e:
+            logger.error(f"Error deleting playlist {playlist_name}: {e}")
+            raise e
+
 download_manager = DownloadManager()

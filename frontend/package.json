@@ -1,7 +1,7 @@
 {
   "name": "audiovault-frontend",
   "private": true,
-  "version": "0.5.0",
+  "version": "0.5.1",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -23,6 +23,7 @@
     "react-hot-toast": "^2.6.0",
     "react-icons": "^5.5.0",
     "react-router-dom": "^7.11.0",
+    "socket.io-client": "^4.8.1",
     "tailwind-merge": "^3.4.0",
     "zustand": "^5.0.9"
   },

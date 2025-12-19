@@ -3,13 +3,17 @@ import axios from "axios";
 // import { useStore } from "../store/useStore";
 
 // Store injection to break circular dependency
+// Store injection to break circular dependency
 let store: any = null;
 export const injectStore = (_store: any) => {
   store = _store;
 };
 
+export const API_URL =
+  import.meta.env.VITE_API_URL || "http://localhost:8000/api/v1";
+
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || "http://localhost:8000/api/v1",
+  baseURL: API_URL,
   headers: {
     "Content-Type": "application/json",
   },
