@@ -83,7 +83,7 @@ class SpotifyProvider(MusicProvider):
                     source='spotify',
                     source_id=formatted_info['id']
                 )
-        except Exception as e:
+        except Exception:
             # Fallback if client fail or not configured
             pass
             

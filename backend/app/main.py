@@ -13,13 +13,13 @@ app = FastAPI(
     openapi_url=f"{settings.API_V1_STR}/openapi.json"
 )
 
-from app.api.v1 import artists, downloads, metadata, watchlist, import_routes, auth, dashboard, history, youtube, users, stream, spotify, deezer, sync
+from app.api.v1 import artists, downloads, watchlist, import_routes, auth, dashboard, history, youtube, users, stream, spotify, deezer, sync
 from app.api.v1 import settings as settings_router
 
 app.include_router(auth.router, prefix="/api/v1/auth", tags=["auth"])
 app.include_router(dashboard.router, prefix="/api/v1/dashboard", tags=["dashboard"])
 app.include_router(downloads.router, prefix="/api/v1/downloads", tags=["downloads"])
-app.include_router(metadata.router, prefix="/api/v1/metadata", tags=["metadata"])
+
 app.include_router(artists.router, prefix="/api/v1/artists", tags=["artists"])
 app.include_router(watchlist.router, prefix="/api/v1/watchlist", tags=["watchlist"])
 app.include_router(import_routes.router, prefix="/api/v1/import", tags=["import"])
@@ -88,12 +88,6 @@ from app.db.database import AsyncSessionLocal
 from app.db.init_data import init_db
 
 # Import models to ensure they are registered
-from app.models.user import User
-from app.models.track import Track
-from app.models.download import Download
-from app.models.credentials import ServiceCredentials
-from app.models.watchlist import Watchlist
-from app.models.history import ListeningHistory
 
 
 @app.on_event("startup")
@@ -102,7 +96,6 @@ async def startup_event():
     from app.db.base import Base
     from app.db.database import engine
     import asyncio
-    from sqlalchemy.exc import OperationalError
     
     retries = 5
     for i in range(retries):

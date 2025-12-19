@@ -1,5 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException
-from typing import List
+from fastapi import APIRouter, Depends
 from app.services.youtube_service import YouTubeService
 from app.core.dependencies import get_current_active_user
 from app.models.user import User

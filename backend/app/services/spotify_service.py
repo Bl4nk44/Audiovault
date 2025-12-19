@@ -28,8 +28,6 @@ class SpotifyService:
         
         # Handle short links / redirects first
         if "spotify.link" in query or "spoti.fi" in query:
-             from app.utils.url_helper import resolve_redirects
-             import asyncio
              # We need to run async function in sync method (search is sync here? No, let's check)
              # Wait, SpotifyService.search is standard sync? Fastapi runs it in threadpool usually if not async def.
              # But let's check if we can make search async or use run_until_complete.

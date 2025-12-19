@@ -1,7 +1,7 @@
 import asyncio
 import os
 import logging
-from typing import List, Optional
+from typing import Optional
 from datetime import datetime
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
@@ -13,7 +13,6 @@ from app.core.config import settings
 import yt_dlp
 
 from app.services.fallback_service import fallback_service
-import logging
 
 logger = logging.getLogger(__name__)
 
@@ -97,7 +96,6 @@ class DownloadManager:
     async def process_download(self, download_id: str):
         async with AsyncSessionLocal() as db:
             # Eager load user to get preferences
-            from app.models.user import User
             result = await db.execute(
                 select(Download)
                 .options(selectinload(Download.user), selectinload(Download.track))
@@ -328,7 +326,7 @@ class DownloadManager:
         if not output_template or '%' not in output_template:
              # This fallback seems redundant if we set a robust default above, but good for safety.
              # Use the new default structure as fallback too
-             output_template = f'%(artist)s - %(title)s'
+             output_template = '%(artist)s - %(title)s'
 
         # Pre-process playlist tag manually because yt-dlp might not know it (e.g. single track form Spotify)
         if '{playlist}' in output_template:
@@ -351,7 +349,7 @@ class DownloadManager:
             output_template = output_template.replace(tag, replacement)
         
         if not output_template or '%' not in output_template:
-             output_template = f'%(artist)s - %(title)s'
+             output_template = '%(artist)s - %(title)s'
 
         download_path = download.user.preferences.get('downloadPath') or settings.DOWNLOAD_DIR
         ydl_opts['outtmpl'] = f'{download_path}/{output_template}.%(ext)s'
@@ -421,7 +419,6 @@ class DownloadManager:
 
     async def update_playlist_m3u(self, db: AsyncSession, user_id: str, playlist_name: str):
         try:
-            from app.models.user import User
             # Get all completed downloads for this playlist
             result = await db.execute(
                 select(Download)

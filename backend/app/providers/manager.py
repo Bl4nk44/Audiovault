@@ -1,4 +1,4 @@
-from typing import List, Optional, Type
+from typing import List, Optional
 from app.providers.base import MusicProvider
 from app.schemas.metadata import PlaylistMetadata, TrackMetadata
 

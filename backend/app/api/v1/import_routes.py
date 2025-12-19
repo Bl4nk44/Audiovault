@@ -1,5 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException
-from typing import List, Optional
+from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 from app.providers import provider_manager
 from app.schemas.metadata import PlaylistMetadata

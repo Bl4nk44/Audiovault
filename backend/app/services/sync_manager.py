@@ -1,18 +1,16 @@
-import asyncio
 import os
 import shutil
 import logging
-from typing import List, Dict, Optional, Set
-from datetime import datetime, timedelta
+from typing import List, Dict
+from datetime import datetime
 from uuid import uuid4
 
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
-from sqlalchemy import func, and_, delete
+from sqlalchemy import func, delete
 
 from app.models.watchlist import Watchlist
 from app.models.watchlist_item import WatchlistItem
-from app.models.track import Track
 from app.models.download import Download
 from app.core.config import settings
 from app.providers import provider_manager

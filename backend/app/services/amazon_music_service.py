@@ -1,5 +1,4 @@
 import logging
-import re
 from typing import List, Dict, Any, Optional
 import yt_dlp
 import asyncio

@@ -1,0 +1,1566 @@
+E402 Module level import not at top of file
+  --> app\api\v1\__init__.py:18:1
+   |
+16 | api_router.include_router(deezer.router, prefix="/deezer", tags=["deezer"])
+17 | api_router.include_router(artists.router, prefix="/artists", tags=["artists"])
+18 | from app.api.v1 import apple_music, tidal
+   | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+19 | api_router.include_router(apple_music.router, prefix="/apple_music", tags=["apple_music"])
+20 | api_router.include_router(tidal.router, prefix="/tidal", tags=["tidal"])
+   |
+
+E402 Module level import not at top of file
+  --> app\api\v1\__init__.py:21:1
+   |
+19 | api_router.include_router(apple_music.router, prefix="/apple_music", tags=["apple_music"])
+20 | api_router.include_router(tidal.router, prefix="/tidal", tags=["tidal"])
+21 | from app.api.v1 import amazon_music
+   | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+22 | api_router.include_router(amazon_music.router, prefix="/amazon_music", tags=["amazon_music"])
+23 | from app.api.v1 import soundcloud
+   |
+
+E402 Module level import not at top of file
+  --> app\api\v1\__init__.py:23:1
+   |
+21 | from app.api.v1 import amazon_music
+22 | api_router.include_router(amazon_music.router, prefix="/amazon_music", tags=["amazon_music"])
+23 | from app.api.v1 import soundcloud
+   | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+24 | api_router.include_router(soundcloud.router, prefix="/soundcloud", tags=["soundcloud"])
+   |
+
+F401 [*] `typing.List` imported but unused
+ --> app\api\v1\amazon_music.py:2:20
+  |
+1 | from fastapi import APIRouter, Depends
+2 | from typing import List
+  |                    ^^^^
+3 | from app.services.amazon_music_service import amazon_music_service
+4 | from app.core.dependencies import get_current_active_user
+  |
+help: Remove unused import: `typing.List`
+
+F401 [*] `typing.List` imported but unused
+ --> app\api\v1\apple_music.py:2:20
+  |
+1 | from fastapi import APIRouter, Depends
+2 | from typing import List
+  |                    ^^^^
+3 | from app.services.apple_music_service import apple_music_service
+4 | from app.core.dependencies import get_current_active_user
+  |
+help: Remove unused import: `typing.List`
+
+F401 [*] `app.models.album.Album` imported but unused
+  --> app\api\v1\artists.py:10:30
+   |
+ 8 | from app.db.database import get_db
+ 9 | from app.models.artist import Artist
+10 | from app.models.album import Album
+   |                              ^^^^^
+11 | from app.schemas.artist import ArtistResponse
+   |
+help: Remove unused import: `app.models.album.Album`
+
+E402 Module level import not at top of file
+  --> app\api\v1\auth.py:11:1
+   |
+ 9 | router = APIRouter()
+10 |
+11 | from fastapi_limiter.depends import RateLimiter
+   | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+12 |
+13 | @router.post("/register", response_model=UserResponse, status_code=status.HTTP_201_CREATED, dependencies=[Depends(RateLimiter(times=5,…
+   |
+
+F401 [*] `fastapi.HTTPException` imported but unused
+ --> app\api\v1\deezer.py:1:41
+  |
+1 | from fastapi import APIRouter, Depends, HTTPException
+  |                                         ^^^^^^^^^^^^^
+2 | from typing import List
+3 | from app.services.deezer_service import DeezerService
+  |
+help: Remove unused import: `fastapi.HTTPException`
+
+F401 [*] `typing.List` imported but unused
+ --> app\api\v1\deezer.py:2:20
+  |
+1 | from fastapi import APIRouter, Depends, HTTPException
+2 | from typing import List
+  |                    ^^^^
+3 | from app.services.deezer_service import DeezerService
+4 | from app.core.dependencies import get_current_active_user
+  |
+help: Remove unused import: `typing.List`
+
+F401 [*] `typing.List` imported but unused
+ --> app\api\v1\downloads.py:6:20
+  |
+4 | from sqlalchemy.orm import joinedload
+5 | from sqlalchemy import case
+6 | from typing import List, Optional
+  |                    ^^^^
+7 | from app.db.database import get_db
+8 | from app.services.download_manager import download_manager
+  |
+help: Remove unused import: `typing.List`
+
+E402 Module level import not at top of file
+   --> app\api\v1\downloads.py:147:1
+    |
+147 | from sqlalchemy import update, text
+    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+148 |
+149 | @router.post("/clear-history")
+    |
+
+F841 [*] Local variable `e` is assigned to but never used
+   --> app\api\v1\downloads.py:163:25
+    |
+161 |         await db.execute(text("ALTER TABLE downloads ADD COLUMN archived BOOLEAN DEFAULT 0"))
+162 |         await db.commit()
+163 |     except Exception as e:
+    |                         ^
+164 |         # Column likely exists
+165 |         await db.rollback()
+    |
+help: Remove assignment to unused variable `e`
+
+E711 Comparison to `None` should be `cond is None`
+   --> app\api\v1\downloads.py:243:58
+    |
+241 |     if playlist:
+242 |         if playlist == "__none__":
+243 |              conditions.append(Download.playlist_name == None)
+    |                                                          ^^^^
+244 |         else:
+245 |              conditions.append(Download.playlist_name == playlist)
+    |
+help: Replace with `cond is None`
+
+E712 Avoid equality comparisons to `False`; use `not Download.archived:` for false checks
+   --> app\api\v1\downloads.py:374:13
+    |
+372 |         .where(
+373 |             Download.user_id == current_user.id,
+374 |             Download.archived == False # Only show unarchived in queue
+    |             ^^^^^^^^^^^^^^^^^^^^^^^^^^
+375 |         )
+376 |         .order_by(status_order, Download.created_at.desc())
+    |
+help: Replace with `not Download.archived`
+
+F841 Local variable `stats` is assigned to but never used
+   --> app\api\v1\downloads.py:427:5
+    |
+425 |         .group_by(Download.source, Download.playlist_name)
+426 |     )
+427 |     stats = [{"source": row[0], "playlist": row[1], "count": row[2]} for row in stats_result.all()]
+    |     ^^^^^
+428 |     
+429 |     # 2. Fix Source
+    |
+help: Remove assignment to unused variable `stats`
+
+E711 Comparison to `None` should be `cond is None`
+   --> app\api\v1\downloads.py:434:33
+    |
+432 |         .options(joinedload(Download.track))
+433 |         .where(
+434 |             (Download.source == None) | 
+    |                                 ^^^^
+435 |             (Download.source == "") | 
+436 |             (Download.source == "other")
+    |
+help: Replace with `cond is None`
+
+E701 Multiple statements on one line (colon)
+   --> app\api\v1\downloads.py:554:40
+    |
+552 |                 try:
+553 |                     audio = EasyID3(full_path)
+554 |                     if 'title' in audio: title = audio['title'][0]
+    |                                        ^
+555 |                     if 'artist' in audio: artist = audio['artist'][0]
+556 |                     if 'album' in audio: album = audio['album'][0]
+    |
+
+E701 Multiple statements on one line (colon)
+   --> app\api\v1\downloads.py:555:41
+    |
+553 |                     audio = EasyID3(full_path)
+554 |                     if 'title' in audio: title = audio['title'][0]
+555 |                     if 'artist' in audio: artist = audio['artist'][0]
+    |                                         ^
+556 |                     if 'album' in audio: album = audio['album'][0]
+557 |                 except Exception as e:
+    |
+
+E701 Multiple statements on one line (colon)
+   --> app\api\v1\downloads.py:556:40
+    |
+554 |                     if 'title' in audio: title = audio['title'][0]
+555 |                     if 'artist' in audio: artist = audio['artist'][0]
+556 |                     if 'album' in audio: album = audio['album'][0]
+    |                                        ^
+557 |                 except Exception as e:
+558 |                      try:
+    |
+
+F841 [*] Local variable `e` is assigned to but never used
+   --> app\api\v1\downloads.py:557:37
+    |
+555 |                     if 'artist' in audio: artist = audio['artist'][0]
+556 |                     if 'album' in audio: album = audio['album'][0]
+557 |                 except Exception as e:
+    |                                     ^
+558 |                      try:
+559 |                         m = mutagen.File(full_path)
+    |
+help: Remove assignment to unused variable `e`
+
+E701 Multiple statements on one line (colon)
+   --> app\api\v1\downloads.py:560:45
+    |
+558 |                      try:
+559 |                         m = mutagen.File(full_path)
+560 |                         if m and 'TIT2' in m: title = str(m['TIT2'])
+    |                                             ^
+561 |                         if m and 'TPE1' in m: artist = str(m['TPE1'])
+562 |                      except:
+    |
+
+E701 Multiple statements on one line (colon)
+   --> app\api\v1\downloads.py:561:45
+    |
+559 |                         m = mutagen.File(full_path)
+560 |                         if m and 'TIT2' in m: title = str(m['TIT2'])
+561 |                         if m and 'TPE1' in m: artist = str(m['TPE1'])
+    |                                             ^
+562 |                      except:
+563 |                         pass
+    |
+
+E722 Do not use bare `except`
+   --> app\api\v1\downloads.py:562:22
+    |
+560 |                         if m and 'TIT2' in m: title = str(m['TIT2'])
+561 |                         if m and 'TPE1' in m: artist = str(m['TPE1'])
+562 |                      except:
+    |                      ^^^^^^
+563 |                         pass
+    |
+
+F401 [*] `sqlalchemy.future.select` imported but unused
+ --> app\api\v1\history.py:3:31
+  |
+1 | from fastapi import APIRouter, Depends, HTTPException
+2 | from sqlalchemy.ext.asyncio import AsyncSession
+3 | from sqlalchemy.future import select
+  |                               ^^^^^^
+4 | from sqlalchemy.orm import joinedload
+5 | from typing import List, Optional
+  |
+help: Remove unused import: `sqlalchemy.future.select`
+
+F401 [*] `sqlalchemy.orm.joinedload` imported but unused
+ --> app\api\v1\history.py:4:28
+  |
+2 | from sqlalchemy.ext.asyncio import AsyncSession
+3 | from sqlalchemy.future import select
+4 | from sqlalchemy.orm import joinedload
+  |                            ^^^^^^^^^^
+5 | from typing import List, Optional
+6 | from app.db.database import get_db
+  |
+help: Remove unused import: `sqlalchemy.orm.joinedload`
+
+F401 [*] `typing.List` imported but unused
+ --> app\api\v1\history.py:5:20
+  |
+3 | from sqlalchemy.future import select
+4 | from sqlalchemy.orm import joinedload
+5 | from typing import List, Optional
+  |                    ^^^^
+6 | from app.db.database import get_db
+7 | from app.core.dependencies import get_current_active_user
+  |
+help: Remove unused import
+
+F401 [*] `typing.Optional` imported but unused
+ --> app\api\v1\history.py:5:26
+  |
+3 | from sqlalchemy.future import select
+4 | from sqlalchemy.orm import joinedload
+5 | from typing import List, Optional
+  |                          ^^^^^^^^
+6 | from app.db.database import get_db
+7 | from app.core.dependencies import get_current_active_user
+  |
+help: Remove unused import
+
+F401 [*] `datetime.datetime` imported but unused
+  --> app\api\v1\history.py:13:22
+   |
+11 | from pydantic import BaseModel
+12 | from uuid import UUID
+13 | from datetime import datetime
+   |                      ^^^^^^^^
+14 |
+15 | router = APIRouter()
+   |
+help: Remove unused import: `datetime.datetime`
+
+F401 [*] `fastapi.Depends` imported but unused
+ --> app\api\v1\import_routes.py:1:32
+  |
+1 | from fastapi import APIRouter, Depends, HTTPException
+  |                                ^^^^^^^
+2 | from typing import List, Optional
+3 | from pydantic import BaseModel
+  |
+help: Remove unused import: `fastapi.Depends`
+
+F401 [*] `typing.List` imported but unused
+ --> app\api\v1\import_routes.py:2:20
+  |
+1 | from fastapi import APIRouter, Depends, HTTPException
+2 | from typing import List, Optional
+  |                    ^^^^
+3 | from pydantic import BaseModel
+4 | from app.providers import provider_manager
+  |
+help: Remove unused import
+
+F401 [*] `typing.Optional` imported but unused
+ --> app\api\v1\import_routes.py:2:26
+  |
+1 | from fastapi import APIRouter, Depends, HTTPException
+2 | from typing import List, Optional
+  |                          ^^^^^^^^
+3 | from pydantic import BaseModel
+4 | from app.providers import provider_manager
+  |
+help: Remove unused import
+
+F401 [*] `typing.List` imported but unused
+ --> app\api\v1\soundcloud.py:2:20
+  |
+1 | from fastapi import APIRouter, Depends
+2 | from typing import List
+  |                    ^^^^
+3 | from app.services.soundcloud_service import soundcloud_service
+4 | from app.core.dependencies import get_current_active_user
+  |
+help: Remove unused import: `typing.List`
+
+F401 [*] `typing.List` imported but unused
+ --> app\api\v1\spotify.py:2:20
+  |
+1 | from fastapi import APIRouter, Depends, HTTPException
+2 | from typing import List
+  |                    ^^^^
+3 | from app.services.spotify_service import SpotifyService
+4 | from app.core.dependencies import get_current_active_user
+  |
+help: Remove unused import: `typing.List`
+
+F401 [*] `fastapi.Response` imported but unused
+ --> app\api\v1\stream.py:1:47
+  |
+1 | from fastapi import APIRouter, HTTPException, Response
+  |                                               ^^^^^^^^
+2 | from fastapi.responses import StreamingResponse
+3 | import yt_dlp
+  |
+help: Remove unused import: `fastapi.Response`
+
+F401 [*] `typing.List` imported but unused
+ --> app\api\v1\sync.py:3:20
+  |
+1 | from fastapi import APIRouter, Depends, HTTPException, Body
+2 | from sqlalchemy.ext.asyncio import AsyncSession
+3 | from typing import List, Dict
+  |                    ^^^^
+4 | from uuid import UUID
+  |
+help: Remove unused import
+
+F401 [*] `typing.Dict` imported but unused
+ --> app\api\v1\sync.py:3:26
+  |
+1 | from fastapi import APIRouter, Depends, HTTPException, Body
+2 | from sqlalchemy.ext.asyncio import AsyncSession
+3 | from typing import List, Dict
+  |                          ^^^^
+4 | from uuid import UUID
+  |
+help: Remove unused import
+
+F401 [*] `typing.List` imported but unused
+ --> app\api\v1\tidal.py:2:20
+  |
+1 | from fastapi import APIRouter, Depends
+2 | from typing import List
+  |                    ^^^^
+3 | from app.services.tidal_service import tidal_service
+4 | from app.core.dependencies import get_current_active_user
+  |
+help: Remove unused import: `typing.List`
+
+F401 [*] `fastapi.status` imported but unused
+ --> app\api\v1\users.py:1:56
+  |
+1 | from fastapi import APIRouter, Depends, HTTPException, status
+  |                                                        ^^^^^^
+2 | from sqlalchemy.ext.asyncio import AsyncSession
+3 | from app.db.database import get_db
+  |
+help: Remove unused import: `fastapi.status`
+
+F401 [*] `typing.List` imported but unused
+ --> app\api\v1\watchlist.py:3:20
+  |
+1 | from fastapi import APIRouter, Depends, HTTPException
+2 | from sqlalchemy.ext.asyncio import AsyncSession
+3 | from typing import List
+  |                    ^^^^
+4 | from app.db.database import get_db
+5 | from app.services.watchlist_engine import watchlist_engine
+  |
+help: Remove unused import: `typing.List`
+
+F401 [*] `fastapi.HTTPException` imported but unused
+ --> app\api\v1\youtube.py:1:41
+  |
+1 | from fastapi import APIRouter, Depends, HTTPException
+  |                                         ^^^^^^^^^^^^^
+2 | from typing import List
+3 | from app.services.youtube_service import YouTubeService
+  |
+help: Remove unused import: `fastapi.HTTPException`
+
+F401 [*] `typing.List` imported but unused
+ --> app\api\v1\youtube.py:2:20
+  |
+1 | from fastapi import APIRouter, Depends, HTTPException
+2 | from typing import List
+  |                    ^^^^
+3 | from app.services.youtube_service import YouTubeService
+4 | from app.core.dependencies import get_current_active_user
+  |
+help: Remove unused import: `typing.List`
+
+F401 [*] `app.models.schemas.TokenPayload` imported but unused
+  --> app\core\dependencies.py:10:32
+   |
+ 8 | from app.core.config import settings
+ 9 | from app.models.user import User
+10 | from app.models.schemas import TokenPayload
+   |                                ^^^^^^^^^^^^
+11 |
+12 | oauth2_scheme = OAuth2PasswordBearer(tokenUrl=f"{settings.API_V1_STR}/auth/login")
+   |
+help: Remove unused import: `app.models.schemas.TokenPayload`
+
+F401 [*] `typing.Optional` imported but unused
+ --> app\core\security.py:2:32
+  |
+1 | from datetime import datetime, timedelta
+2 | from typing import Any, Union, Optional
+  |                                ^^^^^^^^
+3 | import jwt
+4 | import bcrypt
+  |
+help: Remove unused import: `typing.Optional`
+
+F403 `from app.models import *` used; unable to detect undefined names
+  --> app\db\migrations\env.py:13:1
+   |
+11 | from app.db.base import Base
+12 | # Import all models here to ensure they are registered
+13 | from app.models import * 
+   | ^^^^^^^^^^^^^^^^^^^^^^^^
+14 |
+15 | # this is the Alembic Config object, which provides
+   |
+
+E402 Module level import not at top of file
+  --> app\main.py:16:1
+   |
+14 | )
+15 |
+16 | from app.api.v1 import artists, downloads, metadata, watchlist, import_routes, auth, dashboard, history, youtube, users, stream, spotify, deezer, sync
+   | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+17 | from app.api.v1 import settings as settings_router
+   |
+
+E402 Module level import not at top of file
+  --> app\main.py:17:1
+   |
+16 | from app.api.v1 import artists, downloads, metadata, watchlist, import_routes, auth, dashboard, history, youtube, users, stream, spoti…
+17 | from app.api.v1 import settings as settings_router
+   | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+18 |
+19 | app.include_router(auth.router, prefix="/api/v1/auth", tags=["auth"])
+   |
+
+E402 Module level import not at top of file
+  --> app\main.py:49:1
+   |
+47 | )
+48 |
+49 | from fastapi.middleware.gzip import GZipMiddleware
+   | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+50 | app.add_middleware(GZipMiddleware, minimum_size=1000)
+   |
+
+E402 Module level import not at top of file
+  --> app\main.py:64:1
+   |
+62 |     return {"version": settings.VERSION}
+63 |
+64 | from fastapi.staticfiles import StaticFiles
+   | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+65 | import os
+   |
+
+E402 Module level import not at top of file
+  --> app\main.py:65:1
+   |
+64 | from fastapi.staticfiles import StaticFiles
+65 | import os
+   | ^^^^^^^^^
+66 |
+67 | # Ensure download directory exists
+   |
+
+E402 Module level import not at top of file
+  --> app\main.py:72:1
+   |
+71 | # Debug: List files in download directory on startup
+72 | import logging
+   | ^^^^^^^^^^^^^^
+73 | logger = logging.getLogger(__name__)
+   |
+
+E402 Module level import not at top of file
+  --> app\main.py:84:1
+   |
+82 | app.mount("/stream", StaticFiles(directory=settings.DOWNLOAD_DIR), name="stream")
+83 |
+84 | from app.services.socket_manager import socket_manager
+   | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+85 | app.mount("/socket.io", socket_manager.app)
+   |
+
+E402 Module level import not at top of file
+  --> app\main.py:87:1
+   |
+85 | app.mount("/socket.io", socket_manager.app)
+86 |
+87 | from app.db.database import AsyncSessionLocal
+   | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+88 | from app.db.init_data import init_db
+   |
+
+E402 Module level import not at top of file
+  --> app\main.py:88:1
+   |
+87 | from app.db.database import AsyncSessionLocal
+88 | from app.db.init_data import init_db
+   | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+89 |
+90 | # Import models to ensure they are registered
+   |
+
+E402 Module level import not at top of file
+  --> app\main.py:91:1
+   |
+90 | # Import models to ensure they are registered
+91 | from app.models.user import User
+   | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+92 | from app.models.track import Track
+93 | from app.models.download import Download
+   |
+
+F401 [*] `app.models.user.User` imported but unused
+  --> app\main.py:91:29
+   |
+90 | # Import models to ensure they are registered
+91 | from app.models.user import User
+   |                             ^^^^
+92 | from app.models.track import Track
+93 | from app.models.download import Download
+   |
+help: Remove unused import: `app.models.user.User`
+
+E402 Module level import not at top of file
+  --> app\main.py:92:1
+   |
+90 | # Import models to ensure they are registered
+91 | from app.models.user import User
+92 | from app.models.track import Track
+   | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+93 | from app.models.download import Download
+94 | from app.models.credentials import ServiceCredentials
+   |
+
+F401 [*] `app.models.track.Track` imported but unused
+  --> app\main.py:92:30
+   |
+90 | # Import models to ensure they are registered
+91 | from app.models.user import User
+92 | from app.models.track import Track
+   |                              ^^^^^
+93 | from app.models.download import Download
+94 | from app.models.credentials import ServiceCredentials
+   |
+help: Remove unused import: `app.models.track.Track`
+
+E402 Module level import not at top of file
+  --> app\main.py:93:1
+   |
+91 | from app.models.user import User
+92 | from app.models.track import Track
+93 | from app.models.download import Download
+   | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+94 | from app.models.credentials import ServiceCredentials
+95 | from app.models.watchlist import Watchlist
+   |
+
+F401 [*] `app.models.download.Download` imported but unused
+  --> app\main.py:93:33
+   |
+91 | from app.models.user import User
+92 | from app.models.track import Track
+93 | from app.models.download import Download
+   |                                 ^^^^^^^^
+94 | from app.models.credentials import ServiceCredentials
+95 | from app.models.watchlist import Watchlist
+   |
+help: Remove unused import: `app.models.download.Download`
+
+E402 Module level import not at top of file
+  --> app\main.py:94:1
+   |
+92 | from app.models.track import Track
+93 | from app.models.download import Download
+94 | from app.models.credentials import ServiceCredentials
+   | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+95 | from app.models.watchlist import Watchlist
+96 | from app.models.history import ListeningHistory
+   |
+
+F401 [*] `app.models.credentials.ServiceCredentials` imported but unused
+  --> app\main.py:94:36
+   |
+92 | from app.models.track import Track
+93 | from app.models.download import Download
+94 | from app.models.credentials import ServiceCredentials
+   |                                    ^^^^^^^^^^^^^^^^^^
+95 | from app.models.watchlist import Watchlist
+96 | from app.models.history import ListeningHistory
+   |
+help: Remove unused import: `app.models.credentials.ServiceCredentials`
+
+E402 Module level import not at top of file
+  --> app\main.py:95:1
+   |
+93 | from app.models.download import Download
+94 | from app.models.credentials import ServiceCredentials
+95 | from app.models.watchlist import Watchlist
+   | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+96 | from app.models.history import ListeningHistory
+   |
+
+F401 [*] `app.models.watchlist.Watchlist` imported but unused
+  --> app\main.py:95:34
+   |
+93 | from app.models.download import Download
+94 | from app.models.credentials import ServiceCredentials
+95 | from app.models.watchlist import Watchlist
+   |                                  ^^^^^^^^^
+96 | from app.models.history import ListeningHistory
+   |
+help: Remove unused import: `app.models.watchlist.Watchlist`
+
+E402 Module level import not at top of file
+  --> app\main.py:96:1
+   |
+94 | from app.models.credentials import ServiceCredentials
+95 | from app.models.watchlist import Watchlist
+96 | from app.models.history import ListeningHistory
+   | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   |
+
+F401 [*] `app.models.history.ListeningHistory` imported but unused
+  --> app\main.py:96:32
+   |
+94 | from app.models.credentials import ServiceCredentials
+95 | from app.models.watchlist import Watchlist
+96 | from app.models.history import ListeningHistory
+   |                                ^^^^^^^^^^^^^^^^
+   |
+help: Remove unused import: `app.models.history.ListeningHistory`
+
+F401 [*] `sqlalchemy.exc.OperationalError` imported but unused
+   --> app\main.py:105:32
+    |
+103 |     from app.db.database import engine
+104 |     import asyncio
+105 |     from sqlalchemy.exc import OperationalError
+    |                                ^^^^^^^^^^^^^^^^
+106 |     
+107 |     retries = 5
+    |
+help: Remove unused import: `sqlalchemy.exc.OperationalError`
+
+F401 `.user.User` imported but unused; consider removing, adding to `__all__`, or using a redundant alias
+ --> app\models\__init__.py:1:19
+  |
+1 | from .user import User
+  |                   ^^^^
+2 | from .artist import Artist
+3 | from .album import Album
+  |
+help: Use an explicit re-export: `User as User`
+
+F401 `.artist.Artist` imported but unused; consider removing, adding to `__all__`, or using a redundant alias
+ --> app\models\__init__.py:2:21
+  |
+1 | from .user import User
+2 | from .artist import Artist
+  |                     ^^^^^^
+3 | from .album import Album
+4 | from .track import Track
+  |
+help: Use an explicit re-export: `Artist as Artist`
+
+F401 `.album.Album` imported but unused; consider removing, adding to `__all__`, or using a redundant alias
+ --> app\models\__init__.py:3:20
+  |
+1 | from .user import User
+2 | from .artist import Artist
+3 | from .album import Album
+  |                    ^^^^^
+4 | from .track import Track
+5 | from .download import Download
+  |
+help: Use an explicit re-export: `Album as Album`
+
+F401 `.track.Track` imported but unused; consider removing, adding to `__all__`, or using a redundant alias
+ --> app\models\__init__.py:4:20
+  |
+2 | from .artist import Artist
+3 | from .album import Album
+4 | from .track import Track
+  |                    ^^^^^
+5 | from .download import Download
+6 | from .watchlist import Watchlist
+  |
+help: Use an explicit re-export: `Track as Track`
+
+F401 `.download.Download` imported but unused; consider removing, adding to `__all__`, or using a redundant alias
+ --> app\models\__init__.py:5:23
+  |
+3 | from .album import Album
+4 | from .track import Track
+5 | from .download import Download
+  |                       ^^^^^^^^
+6 | from .watchlist import Watchlist
+7 | from .watchlist_item import WatchlistItem
+  |
+help: Use an explicit re-export: `Download as Download`
+
+F401 `.watchlist.Watchlist` imported but unused; consider removing, adding to `__all__`, or using a redundant alias
+ --> app\models\__init__.py:6:24
+  |
+4 | from .track import Track
+5 | from .download import Download
+6 | from .watchlist import Watchlist
+  |                        ^^^^^^^^^
+7 | from .watchlist_item import WatchlistItem
+8 | from .credentials import ServiceCredentials
+  |
+help: Use an explicit re-export: `Watchlist as Watchlist`
+
+F401 `.watchlist_item.WatchlistItem` imported but unused; consider removing, adding to `__all__`, or using a redundant alias
+ --> app\models\__init__.py:7:29
+  |
+5 | from .download import Download
+6 | from .watchlist import Watchlist
+7 | from .watchlist_item import WatchlistItem
+  |                             ^^^^^^^^^^^^^
+8 | from .credentials import ServiceCredentials
+9 | from .history import ListeningHistory
+  |
+help: Use an explicit re-export: `WatchlistItem as WatchlistItem`
+
+F401 `.credentials.ServiceCredentials` imported but unused; consider removing, adding to `__all__`, or using a redundant alias
+ --> app\models\__init__.py:8:26
+  |
+6 | from .watchlist import Watchlist
+7 | from .watchlist_item import WatchlistItem
+8 | from .credentials import ServiceCredentials
+  |                          ^^^^^^^^^^^^^^^^^^
+9 | from .history import ListeningHistory
+  |
+help: Use an explicit re-export: `ServiceCredentials as ServiceCredentials`
+
+F401 `.history.ListeningHistory` imported but unused; consider removing, adding to `__all__`, or using a redundant alias
+ --> app\models\__init__.py:9:22
+  |
+7 | from .watchlist_item import WatchlistItem
+8 | from .credentials import ServiceCredentials
+9 | from .history import ListeningHistory
+  |                      ^^^^^^^^^^^^^^^^
+  |
+help: Use an explicit re-export: `ListeningHistory as ListeningHistory`
+
+F401 [*] `sqlalchemy.String` imported but unused
+ --> app\models\history.py:1:32
+  |
+1 | from sqlalchemy import Column, String, Integer, DateTime, ForeignKey
+  |                                ^^^^^^
+2 | from sqlalchemy import Uuid
+3 | from sqlalchemy.orm import relationship
+  |
+help: Remove unused import: `sqlalchemy.String`
+
+F401 [*] `sqlalchemy.String` imported but unused
+ --> app\models\watchlist_item.py:1:32
+  |
+1 | from sqlalchemy import Column, String, Integer, DateTime, ForeignKey, UniqueConstraint
+  |                                ^^^^^^
+2 | from sqlalchemy import Uuid
+3 | from sqlalchemy.orm import relationship
+  |
+help: Remove unused import: `sqlalchemy.String`
+
+E402 Module level import not at top of file
+ --> app\providers\__init__.py:7:1
+  |
+5 | # In the future we can add more specific providers here
+6 | provider_manager.register_provider(GenericProvider())
+7 | from app.providers.apple_music_provider import AppleMusicProvider
+  | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+8 | from app.providers.deezer_provider import DeezerProvider
+  |
+
+E402 Module level import not at top of file
+  --> app\providers\__init__.py:8:1
+   |
+ 6 | provider_manager.register_provider(GenericProvider())
+ 7 | from app.providers.apple_music_provider import AppleMusicProvider
+ 8 | from app.providers.deezer_provider import DeezerProvider
+   | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+ 9 |
+10 | provider_manager.register_provider(AppleMusicProvider())
+   |
+
+E402 Module level import not at top of file
+  --> app\providers\__init__.py:12:1
+   |
+10 | provider_manager.register_provider(AppleMusicProvider())
+11 | provider_manager.register_provider(DeezerProvider())
+12 | from app.providers.tidal_provider import TidalProvider
+   | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+13 | provider_manager.register_provider(TidalProvider())
+14 | from app.providers.amazon_music_provider import AmazonMusicProvider
+   |
+
+E402 Module level import not at top of file
+  --> app\providers\__init__.py:14:1
+   |
+12 | from app.providers.tidal_provider import TidalProvider
+13 | provider_manager.register_provider(TidalProvider())
+14 | from app.providers.amazon_music_provider import AmazonMusicProvider
+   | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+15 | provider_manager.register_provider(AmazonMusicProvider())
+16 | from app.providers.soundcloud_provider import SoundCloudProvider
+   |
+
+E402 Module level import not at top of file
+  --> app\providers\__init__.py:16:1
+   |
+14 | from app.providers.amazon_music_provider import AmazonMusicProvider
+15 | provider_manager.register_provider(AmazonMusicProvider())
+16 | from app.providers.soundcloud_provider import SoundCloudProvider
+   | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+17 | provider_manager.register_provider(SoundCloudProvider())
+18 | from app.providers.spotify_provider import SpotifyProvider
+   |
+
+E402 Module level import not at top of file
+  --> app\providers\__init__.py:18:1
+   |
+16 | from app.providers.soundcloud_provider import SoundCloudProvider
+17 | provider_manager.register_provider(SoundCloudProvider())
+18 | from app.providers.spotify_provider import SpotifyProvider
+   | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+19 | provider_manager.register_provider(SpotifyProvider())
+20 | from app.providers.youtube_provider import YouTubeProvider
+   |
+
+E402 Module level import not at top of file
+  --> app\providers\__init__.py:20:1
+   |
+18 | from app.providers.spotify_provider import SpotifyProvider
+19 | provider_manager.register_provider(SpotifyProvider())
+20 | from app.providers.youtube_provider import YouTubeProvider
+   | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+21 | provider_manager.register_provider(YouTubeProvider())
+   |
+
+E701 Multiple statements on one line (colon)
+  --> app\providers\deezer_provider.py:37:17
+   |
+35 |         elif kind == 'track':
+36 |             t = await deezer_service.get_track(id)
+37 |             if t: tracks_data = [t]
+   |                 ^
+38 |             title = "Deezer Track"
+   |
+
+F401 [*] `typing.Type` imported but unused
+ --> app\providers\manager.py:1:36
+  |
+1 | from typing import List, Optional, Type
+  |                                    ^^^^
+2 | from app.providers.base import MusicProvider
+3 | from app.schemas.metadata import PlaylistMetadata, TrackMetadata
+  |
+help: Remove unused import: `typing.Type`
+
+F841 [*] Local variable `e` is assigned to but never used
+  --> app\providers\spotify_provider.py:86:29
+   |
+84 |                     source_id=formatted_info['id']
+85 |                 )
+86 |         except Exception as e:
+   |                             ^
+87 |             # Fallback if client fail or not configured
+88 |             pass
+   |
+help: Remove assignment to unused variable `e`
+
+E722 Do not use bare `except`
+  --> app\providers\youtube_provider.py:66:9
+   |
+64 |              pl_info = self.service.yt.get_playlist(playlist_id, limit=1)
+65 |              title = pl_info.get('title', "YouTube Playlist")
+66 |         except:
+   |         ^^^^^^
+67 |              pass
+   |
+
+F401 [*] `typing.List` imported but unused
+ --> app\schemas\artist.py:2:30
+  |
+1 | from pydantic import BaseModel
+2 | from typing import Optional, List, Dict, Any
+  |                              ^^^^
+3 | from uuid import UUID
+4 | from datetime import datetime
+  |
+help: Remove unused import: `typing.List`
+
+F401 [*] `typing.Dict` imported but unused
+ --> app\schemas\metadata.py:2:36
+  |
+1 | from pydantic import BaseModel
+2 | from typing import Optional, List, Dict, Any
+  |                                    ^^^^
+3 |
+4 | class ArtistMetadata(BaseModel):
+  |
+help: Remove unused import
+
+F401 [*] `typing.Any` imported but unused
+ --> app\schemas\metadata.py:2:42
+  |
+1 | from pydantic import BaseModel
+2 | from typing import Optional, List, Dict, Any
+  |                                          ^^^
+3 |
+4 | class ArtistMetadata(BaseModel):
+  |
+help: Remove unused import
+
+F401 [*] `re` imported but unused
+ --> app\services\amazon_music_service.py:2:8
+  |
+1 | import logging
+2 | import re
+  |        ^^
+3 | from typing import List, Dict, Any, Optional
+4 | import yt_dlp
+  |
+help: Remove unused import: `re`
+
+E701 Multiple statements on one line (colon)
+  --> app\services\amazon_music_service.py:49:29
+   |
+48 |             for entry in entries:
+49 |                 if not entry: continue
+   |                             ^
+50 |                 
+51 |                 # data mapping
+   |
+
+E701 Multiple statements on one line (colon)
+  --> app\services\amazon_music_service.py:55:29
+   |
+53 |                 artist = entry.get('artist') or entry.get('uploader') or "Unknown Artist"
+54 |                 
+55 |                 if not title: continue
+   |                             ^
+56 |
+57 |                 track = {
+   |
+
+F401 [*] `re` imported but unused
+ --> app\services\apple_music_service.py:2:8
+  |
+1 | import logging
+2 | import re
+  |        ^^
+3 | from typing import List, Dict, Any, Optional
+4 | import yt_dlp
+  |
+help: Remove unused import: `re`
+
+E701 Multiple statements on one line (colon)
+  --> app\services\apple_music_service.py:55:29
+   |
+54 |             for entry in entries:
+55 |                 if not entry: continue
+   |                             ^
+56 |                 
+57 |                 # data mapping
+   |
+
+E701 Multiple statements on one line (colon)
+  --> app\services\apple_music_service.py:61:29
+   |
+59 |                 artist = entry.get('artist') or entry.get('uploader') or "Unknown Artist"
+60 |                 
+61 |                 if not title: continue
+   |                             ^
+62 |
+63 |                 track = {
+   |
+
+F401 [*] `typing.List` imported but unused
+ --> app\services\download_manager.py:4:20
+  |
+2 | import os
+3 | import logging
+4 | from typing import List, Optional
+  |                    ^^^^
+5 | from datetime import datetime
+6 | from sqlalchemy.ext.asyncio import AsyncSession
+  |
+help: Remove unused import: `typing.List`
+
+F811 [*] Redefinition of unused `logging` from line 3
+  --> app\services\download_manager.py:16:8
+   |
+15 | from app.services.fallback_service import fallback_service
+16 | import logging
+   |        ^^^^^^^ `logging` redefined here
+17 |
+18 | logger = logging.getLogger(__name__)
+   |
+  ::: app\services\download_manager.py:3:8
+   |
+ 1 | import asyncio
+ 2 | import os
+ 3 | import logging
+   |        ------- previous definition of `logging` here
+ 4 | from typing import List, Optional
+ 5 | from datetime import datetime
+   |
+help: Remove definition: `logging`
+
+F401 [*] `app.models.user.User` imported but unused
+   --> app\services\download_manager.py:100:41
+    |
+ 98 |         async with AsyncSessionLocal() as db:
+ 99 |             # Eager load user to get preferences
+100 |             from app.models.user import User
+    |                                         ^^^^
+101 |             result = await db.execute(
+102 |                 select(Download)
+    |
+help: Remove unused import: `app.models.user.User`
+
+F601 Dictionary key literal `'quiet'` repeated
+   --> app\services\download_manager.py:309:13
+    |
+307 |             'quiet': True,
+308 |             'no_warnings': True,
+309 |             'quiet': True,
+    |             ^^^^^^^
+310 |             'no_warnings': True,
+311 |         }
+    |
+help: Remove repeated key literal `'quiet'`
+
+F601 Dictionary key literal `'no_warnings'` repeated
+   --> app\services\download_manager.py:310:13
+    |
+308 |             'no_warnings': True,
+309 |             'quiet': True,
+310 |             'no_warnings': True,
+    |             ^^^^^^^^^^^^^
+311 |         }
+    |
+help: Remove repeated key literal `'no_warnings'`
+
+F541 [*] f-string without any placeholders
+   --> app\services\download_manager.py:331:32
+    |
+329 |              # This fallback seems redundant if we set a robust default above, but good for safety.
+330 |              # Use the new default structure as fallback too
+331 |              output_template = f'%(artist)s - %(title)s'
+    |                                ^^^^^^^^^^^^^^^^^^^^^^^^^
+332 |
+333 |         # Pre-process playlist tag manually because yt-dlp might not know it (e.g. single track form Spotify)
+    |
+help: Remove extraneous `f` prefix
+
+E701 Multiple statements on one line (colon)
+   --> app\services\download_manager.py:350:35
+    |
+349 |         for tag, replacement in schema_map.items():
+350 |             if tag == '{playlist}': continue # Handled above
+    |                                   ^
+351 |             output_template = output_template.replace(tag, replacement)
+    |
+
+F541 [*] f-string without any placeholders
+   --> app\services\download_manager.py:354:32
+    |
+353 |         if not output_template or '%' not in output_template:
+354 |              output_template = f'%(artist)s - %(title)s'
+    |                                ^^^^^^^^^^^^^^^^^^^^^^^^^
+355 |
+356 |         download_path = download.user.preferences.get('downloadPath') or settings.DOWNLOAD_DIR
+    |
+help: Remove extraneous `f` prefix
+
+F401 [*] `app.models.user.User` imported but unused
+   --> app\services\download_manager.py:424:41
+    |
+422 |     async def update_playlist_m3u(self, db: AsyncSession, user_id: str, playlist_name: str):
+423 |         try:
+424 |             from app.models.user import User
+    |                                         ^^^^
+425 |             # Get all completed downloads for this playlist
+426 |             result = await db.execute(
+    |
+help: Remove unused import: `app.models.user.User`
+
+F401 [*] `random` imported but unused
+ --> app\services\fallback_service.py:2:8
+  |
+1 | import logging
+2 | import random
+  |        ^^^^^^
+3 | from typing import Optional, List
+4 | from app.models.track import Track
+  |
+help: Remove unused import: `random`
+
+F401 [*] `typing.Optional` imported but unused
+ --> app\services\fallback_service.py:3:20
+  |
+1 | import logging
+2 | import random
+3 | from typing import Optional, List
+  |                    ^^^^^^^^
+4 | from app.models.track import Track
+  |
+help: Remove unused import
+
+F401 [*] `typing.List` imported but unused
+ --> app\services\fallback_service.py:3:30
+  |
+1 | import logging
+2 | import random
+3 | from typing import Optional, List
+  |                              ^^^^
+4 | from app.models.track import Track
+  |
+help: Remove unused import
+
+F401 [*] `app.models.track.Track` imported but unused
+ --> app\services\fallback_service.py:4:30
+  |
+2 | import random
+3 | from typing import Optional, List
+4 | from app.models.track import Track
+  |                              ^^^^^
+5 |
+6 | logger = logging.getLogger(__name__)
+  |
+help: Remove unused import: `app.models.track.Track`
+
+F401 [*] `typing.List` imported but unused
+ --> app\services\metadata_service.py:1:41
+  |
+1 | from typing import Optional, Dict, Any, List
+  |                                         ^^^^
+2 | from app.models.track import Track
+3 | from app.models.artist import Artist
+  |
+help: Remove unused import: `typing.List`
+
+F401 [*] `sqlalchemy.or_` imported but unused
+ --> app\services\metadata_service.py:7:32
+  |
+5 | from app.services.spotify_service import SpotifyService
+6 | from sqlalchemy.ext.asyncio import AsyncSession
+7 | from sqlalchemy import select, or_
+  |                                ^^^
+8 | from app.db.database import AsyncSessionLocal
+9 | import logging
+  |
+help: Remove unused import: `sqlalchemy.or_`
+
+F401 [*] `app.db.database.AsyncSessionLocal` imported but unused
+ --> app\services\metadata_service.py:8:29
+  |
+6 | from sqlalchemy.ext.asyncio import AsyncSession
+7 | from sqlalchemy import select, or_
+8 | from app.db.database import AsyncSessionLocal
+  |                             ^^^^^^^^^^^^^^^^^
+9 | import logging
+  |
+help: Remove unused import: `app.db.database.AsyncSessionLocal`
+
+F401 [*] `app.services.download_manager.download_manager` imported but unused
+ --> app\services\scheduler.py:6:43
+  |
+4 | from app.db.database import AsyncSessionLocal
+5 | from app.services.watchlist_engine import watchlist_engine
+6 | from app.services.download_manager import download_manager
+  |                                           ^^^^^^^^^^^^^^^^
+7 | from sqlalchemy import select
+8 | from app.models.user import User
+  |
+help: Remove unused import: `app.services.download_manager.download_manager`
+
+F401 [*] `asyncio` imported but unused
+  --> app\services\scheduler.py:10:8
+   |
+ 8 | from app.models.user import User
+ 9 | import logging
+10 | import asyncio
+   |        ^^^^^^^
+11 | from datetime import datetime
+   |
+help: Remove unused import: `asyncio`
+
+F401 [*] `datetime.datetime` imported but unused
+  --> app\services\scheduler.py:11:22
+   |
+ 9 | import logging
+10 | import asyncio
+11 | from datetime import datetime
+   |                      ^^^^^^^^
+12 |
+13 | logger = logging.getLogger(__name__)
+   |
+help: Remove unused import: `datetime.datetime`
+
+F401 [*] `re` imported but unused
+ --> app\services\soundcloud_service.py:2:8
+  |
+1 | import logging
+2 | import re
+  |        ^^
+3 | from typing import List, Dict, Any, Optional
+4 | import yt_dlp
+  |
+help: Remove unused import: `re`
+
+E701 Multiple statements on one line (colon)
+  --> app\services\soundcloud_service.py:56:29
+   |
+55 |             for entry in entries:
+56 |                 if not entry: continue
+   |                             ^
+57 |                 
+58 |                 # SoundCloud specific: id usually exists
+   |
+
+E701 Multiple statements on one line (colon)
+  --> app\services\soundcloud_service.py:63:29
+   |
+61 |                 uploader = entry.get('uploader') or entry.get('artist') or "Unknown Artist"
+62 |                 
+63 |                 if not title: continue
+   |                             ^
+64 |
+65 |                 # For SoundCloud, web_url or url is critical for direct download
+   |
+
+F401 [*] `app.utils.url_helper.resolve_redirects` imported but unused
+  --> app\services\spotify_service.py:31:47
+   |
+29 |         # Handle short links / redirects first
+30 |         if "spotify.link" in query or "spoti.fi" in query:
+31 |              from app.utils.url_helper import resolve_redirects
+   |                                               ^^^^^^^^^^^^^^^^^
+32 |              import asyncio
+33 |              # We need to run async function in sync method (search is sync here? No, let's check)
+   |
+help: Remove unused import: `app.utils.url_helper.resolve_redirects`
+
+F401 [*] `asyncio` imported but unused
+  --> app\services\spotify_service.py:32:21
+   |
+30 |         if "spotify.link" in query or "spoti.fi" in query:
+31 |              from app.utils.url_helper import resolve_redirects
+32 |              import asyncio
+   |                     ^^^^^^^
+33 |              # We need to run async function in sync method (search is sync here? No, let's check)
+34 |              # Wait, SpotifyService.search is standard sync? Fastapi runs it in threadpool usually if not async def.
+   |
+help: Remove unused import: `asyncio`
+
+E701 Multiple statements on one line (colon)
+   --> app\services\spotify_service.py:107:28
+    |
+105 |         if 'playlists' in results:
+106 |             for item in results['playlists']['items']:
+107 |                 if not item: continue
+    |                            ^
+108 |                 items.append(self._format_playlist(item))
+    |
+
+F401 [*] `asyncio` imported but unused
+ --> app\services\sync_manager.py:1:8
+  |
+1 | import asyncio
+  |        ^^^^^^^
+2 | import os
+3 | import shutil
+  |
+help: Remove unused import: `asyncio`
+
+F401 [*] `typing.Optional` imported but unused
+ --> app\services\sync_manager.py:5:32
+  |
+3 | import shutil
+4 | import logging
+5 | from typing import List, Dict, Optional, Set
+  |                                ^^^^^^^^
+6 | from datetime import datetime, timedelta
+7 | from uuid import uuid4
+  |
+help: Remove unused import
+
+F401 [*] `typing.Set` imported but unused
+ --> app\services\sync_manager.py:5:42
+  |
+3 | import shutil
+4 | import logging
+5 | from typing import List, Dict, Optional, Set
+  |                                          ^^^
+6 | from datetime import datetime, timedelta
+7 | from uuid import uuid4
+  |
+help: Remove unused import
+
+F401 [*] `datetime.timedelta` imported but unused
+ --> app\services\sync_manager.py:6:32
+  |
+4 | import logging
+5 | from typing import List, Dict, Optional, Set
+6 | from datetime import datetime, timedelta
+  |                                ^^^^^^^^^
+7 | from uuid import uuid4
+  |
+help: Remove unused import: `datetime.timedelta`
+
+F401 [*] `sqlalchemy.and_` imported but unused
+  --> app\services\sync_manager.py:11:30
+   |
+ 9 | from sqlalchemy.ext.asyncio import AsyncSession
+10 | from sqlalchemy.future import select
+11 | from sqlalchemy import func, and_, delete
+   |                              ^^^^
+12 |
+13 | from app.models.watchlist import Watchlist
+   |
+help: Remove unused import: `sqlalchemy.and_`
+
+F401 [*] `app.models.track.Track` imported but unused
+  --> app\services\sync_manager.py:15:30
+   |
+13 | from app.models.watchlist import Watchlist
+14 | from app.models.watchlist_item import WatchlistItem
+15 | from app.models.track import Track
+   |                              ^^^^^
+16 | from app.models.download import Download
+17 | from app.core.config import settings
+   |
+help: Remove unused import: `app.models.track.Track`
+
+F841 Local variable `local_map` is assigned to but never used
+  --> app\services\sync_manager.py:63:9
+   |
+61 |         local_items = local_items_result.scalars().all()
+62 |         
+63 |         local_map = {} # TrackID (UUID) -> WatchlistItem
+   |         ^^^^^^^^^
+64 |         to_keep_uuids = set()
+65 |         to_delete_candidates = [] # List of {id: uuid, title: str, ...}
+   |
+help: Remove assignment to unused variable `local_map`
+
+E701 Multiple statements on one line (colon)
+  --> app\services\sync_manager.py:71:25
+   |
+69 |         for item in local_items:
+70 |             track = item.track
+71 |             if not track: continue
+   |                         ^
+72 |             
+73 |             # Identify if this local track exists in remote_ids
+   |
+
+F401 [*] `re` imported but unused
+ --> app\services\tidal_service.py:2:8
+  |
+1 | import logging
+2 | import re
+  |        ^^
+3 | from typing import List, Dict, Any, Optional
+4 | import yt_dlp
+  |
+help: Remove unused import: `re`
+
+E701 Multiple statements on one line (colon)
+  --> app\services\tidal_service.py:48:29
+   |
+47 |             for entry in entries:
+48 |                 if not entry: continue
+   |                             ^
+49 |                 
+50 |                 # data mapping
+   |
+
+E701 Multiple statements on one line (colon)
+  --> app\services\tidal_service.py:54:29
+   |
+52 |                 artist = entry.get('artist') or entry.get('uploader') or "Unknown Artist"
+53 |                 
+54 |                 if not title: continue
+   |                             ^
+55 |
+56 |                 track = {
+   |
+
+F401 [*] `app.models.schemas.UserCreate` imported but unused
+ --> app\services\watchlist_engine.py:4:32
+  |
+2 | from sqlalchemy.future import select
+3 | from app.models.watchlist import Watchlist
+4 | from app.models.schemas import UserCreate
+  |                                ^^^^^^^^^^
+5 | from typing import List
+6 | from app.services.spotify_service import SpotifyService
+  |
+help: Remove unused import: `app.models.schemas.UserCreate`
+
+F401 [*] `app.providers.SpotifyProvider` imported but unused
+   --> app\services\watchlist_engine.py:106:53
+    |
+104 |         logger.info(f"Checking for updates for user {user_id}")
+105 |         watchlist_items = await self.get_watchlist(db, user_id)
+106 |         from app.providers import provider_manager, SpotifyProvider, YouTubeProvider, DeezerProvider
+    |                                                     ^^^^^^^^^^^^^^^
+107 |         
+108 |         # Legacy services for Artist support (until providers support artists)
+    |
+help: Remove unused import
+
+F401 [*] `app.providers.YouTubeProvider` imported but unused
+   --> app\services\watchlist_engine.py:106:70
+    |
+104 |         logger.info(f"Checking for updates for user {user_id}")
+105 |         watchlist_items = await self.get_watchlist(db, user_id)
+106 |         from app.providers import provider_manager, SpotifyProvider, YouTubeProvider, DeezerProvider
+    |                                                                      ^^^^^^^^^^^^^^^
+107 |         
+108 |         # Legacy services for Artist support (until providers support artists)
+    |
+help: Remove unused import
+
+F401 [*] `app.providers.DeezerProvider` imported but unused
+   --> app\services\watchlist_engine.py:106:87
+    |
+104 |         logger.info(f"Checking for updates for user {user_id}")
+105 |         watchlist_items = await self.get_watchlist(db, user_id)
+106 |         from app.providers import provider_manager, SpotifyProvider, YouTubeProvider, DeezerProvider
+    |                                                                                       ^^^^^^^^^^^^^^
+107 |         
+108 |         # Legacy services for Artist support (until providers support artists)
+    |
+help: Remove unused import
+
+F841 Local variable `deezer_service` is assigned to but never used
+   --> app\services\watchlist_engine.py:112:9
+    |
+110 |         youtube_service = YouTubeService()
+111 |         from app.services.deezer_service import DeezerService
+112 |         deezer_service = DeezerService()
+    |         ^^^^^^^^^^^^^^
+113 |         
+114 |         new_downloads_count = 0
+    |
+help: Remove assignment to unused variable `deezer_service`
+
+F401 [*] `sqlalchemy.or_` imported but unused
+   --> app\services\watchlist_engine.py:165:40
+    |
+164 |                 from app.models.track import Track
+165 |                 from sqlalchemy import or_, func
+    |                                        ^^^
+166 |                 
+167 |                 # Get all downloaded tracks for this user (to avoid re-downloading things user already has)
+    |
+help: Remove unused import
+
+F401 [*] `sqlalchemy.func` imported but unused
+   --> app\services\watchlist_engine.py:165:45
+    |
+164 |                 from app.models.track import Track
+165 |                 from sqlalchemy import or_, func
+    |                                             ^^^^
+166 |                 
+167 |                 # Get all downloaded tracks for this user (to avoid re-downloading things user already has)
+    |
+help: Remove unused import
+
+E712 Avoid equality comparisons to `False`; use `not Download.archived:` for false checks
+   --> app\services\watchlist_engine.py:170:21
+    |
+168 |                 downloaded_tracks_query = select(Track).join(Download, Download.track_id == Track.id).where(
+169 |                     Download.user_id == user_id,
+170 |                     Download.archived == False
+    |                     ^^^^^^^^^^^^^^^^^^^^^^^^^^
+171 |                 )
+172 |                 downloaded_tracks_result = await db.execute(downloaded_tracks_query)
+    |
+help: Replace with `not Download.archived`
+
+Found 141 errors.
+[*] 76 fixable with the `--fix` option (9 hidden fixes can be enabled with the `--unsafe-fixes` option).

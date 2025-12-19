@@ -1,5 +1,5 @@
 from datetime import datetime, timedelta
-from typing import Any, Union, Optional
+from typing import Any, Union
 import jwt
 import bcrypt
 from app.core.config import settings

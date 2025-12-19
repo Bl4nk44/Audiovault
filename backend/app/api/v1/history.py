@@ -1,8 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.future import select
-from sqlalchemy.orm import joinedload
-from typing import List, Optional
 from app.db.database import get_db
 from app.core.dependencies import get_current_active_user
 from app.models.user import User
@@ -10,7 +7,6 @@ from app.models.history import ListeningHistory
 from app.models.track import Track
 from pydantic import BaseModel
 from uuid import UUID
-from datetime import datetime
 
 router = APIRouter()
 

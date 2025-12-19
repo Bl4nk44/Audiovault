@@ -1,5 +1,4 @@
 from fastapi import APIRouter, Depends, HTTPException
-from typing import List
 from app.services.spotify_service import SpotifyService
 from app.core.dependencies import get_current_active_user
 from app.models.user import User

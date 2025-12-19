@@ -1,7 +1,4 @@
 import logging
-import random
-from typing import Optional, List
-from app.models.track import Track
 
 logger = logging.getLogger(__name__)
 

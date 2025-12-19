@@ -3,7 +3,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 from sqlalchemy.orm import joinedload
 from sqlalchemy import case
-from typing import List, Optional
+from typing import Optional
 from app.db.database import get_db
 from app.services.download_manager import download_manager
 from app.core.dependencies import get_current_active_user
@@ -160,7 +160,7 @@ async def clear_history(
         # We can just catch the exception.
         await db.execute(text("ALTER TABLE downloads ADD COLUMN archived BOOLEAN DEFAULT 0"))
         await db.commit()
-    except Exception as e:
+    except Exception:
         # Column likely exists
         await db.rollback()
         pass
@@ -551,14 +551,19 @@ async def scan_library(
                 
                 try:
                     audio = EasyID3(full_path)
-                    if 'title' in audio: title = audio['title'][0]
-                    if 'artist' in audio: artist = audio['artist'][0]
-                    if 'album' in audio: album = audio['album'][0]
-                except Exception as e:
+                    if 'title' in audio:
+                        title = audio['title'][0]
+                    if 'artist' in audio:
+                        artist = audio['artist'][0]
+                    if 'album' in audio:
+                        album = audio['album'][0]
+                except Exception:
                      try:
                         m = mutagen.File(full_path)
-                        if m and 'TIT2' in m: title = str(m['TIT2'])
-                        if m and 'TPE1' in m: artist = str(m['TPE1'])
+                        if m and 'TIT2' in m:
+                            title = str(m['TIT2'])
+                        if m and 'TPE1' in m:
+                            artist = str(m['TPE1'])
                      except:
                         pass
                 

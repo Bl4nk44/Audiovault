@@ -7,7 +7,6 @@ from uuid import UUID
 
 from app.db.database import get_db
 from app.models.artist import Artist
-from app.models.album import Album
 from app.schemas.artist import ArtistResponse
 
 router = APIRouter()

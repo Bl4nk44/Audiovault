@@ -1,6 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
-from typing import List
 from app.db.database import get_db
 from app.services.watchlist_engine import watchlist_engine
 from app.core.dependencies import get_current_active_user

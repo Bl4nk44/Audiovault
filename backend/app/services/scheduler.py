@@ -3,12 +3,9 @@ from apscheduler.triggers.interval import IntervalTrigger
 from app.core.cache import cache_manager
 from app.db.database import AsyncSessionLocal
 from app.services.watchlist_engine import watchlist_engine
-from app.services.download_manager import download_manager
 from sqlalchemy import select
 from app.models.user import User
 import logging
-import asyncio
-from datetime import datetime
 
 logger = logging.getLogger(__name__)
 

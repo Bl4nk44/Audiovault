@@ -1,7 +1,6 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 from app.models.watchlist import Watchlist
-from app.models.schemas import UserCreate
 from typing import List
 from app.services.spotify_service import SpotifyService
 from app.services.youtube_service import YouTubeService
@@ -103,7 +102,7 @@ class WatchlistEngine:
     async def check_for_updates(self, db: AsyncSession, user_id: str):
         logger.info(f"Checking for updates for user {user_id}")
         watchlist_items = await self.get_watchlist(db, user_id)
-        from app.providers import provider_manager, SpotifyProvider, YouTubeProvider, DeezerProvider
+        from app.providers import provider_manager
         
         # Legacy services for Artist support (until providers support artists)
         spotify_service = SpotifyService()
@@ -162,7 +161,6 @@ class WatchlistEngine:
                     continue
 
                 from app.models.track import Track
-                from sqlalchemy import or_, func
                 
                 # Get all downloaded tracks for this user (to avoid re-downloading things user already has)
                 downloaded_tracks_query = select(Track).join(Download, Download.track_id == Track.id).where(
