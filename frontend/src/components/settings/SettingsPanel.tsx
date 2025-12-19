@@ -350,7 +350,7 @@ export default function SettingsPanel() {
                   placeholder="{user}/{service}/{playlist}/{artist} - {title}"
                 />
                 <p className="text-xs text-gray-500 ml-1 leading-relaxed">
-                  Available tags:{" "}
+                  {t("settings.availableTags")}{" "}
                   <code className="text-primary">{"{artist}"}</code>,{" "}
                   <code className="text-primary">{"{title}"}</code>,{" "}
                   <code className="text-primary">{"{album}"}</code>,{" "}
@@ -371,7 +371,7 @@ export default function SettingsPanel() {
 
                 <div className="mt-2 p-3 rounded-lg bg-black/30 border border-white/5 text-sm text-gray-400 font-mono">
                   <span className="text-gray-500 uppercase text-xs font-bold mr-2 block mb-1 font-sans">
-                    Preview:
+                    {t("settings.preview")}
                   </span>
                   <div className="flex items-center gap-2">
                     <FolderOpen size={14} className="text-yellow-500" />

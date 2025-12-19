@@ -6,8 +6,10 @@ import toast from "react-hot-toast";
 import { motion } from "framer-motion";
 import { User, Lock, Save, Camera } from "lucide-react";
 import Button from "../ui/Button";
+import { useTranslation } from "../../hooks/useTranslation";
 
 export default function AccountSettings() {
+  const { t } = useTranslation();
   const { user, setUser } = useStore();
   const [isLoading, setIsLoading] = useState(false);
   const {
@@ -56,9 +58,11 @@ export default function AccountSettings() {
 
       const response = await api.put("/users/me", payload);
       setUser({ ...user!, ...response.data.user });
-      toast.success("Profile updated successfully");
+      toast.success(t("settings.messages.profileUpdated"));
     } catch (error: any) {
-      toast.error(error.response?.data?.detail || "Failed to update profile");
+      toast.error(
+        error.response?.data?.detail || t("settings.messages.updateError")
+      );
     } finally {
       setIsLoading(false);
     }
@@ -71,10 +75,12 @@ export default function AccountSettings() {
         current_password: data.currentPassword,
         new_password: data.newPassword,
       });
-      toast.success("Password updated successfully");
+      toast.success(t("settings.messages.passwordUpdated"));
       resetPassword();
     } catch (error: any) {
-      toast.error(error.response?.data?.detail || "Failed to update password");
+      toast.error(
+        error.response?.data?.detail || t("settings.messages.updateError")
+      );
     } finally {
       setIsLoading(false);
     }
@@ -109,9 +115,11 @@ export default function AccountSettings() {
       // Also update the form value for avatar_url
       // Clear the input field because we have an internal path now
       setValue("avatar_url", "");
-      toast.success("Avatar updated successfully");
+      toast.success(t("settings.messages.avatarUpdated"));
     } catch (error: any) {
-      toast.error(error.response?.data?.detail || "Failed to upload avatar");
+      toast.error(
+        error.response?.data?.detail || t("settings.messages.uploadError")
+      );
     } finally {
       setIsLoading(false);
     }
@@ -137,7 +145,7 @@ export default function AccountSettings() {
       >
         <h3 className="text-xl font-bold text-white border-b border-white/10 pb-4 mb-6 flex items-center gap-3">
           <User className="text-primary" size={24} />
-          Profile Information
+          {t("settings.profileInfo")}
         </h3>
 
         <form onSubmit={handleSubmit(onUpdateProfile)} className="space-y-6">
@@ -178,7 +186,7 @@ export default function AccountSettings() {
           <div className="grid gap-6 md:grid-cols-2">
             <div className="space-y-2">
               <label className="text-sm font-medium text-gray-300 ml-1">
-                Username
+                {t("settings.username")}
               </label>
               <input
                 {...register("username", { required: "Username is required" })}
@@ -192,7 +200,7 @@ export default function AccountSettings() {
             </div>
             <div className="space-y-2">
               <label className="text-sm font-medium text-gray-300 ml-1">
-                Avatar URL
+                {t("settings.avatarUrl")}
               </label>
               <input
                 {...register("avatar_url")}
@@ -214,7 +222,7 @@ export default function AccountSettings() {
               variant="primary"
               className="px-6"
             >
-              <Save size={18} className="mr-2" /> Save Profile
+              <Save size={18} className="mr-2" /> {t("settings.saveProfile")}
             </Button>
           </div>
         </form>
@@ -229,7 +237,7 @@ export default function AccountSettings() {
       >
         <h3 className="text-xl font-bold text-white border-b border-white/10 pb-4 mb-6 flex items-center gap-3">
           <Lock className="text-red-500" size={24} />
-          Change Password
+          {t("settings.changePassword")}
         </h3>
 
         <form
@@ -238,7 +246,7 @@ export default function AccountSettings() {
         >
           <div className="space-y-2">
             <label className="text-sm font-medium text-gray-300 ml-1">
-              Current Password
+              {t("settings.currentPassword")}
             </label>
             <input
               type="password"
@@ -256,7 +264,7 @@ export default function AccountSettings() {
 
           <div className="space-y-2">
             <label className="text-sm font-medium text-gray-300 ml-1">
-              New Password
+              {t("settings.newPassword")}
             </label>
             <input
               type="password"
@@ -280,7 +288,7 @@ export default function AccountSettings() {
               variant="outline"
               className="px-6 hover:bg-red-500/10 hover:text-red-500 hover:border-red-500/50"
             >
-              Update Password
+              {t("settings.updatePassword")}
             </Button>
           </div>
         </form>
