@@ -37,3 +37,7 @@ logs_full.txt
 backend/logs/
 deploy.ps1
 
+# SonarQube
+.scannerwork/
+.sonarlint/
+sonar-project.properties
