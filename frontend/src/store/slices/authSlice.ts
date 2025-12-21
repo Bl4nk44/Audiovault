@@ -109,17 +109,25 @@ export const createAuthSlice: StateCreator<AuthSlice> = (set, get) => {
     updateUserPreferences: (prefs: Record<string, unknown>) => {
       const user = get().user;
       if (user) {
+        // We use a type assertion here because merging partial unknown preferences
+        // requires validation in a real app.
         const updatedUser = {
           ...user,
-          preferences: { ...user.preferences, ...prefs },
+          preferences: {
+            ...user.preferences,
+            ...prefs,
+          } as unknown as User["preferences"],
         };
         set({ user: updatedUser });
 
-        // Also update session in localStorage
+        // Update user in sessions
+        const userId = user.id;
         const sessions = { ...get().sessions };
-        if (sessions[user.id]) {
-          sessions[user.id].user = updatedUser;
+
+        if (sessions[userId]) {
+          sessions[userId].user = updatedUser;
           localStorage.setItem("sessions", JSON.stringify(sessions));
+          set({ sessions });
         }
       }
     },

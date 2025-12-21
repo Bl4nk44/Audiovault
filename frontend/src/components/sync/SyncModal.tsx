@@ -3,7 +3,7 @@ import { createPortal } from "react-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { Loader2, AlertTriangle, CheckCircle, Trash2, X } from "lucide-react";
 import { syncApi, type SyncReport, type SyncResult } from "../../api/sync";
-import { notify as toast } from '../../utils/notify';
+import { notify as toast } from "../../utils/notify";
 import { cn } from "../../lib/utils";
 import { type WatchlistItem } from "../../types";
 
@@ -22,22 +22,24 @@ export default function SyncModal({ item, onClose }: SyncModalProps) {
 
   useEffect(() => {
     if (item) {
-      setStep("analyzing");
-      setReport(null);
-      syncApi
-        .analyze(item.id)
-        .then((data) => {
+      const analyzeItem = async () => {
+        setStep("analyzing");
+        setReport(null);
+        try {
+          const data = await syncApi.analyze(item.id);
           setReport(data);
           setSelectedRemovals(data.to_remove_items.map((i) => i.track_id));
           setStep("review");
-        })
-        .catch((err) => {
+        } catch (err) {
           console.error(err);
           toast.error("Analysis failed. See console.");
           onClose();
-        });
+        }
+      };
+
+      analyzeItem();
     }
-  }, [item, onClose]); // Added onClose to dependency array to satisfy lint
+  }, [item, onClose]);
 
   const handleExecute = async () => {
     if (!report || !item) return;
@@ -292,4 +294,3 @@ export default function SyncModal({ item, onClose }: SyncModalProps) {
     document.body
   );
 }
-

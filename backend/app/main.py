@@ -34,10 +34,8 @@ app.include_router(sync.router, prefix="/api/v1/sync", tags=["sync"])
 app.include_router(system.router, prefix="/api/v1/system", tags=["system"])
 
 # CORS
-origins = [
-    "http://localhost:3000",
-    "http://localhost:5173",
-]
+# CORS
+origins = settings.BACKEND_CORS_ORIGINS
 
 app.add_middleware(
     CORSMiddleware,

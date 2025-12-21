@@ -319,7 +319,13 @@ class WatchlistEngine:
                     if item.auto_download:
                         logger.info(f"Queueing new download: {track_data['title']}")
                         playlist_name = item.source_name if item.watch_type == 'playlist' else None
-                        await download_manager.add_download(db, user_id, track_uuid, item.source, playlist_name=playlist_name)
+                        from app.schemas.download import DownloadCreate
+                        download_data = DownloadCreate(
+                            track_id=track_uuid, 
+                            source=item.source, 
+                            playlist_name=playlist_name
+                        )
+                        await download_manager.add_download(db, user_id, download_data)
                         new_downloads_count += 1
             
             except Exception as e:

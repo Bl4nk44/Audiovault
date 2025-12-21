@@ -11,8 +11,10 @@ from app.models.track import Track
 from app.db.database import AsyncSessionLocal
 from app.core.config import settings
 import yt_dlp
+from app.schemas.download import DownloadCreate
 
 from app.services.fallback_service import fallback_service
+from app.services.socket_manager import socket_manager
 
 logger = logging.getLogger(__name__)
 
@@ -75,12 +77,12 @@ class DownloadManager:
         else:
             logger.info("No pending downloads found")
 
-    async def add_download(self, db: AsyncSession, user_id: str, track_id: str, source: str, playlist_name: str = None) -> Download:
+    async def add_download(self, db: AsyncSession, user_id: str, download_data: 'DownloadCreate') -> Download:
         download = Download(
             user_id=user_id,
-            track_id=track_id,
-            source=source,
-            playlist_name=playlist_name,
+            track_id=str(download_data.track_id),
+            source=download_data.source,
+            playlist_name=download_data.playlist_name,
             status="pending"
         )
         db.add(download)
@@ -92,6 +94,97 @@ class DownloadManager:
         await self.start_worker()
         
         return download
+
+    async def _notify_start(self, download):
+        await socket_manager.emit('download:progress', {
+            'download_id': str(download.id),
+            'progress': 0,
+            'status': 'downloading',
+            'track': {
+                'title': download.track.title,
+                'artist': download.track.artist,
+                'image_url': download.track.metadata_content.get('image_url') if download.track.metadata_content else None
+            }
+        })
+
+    async def _handle_completion(self, db, download, final_filename_container, output_template):
+        download.status = "completed"
+        download.progress = 100
+        download.completed_at = datetime.utcnow()
+        
+        if final_filename_container['path']:
+            # Ensure extension matches the converted format (mp3)
+            base, ext = os.path.splitext(final_filename_container['path'])
+            if ext != '.mp3':
+                download.file_path = base + '.mp3'
+            else:
+                download.file_path = final_filename_container['path']
+        else:
+            download_path = download.user.preferences.get('downloadPath')
+            if not download_path:
+                # Default to user subdirectory
+                download_path = os.path.join(settings.DOWNLOAD_DIR, download.user.username)
+                if not os.path.exists(download_path):
+                    os.makedirs(download_path, exist_ok=True)
+            elif not os.path.exists(download_path):
+                 # Create custom path if it doesn't exist (optional safety)
+                 os.makedirs(download_path, exist_ok=True)
+
+            download.file_path = os.path.join(download_path, f"{output_template}.mp3")
+
+        # Post-processing: Fix "NA" artifacts from yt-dlp (common when artist metadata is missing)
+        if download.file_path and os.path.exists(download.file_path):
+            directory, filename = os.path.split(download.file_path)
+            # Check for "NA -" prefix
+            if filename.startswith("NA -"):
+                 new_filename = filename[4:].strip() # Remove "NA -"
+                 if len(new_filename) > 0:
+                      new_path = os.path.join(directory, new_filename)
+                      try:
+                          os.rename(download.file_path, new_path)
+                          download.file_path = new_path
+                          logger.info(f"Renamed file to remove NA prefix: {filename} -> {new_filename}")
+                      except Exception as e:
+                          logger.warning(f"Failed to rename NA file: {e}")
+
+        logger.info(f"💾 Saving file for user '{download.user.username}' to: {download.file_path}")
+        await db.commit()
+        
+
+        actual_filename = os.path.basename(download.file_path) if download.file_path else f"{download.track_id}.mp3"
+
+        await socket_manager.emit('download:completed', {
+            'download_id': str(download.id),
+            'filename': actual_filename,
+            'track': {
+                'title': download.track.title,
+                'artist': download.track.artist,
+                'image_url': download.track.metadata_content.get('image_url') if download.track.metadata_content else None
+            }
+        })
+
+        if download.playlist_name:
+            await self.update_playlist_m3u(db, download.user_id, download.playlist_name)
+
+    async def _handle_error(self, db, download, e):
+        if str(e) == "DOWNLOAD_PAUSED":
+            logger.info(f"Download {download.id} paused by user")
+            download.status = "paused"
+            await db.commit()
+            await socket_manager.emit('download:paused', {'download_id': str(download.id)})
+            return
+
+        logger.error(f"Download failed for {download.id}: {e}", exc_info=True)
+        download.status = "failed"
+        download.error_message = str(e)
+        # Increment retry count
+        download.retry_count = (download.retry_count or 0) + 1
+        await db.commit()
+        
+        await socket_manager.emit('download:error', {
+            'download_id': str(download.id),
+            'error': str(e)
+        })
 
     async def process_download(self, download_id: str):
         async with AsyncSessionLocal() as db:
@@ -107,39 +200,26 @@ class DownloadManager:
                 return
 
             try:
-                from app.services.socket_manager import socket_manager
-                
                 # Update status to downloading
                 download.status = "downloading"
                 download.started_at = datetime.utcnow()
                 await db.commit()
                 
                 # Notify start
-                await socket_manager.emit('download:progress', {
-                    'download_id': str(download.id),
-                    'progress': 0,
-                    'status': 'downloading',
-                    'track': {
-                        'title': download.track.title,
-                        'artist': download.track.artist,
-                        'image_url': download.track.metadata_content.get('image_url') if download.track.metadata_content else None
-                    }
-                })
+                await self._notify_start(download)
 
                 loop = asyncio.get_running_loop()
                 final_filename_container = {'path': None}
 
                 def progress_hook(d):
                     if d['status'] == 'downloading':
-                        # Check if paused (this is a bit hacky for yt-dlp, relying on raising exception to stop)
+                        # Check if paused
                         if download_id in self.paused_downloads:
                             raise Exception("DOWNLOAD_PAUSED")
 
                         try:
                             p = d.get('_percent_str', '0%').replace('%', '')
                             progress = float(p)
-                            # Update progress in DB every 5% or so to avoid spamming DB? 
-                            # tracking internal state might be better
                             
                             asyncio.run_coroutine_threadsafe(
                                 socket_manager.emit('download:progress', {
@@ -156,9 +236,6 @@ class DownloadManager:
                                 loop
                             )
 
-                            # Update DB periodically (every ~5%) to support polling fallback
-                            # We can't do async db commit here easily in sync hook
-                            # But we can verify if we should fire a separate async task to update DB
                             if progress % 5 == 0:
                                 asyncio.run_coroutine_threadsafe(
                                     self.update_progress_db(download_id, progress),
@@ -182,85 +259,12 @@ class DownloadManager:
                     await loop.run_in_executor(None, lambda: yt_dlp.YoutubeDL(ydl_opts).download([url]))
                     logger.info(f"Download finished for {download_id}")
                     
-                    download.status = "completed"
-                    download.progress = 100
-                    download.completed_at = datetime.utcnow()
-                    
-                    if final_filename_container['path']:
-                        # Ensure extension matches the converted format (mp3)
-                        base, ext = os.path.splitext(final_filename_container['path'])
-                        if ext != '.mp3':
-                            download.file_path = base + '.mp3'
-                        else:
-                            download.file_path = final_filename_container['path']
-                    else:
-                        download_path = download.user.preferences.get('downloadPath')
-                        if not download_path:
-                            # Default to user subdirectory
-                            download_path = os.path.join(settings.DOWNLOAD_DIR, download.user.username)
-                            if not os.path.exists(download_path):
-                                os.makedirs(download_path, exist_ok=True)
-                        elif not os.path.exists(download_path):
-                             # Create custom path if it doesn't exist (optional safety)
-                             os.makedirs(download_path, exist_ok=True)
-
-                        download.file_path = os.path.join(download_path, f"{output_template}.mp3")
-
-                    # Post-processing: Fix "NA" artifacts from yt-dlp (common when artist metadata is missing)
-                    if download.file_path and os.path.exists(download.file_path):
-                        directory, filename = os.path.split(download.file_path)
-                        # Check for "NA -" prefix
-                        if filename.startswith("NA -"):
-                             new_filename = filename[4:].strip() # Remove "NA -"
-                             if len(new_filename) > 0:
-                                  new_path = os.path.join(directory, new_filename)
-                                  try:
-                                      os.rename(download.file_path, new_path)
-                                      download.file_path = new_path
-                                      logger.info(f"Renamed file to remove NA prefix: {filename} -> {new_filename}")
-                                  except Exception as e:
-                                      logger.warning(f"Failed to rename NA file: {e}")
-
-                    logger.info(f"💾 Saving file for user '{download.user.username}' to: {download.file_path}")
-                    await db.commit()
-                    
-
-                    actual_filename = os.path.basename(download.file_path) if download.file_path else f"{download.track_id}.mp3"
-
-                    await socket_manager.emit('download:completed', {
-                        'download_id': str(download.id),
-                        'filename': actual_filename,
-                        'track': {
-                            'title': download.track.title,
-                            'artist': download.track.artist,
-                            'image_url': download.track.metadata_content.get('image_url') if download.track.metadata_content else None
-                        }
-                    })
-
-                    if download.playlist_name:
-                        await self.update_playlist_m3u(db, download.user_id, download.playlist_name)
+                    await self._handle_completion(db, download, final_filename_container, output_template)
                 else:
                     raise Exception("Could not resolve download URL")
                 
             except Exception as e:
-                if str(e) == "DOWNLOAD_PAUSED":
-                    logger.info(f"Download {download_id} paused by user")
-                    download.status = "paused"
-                    await db.commit()
-                    await socket_manager.emit('download:paused', {'download_id': str(download.id)})
-                    return
-
-                logger.error(f"Download failed for {download_id}: {e}", exc_info=True)
-                download.status = "failed"
-                download.error_message = str(e)
-                # Increment retry count
-                download.retry_count = (download.retry_count or 0) + 1
-                await db.commit()
-                
-                await socket_manager.emit('download:error', {
-                    'download_id': str(download.id),
-                    'error': str(e)
-                })
+                await self._handle_error(db, download, e)
 
     async def pause_download(self, download_id: str):
         self.paused_downloads.add(download_id)
@@ -300,7 +304,6 @@ class DownloadManager:
             await db.commit()
             logger.info(f"Cancelled and deleted download {download_id}")
             
-            from app.services.socket_manager import socket_manager
             await socket_manager.emit('download:cancelled', {'download_id': download_id})
 
     async def retry_download(self, db: AsyncSession, download_id: str):

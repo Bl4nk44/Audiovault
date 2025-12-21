@@ -1,0 +1,97 @@
+
+> audiovault-frontend@0.5.8 lint
+> eslint .
+
+
+C:\Users\Mati\DEV\Audiovault\frontend\src\api\artists.ts
+  17:18  error  '_query' is defined but never used  @typescript-eslint/no-unused-vars
+
+C:\Users\Mati\DEV\Audiovault\frontend\src\components\auth\LoginForm.tsx
+  21:33  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  37:21  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\Mati\DEV\Audiovault\frontend\src\components\auth\RegisterForm.tsx
+  15:35  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  25:25  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\Mati\DEV\Audiovault\frontend\src\components\common\DownloadNotifications.tsx
+   8:33  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  13:29  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  18:70  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  19:62  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  22:75  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  23:67  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\Mati\DEV\Audiovault\frontend\src\components\import\PlaylistImport.tsx
+  33:25  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  81:22  error  'error' is defined but never used         @typescript-eslint/no-unused-vars
+
+C:\Users\Mati\DEV\Audiovault\frontend\src\components\player\Player.tsx
+  81:47  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\Mati\DEV\Audiovault\frontend\src\components\queue\DownloadQueue.tsx
+  10:38  error    Unexpected any. Specify a different type                                                                       @typescript-eslint/no-explicit-any
+  30:32  error    Unexpected any. Specify a different type                                                                       @typescript-eslint/no-explicit-any
+  45:68  error    Unexpected any. Specify a different type                                                                       @typescript-eslint/no-explicit-any
+  46:70  error    Unexpected any. Specify a different type                                                                       @typescript-eslint/no-explicit-any
+  50:73  error    Unexpected any. Specify a different type                                                                       @typescript-eslint/no-explicit-any
+  51:75  error    Unexpected any. Specify a different type                                                                       @typescript-eslint/no-explicit-any
+  53:6   warning  React Hook useEffect has a missing dependency: 'fetchQueue'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+
+C:\Users\Mati\DEV\Audiovault\frontend\src\components\search\ArtistCard.tsx
+  35:18  error  'error' is defined but never used  @typescript-eslint/no-unused-vars
+
+C:\Users\Mati\DEV\Audiovault\frontend\src\components\search\PlaylistCard.tsx
+  36:18  error  'error' is defined but never used  @typescript-eslint/no-unused-vars
+
+C:\Users\Mati\DEV\Audiovault\frontend\src\components\search\SearchResults.tsx
+  8:12  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\Mati\DEV\Audiovault\frontend\src\components\search\TrackCard.tsx
+  26:33  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  28:12  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  41:14  error  'error' is defined but never used         @typescript-eslint/no-unused-vars
+  57:14  error  'error' is defined but never used         @typescript-eslint/no-unused-vars
+
+C:\Users\Mati\DEV\Audiovault\frontend\src\components\sync\SyncModal.tsx
+  25:7  error  Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+C:\Users\Mati\DEV\Audiovault\frontend\src\components\sync\SyncModal.tsx:25:7
+  23 |   useEffect(() => {
+  24 |     if (item) {
+> 25 |       setStep("analyzing");
+     |       ^^^^^^^ Avoid calling setState() directly within an effect
+  26 |       setReport(null);
+  27 |       syncApi
+  28 |         .analyze(item.id)  react-hooks/set-state-in-effect
+
+C:\Users\Mati\DEV\Audiovault\frontend\src\hooks\useTranslation.ts
+  15:20  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  21:27  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\Mati\DEV\Audiovault\frontend\src\pages\ArtistProfile.tsx
+  130:182  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\Mati\DEV\Audiovault\frontend\src\services\auth.ts
+  3:42  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  8:38  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\Mati\DEV\Audiovault\frontend\src\services\websocket.ts
+  49:48  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  57:49  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  65:45  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\Mati\DEV\Audiovault\frontend\src\store\slices\authSlice.ts
+  117:61  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\Mati\DEV\Audiovault\frontend\src\store\slices\watchlistSlice.ts
+  13:14  error  'e' is defined but never used  @typescript-eslint/no-unused-vars
+
+Ôťľ 39 problems (38 errors, 1 warning)
+

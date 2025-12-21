@@ -3,10 +3,11 @@ import { useForm } from "react-hook-form";
 import { useNavigate } from "react-router-dom";
 import { login, getMe } from "../../services/auth";
 import { useStore } from "../../store/useStore";
-import { notify as toast } from '../../utils/notify';
+import { notify as toast } from "../../utils/notify";
 import { motion } from "framer-motion";
 import Button from "../ui/Button";
 import { Mail, Lock, AlertCircle } from "lucide-react";
+import type { LoginCredentials } from "../../types";
 
 export default function LoginForm() {
   const {
@@ -18,7 +19,7 @@ export default function LoginForm() {
   const navigate = useNavigate();
   const { addSession, setTokens } = useStore();
 
-  const onSubmit = async (data: any) => {
+  const onSubmit = async (data: LoginCredentials) => {
     setIsLoading(true);
     try {
       const response = await login(data);
@@ -34,11 +35,15 @@ export default function LoginForm() {
 
       toast.success("Logged in successfully");
       navigate("/");
-    } catch (error: any) {
+    } catch (error) {
       console.error("Login error:", error);
+      const err = error as {
+        response?: { data?: { detail?: string } };
+        message?: string;
+      };
       const errorMessage =
-        error.response?.data?.detail ||
-        error.message ||
+        err.response?.data?.detail ||
+        err.message ||
         "Login failed. Please check your connection.";
       toast.error(errorMessage);
     } finally {
@@ -139,4 +144,3 @@ export default function LoginForm() {
     </form>
   );
 }
-

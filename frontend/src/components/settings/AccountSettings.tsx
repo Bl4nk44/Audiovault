@@ -1,12 +1,23 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { useStore } from "../../store/useStore";
 import api from "../../services/api";
-import { notify as toast } from '../../utils/notify';
+import { notify as toast } from "../../utils/notify";
 import { motion } from "framer-motion";
 import { User, Lock, Save, Camera } from "lucide-react";
 import Button from "../ui/Button";
 import { useTranslation } from "../../hooks/useTranslation";
+import { AxiosError } from "axios";
+
+interface ProfileFormData {
+  username: string;
+  avatar_url?: string;
+}
+
+interface PasswordFormData {
+  currentPassword?: string;
+  newPassword?: string;
+}
 
 export default function AccountSettings() {
   const { t } = useTranslation();
@@ -25,19 +36,20 @@ export default function AccountSettings() {
   });
 
   // Populate form with user data, effectively hiding internal paths
-  useState(() => {
+  // Use useEffect for side effects instead of useState callback
+  useEffect(() => {
     if (user?.username) setValue("username", user.username);
     if (user?.preferences?.avatar_url) {
       // Only show the URL if it is an external link (starts with http)
       // If it's internal (starts with /), keep the input empty to avoid showing raw path
       const url = user.preferences.avatar_url;
-      if (url.startsWith("http")) {
+      if (typeof url === "string" && url.startsWith("http")) {
         setValue("avatar_url", url);
       } else {
         setValue("avatar_url", "");
       }
     }
-  });
+  }, [user, setValue]);
 
   const {
     register: registerPassword,
@@ -46,12 +58,12 @@ export default function AccountSettings() {
     formState: { errors: passwordErrors },
   } = useForm();
 
-  const onUpdateProfile = async (data: any) => {
+  const onUpdateProfile = async (data: ProfileFormData) => {
     setIsLoading(true);
     try {
       // Filter out empty avatar_url to prevent overwriting existing avatar with empty string
       // unless we want to allow clearing? For now assuming empty input means "keep current"
-      const payload = { ...data };
+      const payload: Partial<ProfileFormData> = { ...data };
       if (!payload.avatar_url) {
         delete payload.avatar_url;
       }
@@ -59,16 +71,17 @@ export default function AccountSettings() {
       const response = await api.put("/users/me", payload);
       setUser({ ...user!, ...response.data.user });
       toast.success(t("settings.messages.profileUpdated"));
-    } catch (error: any) {
+    } catch (error) {
+      const err = error as AxiosError<{ detail: string }>;
       toast.error(
-        error.response?.data?.detail || t("settings.messages.updateError")
+        err.response?.data?.detail || t("settings.messages.updateError")
       );
     } finally {
       setIsLoading(false);
     }
   };
 
-  const onUpdatePassword = async (data: any) => {
+  const onUpdatePassword = async (data: PasswordFormData) => {
     setIsLoading(true);
     try {
       await api.put("/users/me/password", {
@@ -77,9 +90,10 @@ export default function AccountSettings() {
       });
       toast.success(t("settings.messages.passwordUpdated"));
       resetPassword();
-    } catch (error: any) {
+    } catch (error) {
+      const err = error as AxiosError<{ detail: string }>;
       toast.error(
-        error.response?.data?.detail || t("settings.messages.updateError")
+        err.response?.data?.detail || t("settings.messages.updateError")
       );
     } finally {
       setIsLoading(false);
@@ -116,9 +130,10 @@ export default function AccountSettings() {
       // Clear the input field because we have an internal path now
       setValue("avatar_url", "");
       toast.success(t("settings.messages.avatarUpdated"));
-    } catch (error: any) {
+    } catch (error) {
+      const err = error as AxiosError<{ detail: string }>;
       toast.error(
-        error.response?.data?.detail || t("settings.messages.uploadError")
+        err.response?.data?.detail || t("settings.messages.uploadError")
       );
     } finally {
       setIsLoading(false);
@@ -152,7 +167,8 @@ export default function AccountSettings() {
           <div className="flex items-center gap-6 mb-8">
             <div className="relative group">
               <div className="w-24 h-24 rounded-full bg-linear-to-br from-primary to-green-600 flex items-center justify-center shadow-lg overflow-hidden">
-                {user?.preferences?.avatar_url ? (
+                {user?.preferences?.avatar_url &&
+                typeof user.preferences.avatar_url === "string" ? (
                   <img
                     src={getAvatarSrc(user.preferences.avatar_url)}
                     alt="Avatar"
@@ -205,7 +221,8 @@ export default function AccountSettings() {
               <input
                 {...register("avatar_url")}
                 placeholder={
-                  user?.preferences?.avatar_url &&
+                  typeof user?.preferences?.avatar_url === "string" &&
+                  user.preferences.avatar_url &&
                   !user.preferences.avatar_url.startsWith("http")
                     ? "Uploaded Image Activity (Enter URL to override)"
                     : "https://example.com/avatar.jpg"
@@ -296,4 +313,3 @@ export default function AccountSettings() {
     </div>
   );
 }
-

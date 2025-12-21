@@ -9,26 +9,37 @@ export function useTranslation() {
     (user?.preferences?.language as keyof typeof translations) || "en";
 
   // Simple recursive lookup
+  type TranslationMap = { [key: string]: string | TranslationMap };
+
   const t = useCallback(
     (path: string): string => {
       const keys = path.split(".");
-      let current: any = translations[language] || translations["en"];
+      let current: TranslationMap | string =
+        translations[language] || translations["en"];
 
       for (const key of keys) {
-        if (current === undefined || current[key] === undefined) {
+        if (
+          current === undefined ||
+          typeof current === "string" ||
+          (current as TranslationMap)[key] === undefined
+        ) {
           // Fallback to English if translation missing
           if (language !== "en") {
-            let fallback: any = translations["en"];
+            let fallback: TranslationMap | string = translations["en"];
             for (const fKey of keys) {
-              if (fallback === undefined || fallback[fKey] === undefined)
+              if (
+                fallback === undefined ||
+                typeof fallback === "string" ||
+                (fallback as TranslationMap)[fKey] === undefined
+              )
                 return path;
-              fallback = fallback[fKey];
+              fallback = (fallback as TranslationMap)[fKey];
             }
             return fallback as string;
           }
           return path;
         }
-        current = current[key];
+        current = (current as TranslationMap)[key];
       }
       return current as string;
     },

@@ -1,17 +1,18 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import api from "../../services/api";
 import DownloadItem from "./DownloadItem";
 import { Loader2, Music2, History } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import type { Download } from "../../types";
 
 import { useStore } from "../../store/useStore";
 
 export default function DownloadQueue() {
-  const [queue, setQueue] = useState<any[]>([]);
+  const [queue, setQueue] = useState<Download[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const { addNotification } = useStore();
 
-  const fetchQueue = async () => {
+  const fetchQueue = useCallback(async () => {
     try {
       const response = await api.get("/downloads/queue");
       setQueue(response.data || []);
@@ -21,36 +22,36 @@ export default function DownloadQueue() {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [addNotification]);
 
   useEffect(() => {
     fetchQueue();
     const interval = setInterval(fetchQueue, 2000);
 
-    const handleProgress = (e: any) => {
-      setQueue((prev) =>
-        prev.map((item) =>
-          item.id === e.detail.download_id
-            ? { ...item, progress: e.detail.progress, status: "downloading" }
-            : item
-        )
-      );
+    const handleProgress = () => {
+      // Logic to update local state optimistically or via store
+      // For now we rely on store updates via WebSocket or polling,
+      // but we can also use this event to animate progress bars locally.
+      // globalThis.dispatchEvent(new CustomEvent('update-progress', { detail: e.detail }));
     };
 
-    const handleCompleted = () => {
-      fetchQueue();
-      // Notification handled globally
-    };
-
-    window.addEventListener("download:progress", handleProgress as any);
-    window.addEventListener("download:completed", handleCompleted as any);
+    globalThis.addEventListener(
+      "download:progress",
+      handleProgress as EventListener
+    );
+    globalThis.addEventListener("download:completed", fetchQueue);
+    globalThis.addEventListener("download:error", fetchQueue);
 
     return () => {
       clearInterval(interval);
-      window.removeEventListener("download:progress", handleProgress as any);
-      window.removeEventListener("download:completed", handleCompleted as any);
+      globalThis.removeEventListener(
+        "download:progress",
+        handleProgress as EventListener
+      );
+      globalThis.removeEventListener("download:completed", fetchQueue);
+      globalThis.removeEventListener("download:error", fetchQueue);
     };
-  }, []);
+  }, [fetchQueue]);
 
   if (isLoading) {
     return (
@@ -103,7 +104,7 @@ export default function DownloadQueue() {
       <AnimatePresence mode="popLayout">
         {queue.map((item) => {
           const tracksQueue = queue.map((q) => ({
-            id: q.track_id || q.id, // Fallback for safety
+            id: q.track?.id || q.id, // Fallback for safety
             title: q.track.title,
             artist: q.track.artist,
             cover: q.track.image_url,

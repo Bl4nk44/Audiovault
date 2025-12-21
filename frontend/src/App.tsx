@@ -43,14 +43,18 @@ function ThemeInit() {
           const currentToken = localStorage.getItem("access_token");
           if (currentToken) {
             // Define minimal interface for legacy session parsing
-            interface SessionData {
+            interface LegacySession {
+              token?: string;
               user?: { preferences?: { theme?: string } };
             }
             const session = Object.values(sessions).find(
-              (s: unknown) => (s as any).token === currentToken
-            ) as SessionData | undefined;
+              (s) => (s as LegacySession).token === currentToken
+            ) as LegacySession | undefined;
             if (session?.user?.preferences?.theme) {
-              theme = session.user.preferences.theme;
+              const legacyTheme = session.user.preferences.theme;
+              if (legacyTheme === "light" || legacyTheme === "dark") {
+                theme = legacyTheme;
+              }
             }
           }
         }

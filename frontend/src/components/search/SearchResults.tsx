@@ -4,8 +4,12 @@ import PlaylistCard from "./PlaylistCard";
 import { motion } from "framer-motion";
 import { useTranslation } from "../../hooks/useTranslation";
 
+import type { Track, Artist, Playlist } from "../../types";
+
+type SearchResultItem = (Track | Artist | Playlist) & { type?: string };
+
 interface SearchResultsProps {
-  results: any[];
+  results: SearchResultItem[];
   isLoading: boolean;
 }
 
@@ -50,11 +54,17 @@ export default function SearchResults({
     );
   }
 
-  const artists = results.filter((r) => r.type === "artist");
-  const playlists = results.filter((r) => r.type === "playlist");
-  const tracks = results.filter(
-    (r) => !r.type || r.type === "track" || r.type === "song"
-  );
+  // Type Guards
+  const isArtist = (item: SearchResultItem): item is Artist =>
+    item.type === "artist";
+  const isPlaylist = (item: SearchResultItem): item is Playlist =>
+    item.type === "playlist";
+  const isTrack = (item: SearchResultItem): item is Track =>
+    !item.type || item.type === "track" || item.type === "song";
+
+  const artists = results.filter(isArtist);
+  const playlists = results.filter(isPlaylist);
+  const tracks = results.filter(isTrack);
 
   return (
     <motion.div

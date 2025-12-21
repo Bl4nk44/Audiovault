@@ -3,80 +3,87 @@ from typing import List, Dict, Any
 import re
 import logging
 
+from app.services.base_music_service import BaseMusicService
+
 logger = logging.getLogger(__name__)
 
-class YouTubeService:
+class YouTubeService(BaseMusicService):
     def __init__(self):
+        super().__init__()
         self.yt = YTMusic()
+        self.source_name = 'youtube'
 
     def search(self, query: str, limit: int = 20, type: str = 'song') -> List[Dict[str, Any]]:
         logger.info(f"YouTube search query: {query}, type: {type}")
         
-        # Check for YouTube URLs
-        # Check for YouTube URLs (including music.youtube.com and shorts)
-        # Handle music.youtube.com same as youtube.com
-        # Handle shorts/ in URL
+        # Regex matching
         video_match = re.search(r'(?:youtube\.com/(?:watch\?v=|shorts/)|youtu\.be/|music\.youtube\.com/watch\?v=)([a-zA-Z0-9_-]+)', query)
-        # Match list parameter in any YouTube URL (e.g. watch?v=...&list=... or playlist?list=...)
         playlist_match = re.search(r'[?&]list=([a-zA-Z0-9_-]+)', query)
         channel_match = re.search(r'(?:youtube\.com|music\.youtube\.com)/(?:channel/|@)([a-zA-Z0-9_-]+)', query)
 
-        if video_match and (type == 'song' or type == 'track' or not playlist_match):
-            # Only return video if type matches or is generic
-            if type not in ['song', 'track', 'all']:
-                pass
-            else:
-                video_id = video_match.group(1)
-                try:
-                    # Fallback: search for video ID usually works and returns song result
-                    results = self.yt.search(video_id, filter="songs", limit=1)
-                    if results:
-                        return [self._format_track(results[0])]
-                except Exception:
-                    pass
-        
-        if playlist_match:
-            # Only return playlist if type matches
-            if type not in ['playlist', 'all']:
-                pass
-            else:
-                playlist_id = playlist_match.group(1)
-                try:
-                    playlist = self.yt.get_playlist(playlist_id)
-                    image_url = playlist['thumbnails'][-1]['url'] if playlist.get('thumbnails') else None
-                    return [{
-                        "id": playlist['id'],
-                        "title": playlist['title'],
-                        "image_url": image_url,
-                        "source": "youtube",
-                        "type": "playlist",
-                        "track_count": playlist.get('trackCount', 0)
-                    }]
-                except Exception as e:
-                    logger.error(f"Error fetching YouTube playlist {playlist_id}: {e}")
-                    pass
+        # 1. Video Search Priority
+        if video_match and (type in ['song', 'track', 'all']) and not playlist_match:
+            res = self._search_video(video_match.group(1))
+            if res: return res
 
-        if channel_match:
-             # Only return artist/channel if type matches
-            if type not in ['artist', 'all']:
-                pass
-            else:
-                channel_id = channel_match.group(1)
-                if query.startswith('http') or 'youtube.com' in query:
-                     try:
-                        if channel_id.startswith('UC'):
-                            artist = self.yt.get_artist(channel_id)
-                            image_url = artist['thumbnails'][-1]['url'] if artist.get('thumbnails') else None
-                            return [{
-                                "id": artist['browseId'],
-                                "name": artist['name'],
-                                "image_url": image_url,
-                                "source": "youtube",
-                                "type": "artist"
-                            }]
-                     except Exception:
-                        pass
+        # 2. Playlist Search Priority
+        if playlist_match and (type in ['playlist', 'all']):
+            res = self._search_playlist(playlist_match.group(1))
+            if res: return res
 
+        # 3. Channel Search Priority
+        if channel_match and (type in ['artist', 'all']):
+            # Additional check to ensuring it looks like a URL if strictly matching regex
+            if query.startswith('http') or 'youtube.com' in query:
+                res = self._search_channel(channel_match.group(1))
+                if res: return res
+
+        # 4. Keyword Search (Fallback)
+        return self._search_keywords(query, limit, type)
+
+    def _search_video(self, video_id: str) -> List[Dict[str, Any]]:
+        try:
+            results = self.yt.search(video_id, filter="songs", limit=1)
+            if results:
+                return [self._format_track(results[0])]
+        except Exception:
+            pass
+        return []
+
+    def _search_playlist(self, playlist_id: str) -> List[Dict[str, Any]]:
+        try:
+            playlist = self.yt.get_playlist(playlist_id)
+            image_url = playlist['thumbnails'][-1]['url'] if playlist.get('thumbnails') else None
+            return [{
+                "id": playlist['id'],
+                "title": playlist['title'],
+                "image_url": image_url,
+                "source": "youtube",
+                "type": "playlist",
+                "track_count": playlist.get('trackCount', 0)
+            }]
+        except Exception as e:
+            logger.error(f"Error fetching YouTube playlist {playlist_id}: {e}")
+            pass
+        return []
+
+    def _search_channel(self, channel_id: str) -> List[Dict[str, Any]]:
+        try:
+            if channel_id.startswith('UC'):
+                artist = self.yt.get_artist(channel_id)
+                image_url = artist['thumbnails'][-1]['url'] if artist.get('thumbnails') else None
+                return [{
+                    "id": artist['browseId'],
+                    "name": artist['name'],
+                    "image_url": image_url,
+                    "source": "youtube",
+                    "type": "artist"
+                }]
+        except Exception:
+            pass
+        return []
+
+    def _search_keywords(self, query: str, limit: int, type: str) -> List[Dict[str, Any]]:
         # Map frontend types to ytmusicapi filter types
         yt_filter = "songs"
         if type == 'artist':
@@ -84,9 +91,13 @@ class YouTubeService:
         elif type == 'playlist':
             yt_filter = "community_playlists"
             
-        results = self.yt.search(query, filter=yt_filter, limit=limit)
+        try:
+            results = self.yt.search(query, filter=yt_filter, limit=limit)
+        except Exception as e:
+             logger.error(f"Error searching YouTube keywords: {e}")
+             return []
+
         items = []
-        
         for item in results:
             if item['resultType'] == 'song':
                 items.append(self._format_track(item))
@@ -109,43 +120,9 @@ class YouTubeService:
                     "type": "playlist",
                     "track_count": int(item.get('itemCount', 0)) if isinstance(item.get('itemCount'), (int, str)) else 0
                 })
-                
         return items
 
-    def get_playlist_tracks(self, playlist_id: str) -> List[Dict[str, Any]]:
-        try:
-            import yt_dlp
-            ydl_opts = {
-                'extract_flat': True,
-                'quiet': True,
-                'no_warnings': True,
-            }
-            url = f"https://www.youtube.com/playlist?list={playlist_id}"
-            
-            with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-                info = ydl.extract_info(url, download=False)
-                
-            tracks = []
-            if 'entries' in info:
-                for item in info['entries']:
-                    # yt-dlp flat extraction returns basic info
-                    tracks.append({
-                        "id": item.get('id'),
-                        "title": item.get('title'),
-                        "artist": item.get('uploader'), # Use uploader as artist
-                        "album": info.get('title'), # Use playlist title as album
-                        "duration_ms": int(item.get('duration', 0) * 1000) if item.get('duration') else 0,
-                        "image_url": None, # Flat extraction might not have thumbnails
-                        "source": "youtube",
-                        "popularity": 0,
-                        "isrc": None
-                    })
-            return tracks
-        except Exception as e:
-            logger.error(f"Error fetching YouTube playlist {playlist_id}: {e}")
-            import traceback
-            logger.error(traceback.format_exc())
-            return []
+    # get_playlist_tracks removed as it duplicated BaseMusicService logic and was likely unused or can be replaced by base.
 
     def get_artist_tracks(self, channel_id: str) -> List[Dict[str, Any]]:
         try:

@@ -15,6 +15,12 @@ import {
 import { motion } from "framer-motion";
 import { cn } from "../../lib/utils";
 
+declare global {
+  interface Window {
+    webkitAudioContext: typeof AudioContext;
+  }
+}
+
 export default function Player() {
   const {
     currentTrack,
@@ -78,7 +84,7 @@ export default function Player() {
       try {
         if (!audioContextRef.current) {
           const AudioContextClass =
-            window.AudioContext || (window as any).webkitAudioContext;
+            window.AudioContext || window.webkitAudioContext;
           audioContextRef.current = new AudioContextClass();
           analyserRef.current = audioContextRef.current.createAnalyser();
           analyserRef.current.fftSize = 256;

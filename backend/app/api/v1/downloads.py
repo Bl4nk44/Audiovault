@@ -35,13 +35,20 @@ class DownloadResponse(BaseModel):
     track: dict # Using dict to allow flexibility, or we can define a nested model
     # Let's use a custom structure for the response to flatten/inject image_url
 
+from app.schemas.download import DownloadCreate
+
 @router.post("/add")
 async def add_download(
     request: DownloadRequest,
     current_user: User = Depends(get_current_active_user),
     db: AsyncSession = Depends(get_db)
 ):
-    return await download_manager.add_download(db, current_user.id, request.track_id, request.source, request.playlist_name)
+    download_data = DownloadCreate(
+        track_id=request.track_id, 
+        source=request.source, 
+        playlist_name=request.playlist_name
+    )
+    return await download_manager.add_download(db, current_user.id, download_data)
 
 @router.post("/{download_id}/pause")
 async def pause_download(

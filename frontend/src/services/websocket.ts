@@ -1,5 +1,10 @@
 import { io, Socket } from "socket.io-client";
 import { API_URL } from "./api";
+import type {
+  DownloadProgressDetail,
+  DownloadCompletedDetail,
+  DownloadErrorDetail,
+} from "../types/events";
 
 class WebSocketService {
   private socket: Socket | null = null;
@@ -46,27 +51,27 @@ class WebSocketService {
     });
 
     // Handle download progress
-    this.socket.on("download_progress", (data: any) => {
+    this.socket.on("download_progress", (data: DownloadProgressDetail) => {
       const event = new CustomEvent("download:progress", {
         detail: data,
       });
-      window.dispatchEvent(event);
+      globalThis.dispatchEvent(event);
     });
 
     // Handle download completion
-    this.socket.on("download_completed", (data: any) => {
+    this.socket.on("download_completed", (data: DownloadCompletedDetail) => {
       const event = new CustomEvent("download:completed", {
         detail: data,
       });
-      window.dispatchEvent(event);
+      globalThis.dispatchEvent(event);
     });
 
     // Handle download error
-    this.socket.on("download_error", (data: any) => {
+    this.socket.on("download_error", (data: DownloadErrorDetail) => {
       const event = new CustomEvent("download:error", {
         detail: data,
       });
-      window.dispatchEvent(event);
+      globalThis.dispatchEvent(event);
     });
   }
 

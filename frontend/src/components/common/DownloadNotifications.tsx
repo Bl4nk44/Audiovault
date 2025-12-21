@@ -1,28 +1,40 @@
 import { useEffect } from "react";
-import { useStore } from "../../store/useStore";
+
+import type {
+  DownloadCompletedDetail,
+  DownloadErrorDetail,
+} from "../../types/events";
+import { notify as toast } from "../../utils/notify";
 
 export default function DownloadNotifications() {
-  const { addNotification } = useStore();
+  // const { addNotification } = useStore(); // Unused if we use toast directly
 
   useEffect(() => {
-    const handleCompleted = (e: any) => {
-      const trackTitle = e.detail?.track?.title || "Track";
-      addNotification("success", `Download completed: ${trackTitle}`);
+    const handleCompleted = (e: CustomEvent<DownloadCompletedDetail>) => {
+      toast.success(`Download completed: ${e.detail.track.title}`);
     };
 
-    const handleError = (e: any) => {
-      const message = e.detail?.message || "Download failed";
-      addNotification("error", message);
+    const handleError = (e: CustomEvent<DownloadErrorDetail>) => {
+      toast.error(`Download failed: ${e.detail.message}`);
     };
 
-    window.addEventListener("download:completed", handleCompleted as any);
-    window.addEventListener("download:error", handleError as any);
+    globalThis.addEventListener(
+      "download:completed",
+      handleCompleted as EventListener
+    );
+    globalThis.addEventListener("download:error", handleError as EventListener);
 
     return () => {
-      window.removeEventListener("download:completed", handleCompleted as any);
-      window.removeEventListener("download:error", handleError as any);
+      globalThis.removeEventListener(
+        "download:completed",
+        handleCompleted as EventListener
+      );
+      globalThis.removeEventListener(
+        "download:error",
+        handleError as EventListener
+      );
     };
-  }, [addNotification]);
+  }, []); // The original dependency array was [addNotification]. The instruction's Code Edit shows '[]addNotification])', which is syntactically incorrect. Assuming the intent was to remove 'addNotification' from the dependencies if 'toast' is used directly, resulting in '[]'.
 
   return null;
 }

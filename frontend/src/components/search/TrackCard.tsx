@@ -1,6 +1,6 @@
 import { Play, Download, Plus, MoreHorizontal, Music } from "lucide-react";
 import api from "../../services/api";
-import { notify as toast } from '../../utils/notify';
+import { notify as toast } from "../../utils/notify";
 import { motion } from "framer-motion";
 import { type Track } from "../../types"; // Import global Track
 
@@ -22,12 +22,12 @@ export default function TrackCard({ track, queue }: TrackCardProps) {
         id: track.id,
         title: track.title,
         artist: track.artist,
-        cover: track.cover, // Use cover
-        source: track.source as any, // Cast source if types mismatch slightly (global has string, local had union)
-        duration_ms: track.duration_ms, // Use duration_ms
-      } as any,
+        cover: track.cover,
+        source: track.source,
+        duration_ms: track.duration_ms,
+      },
       queue
-    ); // Cast to any or strict Track if needed, playTrack expects Track
+    );
   };
 
   const handleDownload = async (e: React.MouseEvent) => {
@@ -38,7 +38,7 @@ export default function TrackCard({ track, queue }: TrackCardProps) {
         source: track.source,
       });
       toast.success("Added to download queue");
-    } catch (error) {
+    } catch {
       toast.error("Failed to add to queue");
     }
   };
@@ -54,7 +54,7 @@ export default function TrackCard({ track, queue }: TrackCardProps) {
         auto_download: false,
       });
       toast.success("Added to library");
-    } catch (error) {
+    } catch {
       toast.error("Failed to add to library");
     }
   };
@@ -133,4 +133,3 @@ export default function TrackCard({ track, queue }: TrackCardProps) {
     </motion.div>
   );
 }
-
