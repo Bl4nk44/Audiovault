@@ -1,6 +1,0 @@
-projectKey=wGw5lVoIIwIntP9LQXcADdd7v
-serverUrl=http://192.168.178.22:9000
-serverVersion=25.12.0.117093
-dashboardUrl=http://192.168.178.22:9000/dashboard?id=wGw5lVoIIwIntP9LQXcADdd7v
-ceTaskId=2dc19fdc-1b7e-4bb7-947b-1d3c3bcd5b74
-ceTaskUrl=http://192.168.178.22:9000/api/ce/task?id=2dc19fdc-1b7e-4bb7-947b-1d3c3bcd5b74
