@@ -15,6 +15,7 @@ from app.schemas.download import DownloadCreate
 
 from app.services.fallback_service import fallback_service
 from app.services.socket_manager import socket_manager
+from app.utils.sanitization import sanitize_filename
 
 logger = logging.getLogger(__name__)
 
@@ -360,8 +361,8 @@ class DownloadManager:
         if '{playlist}' in output_template:
             playlist_val = download.playlist_name
             if playlist_val:
-                # Sanitize to avoid accidental subdirs
-                playlist_val = playlist_val.replace('/', '-').replace('\\', '-')
+                # Sanitize to avoid accidental subdirs and OS restricted chars
+                playlist_val = sanitize_filename(playlist_val)
             else:
                 # If no playlist, we remove the {playlist} tag and any preceding slash to avoid empty folder
                 # Simple approach: replace with empty string. 
