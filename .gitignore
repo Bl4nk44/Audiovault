@@ -41,3 +41,4 @@ deploy.ps1
 .scannerwork/
 .sonarlint/
 sonar-project.properties
+AI_CONTEXT.md
