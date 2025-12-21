@@ -20,6 +20,9 @@ from app.utils.sanitization import sanitize_filename
 
 logger = logging.getLogger(__name__)
 
+class DownloadPausedError(Exception):
+    pass
+
 class DownloadManager:
     def __init__(self):
         self.active_downloads = 0
@@ -46,11 +49,92 @@ class DownloadManager:
                 await task
             except asyncio.CancelledError:
                 logger.info(f"Download task {download_id} cancelled")
+                raise # Re-raise to ensure proper task cancellation propagation
             except Exception as e:
                 logger.error(f"Error processing download {download_id}: {e}")
             finally:
                 self.active_tasks.pop(download_id, None)
                 self.queue.task_done()
+
+    # ... (omit resume_pending_downloads, add_download, _notify_start as they are fine)
+
+    # ... (omit _handle_completion, _set_download_file_path, _fix_filename_artifacts, _notify_completion as they are fine)
+
+    async def _handle_error(self, db, download, e):
+        if isinstance(e, DownloadPausedError) or str(e) == "DOWNLOAD_PAUSED":
+            logger.info(f"Download {download.id} paused by user")
+            download.status = "paused"
+            await db.commit()
+            await socket_manager.emit('download:paused', {'download_id': str(download.id)})
+            return
+
+        logger.error(f"Download failed for {download.id}: {e}", exc_info=True)
+        download.status = "failed"
+        download.error_message = str(e)
+        # Increment retry count
+        download.retry_count = (download.retry_count or 0) + 1
+        await db.commit()
+        
+        await socket_manager.emit('download:error', {
+            'download_id': str(download.id),
+            'error': str(e)
+        })
+
+    async def process_download(self, download_id: str):
+        async with AsyncSessionLocal() as db:
+            result = await db.execute(
+                select(Download)
+                .options(selectinload(Download.user), selectinload(Download.track))
+                .where(Download.id == download_id)
+            )
+            download = result.scalar_one_or_none()
+            
+            if not download:
+                return
+
+            try:
+                await self._mark_download_started(db, download)
+                
+                loop = asyncio.get_running_loop()
+                final_filename_container = {'path': None}
+
+                progress_hook = self._create_progress_hook(download_id, download, loop, final_filename_container)
+                ydl_opts, output_template = self._get_ydl_options(download, progress_hook)
+                
+                url = await self._resolve_url(db, download)
+                
+                if url:
+                    await self._execute_download_task(loop, ydl_opts, url, download_id)
+                    await self._handle_completion(db, download, final_filename_container, output_template)
+                else:
+                    raise ValueError("Could not resolve download URL")
+                
+            except Exception as e:
+                await self._handle_error(db, download, e)
+
+    # ... (skipped helper methods)
+
+    def _create_progress_hook(self, download_id, download, loop, final_filename_container):
+        def progress_hook(d):
+            if d['status'] == 'downloading':
+                if download_id in self.paused_downloads:
+                    raise DownloadPausedError("DOWNLOAD_PAUSED")
+                self._handle_progress_update(d, download_id, download, loop)
+            elif d['status'] == 'finished':
+                try:
+                    logger.info(f"Download finished: {d['filename']}")
+                    final_filename_container['path'] = d['filename']
+                except Exception as e:
+                    logger.error(f"Finished hook error: {e}")
+        return progress_hook
+
+    # ... (skipped _handle_progress_update, _execute_download_task)
+
+    def pause_download(self, download_id: str):
+        self.paused_downloads.add(download_id)
+        # If it's currently running, we can't easily stop yt-dlp except via the hook exception
+        # The hook will raise exception and process_download will catch it and update DB
+        logger.info(f"Requested pause for {download_id}")
 
     async def resume_pending_downloads(self, db: AsyncSession):
         """Resume downloads that were pending or interrupted during restart."""

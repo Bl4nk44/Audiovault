@@ -214,7 +214,7 @@ export default function PlaylistImport() {
             <div className="grid gap-3">
               {previewData.tracks.slice(0, 100).map((track, i) => (
                 <motion.div
-                  key={i}
+                  key={`${track.title}-${i}`}
                   initial={{ opacity: 0, x: -20 }}
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ delay: i * 0.03 }}
