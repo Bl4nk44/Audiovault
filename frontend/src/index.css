@@ -1,0 +1,214 @@
+@import "tailwindcss";
+@config "../tailwind.config.js";
+
+/* @tailwind base; - Removed for v4 */
+/* @tailwind components; - Removed for v4 */
+/* @tailwind utilities; - Removed for v4 */
+
+@layer base {
+  :root {
+    /* Audiovault Default (Cyber Cyan/Black) */
+    --glass-opacity: 0.6;
+    --blur: 20px;
+    --radius: 1rem;
+    --border-opacity: 0.1;
+
+    --background: 240 10% 2%;
+    --foreground: 0 0% 98%;
+
+    --card: 240 10% 4%;
+    --card-foreground: 0 0% 98%;
+
+    --popover: 240 10% 4%;
+    --popover-foreground: 0 0% 98%;
+
+    --primary: 190 90% 50%; /* Cyber Cyan - Distinct from Forest Green */
+    --primary-foreground: 240 5.9% 10%;
+
+    --secondary: 240 5% 10%;
+    --secondary-foreground: 0 0% 98%;
+
+    --muted: 240 5% 10%;
+    --muted-foreground: 240 5% 60%;
+
+    --accent: 270 90% 60%;
+    --accent-foreground: 0 0% 98%;
+
+    --destructive: 0 62% 30%;
+    --destructive-foreground: 0 0% 98%;
+
+    --border: 240 5% 15%;
+    --input: 240 5% 10%;
+    --ring: 190 90% 50%;
+  }
+
+  .dark {
+    --background: 240 10% 2%;
+    --foreground: 0 0% 98%;
+  }
+
+  .midnight {
+    --glass-opacity: 0.5;
+    --blur: 16px;
+    --background: 230 40% 10%; /* Deep Indigo */
+    --foreground: 230 20% 98%;
+    --card: 230 40% 8%;
+    --popover: 230 40% 8%;
+    --primary: 250 80% 70%; /* Soft Purple */
+    --radius: 0.75rem;
+  }
+
+  .ocean {
+    --glass-opacity: 0.5;
+    --blur: 16px;
+    --background: 195 60% 6%; /* Deep Cyan/Teal Background */
+    --foreground: 195 20% 98%;
+    --card: 195 60% 5%;
+    --popover: 195 60% 5%;
+    --primary: 180 80% 50%; /* Cyan Primary */
+  }
+
+  .forest {
+    --glass-opacity: 0.5;
+    --blur: 16px;
+    --background: 150 50% 4%;
+    --foreground: 150 20% 98%;
+    --card: 150 50% 3%;
+    --primary: 142 70% 45%;
+  }
+
+  .sunset {
+    --glass-opacity: 0.55;
+    --blur: 20px;
+    --background: 0 40% 4%;
+    --foreground: 10 20% 98%;
+    --card: 0 40% 3%;
+    --popover: 0 40% 3%;
+    --primary: 15 90% 55%;
+    --primary-foreground: 0 0% 100%;
+    --accent: 35 100% 50%;
+    --radius: 1.25rem;
+  }
+
+  .neon {
+    --glass-opacity: 0.7;
+    --blur: 12px;
+    --background: 260 50% 3%;
+    --foreground: 280 20% 98%;
+    --card: 260 50% 4%;
+    --popover: 260 50% 4%;
+    --primary: 320 100% 50%; /* Neon Pink */
+    --primary-foreground: 0 0% 100%;
+    --accent: 180 100% 50%; /* Neon Cyan */
+    --radius: 0.5rem;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply text-foreground antialiased selection:bg-primary/30 selection:text-primary-foreground;
+    
+    min-height: 100vh;
+    /* Ensure base color is set but allow transparency if needed */
+    background-color: hsl(var(--background));
+    
+    /* Dynamic layered background - VISIBLE */
+    background-image: 
+        /* Grid Pattern - Top Layer */
+        linear-gradient(to right, hsl(var(--primary) / 0.08) 1px, transparent 1px),
+        linear-gradient(to bottom, hsl(var(--primary) / 0.08) 1px, transparent 1px),
+        
+        /* Vibrant Spotlights */
+        radial-gradient(circle at 0% 0%, hsl(var(--primary) / 0.3), transparent 60%),
+        radial-gradient(circle at 100% 0%, hsl(var(--accent) / 0.3), transparent 60%),
+        radial-gradient(circle at 50% 100%, hsl(var(--primary) / 0.2), transparent 60%);
+        
+    background-size: 60px 60px, 60px 60px, 100% 100%, 100% 100%, 100% 100%;
+    background-attachment: fixed;
+  }
+}
+
+@layer utilities {
+  .glass {
+    @apply bg-black/(--glass-opacity) backdrop-blur-md border border-white/(--border-opacity) shadow-xl;
+    backdrop-filter: blur(var(--blur));
+  }
+
+  .glass-hover {
+    @apply hover:bg-white/5 transition-colors duration-200;
+  }
+
+  .text-glow {
+    text-shadow: 0 0 10px rgba(255, 255, 255, 0.3);
+  }
+
+  .text-glow-primary {
+    text-shadow: 0 0 15px hsl(var(--primary) / 0.5);
+  }
+
+  @keyframes blob {
+    0% {
+      transform: translate(0px, 0px) scale(1);
+    }
+
+    33% {
+      transform: translate(30px, -50px) scale(1.1);
+    }
+
+    66% {
+      transform: translate(-20px, 20px) scale(0.9);
+    }
+
+    100% {
+      transform: translate(0px, 0px) scale(1);
+    }
+  }
+
+  .animate-blob {
+    animation: blob 10s infinite;
+  }
+
+  .animation-delay-2000 {
+    animation-delay: 2s;
+  }
+
+  .animation-delay-4000 {
+    animation-delay: 4s;
+  }
+
+  @keyframes progress-shimmer {
+    0% {
+      transform: translateX(-100%);
+    }
+
+    100% {
+      transform: translateX(100%);
+    }
+  }
+
+  .animate-progress-shimmer {
+    animation: progress-shimmer 1.5s infinite linear;
+  }
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: hsla(0, 0%, 100%, 0.1);
+  border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: hsla(0, 0%, 100%, 0.2);
+}

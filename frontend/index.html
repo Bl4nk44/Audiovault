@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/png" href="/ikona.png" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Outfit:wght@100..900&display=swap"
+      rel="stylesheet"
+    />
+    <title>Audiovault</title>
+    <script>
+      (function () {
+        try {
+          // Attempt to restore theme from localStorage immediately
+          const token = localStorage.getItem("access_token");
+          if (token) {
+            const sessions = JSON.parse(
+              localStorage.getItem("sessions") || "{}"
+            );
+            const session = Object.values(sessions).find(
+              (s) => s.token === token
+            );
+            if (
+              session &&
+              session.user &&
+              session.user.preferences &&
+              session.user.preferences.theme
+            ) {
+              document.documentElement.className =
+                session.user.preferences.theme;
+              return;
+            }
+          }
+          // Default fallback if no user or preference found
+          document.documentElement.className = "dark";
+        } catch (e) {
+          console.error("Theme restore failed", e);
+          document.documentElement.className = "dark";
+        }
+      })();
+    </script>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>
