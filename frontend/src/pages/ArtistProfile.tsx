@@ -98,7 +98,7 @@ export default function ArtistProfile() {
             <Music className="w-24 h-24 text-gray-700" />
           </div>
         )}
-        <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent flex flex-col justify-end p-8">
+        <div className="absolute inset-0 bg-linear-to-t from-black/90 via-black/40 to-transparent flex flex-col justify-end p-8">
           <Button
             variant="ghost"
             size="icon"

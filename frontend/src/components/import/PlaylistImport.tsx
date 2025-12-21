@@ -98,7 +98,7 @@ export default function PlaylistImport() {
         animate={{ opacity: 1, y: 0 }}
         className="text-center space-y-4"
       >
-        <h1 className="text-4xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-green-400 to-blue-500">
+        <h1 className="text-4xl font-bold bg-clip-text text-transparent bg-linear-to-r from-green-400 to-blue-500">
           Import Playlist
         </h1>
         <p className="text-muted-foreground text-lg">
@@ -220,7 +220,7 @@ export default function PlaylistImport() {
                   transition={{ delay: i * 0.03 }}
                   className="flex items-center gap-4 bg-card/40 p-3 rounded-lg border border-white/5 hover:bg-white/5 transition-colors group"
                 >
-                  <div className="w-10 h-10 rounded bg-white/10 flex items-center justify-center flex-shrink-0">
+                  <div className="w-10 h-10 rounded bg-white/10 flex items-center justify-center shrink-0">
                     {track.image_url ? (
                       <img
                         src={track.image_url}

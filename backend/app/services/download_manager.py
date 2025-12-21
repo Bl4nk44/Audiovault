@@ -2,7 +2,8 @@ import asyncio
 import os
 import logging
 from typing import Optional
-from datetime import datetime
+from datetime import datetime, timezone
+import aiofiles
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 from sqlalchemy.orm import selectinload
@@ -111,10 +112,21 @@ class DownloadManager:
     async def _handle_completion(self, db, download, final_filename_container, output_template):
         download.status = "completed"
         download.progress = 100
-        download.completed_at = datetime.utcnow()
+        download.completed_at = datetime.now(timezone.utc)
         
+        self._set_download_file_path(download, final_filename_container, output_template)
+        self._fix_filename_artifacts(download)
+
+        logger.info(f"💾 Saving file for user '{download.user.username}' to: {download.file_path}")
+        await db.commit()
+        
+        await self._notify_completion(download)
+
+        if download.playlist_name:
+            await self.update_playlist_m3u(db, download.user_id, download.playlist_name)
+
+    def _set_download_file_path(self, download, final_filename_container, output_template):
         if final_filename_container['path']:
-            # Ensure extension matches the converted format (mp3)
             base, ext = os.path.splitext(final_filename_container['path'])
             if ext != '.mp3':
                 download.file_path = base + '.mp3'
@@ -123,22 +135,18 @@ class DownloadManager:
         else:
             download_path = download.user.preferences.get('downloadPath')
             if not download_path:
-                # Default to user subdirectory
                 download_path = os.path.join(settings.DOWNLOAD_DIR, download.user.username)
-                if not os.path.exists(download_path):
-                    os.makedirs(download_path, exist_ok=True)
-            elif not os.path.exists(download_path):
-                 # Create custom path if it doesn't exist (optional safety)
-                 os.makedirs(download_path, exist_ok=True)
+            
+            if not os.path.exists(download_path):
+                os.makedirs(download_path, exist_ok=True)
 
             download.file_path = os.path.join(download_path, f"{output_template}.mp3")
 
-        # Post-processing: Fix "NA" artifacts from yt-dlp (common when artist metadata is missing)
+    def _fix_filename_artifacts(self, download):
         if download.file_path and os.path.exists(download.file_path):
             directory, filename = os.path.split(download.file_path)
-            # Check for "NA -" prefix
             if filename.startswith("NA -"):
-                 new_filename = filename[4:].strip() # Remove "NA -"
+                 new_filename = filename[4:].strip()
                  if len(new_filename) > 0:
                       new_path = os.path.join(directory, new_filename)
                       try:
@@ -148,10 +156,7 @@ class DownloadManager:
                       except Exception as e:
                           logger.warning(f"Failed to rename NA file: {e}")
 
-        logger.info(f"💾 Saving file for user '{download.user.username}' to: {download.file_path}")
-        await db.commit()
-        
-
+    async def _notify_completion(self, download):
         actual_filename = os.path.basename(download.file_path) if download.file_path else f"{download.track_id}.mp3"
 
         await socket_manager.emit('download:completed', {
@@ -163,9 +168,6 @@ class DownloadManager:
                 'image_url': download.track.metadata_content.get('image_url') if download.track.metadata_content else None
             }
         })
-
-        if download.playlist_name:
-            await self.update_playlist_m3u(db, download.user_id, download.playlist_name)
 
     async def _handle_error(self, db, download, e):
         if str(e) == "DOWNLOAD_PAUSED":
@@ -201,71 +203,77 @@ class DownloadManager:
                 return
 
             try:
-                # Update status to downloading
-                download.status = "downloading"
-                download.started_at = datetime.utcnow()
-                await db.commit()
+                await self._mark_download_started(db, download)
                 
-                # Notify start
-                await self._notify_start(download)
-
                 loop = asyncio.get_running_loop()
                 final_filename_container = {'path': None}
 
-                def progress_hook(d):
-                    if d['status'] == 'downloading':
-                        # Check if paused
-                        if download_id in self.paused_downloads:
-                            raise Exception("DOWNLOAD_PAUSED")
-
-                        try:
-                            p = d.get('_percent_str', '0%').replace('%', '')
-                            progress = float(p)
-                            
-                            asyncio.run_coroutine_threadsafe(
-                                socket_manager.emit('download:progress', {
-                                    'download_id': str(download_id),
-                                    'progress': progress,
-                                    'status': 'downloading',
-                                    'track': {
-                                        'title': download.track.title,
-                                        'artist': download.track.artist,
-                                        'image_url': download.track.metadata_content.get('image_url') if download.track.metadata_content else None
-                                    }
-                                    }
-                                ),
-                                loop
-                            )
-
-                            if progress % 5 == 0:
-                                asyncio.run_coroutine_threadsafe(
-                                    self.update_progress_db(download_id, progress),
-                                    loop
-                                )
-                        except Exception as e:
-                            logger.error(f"Progress hook error: {e}")
-                    elif d['status'] == 'finished':
-                        try:
-                            logger.info(f"Download finished: {d['filename']}")
-                            final_filename_container['path'] = d['filename']
-                        except Exception as e:
-                            logger.error(f"Finished hook error: {e}")
-
+                progress_hook = self._create_progress_hook(download_id, download, loop, final_filename_container)
                 ydl_opts, output_template = self._get_ydl_options(download, progress_hook)
+                
                 url = await self._resolve_url(db, download)
                 
                 if url:
-                    logger.info(f"Starting download for {download_id} from URL: {url}")
-                    # Run blocking download in executor
-                    await loop.run_in_executor(None, lambda: yt_dlp.YoutubeDL(ydl_opts).download([url]))
-                    logger.info(f"Download finished for {download_id}")
-                    
+                    await self._execute_download_task(loop, ydl_opts, url, download_id)
                     await self._handle_completion(db, download, final_filename_container, output_template)
                 else:
                     raise Exception("Could not resolve download URL")
                 
             except Exception as e:
                 await self._handle_error(db, download, e)
+
+    async def _mark_download_started(self, db, download):
+        download.status = "downloading"
+        download.started_at = datetime.now(timezone.utc)
+        await db.commit()
+        await self._notify_start(download)
+
+    def _create_progress_hook(self, download_id, download, loop, final_filename_container):
+        def progress_hook(d):
+            if d['status'] == 'downloading':
+                if download_id in self.paused_downloads:
+                    raise Exception("DOWNLOAD_PAUSED")
+                self._handle_progress_update(d, download_id, download, loop)
+            elif d['status'] == 'finished':
+                try:
+                    logger.info(f"Download finished: {d['filename']}")
+                    final_filename_container['path'] = d['filename']
+                except Exception as e:
+                    logger.error(f"Finished hook error: {e}")
+        return progress_hook
+
+    def _handle_progress_update(self, d, download_id, download, loop):
+        try:
+            p = d.get('_percent_str', '0%').replace('%', '')
+            progress = float(p)
+            
+            asyncio.run_coroutine_threadsafe(
+                socket_manager.emit('download:progress', {
+                    'download_id': str(download_id),
+                    'progress': progress,
+                    'status': 'downloading',
+                    'track': {
+                        'title': download.track.title,
+                        'artist': download.track.artist,
+                        'image_url': download.track.metadata_content.get('image_url') if download.track.metadata_content else None
+                    }
+                }),
+                loop
+            )
+
+            if progress % 5 == 0:
+                asyncio.run_coroutine_threadsafe(
+                    self.update_progress_db(download_id, progress),
+                    loop
+                )
+        except Exception as e:
+            logger.error(f"Progress hook error: {e}")
+
+    async def _execute_download_task(self, loop, ydl_opts, url, download_id):
+        logger.info(f"Starting download for {download_id} from URL: {url}")
+        # Run blocking download in executor
+        await loop.run_in_executor(None, lambda: yt_dlp.YoutubeDL(ydl_opts).download([url]))
+        logger.info(f"Download finished for {download_id}")
 
     async def pause_download(self, download_id: str):
         self.paused_downloads.add(download_id)
@@ -333,8 +341,6 @@ class DownloadManager:
             'progress_hooks': [progress_hook],
             'quiet': True,
             'no_warnings': True,
-            'quiet': True,
-            'no_warnings': True,
         }
 
 
@@ -358,7 +364,8 @@ class DownloadManager:
              output_template = '%(artist)s - %(title)s'
 
         # Pre-process playlist tag manually because yt-dlp might not know it (e.g. single track form Spotify)
-        if '{playlist}' in output_template:
+        PLAYLIST_TAG = '{playlist}'
+        if PLAYLIST_TAG in output_template:
             playlist_val = download.playlist_name
             if playlist_val:
                 # Sanitize to avoid accidental subdirs and OS restricted chars
@@ -369,12 +376,12 @@ class DownloadManager:
                 # Better approach: if schema is .../{playlist}/... -> ...//... -> .../...
                 playlist_val = ""
             
-            output_template = output_template.replace('{playlist}', playlist_val)
+            output_template = output_template.replace(PLAYLIST_TAG, playlist_val)
             # Cleanup double slashes if playlist was empty
             output_template = output_template.replace('//', '/')
 
         for tag, replacement in schema_map.items():
-            if tag == '{playlist}': continue # Handled above
+            if tag == PLAYLIST_TAG: continue # Handled above
             output_template = output_template.replace(tag, replacement)
         
         if not output_template or '%' not in output_template:
@@ -445,7 +452,7 @@ class DownloadManager:
             # Fallback to search if direct fails/missing
             if track_info:
                 return f"scsearch1:{track_info.artist} - {track_info.title}"
-            return None
+            return ""
             
         elif resp_type == 'none':
             # Try default legacy logic if no instruction covers it (shouldn't happen with new logic covering all known sources)
@@ -491,13 +498,13 @@ class DownloadManager:
             safe_playlist_name = playlist_name.replace('/', '-').replace('\\', '-')
             playlist_file_path = f"{download_path}/{safe_playlist_name}.m3u8"
             
-            with open(playlist_file_path, 'w', encoding='utf-8') as f:
-                f.write("#EXTM3U\n")
+            async with aiofiles.open(playlist_file_path, 'w', encoding='utf-8') as f:
+                await f.write("#EXTM3U\n")
                 for d in downloads:
                     if d.file_path:
                         rel_path = d.file_path.replace(f"{download_path}/", "")
-                        f.write(f"#EXTINF:-1,{d.playlist_name} - Track\n")
-                        f.write(f"{rel_path}\n")
+                        await f.write(f"#EXTINF:-1,{d.playlist_name} - Track\n")
+                        await f.write(f"{rel_path}\n")
                         
             logger.info(f"Updated playlist {playlist_file_path}")
             
@@ -521,59 +528,64 @@ class DownloadManager:
     async def delete_playlist(self, db: AsyncSession, user_id: str, source: str, playlist_name: str):
         """Delete an entire playlist, including files and DB records."""
         try:
-            # 1. Get all downloads for this playlist
-            result = await db.execute(
-                select(Download).where(
-                    Download.user_id == user_id,
-                    Download.source == source,
-                    Download.playlist_name == playlist_name
-                )
-            )
-            downloads = result.scalars().all()
+            downloads = await self._get_playlist_downloads(db, user_id, source, playlist_name)
             
             if not downloads:
                  logger.info(f"No downloads found for playlist {playlist_name} ({source})")
                  return
 
-            # 2. Delete files
-            for download in downloads:
-                if download.file_path and os.path.exists(download.file_path):
-                    try:
-                        os.remove(download.file_path)
-                    except Exception as e:
-                        logger.error(f"Failed to delete file {download.file_path}: {e}")
-                
-                # Also remove from active tasks if downloading
-                if download.id in self.active_tasks:
-                     self.active_tasks[download.id].cancel()
-                     self.active_tasks.pop(download.id, None)
-
-            # 3. Clean up empty directory (heuristic)
-            # Assuming files are in DOWNLOAD_DIR/Artist - Title.mp3 or similar flat structure, 
-            # or grouped by playlist if schema was used.
-            # If files were in a folder named after the playlist, try to remove it.
-            # We check the directory of the first download.
-            if downloads and downloads[0].file_path:
-                 parent_dir = os.path.dirname(downloads[0].file_path)
-                 # Check if this dir name matches playlist name normalized
-                 safe_playlist_name = playlist_name.replace('/', '-').replace('\\', '-')
-                 if safe_playlist_name in os.path.basename(parent_dir):
-                      # Try to remove dir if empty
-                      try:
-                          os.rmdir(parent_dir)
-                          logger.info(f"Removed empty directory {parent_dir}")
-                      except Exception:
-                          pass # Not empty or other error
-
-            # 4. Delete DB records
-            for download in downloads:
-                await db.delete(download)
+            self._delete_physical_files(downloads)
+            self._cleanup_empty_directory(downloads, playlist_name)
             
-            await db.commit()
+            await self._delete_db_records(db, downloads)
+            
             logger.info(f"Deleted playlist {playlist_name} for user {user_id}")
 
         except Exception as e:
             logger.error(f"Error deleting playlist {playlist_name}: {e}")
             raise e
+
+    async def _get_playlist_downloads(self, db: AsyncSession, user_id, source, playlist_name):
+        result = await db.execute(
+            select(Download).where(
+                Download.user_id == user_id,
+                Download.source == source,
+                Download.playlist_name == playlist_name
+            )
+        )
+        return result.scalars().all()
+
+    def _delete_physical_files(self, downloads):
+        for download in downloads:
+            if download.file_path and os.path.exists(download.file_path):
+                try:
+                    os.remove(download.file_path)
+                except Exception as e:
+                    logger.error(f"Failed to delete file {download.file_path}: {e}")
+            
+            # Also remove from active tasks if downloading
+            if download.id in self.active_tasks:
+                 self.active_tasks[download.id].cancel()
+                 self.active_tasks.pop(download.id, None)
+
+    def _cleanup_empty_directory(self, downloads, playlist_name):
+        # 3. Clean up empty directory (heuristic)
+        if downloads and downloads[0].file_path:
+             parent_dir = os.path.dirname(downloads[0].file_path)
+             # Check if this dir name matches playlist name normalized
+             safe_playlist_name = playlist_name.replace('/', '-').replace('\\', '-')
+             if safe_playlist_name in os.path.basename(parent_dir):
+                  # Try to remove dir if empty
+                  try:
+                      os.rmdir(parent_dir)
+                      logger.info(f"Removed empty directory {parent_dir}")
+                  except Exception:
+                      pass # Not empty or other error
+
+    async def _delete_db_records(self, db, downloads):
+        # 4. Delete DB records
+        for download in downloads:
+            await db.delete(download)
+        await db.commit()
 
 download_manager = DownloadManager()
