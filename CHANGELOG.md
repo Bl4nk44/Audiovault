@@ -1,5 +1,39 @@
 # Changelog
 
+## [0.5.10] - 2025-12-22
+
+### Feature
+- add cross-platform filename sanitization and units tests
+
+### Bug Fixes
+- syntax error in library_maintenance.py
+- resolve reliability bug with synchronous file I/O in system logs endpoint
+- address remaining IDE warnings (async, exceptions, react keys)
+- final lint and build repairs
+
+### Refactor
+- resolve SonarQube issues (duplication, accessibility)
+- cleanup code smells (datetime, exceptions, imports)
+- reduce complexity in downloads.py, stream.py and fix reliability and code smells
+- resolve high code smells and reliability issues in downloads, users, spotify and security
+- extract logic from App.tsx to reduce cognitive complexity
+- huge complexity reduction, extracted services and fixed code smells
+- reduce complexity, fix async issues and resolve sonar smells
+- reduce cognitive complexity in download_manager and fix frontend warnings
+
+### Chore
+- remove test artifacts from tracking and update .gitignore
+- exclude translation and json files to avoid false positives
+- update docker-compose frontend port mapping and refine README heading styles.
+- bump the frontend-dependencies group
+- ignore AI_CONTEXT.md file
+- remove scanner artifacts from git index
+
+### Other
+- Merge pull request #19 from Bl4nk44/dependabot/npm_and_yarn/frontend/frontend-dependencies-5b4f6032b6
+- Merge branch 'main' of https://github.com/Bl4nk44/Audiovault
+- Update README formatting and section titles
+
 ## [0.5.9] - 2025-12-21
 
 - No significant changes documented.
