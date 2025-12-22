@@ -100,67 +100,61 @@ async def update_settings(
     current_user: User = Depends(get_current_active_user),
     db: AsyncSession = Depends(get_db)
 ):
-    # Update User Preferences
-    current_prefs = dict(current_user.preferences) if current_user.preferences else {}
-    if settings.downloadPath:
-        current_prefs['download_path'] = settings.downloadPath
-    if settings.maxParallelDownloads:
-        current_prefs['max_parallel_downloads'] = settings.maxParallelDownloads
-    if settings.theme:
-        current_prefs['theme'] = settings.theme
-    if settings.language:
-        current_prefs['language'] = settings.language
-    if settings.filenameSchema:
-        current_prefs['filename_schema'] = settings.filenameSchema
-    if settings.audioQuality:
-        current_prefs['audio_quality'] = settings.audioQuality
+    _update_user_preferences(current_user, settings)
     
-    current_user.preferences = current_prefs
+    await _update_service_credentials(db, current_user, 'spotify', {
+        'client_id': settings.spotifyClientId,
+        'client_secret': settings.spotifyClientSecret
+    })
     
-    # Update Spotify Credentials
-    if settings.spotifyClientId or settings.spotifyClientSecret:
-        stmt = select(ServiceCredentials).where(
-            ServiceCredentials.user_id == current_user.id,
-            ServiceCredentials.service == 'spotify'
-        )
-        result = await db.execute(stmt)
-        spotify_creds = result.scalars().first()
-        
-        if not spotify_creds:
-            spotify_creds = ServiceCredentials(
-                user_id=current_user.id,
-                service='spotify',
-                extra_data={}
-            )
-            db.add(spotify_creds)
-        
-        extra_data = dict(spotify_creds.extra_data) if spotify_creds.extra_data else {}
-        if settings.spotifyClientId:
-            extra_data['client_id'] = settings.spotifyClientId
-        if settings.spotifyClientSecret:
-            extra_data['client_secret'] = settings.spotifyClientSecret
-        spotify_creds.extra_data = extra_data
-
-    # Update YouTube Credentials
-    if settings.youtubeApiKey:
-        stmt = select(ServiceCredentials).where(
-            ServiceCredentials.user_id == current_user.id,
-            ServiceCredentials.service == 'youtube'
-        )
-        result = await db.execute(stmt)
-        youtube_creds = result.scalars().first()
-        
-        if not youtube_creds:
-            youtube_creds = ServiceCredentials(
-                user_id=current_user.id,
-                service='youtube',
-                extra_data={}
-            )
-            db.add(youtube_creds)
-            
-        extra_data = dict(youtube_creds.extra_data) if youtube_creds.extra_data else {}
-        extra_data['api_key'] = settings.youtubeApiKey
-        youtube_creds.extra_data = extra_data
+    await _update_service_credentials(db, current_user, 'youtube', {
+        'api_key': settings.youtubeApiKey
+    })
 
     await db.commit()
     return {"status": "success"}
+
+def _update_user_preferences(user: User, settings: SettingsUpdate):
+    current_prefs = dict(user.preferences) if user.preferences else {}
+    mapping = {
+        'download_path': settings.downloadPath,
+        'max_parallel_downloads': settings.maxParallelDownloads,
+        'theme': settings.theme,
+        'language': settings.language,
+        'filename_schema': settings.filenameSchema,
+        'audio_quality': settings.audioQuality
+    }
+    
+    updated = False
+    for key, value in mapping.items():
+        if value is not None:
+            current_prefs[key] = value
+            updated = True
+            
+    if updated:
+        user.preferences = current_prefs
+
+async def _update_service_credentials(db: AsyncSession, user: User, service: str, updates: dict):
+    # Filter out None values
+    valid_updates = {k: v for k, v in updates.items() if v is not None}
+    if not valid_updates:
+        return
+
+    stmt = select(ServiceCredentials).where(
+        ServiceCredentials.user_id == user.id,
+        ServiceCredentials.service == service
+    )
+    result = await db.execute(stmt)
+    creds = result.scalars().first()
+    
+    if not creds:
+        creds = ServiceCredentials(
+            user_id=user.id,
+            service=service,
+            extra_data={}
+        )
+        db.add(creds)
+    
+    extra_data = dict(creds.extra_data) if creds.extra_data else {}
+    extra_data.update(valid_updates)
+    creds.extra_data = extra_data
