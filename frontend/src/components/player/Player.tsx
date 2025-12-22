@@ -349,26 +349,28 @@ export default function Player() {
           {/* Progress Bar */}
           <div className="w-full flex items-center gap-3 text-xs text-gray-400 font-medium">
             <span>{formatTime(currentTime)}</span>
-            <div
-              className="flex-1 h-1 bg-white/10 rounded-full cursor-pointer group relative"
-              onClick={(e) => {
-                if (audioRef.current && duration) {
-                  const rect = e.currentTarget.getBoundingClientRect();
-                  const x = e.clientX - rect.left;
-                  const percentage = Math.max(0, Math.min(1, x / rect.width));
-                  const newTime = percentage * duration;
+            <input
+              type="range"
+              min={0}
+              max={duration || 0}
+              value={currentTime}
+              onChange={(e) => {
+                const newTime = Number(e.target.value);
+                if (audioRef.current) {
                   audioRef.current.currentTime = newTime;
                   setCurrentTime(newTime);
                 }
               }}
-            >
-              <div
-                className="absolute top-0 left-0 h-full bg-primary rounded-full transition-colors"
-                style={{ width: `${(currentTime / duration) * 100}%` }}
-              >
-                <div className="absolute right-0 top-1/2 -translate-y-1/2 w-3 h-3 bg-white rounded-full opacity-0 group-hover:opacity-100 shadow-lg transform scale-0 group-hover:scale-100 transition-all" />
-              </div>
-            </div>
+              className="flex-1 h-1 bg-white/10 rounded-lg appearance-none cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-3 [&::-webkit-slider-thumb]:h-3 [&::-webkit-slider-thumb]:bg-white [&::-webkit-slider-thumb]:rounded-full hover:[&::-webkit-slider-thumb]:bg-primary focus:outline-none focus:ring-2 focus:ring-primary/50"
+              aria-label="Seek slider"
+              style={{
+                backgroundSize: `${
+                  (currentTime / (duration || 1)) * 100
+                }% 100%`,
+                backgroundImage: `linear-gradient(to right, hsl(var(--primary)) 0%, hsl(var(--primary)) 100%)`,
+                backgroundRepeat: "no-repeat",
+              }}
+            />
             <span>{formatTime(duration)}</span>
           </div>
         </div>
@@ -387,20 +389,21 @@ export default function Player() {
             >
               {volume === 0 ? <VolumeX size={20} /> : <Volume2 size={20} />}
             </button>
-            <div
-              className="w-24 h-1 bg-white/10 rounded-full overflow-hidden cursor-pointer relative"
-              onClick={(e) => {
-                const rect = e.currentTarget.getBoundingClientRect();
-                const x = e.clientX - rect.left;
-                const newVolume = Math.max(0, Math.min(1, x / rect.width));
-                setVolume(newVolume);
+            <input
+              type="range"
+              min={0}
+              max={1}
+              step={0.01}
+              value={volume}
+              onChange={(e) => setVolume(Number.parseFloat(e.target.value))}
+              className="w-24 h-1 bg-white/10 rounded-lg appearance-none cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-3 [&::-webkit-slider-thumb]:h-3 [&::-webkit-slider-thumb]:bg-white [&::-webkit-slider-thumb]:rounded-full hover:[&::-webkit-slider-thumb]:bg-primary focus:outline-none focus:ring-2 focus:ring-primary/50"
+              aria-label="Volume slider"
+              style={{
+                backgroundSize: `${volume * 100}% 100%`,
+                backgroundImage: `linear-gradient(to right, white 0%, white 100%)`,
+                backgroundRepeat: "no-repeat",
               }}
-            >
-              <div
-                className="h-full bg-white group-hover:bg-primary transition-colors absolute top-0 left-0"
-                style={{ width: `${volume * 100}%` }}
-              />
-            </div>
+            />
           </div>
           <button
             onClick={() => setShowVisualizer(!showVisualizer)}
@@ -418,6 +421,7 @@ export default function Player() {
           <button
             onClick={() => setIsExpanded(!isExpanded)}
             className="text-gray-400 hover:text-white p-2 hover:bg-white/10 rounded-full transition-colors"
+            aria-label={isExpanded ? "Collapse player" : "Expand player"}
           >
             {isExpanded ? <X size={24} /> : <Maximize2 size={20} />}
           </button>
@@ -430,7 +434,9 @@ export default function Player() {
         crossOrigin="anonymous"
         onTimeUpdate={handleTimeUpdate}
         onEnded={() => togglePlay()}
-      />
+      >
+        <track kind="captions" src="" label="English" />
+      </audio>
     </motion.div>
   );
 }

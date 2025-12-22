@@ -5,10 +5,9 @@ from app.services.auth_manager import AuthManager
 from app.models.schemas import UserCreate, UserLogin, UserResponse, Token, RefreshTokenRequest
 from app.models.user import User
 from app.core.dependencies import get_current_active_user
+from fastapi_limiter.depends import RateLimiter
 
 router = APIRouter()
-
-from fastapi_limiter.depends import RateLimiter
 
 @router.post("/register", response_model=UserResponse, status_code=status.HTTP_201_CREATED, dependencies=[Depends(RateLimiter(times=5, seconds=60))])
 async def register(

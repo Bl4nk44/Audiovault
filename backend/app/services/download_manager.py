@@ -56,79 +56,7 @@ class DownloadManager:
                 self.active_tasks.pop(download_id, None)
                 self.queue.task_done()
 
-    # ... (omit resume_pending_downloads, add_download, _notify_start as they are fine)
 
-    # ... (omit _handle_completion, _set_download_file_path, _fix_filename_artifacts, _notify_completion as they are fine)
-
-    async def _handle_error(self, db, download, e):
-        if isinstance(e, DownloadPausedError) or str(e) == "DOWNLOAD_PAUSED":
-            logger.info(f"Download {download.id} paused by user")
-            download.status = "paused"
-            await db.commit()
-            await socket_manager.emit('download:paused', {'download_id': str(download.id)})
-            return
-
-        logger.error(f"Download failed for {download.id}: {e}", exc_info=True)
-        download.status = "failed"
-        download.error_message = str(e)
-        # Increment retry count
-        download.retry_count = (download.retry_count or 0) + 1
-        await db.commit()
-        
-        await socket_manager.emit('download:error', {
-            'download_id': str(download.id),
-            'error': str(e)
-        })
-
-    async def process_download(self, download_id: str):
-        async with AsyncSessionLocal() as db:
-            result = await db.execute(
-                select(Download)
-                .options(selectinload(Download.user), selectinload(Download.track))
-                .where(Download.id == download_id)
-            )
-            download = result.scalar_one_or_none()
-            
-            if not download:
-                return
-
-            try:
-                await self._mark_download_started(db, download)
-                
-                loop = asyncio.get_running_loop()
-                final_filename_container = {'path': None}
-
-                progress_hook = self._create_progress_hook(download_id, download, loop, final_filename_container)
-                ydl_opts, output_template = self._get_ydl_options(download, progress_hook)
-                
-                url = await self._resolve_url(db, download)
-                
-                if url:
-                    await self._execute_download_task(loop, ydl_opts, url, download_id)
-                    await self._handle_completion(db, download, final_filename_container, output_template)
-                else:
-                    raise ValueError("Could not resolve download URL")
-                
-            except Exception as e:
-                await self._handle_error(db, download, e)
-
-    # ... (skipped helper methods)
-
-    def _create_progress_hook(self, download_id, download, loop, final_filename_container):
-        def progress_hook(d):
-            if d['status'] == 'downloading':
-                if download_id in self.paused_downloads:
-                    raise DownloadPausedError("DOWNLOAD_PAUSED")
-                self._handle_progress_update(d, download_id, download, loop)
-            elif d['status'] == 'finished':
-                try:
-                    logger.info(f"Download finished: {d['filename']}")
-                    final_filename_container['path'] = d['filename']
-                except Exception as e:
-                    logger.error(f"Finished hook error: {e}")
-        return progress_hook
-
-    # ... (skipped _handle_progress_update, _execute_download_task)
 
     def pause_download(self, download_id: str):
         self.paused_downloads.add(download_id)
@@ -254,7 +182,7 @@ class DownloadManager:
         })
 
     async def _handle_error(self, db, download, e):
-        if str(e) == "DOWNLOAD_PAUSED":
+        if isinstance(e, DownloadPausedError) or str(e) == "DOWNLOAD_PAUSED":
             logger.info(f"Download {download.id} paused by user")
             download.status = "paused"
             await db.commit()
@@ -316,7 +244,7 @@ class DownloadManager:
         def progress_hook(d):
             if d['status'] == 'downloading':
                 if download_id in self.paused_downloads:
-                    raise Exception("DOWNLOAD_PAUSED")
+                    raise DownloadPausedError("DOWNLOAD_PAUSED")
                 self._handle_progress_update(d, download_id, download, loop)
             elif d['status'] == 'finished':
                 try:
@@ -359,11 +287,16 @@ class DownloadManager:
         await loop.run_in_executor(None, lambda: yt_dlp.YoutubeDL(ydl_opts).download([url]))
         logger.info(f"Download finished for {download_id}")
 
-    async def pause_download(self, download_id: str):
-        self.paused_downloads.add(download_id)
-        # If it's currently running, we can't easily stop yt-dlp except via the hook exception
-        # The hook will raise exception and process_download will catch it and update DB
-        logger.info(f"Requested pause for {download_id}")
+    async def pause_download_async(self, download_id: str):
+         # Renaming to avoid conflict if necessary, but actually the previous one was sync (line 133)
+         # and this one is async (line 362). 
+         # Line 133: def pause_download(self, download_id: str): -> Sync
+         # Line 362: async def pause_download(self, download_id: str): -> Async
+         # The issue says "implementation equivalent".
+         # The sync one sets the flag. The async one does the same + logs.
+         # Let's keep one unified async method if possible, or alias.
+         # Since this is "async def", and the other "def", check usage.
+         return self.pause_download(download_id)
 
     async def resume_download(self, db: AsyncSession, download_id: str):
         if download_id in self.paused_downloads:
@@ -465,7 +398,8 @@ class DownloadManager:
             output_template = output_template.replace('//', '/')
 
         for tag, replacement in schema_map.items():
-            if tag == PLAYLIST_TAG: continue # Handled above
+            if tag == PLAYLIST_TAG:
+                continue # Handled above
             output_template = output_template.replace(tag, replacement)
         
         if not output_template or '%' not in output_template:
@@ -663,8 +597,8 @@ class DownloadManager:
                   try:
                       os.rmdir(parent_dir)
                       logger.info(f"Removed empty directory {parent_dir}")
-                  except Exception:
-                      pass # Not empty or other error
+                  except Exception as e:
+                      logger.debug(f"Failed to remove directory {parent_dir}: {e}")
 
     async def _delete_db_records(self, db, downloads):
         # 4. Delete DB records

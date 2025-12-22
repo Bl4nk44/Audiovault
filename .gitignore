@@ -42,3 +42,11 @@ deploy.ps1
 .sonarlint/
 sonar-project.properties
 AI_CONTEXT.md
+
+# Test Artifacts
+backend/coverage_report.txt
+frontend/lint_report.txt
+.coverage
+htmlcov/
+junit.xml
+debug.log

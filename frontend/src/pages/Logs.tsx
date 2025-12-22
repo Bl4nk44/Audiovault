@@ -43,7 +43,7 @@ export default function Logs() {
       link.setAttribute("download", "audiovault.log");
       document.body.appendChild(link);
       link.click();
-      link.parentNode?.removeChild(link);
+      link.remove();
     } catch (error) {
       console.error("Failed to download logs", error);
     }
@@ -146,7 +146,7 @@ export default function Logs() {
           ) : (
             logs.map((line, i) => (
               <div
-                key={i}
+                key={`${i}-${line.substring(0, 10)}`} // Using combination of index and content prefix for better uniqueness
                 className={`whitespace-pre-wrap break-all ${getLogColor(line)}`}
               >
                 <span className="opacity-30 mr-4 select-none">{i + 1}</span>

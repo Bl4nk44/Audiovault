@@ -8,32 +8,10 @@ export function ThemeInitializer() {
     let theme = user?.preferences?.theme;
 
     // Fallback to localStorage if user state not ready
+    // Fallback to localStorage if user state not ready
     if (!theme) {
-      try {
-        const stored = localStorage.getItem("sessions");
-        if (stored) {
-          const sessions = JSON.parse(stored);
-          const currentToken = localStorage.getItem("access_token");
-          if (currentToken) {
-            // Define minimal interface for legacy session parsing
-            interface LegacySession {
-              token?: string;
-              user?: { preferences?: { theme?: string } };
-            }
-            const session = Object.values(sessions).find(
-              (s) => (s as LegacySession).token === currentToken
-            ) as LegacySession | undefined;
-            if (session?.user?.preferences?.theme) {
-              const legacyTheme = session.user.preferences.theme;
-              if (legacyTheme === "light" || legacyTheme === "dark") {
-                theme = legacyTheme;
-              }
-            }
-          }
-        }
-      } catch {
-        // Ignore parsing errors
-      }
+      const legacy = getLegacyTheme();
+      if (legacy) theme = legacy;
     }
 
     // specific fallback: if still no theme, check if 'classic' was previously set (legacy) and default to 'dark'
@@ -52,4 +30,36 @@ export function ThemeInitializer() {
   }, [user]);
 
   return null;
+}
+
+function getLegacyTheme(): "light" | "dark" | undefined {
+  try {
+    const stored = localStorage.getItem("sessions");
+    if (!stored) return undefined;
+
+    const currentToken = localStorage.getItem("access_token");
+    if (!currentToken) return undefined;
+
+    const sessions = JSON.parse(stored);
+
+    // Define minimal interface for legacy session parsing
+    interface LegacySession {
+      token?: string;
+      user?: { preferences?: { theme?: string } };
+    }
+
+    const session = Object.values(sessions).find(
+      (s) => (s as LegacySession).token === currentToken
+    ) as LegacySession | undefined;
+
+    if (session?.user?.preferences?.theme) {
+      const legacyTheme = session.user.preferences.theme;
+      if (legacyTheme === "light" || legacyTheme === "dark") {
+        return legacyTheme;
+      }
+    }
+  } catch {
+    // Ignore parsing errors
+  }
+  return undefined;
 }

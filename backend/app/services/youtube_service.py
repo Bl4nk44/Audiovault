@@ -97,30 +97,39 @@ class YouTubeService(BaseMusicService):
              logger.error(f"Error searching YouTube keywords: {e}")
              return []
 
-        items = []
-        for item in results:
-            if item['resultType'] == 'song':
-                items.append(self._format_track(item))
-            elif item['resultType'] == 'artist':
-                image_url = item['thumbnails'][-1]['url'] if item.get('thumbnails') else None
-                items.append({
-                    "id": item['browseId'],
-                    "name": item['artist'],
-                    "image_url": image_url,
-                    "source": "youtube",
-                    "type": "artist"
-                })
-            elif item['resultType'] == 'playlist':
-                image_url = item['thumbnails'][-1]['url'] if item.get('thumbnails') else None
-                items.append({
-                    "id": item['browseId'],
-                    "title": item['title'],
-                    "image_url": image_url,
-                    "source": "youtube",
-                    "type": "playlist",
-                    "track_count": int(item.get('itemCount', 0)) if isinstance(item.get('itemCount'), (int, str)) else 0
-                })
-        return items
+        return [item for item in (self._map_search_result(r) for r in results) if item]
+
+    def _map_search_result(self, item: Dict[str, Any]) -> Dict[str, Any]:
+        """Maps a YouTube search result to a unified format."""
+        result_type = item.get('resultType')
+        
+        if result_type == 'song':
+            return self._format_track(item)
+            
+        if result_type == 'artist':
+            return {
+                "id": item['browseId'],
+                "name": item['artist'],
+                "image_url": item['thumbnails'][-1]['url'] if item.get('thumbnails') else None,
+                "source": "youtube",
+                "type": "artist"
+            }
+            
+        if result_type == 'playlist':
+            track_count = item.get('itemCount', 0)
+            if not isinstance(track_count, (int, float)): # handle string cases cleanly
+                 track_count = int(track_count) if isinstance(track_count, str) and track_count.isdigit() else 0
+                 
+            return {
+                "id": item['browseId'],
+                "title": item['title'],
+                "image_url": item['thumbnails'][-1]['url'] if item.get('thumbnails') else None,
+                "source": "youtube",
+                "type": "playlist",
+                "track_count": int(track_count)
+            }
+            
+        return None
 
     # get_playlist_tracks removed as it duplicated BaseMusicService logic and was likely unused or can be replaced by base.
 

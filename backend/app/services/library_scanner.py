@@ -52,8 +52,8 @@ class LibraryScannerService:
                 m = mutagen.File(full_path)
                 if m and 'TIT2' in m: title = str(m['TIT2'])
                 if m and 'TPE1' in m: artist = str(m['TPE1'])
-            except Exception:
-                pass
+            except Exception as e:
+                logger.debug(f"Mutagen fallback failed for {filename}: {e}")
         return title, artist, album
 
     def _infer_source_info(self, full_path: str, root_dir: str) -> tuple[str, str]:
@@ -75,8 +75,8 @@ class LibraryScannerService:
                     playlist_name = "Uncategorized"
                 else:
                     playlist_name = parts[0]
-        except Exception:
-            pass # Fallback to default
+        except Exception as e:
+            logger.debug(f"Failed to infer source info for {full_path}: {e}") # Fallback to default
             
         return source, playlist_name
 
