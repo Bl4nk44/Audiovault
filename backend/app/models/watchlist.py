@@ -1,7 +1,7 @@
 from sqlalchemy import Column, String, Integer, Boolean, DateTime, JSON, ForeignKey, UniqueConstraint
 from sqlalchemy import Uuid
 from sqlalchemy.orm import relationship
-from datetime import datetime
+from datetime import datetime, timezone
 from uuid import uuid4
 from app.db.base import Base
 
@@ -28,7 +28,7 @@ class Watchlist(Base):
     # Metadata
     metadata_content = Column("metadata", JSON, default={})
     
-    created_at = Column(DateTime, default=datetime.utcnow)
+    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
     
     # Relationships
     user = relationship("User", back_populates="watchlist")

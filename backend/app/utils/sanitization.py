@@ -1,5 +1,4 @@
 import re
-import os
 
 def sanitize_filename(name: str, replacement: str = "_") -> str:
     """

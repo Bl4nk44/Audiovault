@@ -1,8 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
-from sqlalchemy.orm import joinedload
-from sqlalchemy import case
 from typing import Optional
 from app.db.database import get_db
 from app.services.download_manager import download_manager
@@ -12,7 +10,6 @@ from app.models.download import Download
 from pydantic import BaseModel
 from uuid import UUID
 import os
-from app.core.config import settings
 
 router = APIRouter()
 
@@ -127,7 +124,6 @@ async def rescan_library(
 
 
 
-from sqlalchemy import update, text
 
 @router.post("/clear-history")
 async def clear_history(

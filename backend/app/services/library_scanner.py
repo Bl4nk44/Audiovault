@@ -2,7 +2,7 @@ import os
 import logging
 import mutagen
 from mutagen.easyid3 import EasyID3
-from typing import List, Optional, Set
+from typing import Optional, Set
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 

@@ -5,14 +5,20 @@ from sqlalchemy.orm import joinedload
 from app.models.download import Download
 from app.core.config import settings
 import os
-from typing import List, Optional
+import uuid
+from typing import List
 
 class LibraryDataService:
     
     async def get_library_items(self, db: AsyncSession, user_id: str, skip: int = 0, limit: int = 50, source: str = None, playlist: str = None) -> dict:
+        try:
+            u_uuid = uuid.UUID(str(user_id))
+        except ValueError:
+            return {"items": [], "total": 0, "skip": skip, "limit": limit}
+
         # Build query filters
         conditions = [
-            Download.user_id == user_id,
+            Download.user_id == u_uuid,
             Download.status == 'completed'
         ]
         
@@ -107,6 +113,11 @@ class LibraryDataService:
         }, updated
 
     async def get_queue_items(self, db: AsyncSession, user_id: str) -> List[dict]:
+        try:
+            u_uuid = uuid.UUID(str(user_id))
+        except ValueError:
+            return []
+
         # Custom sorting: Downloading first, then Pending/Processing, then others
         status_order = case(
             (Download.status == 'downloading', 1),
@@ -120,7 +131,7 @@ class LibraryDataService:
             select(Download)
             .options(joinedload(Download.track))
             .where(
-                Download.user_id == user_id,
+                Download.user_id == u_uuid,
                 Download.archived == False 
             )
             .order_by(status_order, Download.created_at.desc())

@@ -1,7 +1,7 @@
 from sqlalchemy import Column, Integer, DateTime, ForeignKey, UniqueConstraint
 from sqlalchemy import Uuid
 from sqlalchemy.orm import relationship
-from datetime import datetime
+from datetime import datetime, timezone
 from uuid import uuid4
 from app.db.base import Base
 
@@ -14,7 +14,7 @@ class WatchlistItem(Base):
     
     # Metadata for the item in the context of this playlist
     position = Column(Integer, nullable=True) # Track order
-    added_at = Column(DateTime, default=datetime.utcnow)
+    added_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
     
     # Relationships
     watchlist = relationship("Watchlist", back_populates="items")

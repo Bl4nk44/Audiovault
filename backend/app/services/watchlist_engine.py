@@ -11,14 +11,9 @@ import logging
 from app.models.track import Track
 from app.models.watchlist_item import WatchlistItem
 from app.schemas.download import DownloadCreate
-from sqlalchemy import delete, func
 
 logger = logging.getLogger(__name__)
 
-from app.models.track import Track
-from app.models.watchlist_item import WatchlistItem
-from app.schemas.download import DownloadCreate
-from sqlalchemy import delete, func
 
 
 class WatchlistEngine:

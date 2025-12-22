@@ -2,7 +2,7 @@ import os
 import shutil
 import logging
 from typing import List, Dict
-from datetime import datetime
+from datetime import datetime, timezone
 from uuid import uuid4
 
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -128,7 +128,7 @@ class SyncManager:
             "safety_warning": safety_warning,
             "warning_message": warning_message,
             "sync_token": sync_token,
-            "generated_at": datetime.utcnow().isoformat()
+            "generated_at": datetime.now(timezone.utc).isoformat()
         }
         
         # Store for Execute phase

@@ -7,7 +7,6 @@ from pydantic import BaseModel
 from typing import Optional
 from app.core.security import get_password_hash, verify_password
 from fastapi import File, UploadFile
-import shutil
 import os
 import time
 from app.core.config import settings

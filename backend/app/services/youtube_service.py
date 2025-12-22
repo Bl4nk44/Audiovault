@@ -46,8 +46,9 @@ class YouTubeService(BaseMusicService):
             results = self.yt.search(video_id, filter="songs", limit=1)
             if results:
                 return [self._format_track(results[0])]
-        except Exception:
-            pass
+        except Exception as e:
+            logger.warning(f"Error fetching video details for {video_id}: {e}")
+            return []
         return []
 
     def _search_playlist(self, playlist_id: str) -> List[Dict[str, Any]]:
@@ -64,7 +65,6 @@ class YouTubeService(BaseMusicService):
             }]
         except Exception as e:
             logger.error(f"Error fetching YouTube playlist {playlist_id}: {e}")
-            pass
         return []
 
     def _search_channel(self, channel_id: str) -> List[Dict[str, Any]]:
@@ -79,8 +79,8 @@ class YouTubeService(BaseMusicService):
                     "source": "youtube",
                     "type": "artist"
                 }]
-        except Exception:
-            pass
+        except Exception as e:
+            logger.warning(f"Error fetching channel details {channel_id}: {e}")
         return []
 
     def _search_keywords(self, query: str, limit: int, type: str) -> List[Dict[str, Any]]:

@@ -1,7 +1,7 @@
 from sqlalchemy import Column, String, Integer, JSON, DateTime, ForeignKey
 from sqlalchemy import Uuid
 from sqlalchemy.orm import relationship
-from datetime import datetime
+from datetime import datetime, timezone
 from uuid import uuid4
 from app.db.base import Base
 
@@ -34,8 +34,8 @@ class Track(Base):
         "popularity": 0
     })
     
-    created_at = Column(DateTime, default=datetime.utcnow)
-    updated_at = Column(DateTime, onupdate=datetime.utcnow)
+    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
+    updated_at = Column(DateTime, onupdate=lambda: datetime.now(timezone.utc))
     
     # Relationships
     downloads = relationship("Download", back_populates="track")

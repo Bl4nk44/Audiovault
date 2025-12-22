@@ -9,16 +9,17 @@ from alembic import context
 
 from app.core.config import settings
 from app.db.base import Base
-# Import all models here to ensure they are registered
-from app.models.user import User
-from app.models.download import Download
-from app.models.track import Track
-from app.models.album import Album
-from app.models.artist import Artist
-from app.models.credentials import ServiceCredentials
-from app.models.history import ListeningHistory
-from app.models.watchlist import Watchlist
-from app.models.watchlist_item import WatchlistItem
+from app.models import (
+    User,
+    Artist,
+    Album,
+    Track,
+    Download,
+    Watchlist,
+    WatchlistItem,
+    ServiceCredentials,
+    ListeningHistory
+)
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.

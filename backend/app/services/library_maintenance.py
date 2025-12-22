@@ -1,12 +1,12 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
-from sqlalchemy import func, update, text
+from sqlalchemy import update, text
 from sqlalchemy.orm import joinedload
 from app.models.download import Download
 from app.services.download_manager import download_manager
-from typing import List
 import os
 import logging
+import uuid
 
 logger = logging.getLogger(__name__)
 
@@ -108,7 +108,13 @@ class LibraryMaintenanceService:
 
 
     async def update_download_item(self, db: AsyncSession, user_id: str, download_id: str, updates: dict):
-        result = await db.execute(select(Download).options(joinedload(Download.track)).where(Download.id == download_id, Download.user_id == user_id))
+        try:
+            u_uuid = uuid.UUID(str(user_id))
+            d_uuid = uuid.UUID(str(download_id))
+        except ValueError:
+            raise ValueError("Invalid UUID format")
+
+        result = await db.execute(select(Download).options(joinedload(Download.track)).where(Download.id == d_uuid, Download.user_id == u_uuid))
         download = result.scalar_one_or_none()
         
         if not download:
