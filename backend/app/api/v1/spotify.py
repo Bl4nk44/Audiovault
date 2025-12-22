@@ -5,6 +5,8 @@ from app.models.user import User
 
 router = APIRouter()
 
+SPOTIFY_NOT_CONFIGURED_MSG = "Spotify service not configured"
+
 @router.get("/search")
 async def search_spotify(
     q: str, 
@@ -18,8 +20,8 @@ async def search_spotify(
     
     service = SpotifyService()
     if not service.client:
-        logger.error("Spotify service not configured")
-        raise HTTPException(status_code=503, detail="Spotify service not configured")
+        logger.error(SPOTIFY_NOT_CONFIGURED_MSG)
+        raise HTTPException(status_code=503, detail=SPOTIFY_NOT_CONFIGURED_MSG)
     
     try:
         return service.search(q, limit, offset, type)
@@ -34,7 +36,7 @@ async def get_spotify_track(
 ):
     service = SpotifyService()
     if not service.client:
-        raise HTTPException(status_code=503, detail="Spotify service not configured")
+        raise HTTPException(status_code=503, detail=SPOTIFY_NOT_CONFIGURED_MSG)
         
     track = service.get_track(track_id)
     if not track:

@@ -78,18 +78,19 @@ async def upload_user_avatar(
     db: AsyncSession = Depends(get_db)
 ):
     # Create avatars directory if not exists
-    avatar_dir = os.path.join(settings.DOWNLOAD_DIR, "avatars")
+    import aiofiles
     if not os.path.exists(avatar_dir):
-        os.makedirs(avatar_dir)
+        os.makedirs(avatar_dir, exist_ok=True)
     
     # Generate unique filename
     file_ext = os.path.splitext(file.filename)[1]
     filename = f"avatar_{current_user.id}_{int(time.time())}{file_ext}"
     file_path = os.path.join(avatar_dir, filename)
     
-    # Save file
-    with open(file_path, "wb") as buffer:
-        shutil.copyfileobj(file.file, buffer)
+    # Save file asynchronously
+    async with aiofiles.open(file_path, 'wb') as out_file:
+        while content := await file.read(1024 * 1024):  # Read in 1MB chunks
+            await out_file.write(content)
         
     # Construct URL (relative to backend host)
     avatar_url = f"/stream/avatars/{filename}"
