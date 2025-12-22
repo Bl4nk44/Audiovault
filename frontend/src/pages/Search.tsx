@@ -1,11 +1,13 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useTranslation } from "../hooks/useTranslation";
+import { useSearchParams } from "react-router-dom";
 import SearchBar from "../components/search/SearchBar";
 import SearchResults from "../components/search/SearchResults";
 import api from "../services/api";
-import { notify as toast } from '../utils/notify';
+import { notify as toast } from "../utils/notify";
 
 export default function Search() {
+  const [searchParams] = useSearchParams();
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [results, setResults] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -17,21 +19,42 @@ export default function Search() {
 
   const { t } = useTranslation();
 
+  const detectSourceFromUrl = (query: string): string => {
+    const q = query.toLowerCase();
+    if (q.includes("spotify.com") || q.includes("spotify:")) return "spotify";
+    if (q.includes("youtube.com") || q.includes("youtu.be")) return "youtube";
+    if (q.includes("soundcloud.com")) return "soundcloud";
+    if (q.includes("music.apple.com")) return "apple_music";
+    if (q.includes("listen.tidal.com") || q.includes("tidal.com"))
+      return "tidal";
+    if (q.includes("deezer.com")) return "deezer";
+    if (q.includes("music.amazon.com") || q.includes("amazon.com/music"))
+      return "amazon_music";
+    return "all";
+  };
+
+  useEffect(() => {
+    const queryParam = searchParams.get("q");
+    if (queryParam) {
+      const detectedSource = detectSourceFromUrl(queryParam);
+      handleSearch(queryParam, detectedSource, "all");
+    }
+  }, [searchParams]);
+
   const handleSearch = async (query: string, source: string, type: string) => {
     setIsLoading(true);
     setResults([]);
     setOffset(0);
     setHasMore(true);
 
-    // Auto-detect source and type from URL
+    // Auto-detect source and type from URL (logic moved to helper)
     let effectiveSource = source;
-    const effectiveType = type;
-
-    if (query.includes("spotify.com") || query.includes("spotify:")) {
-      effectiveSource = "spotify";
-    } else if (query.includes("youtube.com") || query.includes("youtu.be")) {
-      effectiveSource = "youtube";
+    // If user selected "all" but we can detect a specific source from the URL/Query, use it
+    if (source === "all") {
+      effectiveSource = detectSourceFromUrl(query);
     }
+
+    const effectiveType = type;
 
     setCurrentQuery(query);
     setCurrentSource(effectiveSource);
@@ -168,7 +191,12 @@ export default function Search() {
         <p className="text-muted-foreground">{t("search.subtitle")}</p>
       </div>
 
-      <SearchBar onSearch={handleSearch} isLoading={isLoading} />
+      <SearchBar
+        onSearch={handleSearch}
+        isLoading={isLoading}
+        initialQuery={currentQuery}
+        initialSource={currentSource}
+      />
 
       <div className="mt-8 space-y-8">
         <SearchResults
@@ -191,4 +219,3 @@ export default function Search() {
     </div>
   );
 }
-

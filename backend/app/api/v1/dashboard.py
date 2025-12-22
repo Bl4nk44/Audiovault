@@ -17,6 +17,7 @@ from app.core.config import settings
 
 router = APIRouter()
 
+
 @router.get("/stats")
 async def get_dashboard_stats(
     current_user: User = Depends(get_current_active_user),
@@ -61,10 +62,10 @@ def _get_storage_free_space() -> str:
         _, _, free = shutil.disk_usage(settings.DOWNLOAD_DIR)
         storage_free_gb = round(free / (1024**3), 1)
         return f"{storage_free_gb} GB"
-    except OSError:
-        return "Unknown"
     except Exception:
         return "Unknown"
+
+# ... (skipping unchanged helper functions)
 
 async def _get_recent_activity(db: AsyncSession, user_id: int) -> List[Dict[str, Any]]:
     recent_query = select(Download).options(selectinload(Download.track)).where(
@@ -148,7 +149,5 @@ def _get_filename(download: Download) -> str:
         if rel_path.startswith(".."):
             return os.path.basename(download.file_path)
         return rel_path
-    except ValueError: # os.path.relpath raises ValueError on Windows if paths are on different drives
-        return os.path.basename(download.file_path)
     except Exception:
-         return os.path.basename(download.file_path)
+        return "Unknown"

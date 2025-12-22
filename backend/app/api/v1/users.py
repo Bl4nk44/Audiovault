@@ -18,9 +18,22 @@ class UserUpdate(BaseModel):
     username: Optional[str] = None
     avatar_url: Optional[str] = None
 
+
 class PasswordUpdate(BaseModel):
     current_password: str
     new_password: str
+
+from app.models.schemas import UserResponse
+
+@router.get("/me", response_model=UserResponse)
+async def read_user_me(
+    current_user: User = Depends(get_current_active_user)
+):
+    """
+    Get current user.
+    """
+    return current_user
+
 
 @router.put("/me", response_model=dict)
 async def update_user_me(

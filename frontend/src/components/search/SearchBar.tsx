@@ -1,18 +1,31 @@
 import { Search as SearchIcon, X, Filter } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { useTranslation } from "../../hooks/useTranslation";
 
 interface SearchBarProps {
   onSearch: (query: string, source: string, type: string) => void;
   isLoading: boolean;
+  initialQuery?: string;
+  initialSource?: string;
 }
 
-export default function SearchBar({ onSearch, isLoading }: SearchBarProps) {
+export default function SearchBar({
+  onSearch,
+  isLoading,
+  initialQuery = "",
+  initialSource = "all",
+}: SearchBarProps) {
   const { t } = useTranslation();
-  const [query, setQuery] = useState("");
-  const [source, setSource] = useState("all");
+  const [query, setQuery] = useState(initialQuery);
+  const [source, setSource] = useState(initialSource);
   const [type, setType] = useState("all");
+
+  // Sync state with props if they change (e.g. on navigation)
+  useEffect(() => {
+    if (initialQuery) setQuery(initialQuery);
+    if (initialSource) setSource(initialSource);
+  }, [initialQuery, initialSource]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();

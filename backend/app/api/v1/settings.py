@@ -33,7 +33,9 @@ class VerifyYouTube(BaseModel):
 async def verify_spotify(creds: VerifySpotify):
     import spotipy
     from spotipy.oauth2 import SpotifyClientCredentials
-    try:
+    import asyncio
+    
+    def _check_spotify():
         client = spotipy.Spotify(
             auth_manager=SpotifyClientCredentials(
                 client_id=creds.clientId,
@@ -41,17 +43,23 @@ async def verify_spotify(creds: VerifySpotify):
             )
         )
         client.search(q='test', limit=1)
+    
+    try:
+        loop = asyncio.get_event_loop()
+        await loop.run_in_executor(None, _check_spotify)
         return {"status": "valid"}
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
 
 @router.post("/verify/youtube")
 async def verify_youtube(creds: VerifyYouTube):
-    import requests
+    import httpx
     try:
         # Simple test request to YouTube Data API
         url = f"https://www.googleapis.com/youtube/v3/search?part=snippet&q=test&key={creds.apiKey}&maxResults=1"
-        response = requests.get(url)
+        async with httpx.AsyncClient() as client:
+            response = await client.get(url)
+            
         if response.status_code == 200:
             return {"status": "valid"}
         else:
