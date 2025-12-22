@@ -105,4 +105,38 @@ class LibraryMaintenanceService:
         await db.execute(stmt)
         await db.commit()
 
+from sqlalchemy.orm import joinedload
+
+# ... (rest of imports)
+
+    async def update_download_item(self, db: AsyncSession, user_id: str, download_id: str, updates: dict):
+        result = await db.execute(select(Download).options(joinedload(Download.track)).where(Download.id == download_id, Download.user_id == user_id))
+        download = result.scalar_one_or_none()
+        
+        if not download:
+            raise ValueError("Item not found")
+            
+        # Handle filename rename
+        if 'filename' in updates:
+            new_filename = updates['filename']
+            if download.file_path and os.path.exists(download.file_path):
+                dir_path = os.path.dirname(download.file_path)
+                new_path = os.path.join(dir_path, new_filename)
+                try:
+                    os.rename(download.file_path, new_path)
+                    download.file_path = new_path
+                except Exception as e:
+                    raise ValueError(f"Failed to rename file: {e}")
+        
+        # Handle metadata updates (title, artist)
+        if 'title' in updates:
+            download.track.title = updates['title']
+        if 'artist' in updates:
+            download.track.artist = updates['artist']
+        if 'album' in updates:
+            download.track.album = updates['album']
+            
+        await db.commit()
+        return True
+
 library_maintenance_service = LibraryMaintenanceService()

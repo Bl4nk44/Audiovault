@@ -197,91 +197,22 @@ async def update_library_item(
     current_user: User = Depends(get_current_active_user),
     db: AsyncSession = Depends(get_db)
 ):
-    result = await db.execute(select(Download).options(joinedload(Download.track)).where(Download.id == download_id, Download.user_id == current_user.id))
-    download = result.scalar_one_or_none()
-    
-    if not download:
-        raise HTTPException(status_code=404, detail="Item not found")
-        
-    # Handle filename rename
-    if 'filename' in updates:
-        new_filename = updates['filename']
-        if download.file_path and os.path.exists(download.file_path):
-            dir_path = os.path.dirname(download.file_path)
-            new_path = os.path.join(dir_path, new_filename)
-            try:
-                os.rename(download.file_path, new_path)
-                download.file_path = new_path
-            except Exception as e:
-                raise HTTPException(status_code=400, detail=f"Failed to rename file: {e}")
-    
-    # Handle metadata updates (title, artist)
-    if 'title' in updates:
-        download.track.title = updates['title']
-    if 'artist' in updates:
-        download.track.artist = updates['artist']
-    if 'album' in updates:
-        download.track.album = updates['album']
-        
-    await db.commit()
-    return {"status": "success"}
+    from app.services.library_maintenance import library_maintenance_service
+    try:
+        await library_maintenance_service.update_download_item(db, str(current_user.id), str(download_id), updates)
+        return {"status": "success"}
+    except ValueError as e:
+        if str(e) == "Item not found":
+            raise HTTPException(status_code=404, detail="Item not found")
+        raise HTTPException(status_code=400, detail=str(e))
 
 @router.get("/queue")
 async def get_queue(
     current_user: User = Depends(get_current_active_user),
     db: AsyncSession = Depends(get_db)
 ):
-    # Custom sorting: Downloading first, then Pending/Processing, then others
-    status_order = case(
-        (Download.status == 'downloading', 1),
-        (Download.status == 'processing', 2),
-        (Download.status == 'pending', 3),
-        else_=4
-    )
-
-    # Filter out archived items
-    result = await db.execute(
-        select(Download)
-        .options(joinedload(Download.track))
-        .where(
-            Download.user_id == current_user.id,
-            Download.archived == False # Only show unarchived in queue
-        )
-        .order_by(status_order, Download.created_at.desc())
-    )
-    downloads = result.scalars().all()
-    
-    # Transform to include image_url from metadata
-    response_data = []
-    for d in downloads:
-        image_url = None
-        if d.track.metadata_content:
-            image_url = d.track.metadata_content.get('image_url') or d.track.metadata_content.get('album_art')
-            
-        filename = None
-        if d.file_path:
-            try:
-                rel_path = os.path.relpath(d.file_path, settings.DOWNLOAD_DIR).replace("\\", "/")
-                if rel_path.startswith(".."):
-                    filename = os.path.basename(d.file_path)
-                else:
-                    filename = rel_path
-            except Exception:
-                filename = os.path.basename(d.file_path)
-
-        response_data.append({
-            "id": str(d.id),
-            "track_id": str(d.track_id),
-            "status": d.status,
-            "progress": d.progress,
-            "error_message": d.error_message,
-            "track": {
-                "title": d.track.title,
-                "artist": d.track.artist,
-                "image_url": image_url,
-                "filename": filename
-            }
-        })
+    from app.services.library_data import library_data_service
+    return await library_data_service.get_queue_items(db, str(current_user.id))
         
 @router.post("/maintenance/fix-legacy-data")
 async def fix_legacy_data(

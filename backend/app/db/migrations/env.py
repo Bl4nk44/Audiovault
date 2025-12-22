@@ -10,7 +10,15 @@ from alembic import context
 from app.core.config import settings
 from app.db.base import Base
 # Import all models here to ensure they are registered
-from app.models import * 
+from app.models.user import User
+from app.models.download import Download
+from app.models.track import Track
+from app.models.album import Album
+from app.models.artist import Artist
+from app.models.credentials import ServiceCredentials
+from app.models.history import ListeningHistory
+from app.models.watchlist import Watchlist
+from app.models.watchlist_item import WatchlistItem
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
@@ -29,6 +37,8 @@ target_metadata = Base.metadata
 # can be acquired:
 # my_important_option = config.get_main_option("my_important_option")
 # ... etc.
+
+SA_URL_KEY = "sqlalchemy.url"
 
 def run_migrations_offline() -> None:
     """Run migrations in 'offline' mode.
@@ -69,14 +79,14 @@ async def run_migrations_online() -> None:
 
     """
     configuration = config.get_section(config.config_ini_section)
-    configuration["sqlalchemy.url"] = settings.DATABASE_URL
+    configuration[SA_URL_KEY] = settings.DATABASE_URL
     
     # Handle async url conversion if needed, though settings.DATABASE_URL should be correct or handled
     # But alembic config needs the string.
     # If settings.DATABASE_URL is postgresql:// we might need to change it for async engine
     # But here we use async_engine_from_config which expects async driver.
-    if configuration["sqlalchemy.url"].startswith("postgresql://"):
-        configuration["sqlalchemy.url"] = configuration["sqlalchemy.url"].replace("postgresql://", "postgresql+asyncpg://", 1)
+    if configuration[SA_URL_KEY].startswith("postgresql://"):
+        configuration[SA_URL_KEY] = configuration[SA_URL_KEY].replace("postgresql://", "postgresql+asyncpg://", 1)
 
     connectable = async_engine_from_config(
         configuration,

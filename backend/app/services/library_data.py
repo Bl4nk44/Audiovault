@@ -91,6 +91,8 @@ class LibraryDataService:
             "id": str(d.id),
             "track_id": str(d.track_id),
             "status": d.status,
+            "progress": d.progress,
+            "error_message": d.error_message,
             "file_path": d.file_path,
             "created_at": d.created_at,
             "source": d.source,
@@ -103,5 +105,33 @@ class LibraryDataService:
                 "filename": filename
             }
         }, updated
+
+    async def get_queue_items(self, db: AsyncSession, user_id: str) -> List[dict]:
+        # Custom sorting: Downloading first, then Pending/Processing, then others
+        status_order = case(
+            (Download.status == 'downloading', 1),
+            (Download.status == 'processing', 2),
+            (Download.status == 'pending', 3),
+            else_=4
+        )
+
+        # Filter out archived items
+        result = await db.execute(
+            select(Download)
+            .options(joinedload(Download.track))
+            .where(
+                Download.user_id == user_id,
+                Download.archived == False 
+            )
+            .order_by(status_order, Download.created_at.desc())
+        )
+        downloads = result.scalars().all()
+        
+        items = []
+        for d in downloads:
+            item_data, _ = self._transform_download_item(d)
+            items.append(item_data)
+            
+        return items
 
 library_data_service = LibraryDataService()

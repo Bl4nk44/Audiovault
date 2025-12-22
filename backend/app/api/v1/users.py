@@ -79,6 +79,7 @@ async def upload_user_avatar(
 ):
     # Create avatars directory if not exists
     import aiofiles
+    avatar_dir = os.path.join(settings.DOWNLOAD_DIR, "avatars")
     if not os.path.exists(avatar_dir):
         os.makedirs(avatar_dir, exist_ok=True)
     
