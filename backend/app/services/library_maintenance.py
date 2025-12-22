@@ -1,6 +1,7 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 from sqlalchemy import func, update, text
+from sqlalchemy.orm import joinedload
 from app.models.download import Download
 from app.services.download_manager import download_manager
 from typing import List
@@ -105,9 +106,6 @@ class LibraryMaintenanceService:
         await db.execute(stmt)
         await db.commit()
 
-from sqlalchemy.orm import joinedload
-
-# ... (rest of imports)
 
     async def update_download_item(self, db: AsyncSession, user_id: str, download_id: str, updates: dict):
         result = await db.execute(select(Download).options(joinedload(Download.track)).where(Download.id == download_id, Download.user_id == user_id))
