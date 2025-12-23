@@ -1,5 +1,10 @@
 # Changelog
 
+## [0.5.12] - 2025-12-23
+
+### Bug Fixes
+- resolve eslint issues and activate websocket service
+
 ## [0.5.11] - 2025-12-23
 
 ### Refactor
