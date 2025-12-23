@@ -1,10 +1,24 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useTranslation } from "../hooks/useTranslation";
 import { useSearchParams } from "react-router-dom";
 import SearchBar from "../components/search/SearchBar";
 import SearchResults from "../components/search/SearchResults";
 import api from "../services/api";
 import { notify as toast } from "../utils/notify";
+
+// Helper function moved outside component
+const detectSourceFromUrl = (query: string): string => {
+  const q = query.toLowerCase();
+  if (q.includes("spotify.com") || q.includes("spotify:")) return "spotify";
+  if (q.includes("youtube.com") || q.includes("youtu.be")) return "youtube";
+  if (q.includes("soundcloud.com")) return "soundcloud";
+  if (q.includes("music.apple.com")) return "apple_music";
+  if (q.includes("listen.tidal.com") || q.includes("tidal.com")) return "tidal";
+  if (q.includes("deezer.com")) return "deezer";
+  if (q.includes("music.amazon.com") || q.includes("amazon.com/music"))
+    return "amazon_music";
+  return "all";
+};
 
 export default function Search() {
   const [searchParams] = useSearchParams();
@@ -18,57 +32,6 @@ export default function Search() {
   const [currentType, setCurrentType] = useState("all");
 
   const { t } = useTranslation();
-
-  const detectSourceFromUrl = (query: string): string => {
-    const q = query.toLowerCase();
-    if (q.includes("spotify.com") || q.includes("spotify:")) return "spotify";
-    if (q.includes("youtube.com") || q.includes("youtu.be")) return "youtube";
-    if (q.includes("soundcloud.com")) return "soundcloud";
-    if (q.includes("music.apple.com")) return "apple_music";
-    if (q.includes("listen.tidal.com") || q.includes("tidal.com"))
-      return "tidal";
-    if (q.includes("deezer.com")) return "deezer";
-    if (q.includes("music.amazon.com") || q.includes("amazon.com/music"))
-      return "amazon_music";
-    return "all";
-  };
-
-  useEffect(() => {
-    const queryParam = searchParams.get("q");
-    if (queryParam) {
-      const detectedSource = detectSourceFromUrl(queryParam);
-      handleSearch(queryParam, detectedSource, "all");
-    }
-  }, [searchParams]);
-
-  const handleSearch = async (query: string, source: string, type: string) => {
-    setIsLoading(true);
-    setResults([]);
-    setOffset(0);
-    setHasMore(true);
-
-    // Auto-detect source and type from URL (logic moved to helper)
-    let effectiveSource = source;
-    // If user selected "all" but we can detect a specific source from the URL/Query, use it
-    if (source === "all") {
-      effectiveSource = detectSourceFromUrl(query);
-    }
-
-    const effectiveType = type;
-
-    setCurrentQuery(query);
-    setCurrentSource(effectiveSource);
-    setCurrentType(effectiveType);
-
-    try {
-      await fetchResults(query, effectiveSource, effectiveType, 0);
-    } catch (error) {
-      toast.error("Search failed");
-      console.error(error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
 
   const fetchResults = async (
     query: string,
@@ -169,6 +132,46 @@ export default function Search() {
     }
   };
 
+  const handleSearch = useCallback(
+    async (query: string, source: string, type: string) => {
+      setIsLoading(true);
+      setResults([]);
+      setOffset(0);
+      setHasMore(true);
+
+      // Auto-detect source and type from URL (logic moved to helper)
+      let effectiveSource = source;
+      // If user selected "all" but we can detect a specific source from the URL/Query, use it
+      if (source === "all") {
+        effectiveSource = detectSourceFromUrl(query);
+      }
+
+      const effectiveType = type;
+
+      setCurrentQuery(query);
+      setCurrentSource(effectiveSource);
+      setCurrentType(effectiveType);
+
+      try {
+        await fetchResults(query, effectiveSource, effectiveType, 0);
+      } catch (error) {
+        toast.error("Search failed");
+        console.error(error);
+      } finally {
+        setIsLoading(false);
+      }
+    },
+    []
+  );
+
+  useEffect(() => {
+    const queryParam = searchParams.get("q");
+    if (queryParam) {
+      const detectedSource = detectSourceFromUrl(queryParam);
+      handleSearch(queryParam, detectedSource, "all");
+    }
+  }, [searchParams, handleSearch]);
+
   const handleLoadMore = async () => {
     if (isLoading || !hasMore) return;
     setIsLoading(true);
@@ -192,6 +195,7 @@ export default function Search() {
       </div>
 
       <SearchBar
+        key={`${currentQuery}-${currentSource}`}
         onSearch={handleSearch}
         isLoading={isLoading}
         initialQuery={currentQuery}

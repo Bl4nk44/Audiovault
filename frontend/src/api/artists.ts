@@ -14,10 +14,3 @@ export const artistsApi = {
     return response.data;
   },
 };
-
-export const getArtists = async () => {
-  // Fallback to metadata search or implement search endpoint
-  // For now, let's assume we might search metadata if not found in DB
-  // But backend artists.py doesn't have search yet.
-  return [];
-};
