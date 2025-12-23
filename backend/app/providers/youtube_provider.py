@@ -63,7 +63,7 @@ class YouTubeProvider(MusicProvider):
         try:
              pl_info = self.service.yt.get_playlist(playlist_id, limit=1)
              title = pl_info.get('title', "YouTube Playlist")
-        except:
+        except Exception: # nosec
              pass
 
         return PlaylistMetadata(

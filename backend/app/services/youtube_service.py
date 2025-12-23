@@ -24,19 +24,22 @@ class YouTubeService(BaseMusicService):
         # 1. Video Search Priority
         if video_match and (type in ['song', 'track', 'all']) and not playlist_match:
             res = self._search_video(video_match.group(1))
-            if res: return res
+            if res:
+                return res
 
         # 2. Playlist Search Priority
         if playlist_match and (type in ['playlist', 'all']):
             res = self._search_playlist(playlist_match.group(1))
-            if res: return res
+            if res:
+                return res
 
         # 3. Channel Search Priority
         if channel_match and (type in ['artist', 'all']):
             # Additional check to ensuring it looks like a URL if strictly matching regex
             if query.startswith('http') or 'youtube.com' in query:
                 res = self._search_channel(channel_match.group(1))
-                if res: return res
+                if res:
+                    return res
 
         # 4. Keyword Search (Fallback)
         return self._search_keywords(query, limit, type)

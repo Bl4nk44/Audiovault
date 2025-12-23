@@ -1,6 +1,5 @@
 import pytest
 from app.models.download import Download
-from uuid import uuid4
 
 @pytest.mark.asyncio
 async def test_smoke_insert(db_session):

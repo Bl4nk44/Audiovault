@@ -58,7 +58,7 @@ class SyncManager:
         )
         local_items = local_items_result.scalars().all()
         
-        local_map = {} # TrackID (UUID) -> WatchlistItem
+
         to_keep_uuids = set()
         to_delete_candidates = [] # List of {id: uuid, title: str, ...}
         
@@ -66,7 +66,8 @@ class SyncManager:
         
         for item in local_items:
             track = item.track
-            if not track: continue
+            if not track:
+                continue
             
             # Identify if this local track exists in remote_ids
             is_found = False

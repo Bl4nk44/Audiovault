@@ -119,7 +119,8 @@ async def _get_active_download(db: AsyncSession, user_id: int) -> Optional[Dict[
     return None
 
 def _calculate_time_ago(dt: datetime) -> str:
-    if not dt: return "Just now"
+    if not dt:
+        return "Just now"
     # Assuming dt is stored as naive UTC or aware UTC. 
     # If naive, assume UTC.
     now = datetime.now(timezone.utc)

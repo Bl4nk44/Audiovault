@@ -7,3 +7,15 @@ from .watchlist import Watchlist
 from .watchlist_item import WatchlistItem
 from .credentials import ServiceCredentials
 from .history import ListeningHistory
+
+__all__ = [
+    "User",
+    "Artist",
+    "Album",
+    "Track",
+    "Download",
+    "Watchlist",
+    "WatchlistItem",
+    "ServiceCredentials",
+    "ListeningHistory",
+]

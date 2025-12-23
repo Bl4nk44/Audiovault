@@ -1,12 +1,11 @@
 import pytest
 from unittest.mock import MagicMock, patch, AsyncMock
-from app.services.download_manager import DownloadManager, DownloadPausedError
+from app.services.download_manager import DownloadManager
 from app.models.download import Download
 from app.models.track import Track
 from app.models.user import User
 from sqlalchemy.ext.asyncio import AsyncSession
 import uuid
-import datetime
 
 @pytest.fixture
 def manager():
@@ -45,7 +44,7 @@ async def test_process_download_success(db_session: AsyncSession, manager: Downl
     
     with patch("app.services.download_manager.AsyncSessionLocal", return_value=mock_session_ctx), \
          patch("app.services.download_manager.socket_manager") as mock_socket, \
-         patch("app.services.download_manager.yt_dlp.YoutubeDL") as mock_ydl_cls, \
+         patch("app.services.download_manager.yt_dlp.YoutubeDL"), \
          patch.object(manager, '_execute_download_task', new_callable=AsyncMock) as mock_exec, \
          patch.object(manager, '_resolve_url', new_callable=AsyncMock) as mock_resolve:
         

@@ -53,13 +53,15 @@ class BaseMusicService:
 
         tracks = []
         for entry in entries:
-            if not entry: continue
+            if not entry:
+                continue
             
             title = entry.get('title')
             # Fallback for artist
             artist = entry.get('artist') or entry.get('uploader') or "Unknown Artist"
             
-            if not title: continue
+            if not title:
+                continue
 
             track = {
                 "id": entry.get('id'),

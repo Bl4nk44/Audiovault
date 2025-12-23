@@ -52,14 +52,16 @@ class SoundCloudService:
                 entries = [info]
 
             for entry in entries:
-                if not entry: continue
+                if not entry:
+                    continue
                 
                 # SoundCloud specific: id usually exists
                 track_id = entry.get('id')
                 title = entry.get('title')
                 uploader = entry.get('uploader') or entry.get('artist') or "Unknown Artist"
                 
-                if not title: continue
+                if not title:
+                    continue
 
                 # For SoundCloud, web_url or url is critical for direct download
                 source_url = entry.get('webpage_url') or entry.get('url') or url

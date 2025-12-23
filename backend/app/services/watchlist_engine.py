@@ -181,7 +181,7 @@ class WatchlistEngine:
         """Get set of source IDs for tracks already downloaded by the user."""
         downloaded_tracks_query = select(Track).join(Download, Download.track_id == Track.id).where(
             Download.user_id == user_id,
-            Download.archived == False
+            Download.archived.is_(False)
         )
         downloaded_tracks_result = await db.execute(downloaded_tracks_query)
         downloaded_tracks = downloaded_tracks_result.scalars().all()

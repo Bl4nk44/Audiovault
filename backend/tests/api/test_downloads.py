@@ -5,30 +5,10 @@ from app.models.download import Download
 from app.models.track import Track
 from sqlalchemy.ext.asyncio import AsyncSession
 import uuid
-import pytest_asyncio
 
 # Assuming client and db_session fixtures are from conftest.py
 
-@pytest.mark.asyncio
-async def test_get_library(client: AsyncClient, db_session: AsyncSession):
-    # Setup Data
-    user_id = uuid.uuid4()
-    # Need to match the mocked user from dependencies.get_current_active_user if mocked,
-    # OR we need to authenticate.
-    # In conftest.py we mocked get_current_active_user? No.
-    # We mocked get_db. We didn't OVERRIDE get_current_active_user in conftest unless I missed it.
-    # Let's check overrides.
-    
-    # Wait, testing with FastAPI TestClient usually requires either:
-    # 1. Overriding authentication dependency to return a specific user
-    # 2. Obtaining a valid token and sending Authorization header.
-    
-    # Let's assume we override credentials for simplicity in this test file, 
-    # or we can inspect conftest.py again.
-    pass 
 
-# I'll write the content assuming I need to override the auth dependency.
-# It makes tests much cleaner.
 
 from app.core.dependencies import get_current_active_user
 from app.main import app

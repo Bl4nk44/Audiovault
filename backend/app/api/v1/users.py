@@ -10,6 +10,8 @@ from fastapi import File, UploadFile
 import os
 import time
 from app.core.config import settings
+from app.models.schemas import UserResponse
+import aiofiles
 
 router = APIRouter()
 
@@ -22,7 +24,7 @@ class PasswordUpdate(BaseModel):
     current_password: str
     new_password: str
 
-from app.models.schemas import UserResponse
+
 
 @router.get("/me", response_model=UserResponse)
 async def read_user_me(
@@ -77,7 +79,7 @@ async def upload_user_avatar(
     db: AsyncSession = Depends(get_db)
 ):
     # Create avatars directory if not exists
-    import aiofiles
+    # Create avatars directory if not exists
     avatar_dir = os.path.join(settings.DOWNLOAD_DIR, "avatars")
     if not os.path.exists(avatar_dir):
         os.makedirs(avatar_dir, exist_ok=True)

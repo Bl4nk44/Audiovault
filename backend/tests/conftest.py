@@ -56,9 +56,11 @@ async def client(db_session: AsyncSession, mock_cache_manager) -> AsyncGenerator
     app.dependency_overrides[get_db] = override_get_db
     
     # Mock download_dir to use a temp dir
-    with patch("app.core.config.settings.DOWNLOAD_DIR", "/tmp/audiovault_test_downloads"):
-        if not os.path.exists("/tmp/audiovault_test_downloads"):
-            os.makedirs("/tmp/audiovault_test_downloads", exist_ok=True)
+    import tempfile
+    temp_dir = os.path.join(tempfile.gettempdir(), "audiovault_test_downloads")
+    with patch("app.core.config.settings.DOWNLOAD_DIR", temp_dir):
+        if not os.path.exists(temp_dir):
+            os.makedirs(temp_dir, exist_ok=True)
             
         async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as c:
             yield c

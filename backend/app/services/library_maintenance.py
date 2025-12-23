@@ -18,7 +18,7 @@ class LibraryMaintenanceService:
         result = await db.execute(
             select(Download)
             .where(
-                (Download.source == None) | 
+                (Download.source.is_(None)) | 
                 (Download.source == "") | 
                 (Download.source == "other")
             )
@@ -93,7 +93,6 @@ class LibraryMaintenanceService:
             await db.commit()
         except Exception:
             await db.rollback()
-            pass
 
         stmt = (
             update(Download)

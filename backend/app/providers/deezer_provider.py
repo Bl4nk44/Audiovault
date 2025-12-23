@@ -34,7 +34,8 @@ class DeezerProvider(MusicProvider):
             title = "Deezer Album"
         elif kind == 'track':
             t = await deezer_service.get_track(id)
-            if t: tracks_data = [t]
+            if t:
+                tracks_data = [t]
             title = "Deezer Track"
 
         if not tracks_data:

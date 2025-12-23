@@ -5,7 +5,6 @@ from app.models.download import Download
 from app.models.track import Track
 from sqlalchemy.ext.asyncio import AsyncSession
 import uuid
-import os
 from unittest.mock import patch
 
 @pytest.mark.asyncio
@@ -26,7 +25,7 @@ async def test_get_library_items_filtering(db_session: AsyncSession):
         user_id=user_id, 
         track_id=track1.id, 
         status="completed", 
-        file_path="/tmp/test.mp3"
+        file_path="test.mp3"
     )
     dl1.source = "spotify"
     
@@ -94,7 +93,7 @@ async def test_get_queue_items_sorting(db_session: AsyncSession):
 @pytest.mark.asyncio
 async def test_transform_auto_fix_extension(db_session: AsyncSession):
     # Mock settings.DOWNLOAD_DIR to avoid OS errors or path issues
-    with patch("app.core.config.settings.DOWNLOAD_DIR", "/tmp"):
+    with patch("app.core.config.settings.DOWNLOAD_DIR", "tmp_mock"):
         user_id = uuid.uuid4()
         track = Track(title="FixMe", artist="A")
         db_session.add(track)
@@ -107,7 +106,7 @@ async def test_transform_auto_fix_extension(db_session: AsyncSession):
             user_id=user_id, 
             track_id=track.id, 
             status="completed", 
-            file_path="/tmp/fake.webm",
+            file_path="tmp_mock/fake.webm",
             source="spotify"
         )
         download.track = track
@@ -117,14 +116,16 @@ async def test_transform_auto_fix_extension(db_session: AsyncSession):
         
         with patch("os.path.exists") as mock_exists:
             def side_effect(path):
-                if path == "/tmp/fake.webm": return False
-                if path == "/tmp/fake.mp3": return True
+                if path == "tmp_mock/fake.webm":
+                    return False
+                if path == "tmp_mock/fake.mp3":
+                    return True
                 return False
             mock_exists.side_effect = side_effect
             
             item_data, updated = library_data_service._transform_download_item(download)
             
             assert updated is True
-            assert download.file_path == "/tmp/fake.mp3"
-            assert item_data["file_path"] == "/tmp/fake.mp3"
+            assert download.file_path == "tmp_mock/fake.mp3"
+            assert item_data["file_path"] == "tmp_mock/fake.mp3"
 

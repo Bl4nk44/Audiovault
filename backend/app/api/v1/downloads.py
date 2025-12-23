@@ -10,6 +10,8 @@ from app.models.download import Download
 from pydantic import BaseModel
 from uuid import UUID
 import os
+from app.schemas.download import DownloadCreate
+
 
 router = APIRouter()
 
@@ -32,7 +34,7 @@ class DownloadResponse(BaseModel):
     track: dict # Using dict to allow flexibility, or we can define a nested model
     # Let's use a custom structure for the response to flatten/inject image_url
 
-from app.schemas.download import DownloadCreate
+
 
 @router.post("/add")
 async def add_download(

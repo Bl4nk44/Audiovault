@@ -102,7 +102,8 @@ class SpotifyService:
 
         if 'playlists' in results:
             for item in results['playlists']['items']:
-                if not item: continue
+                if not item:
+                    continue
                 items.append(self._format_playlist(item))
             
         return items

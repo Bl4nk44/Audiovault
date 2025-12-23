@@ -27,7 +27,7 @@ class LibraryDataService:
         
         if playlist:
             if playlist == "__none__":
-                 conditions.append(Download.playlist_name == None)
+                 conditions.append(Download.playlist_name.is_(None))
             else:
                  conditions.append(Download.playlist_name == playlist)
                  
@@ -132,7 +132,7 @@ class LibraryDataService:
             .options(joinedload(Download.track))
             .where(
                 Download.user_id == u_uuid,
-                Download.archived == False 
+                Download.archived.is_(False) 
             )
             .order_by(status_order, Download.created_at.desc())
         )

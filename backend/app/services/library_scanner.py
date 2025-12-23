@@ -44,14 +44,19 @@ class LibraryScannerService:
         
         try:
             audio = EasyID3(full_path)
-            if 'title' in audio: title = audio['title'][0]
-            if 'artist' in audio: artist = audio['artist'][0]
-            if 'album' in audio: album = audio['album'][0]
+            if 'title' in audio:
+                title = audio['title'][0]
+            if 'artist' in audio:
+                artist = audio['artist'][0]
+            if 'album' in audio:
+                album = audio['album'][0]
         except Exception:
             try:
                 m = mutagen.File(full_path)
-                if m and 'TIT2' in m: title = str(m['TIT2'])
-                if m and 'TPE1' in m: artist = str(m['TPE1'])
+                if m and 'TIT2' in m:
+                    title = str(m['TIT2'])
+                if m and 'TPE1' in m:
+                    artist = str(m['TPE1'])
             except Exception as e:
                 logger.debug(f"Mutagen fallback failed for {filename}: {e}")
         return title, artist, album
