@@ -22,13 +22,13 @@ class Watchlist(Base):
     check_interval_hours = Column(Integer, default=24)
     
     # Status
-    last_checked_at = Column(DateTime, nullable=True)
+    last_checked_at = Column(DateTime(timezone=True), nullable=True)
     new_items_count = Column(Integer, default=0)
     
     # Metadata
     metadata_content = Column("metadata", JSON, default={})
     
-    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
+    created_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
     
     # Relationships
     user = relationship("User", back_populates="watchlist")

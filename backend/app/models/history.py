@@ -12,7 +12,7 @@ class ListeningHistory(Base):
     user_id = Column(Uuid(as_uuid=True), ForeignKey("users.id"), index=True)
     track_id = Column(Uuid(as_uuid=True), ForeignKey("tracks.id"))
     
-    played_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
+    played_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
     duration_played = Column(Integer)  # Seconds played
     
     # Relationships

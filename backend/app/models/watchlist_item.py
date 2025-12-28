@@ -14,7 +14,7 @@ class WatchlistItem(Base):
     
     # Metadata for the item in the context of this playlist
     position = Column(Integer, nullable=True) # Track order
-    added_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
+    added_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
     
     # Relationships
     watchlist = relationship("Watchlist", back_populates="items")

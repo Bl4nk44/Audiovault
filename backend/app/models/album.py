@@ -22,8 +22,8 @@ class Album(Base):
     # Images (cover art)
     images = Column(JSON, default={})
     
-    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
-    updated_at = Column(DateTime, onupdate=lambda: datetime.now(timezone.utc))
+    created_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+    updated_at = Column(DateTime(timezone=True), onupdate=lambda: datetime.now(timezone.utc))
     
     # Relationships
     artist = relationship("Artist", back_populates="albums")

@@ -14,11 +14,11 @@ class ServiceCredentials(Base):
     service = Column(String(50)) # spotify, youtube, deezer
     access_token = Column(String(2000), nullable=True)
     refresh_token = Column(String(2000), nullable=True)
-    expires_at = Column(DateTime, nullable=True)
+    expires_at = Column(DateTime(timezone=True), nullable=True)
     
     # Additional info (e.g. scopes, token_type)
     extra_data = Column(JSON, default={})
     
-    updated_at = Column(DateTime, default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
+    updated_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
     
     user = relationship("User", back_populates="credentials")
