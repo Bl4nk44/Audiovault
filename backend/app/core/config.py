@@ -28,7 +28,7 @@ class Settings(BaseSettings):
     STORAGE_QUOTA_GB: int = 500
     LOG_LEVEL: str = "INFO"
     
-    BACKEND_CORS_ORIGINS: list[str] = ["*"]
+    BACKEND_CORS_ORIGINS: list[str] = ["http://localhost:3000", "http://localhost:5173", "http://127.0.0.1:3000", "http://127.0.0.1:5173"]
 
     class Config:
         env_file = ".env"
