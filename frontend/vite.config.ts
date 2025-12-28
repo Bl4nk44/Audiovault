@@ -1,25 +1,27 @@
-import { defineConfig } from 'vite'
-import react from '@vitejs/plugin-react'
-import tailwindcss from '@tailwindcss/vite'
-import fs from 'fs'
-import path from 'path'
+import { defineConfig } from "vite";
+import react from "@vitejs/plugin-react";
+import tailwindcss from "@tailwindcss/vite";
+import fs from "fs";
+import path from "path";
 
 // Read version from root directory
-const version = fs.readFileSync(path.resolve(__dirname, '../VERSION'), 'utf-8').trim()
+const version = fs
+  .readFileSync(path.resolve(__dirname, "../VERSION"), "utf-8")
+  .trim();
 
 // https://vite.dev/config/
 export default defineConfig({
   define: {
-    '__APP_VERSION__': JSON.stringify(version)
+    __APP_VERSION__: JSON.stringify(version),
   },
   plugins: [react(), tailwindcss()],
   server: {
     host: true,
     proxy: {
-      '/api': {
-        target: 'http://backend:8000',
+      "/api": {
+        target: "http://localhost:8000",
         changeOrigin: true,
       },
     },
   },
-})
+});
