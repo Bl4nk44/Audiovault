@@ -1,5 +1,20 @@
 # Changelog
 
+## [0.6.0] - 2025-12-29
+
+### Bug Fixes
+- restrict CORS to local origins
+- make all datetime columns timezone aware and update env host
+- allow all cors origins for local dev
+- use timezone-aware datetime for User.created_at
+- update proxy target to localhost for local dev
+
+### Documentation
+- add reverse proxy configuration guide
+
+### Other
+- Change Audiovault Dashboard image link
+
 ## [0.5.12] - 2025-12-23
 
 ### Bug Fixes
