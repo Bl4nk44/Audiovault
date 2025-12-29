@@ -1,5 +1,6 @@
+from pydantic import AnyHttpUrl, field_validator
 from pydantic_settings import BaseSettings
-from typing import Optional
+from typing import Optional, List, Union
 from pathlib import Path
 import os
 
@@ -28,7 +29,15 @@ class Settings(BaseSettings):
     STORAGE_QUOTA_GB: int = 500
     LOG_LEVEL: str = "INFO"
     
-    BACKEND_CORS_ORIGINS: list[str] = ["http://localhost:3000", "http://localhost:5173", "http://127.0.0.1:3000", "http://127.0.0.1:5173"]
+    BACKEND_CORS_ORIGINS: Union[List[str], str] = ["http://localhost:3000", "http://localhost:5173", "http://127.0.0.1:3000", "http://127.0.0.1:5173"]
+    ALLOWED_HOSTS: Union[List[str], str] = ["localhost", "127.0.0.1", "0.0.0.0"]
+
+    @field_validator("BACKEND_CORS_ORIGINS", "ALLOWED_HOSTS", mode="before")
+    @classmethod
+    def assemble_list_from_str(cls, v: Union[str, List[str]]) -> List[str]:
+        if isinstance(v, str) and not v.startswith("["):
+            return [i.strip() for i in v.split(",")]
+        return v
 
     class Config:
         env_file = ".env"

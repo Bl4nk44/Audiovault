@@ -1,6 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
+from fastapi.middleware.trustedhost import TrustedHostMiddleware
 from fastapi.staticfiles import StaticFiles
 import os
 import logging
@@ -34,6 +35,12 @@ app = FastAPI(
     description="Audiovault API for downloading and managing music",
     version=settings.VERSION,
     openapi_url=f"{settings.API_V1_STR}/openapi.json"
+)
+
+# Trusted Host Middleware (Security)
+app.add_middleware(
+    TrustedHostMiddleware, 
+    allowed_hosts=settings.ALLOWED_HOSTS
 )
 
 # CORS

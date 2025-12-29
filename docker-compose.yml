@@ -5,7 +5,7 @@ services:
     image: audiovault-backend
     container_name: audiovault-backend
     restart: always
-    command: uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
+    command: uvicorn app.main:app --reload --host 0.0.0.0 --port 8000 --proxy-headers --forwarded-allow-ips '*'
     volumes:
       - ./backend:/app
       - ./downloads:/downloads
@@ -18,6 +18,8 @@ services:
     environment:
       - DATABASE_URL=postgresql+asyncpg://postgres:postgres@db:5432/audiovault
       - REDIS_URL=redis://redis:6379/0
+      - ALLOWED_HOSTS=*
+      - BACKEND_CORS_ORIGINS=*
     depends_on:
       db:
         condition: service_healthy
