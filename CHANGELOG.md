@@ -1,5 +1,21 @@
 # Changelog
 
+## [0.6.1] - 2025-12-31
+
+### Feature
+- Initialize core backend configuration, frontend API client with authentication refresh, and security middleware.
+
+### Bug Fixes
+- resolve reverse proxy auth & polish ui
+
+### Chore
+- bump the frontend-dependencies group
+
+### Other
+- Merge pull request #20 from Bl4nk44/dependabot/npm_and_yarn/frontend/frontend-dependencies-ea98790fba
+- Delete .bandit
+- Delete GEMINI.md
+
 ## [0.6.0] - 2025-12-29
 
 ### Bug Fixes
