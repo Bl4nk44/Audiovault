@@ -5,7 +5,6 @@ import App from "./App.tsx";
 import { ErrorBoundary } from "./components/ErrorBoundary";
 import { injectStore } from "./services/api";
 import { useStore } from "./store/useStore";
-import "./services/websocket";
 
 // Inject store to break circular dependency
 injectStore(useStore);

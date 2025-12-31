@@ -1,0 +1,15 @@
+# Snyk Code (DeepCode) Ignore File
+# Exclude test files to prevent "Hardcoded Credentials" false positives
+backend/tests/
+tests/
+
+# Exclude localization files to prevent "Hardcoded Secret" false positives
+frontend/src/i18n/locales/
+
+# Exclude other build artifacts
+dist/
+build/
+coverage/
+node_modules/
+.venv/
+__pycache__/

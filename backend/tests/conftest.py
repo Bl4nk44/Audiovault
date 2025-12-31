@@ -62,7 +62,7 @@ async def client(db_session: AsyncSession, mock_cache_manager) -> AsyncGenerator
         if not os.path.exists(temp_dir):
             os.makedirs(temp_dir, exist_ok=True)
             
-        async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as c:
+        async with AsyncClient(transport=ASGITransport(app=app), base_url="http://localhost") as c:
             yield c
     
     app.dependency_overrides.clear()

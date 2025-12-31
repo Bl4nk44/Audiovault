@@ -111,24 +111,10 @@
 
   body {
     @apply text-foreground antialiased selection:bg-primary/30 selection:text-primary-foreground;
-    
+
     min-height: 100vh;
     /* Ensure base color is set but allow transparency if needed */
     background-color: hsl(var(--background));
-    
-    /* Dynamic layered background - VISIBLE */
-    background-image: 
-        /* Grid Pattern - Top Layer */
-        linear-gradient(to right, hsl(var(--primary) / 0.08) 1px, transparent 1px),
-        linear-gradient(to bottom, hsl(var(--primary) / 0.08) 1px, transparent 1px),
-        
-        /* Vibrant Spotlights */
-        radial-gradient(circle at 0% 0%, hsl(var(--primary) / 0.3), transparent 60%),
-        radial-gradient(circle at 100% 0%, hsl(var(--accent) / 0.3), transparent 60%),
-        radial-gradient(circle at 50% 100%, hsl(var(--primary) / 0.2), transparent 60%);
-        
-    background-size: 60px 60px, 60px 60px, 100% 100%, 100% 100%, 100% 100%;
-    background-attachment: fixed;
   }
 }
 

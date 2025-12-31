@@ -43,6 +43,10 @@ app.add_middleware(
     allowed_hosts=settings.ALLOWED_HOSTS
 )
 
+# Proxy Headers Middleware (for Reverse Proxies like Nginx/Traefik)
+from uvicorn.middleware.proxy_headers import ProxyHeadersMiddleware
+app.add_middleware(ProxyHeadersMiddleware, trusted_hosts="*")
+
 # CORS
 origins = settings.BACKEND_CORS_ORIGINS
 

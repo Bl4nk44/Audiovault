@@ -113,8 +113,16 @@ Audiovault supports running behind reverse proxies (Nginx, Traefik, etc.) out of
     BACKEND_CORS_ORIGINS=https://audiovault.example.com
     ```
 
+    **Docker Configuration**:
+    If running behind a proxy or in a custom Docker network, ensure the Frontend container knows how to reach the Backend:
+
+    ```bash
+    # In docker-compose.yml or env:
+    BACKEND_URL=http://audiovault-backend:8000
+    ```
+
 2.  **Docker Setup**:
-    The Docker image is already configured to trust `X-Forwarded-*` headers from any proxy. Ensure your proxy passes these headers correctly.
+    The Docker image is already configured to trust `X-Forwarded-*` headers from any proxy via `uvicorn.middleware.proxy_headers`. Ensure your proxy passes these headers correctly.
 
 ## How It Works
 

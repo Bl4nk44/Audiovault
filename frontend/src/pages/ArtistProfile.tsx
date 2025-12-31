@@ -15,6 +15,7 @@ import Button from "../components/ui/Button";
 import { useStore } from "../store/useStore";
 import { notify as toast } from "../utils/notify";
 import TrackCard from "../components/search/TrackCard";
+import { isValidImageUrl } from "../utils/validation";
 
 export default function ArtistProfile() {
   const { id } = useParams<{ id: string }>();
@@ -50,8 +51,11 @@ export default function ArtistProfile() {
     );
   }
 
-  const heroImage =
+  const rawHeroImage =
     artist.images?.banner || artist.images?.image_url || artist.images?.url;
+
+  const heroImage = isValidImageUrl(rawHeroImage) ? rawHeroImage : null;
+
   const isWatched = watchlist.some(
     (item) =>
       item.source_id === artist.spotify_id ||
@@ -77,7 +81,7 @@ export default function ArtistProfile() {
         watch_type: "artist",
         auto_download: false,
         new_items_count: 0,
-        metadata_content: { image_url: heroImage },
+        metadata_content: { image_url: heroImage || undefined },
       });
       toast.success("Added to watchlist");
     }
@@ -154,7 +158,9 @@ export default function ArtistProfile() {
                   ...track,
                   source: "spotify",
                   duration_ms: track.duration_ms,
-                  cover: track.cover || artist.images?.url,
+                  cover: isValidImageUrl(track.cover || artist.images?.url)
+                    ? track.cover || artist.images?.url
+                    : undefined,
                 }}
               />
             ))}
@@ -170,34 +176,40 @@ export default function ArtistProfile() {
             Albums
           </h2>
           <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4">
-            {artist.albums.map((album) => (
-              <div
-                key={album.id}
-                className="bg-white/5 rounded-xl p-4 hover:bg-white/10 transition-colors group cursor-pointer"
-              >
-                <div className="aspect-square bg-black/40 rounded-lg mb-3 overflow-hidden">
-                  {album.images?.url ? (
-                    <img
-                      src={album.images.url}
-                      alt={album.title}
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform"
-                    />
-                  ) : (
-                    <div className="w-full h-full flex items-center justify-center">
-                      <Disc className="w-10 h-10 text-gray-600" />
-                    </div>
-                  )}
+            {artist.albums.map((album) => {
+              const albumCover = isValidImageUrl(album.images?.url)
+                ? album.images?.url
+                : null;
+
+              return (
+                <div
+                  key={album.id}
+                  className="bg-white/5 rounded-xl p-4 hover:bg-white/10 transition-colors group cursor-pointer"
+                >
+                  <div className="aspect-square bg-black/40 rounded-lg mb-3 overflow-hidden">
+                    {albumCover ? (
+                      <img
+                        src={albumCover}
+                        alt={album.title}
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform"
+                      />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center">
+                        <Disc className="w-10 h-10 text-gray-600" />
+                      </div>
+                    )}
+                  </div>
+                  <h3 className="font-semibold truncate text-white">
+                    {album.title}
+                  </h3>
+                  <p className="text-sm text-gray-400">
+                    {album.release_date
+                      ? new Date(album.release_date).getFullYear()
+                      : "Unknown"}
+                  </p>
                 </div>
-                <h3 className="font-semibold truncate text-white">
-                  {album.title}
-                </h3>
-                <p className="text-sm text-gray-400">
-                  {album.release_date
-                    ? new Date(album.release_date).getFullYear()
-                    : "Unknown"}
-                </p>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </div>
       )}

@@ -24,10 +24,5 @@ export function SessionManager() {
     }
   }, [isAuthenticated, syncUser]);
 
-  // WebSocket Intialization
-  React.useEffect(() => {
-    import("../../services/websocket");
-  }, []);
-
   return null;
 }

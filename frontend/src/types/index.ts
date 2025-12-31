@@ -89,14 +89,6 @@ export interface Playlist {
   type?: string; // Add type
 }
 
-export interface SearchResult {
-  type: "track" | "artist" | "playlist" | "album";
-  // ... union of fields or just specific fields
-  id: string;
-  title: string; // or name
-  // ...
-}
-
 export interface LoginCredentials {
   email?: string;
   password?: string;

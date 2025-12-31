@@ -50,7 +50,8 @@ async def test_get_library(client: AsyncClient, db_session: AsyncSession, overri
     await db_session.commit()
     
     response = await client.get("/api/v1/downloads/library")
-    assert response.status_code == 200
+    print(f"DEBUG: {response.text}")
+    assert response.status_code == 200, f"Status code {response.status_code}, response: {response.text}"
     data = response.json()
     assert data["total"] == 1
     assert data["items"][0]["track"]["title"] == "Lib Track"

@@ -26,13 +26,6 @@ class TrackResponse(BaseModel):
     artist: str
     image_url: Optional[str] = None
 
-class DownloadResponse(BaseModel):
-    id: UUID
-    status: str
-    progress: float
-    error_message: Optional[str] = None
-    track: dict # Using dict to allow flexibility, or we can define a nested model
-    # Let's use a custom structure for the response to flatten/inject image_url
 
 
 
