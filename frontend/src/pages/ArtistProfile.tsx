@@ -54,6 +54,7 @@ export default function ArtistProfile() {
   const rawHeroImage =
     artist.images?.banner || artist.images?.image_url || artist.images?.url;
 
+  // Validated by isValidImageUrl to prevent XSS (javascript: etc.)
   const heroImage = isValidImageUrl(rawHeroImage) ? rawHeroImage : null;
 
   const isWatched = watchlist.some(
