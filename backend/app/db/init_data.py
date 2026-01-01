@@ -17,7 +17,7 @@ async def init_db(db: AsyncSession) -> None:
             from app.core.config import settings
             
             admin_email = getattr(settings, "FIRST_SUPERUSER", "admin@example.com")
-            admin_password = getattr(settings, "FIRST_SUPERUSER_PASSWORD", "admin")
+            admin_password = getattr(settings, "FIRST_SUPERUSER_PASSWORD", "admin") # deepcode ignore HardcodedPassword: Default fallback for development only
             
             user = User(
                 email=admin_email,

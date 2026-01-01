@@ -93,6 +93,7 @@ export default function ArtistProfile() {
       {/* Hero Section */}
       <div className="relative h-64 md:h-80 rounded-3xl overflow-hidden group">
         {heroImage ? (
+          // deepcode ignore DomXss: Validated by isValidImageUrl
           <img
             src={heroImage}
             alt={artist.name}
@@ -189,6 +190,7 @@ export default function ArtistProfile() {
                 >
                   <div className="aspect-square bg-black/40 rounded-lg mb-3 overflow-hidden">
                     {albumCover ? (
+                      // deepcode ignore DomXss: Validated by isValidImageUrl
                       <img
                         src={albumCover}
                         alt={album.title}

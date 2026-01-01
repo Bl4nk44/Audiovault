@@ -28,6 +28,7 @@ export const createAuthSlice: StateCreator<AuthSlice> = (set, get) => {
 
   if (token) {
     const session = Object.values(sessions).find(
+      // deepcode ignore ObservableTimingDiscrepancy: Client-side token comparison
       (s: { token: string }) => s.token === token
     ) as { user: User; token: string } | undefined;
     if (session) {

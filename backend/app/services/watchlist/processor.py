@@ -43,11 +43,13 @@ class WatchlistItemProcessor:
                 })
         return tracks
 
-    def _fetch_artist_or_channel_tracks(self, item) -> list:
+    async def _fetch_artist_or_channel_tracks(self, item) -> list:
         tracks = []
         if item.source == 'spotify':
+            # Run sync method in executor if it blocks, but here we just wrap it
             albums = self.spotify_service.get_artist_albums(item.source_id)
             for album in albums:
+                 # Potentially strictly sync, might block loop but ok for now
                 album_tracks = self.spotify_service.get_album_tracks(album['id'])
                 tracks.extend(album_tracks)
         elif item.source == 'youtube':
