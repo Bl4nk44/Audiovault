@@ -34,3 +34,4 @@ fakeredis[lua]>=2.20.0
 aiofiles>=23.2.1
 
 zipp>=3.19.1 # not directly required, pinned by Snyk to avoid a vulnerability
+dnspython>=2.6.1 # not directly required, pinned by Snyk to avoid a vulnerability
