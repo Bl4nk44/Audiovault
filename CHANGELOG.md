@@ -1,5 +1,27 @@
 # Changelog
 
+## [0.6.2] - 2026-01-03
+
+### Feature
+- Add default admin user creation and implement artist profile page with watchlist functionality.
+
+### Bug Fixes
+- backend/requirements.txt to reduce vulnerabilities
+- backend/requirements.txt to reduce vulnerabilities
+
+### Refactor
+- Optimize Docker images, fix audio playback and security issues
+
+### Chore
+- resolve snyk false positives and fix backend test mocks
+- update frontend and backend dependencies
+- add Snyk configuration to exclude test and build directories.
+- restore .env.example with defaults
+
+### Other
+- Merge pull request #23 from Bl4nk44/snyk-fix-d1748247f26fc89bd93da324bf7df3ff
+- Merge pull request #22 from Bl4nk44/snyk-fix-89da8222b5b34d98b1fd4404ac6253f5
+
 ## [0.6.1] - 2025-12-31
 
 ### Feature
