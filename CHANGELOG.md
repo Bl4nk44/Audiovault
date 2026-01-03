@@ -1,5 +1,10 @@
 # Changelog
 
+## [0.6.4] - 2026-01-03
+
+### Bug Fixes
+- Expose VERSION file to frontend build context
+
 ## [0.6.3] - 2026-01-03
 
 ### Bug Fixes
