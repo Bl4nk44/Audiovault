@@ -11,6 +11,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     gcc \
     git \
     build-essential \
+    libpq-dev \
     && rm -rf /var/lib/apt/lists/*
 
 # Install python dependencies to a temporary location
@@ -30,6 +31,7 @@ ENV PATH=/install/bin:$PATH
 # Install runtime dependencies (ffmpeg is crucial)
 RUN apt-get update && apt-get install -y --no-install-recommends \
     ffmpeg \
+    libpq5 \
     && rm -rf /var/lib/apt/lists/*
 
 # Copy installed dependencies from builder
