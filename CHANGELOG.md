@@ -1,5 +1,11 @@
 # Changelog
 
+## [0.6.3] - 2026-01-03
+
+### Bug Fixes
+- Add missing libpq dependencies for postgres driver
+- Limit backend dev volumes for production stability
+
 ## [0.6.2] - 2026-01-03
 
 ### Feature
