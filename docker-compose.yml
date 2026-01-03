@@ -29,7 +29,8 @@ services:
 
   frontend:
     build:
-      context: ./frontend
+      context: .
+      dockerfile: frontend/Dockerfile
     image: audiovault-frontend
     container_name: audiovault-frontend
     restart: always

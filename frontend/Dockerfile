@@ -5,10 +5,12 @@ WORKDIR /app
 
 COPY package*.json ./
 # Clean install for reproducible builds
+COPY VERSION /VERSION
+
+COPY frontend/package*.json ./
 RUN npm ci
 
-COPY . .
-ENV NODE_OPTIONS="--max-old-space-size=4096"
+COPY frontend/ .
 RUN npm run build
 
 # Production Stage
