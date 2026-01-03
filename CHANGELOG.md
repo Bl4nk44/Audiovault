@@ -1,5 +1,10 @@
 # Changelog
 
+## [0.6.5] - 2026-01-03
+
+### Bug Fixes
+- Correct nginx.conf path for root build context
+
 ## [0.6.4] - 2026-01-03
 
 ### Bug Fixes
