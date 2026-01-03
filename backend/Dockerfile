@@ -1,20 +1,49 @@
-FROM python:3.14-slim
+# Build Stage
+FROM python:3.14-slim as builder
 
 WORKDIR /app
 
 ENV PYTHONDONTWRITEBYTECODE 1
 ENV PYTHONUNBUFFERED 1
 
-# Install system dependencies (ffmpeg is crucial)
-RUN apt-get update && apt-get install -y \
-    ffmpeg \
+# Install build dependencies
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    gcc \
     git \
+    build-essential \
     && rm -rf /var/lib/apt/lists/*
 
+# Install python dependencies to a temporary location
 COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
+RUN pip install --no-cache-dir --prefix=/install -r requirements.txt
 
+# Runtime Stage
+FROM python:3.14-slim
+
+WORKDIR /app
+
+ENV PYTHONDONTWRITEBYTECODE 1
+ENV PYTHONUNBUFFERED 1
+# Add installed location to PATH
+ENV PATH=/install/bin:$PATH
+
+# Install runtime dependencies (ffmpeg is crucial)
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    ffmpeg \
+    && rm -rf /var/lib/apt/lists/*
+
+# Copy installed dependencies from builder
+COPY --from=builder /install /install
+# Correct PYTHONPATH so python finds the libs
+ENV PYTHONPATH=/install/lib/python3.14/site-packages
+
+# Copy application code (most frequently changed, keep last)
 COPY . .
 
-# Command is overridden in docker-compose, but good to have default
+# Create non-root user for security (optional but recommended)
+RUN useradd -m appuser && chown -R appuser /app
+USER appuser
+
+EXPOSE 8000
+
 CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]

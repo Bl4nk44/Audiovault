@@ -34,16 +34,10 @@ services:
     image: audiovault-frontend
     container_name: audiovault-frontend
     restart: always
-    volumes:
-      - ./frontend:/app
-      - /app/node_modules
-      - ./VERSION:/VERSION
     ports:
-      - "5173:5173"
+      - "5173:80"
     depends_on:
       - backend
-    environment:
-      - BACKEND_URL=http://backend:8000
     networks:
       - audiovault-network
 

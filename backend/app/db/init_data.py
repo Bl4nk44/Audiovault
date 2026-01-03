@@ -17,7 +17,14 @@ async def init_db(db: AsyncSession) -> None:
             from app.core.config import settings
             
             admin_email = getattr(settings, "FIRST_SUPERUSER", "admin@example.com")
-            admin_password = getattr(settings, "FIRST_SUPERUSER_PASSWORD", "admin") # deepcode ignore HardcodedPassword: Default fallback for development only
+            # Require password from environment variable for security
+            admin_password = getattr(settings, "FIRST_SUPERUSER_PASSWORD", None)
+            
+            if not admin_password:
+                logger.warning("FIRST_SUPERUSER_PASSWORD not set. Creating admin with random password.")
+                import secrets
+                admin_password = secrets.token_urlsafe(16)
+                logger.warning(f"Generated Admin Password: {admin_password}")
             
             user = User(
                 email=admin_email,
@@ -29,16 +36,8 @@ async def init_db(db: AsyncSession) -> None:
             await db.commit()
             await db.refresh(user)
             logger.info("Default admin user created")
-            
-            # Don't log the password if it's from env (security best practice)
-            logger.info(f"Admin created with email: {admin_email}")
-            if admin_password == "admin":
-                logger.warning("Using default insecure password 'admin'. Please change it immediately or set FIRST_SUPERUSER_PASSWORD env var!")
-            else:
-                logger.info("Credentials set from environment variables.")
-            
+            logger.info(f"Admin email: {admin_email}")
         else:
             logger.info("Admin user already exists")
-            logger.info("Credentials: admin / [HIDDEN]")
     except Exception as e:
         logger.error(f"Error creating default admin user: {e}")

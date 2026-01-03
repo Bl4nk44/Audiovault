@@ -12,8 +12,8 @@ router = APIRouter()
 async def stream_track(track_id: str):
     try:
         youtube_url = await _resolve_stream_url(track_id)
-        url = await _extract_direct_url(youtube_url)
-        return StreamingResponse(_stream_content(url), media_type="audio/mpeg")
+        url, headers = await _extract_direct_url(youtube_url)
+        return StreamingResponse(_stream_content(url, headers), media_type="audio/mpeg")
     except HTTPException as he:
         raise he
     except Exception as e:
@@ -51,7 +51,7 @@ async def _resolve_stream_url(track_id: str) -> str:
     await cache_manager.set(f"stream_url:{track_id}", youtube_url, expire=3600)
     return youtube_url
 
-async def _extract_direct_url(youtube_url: str) -> str:
+async def _extract_direct_url(youtube_url: str) -> tuple[str, dict]:
     ydl_opts = {
         'format': 'bestaudio/best',
         'quiet': True,
@@ -62,10 +62,11 @@ async def _extract_direct_url(youtube_url: str) -> str:
     loop = asyncio.get_event_loop()
     with yt_dlp.YoutubeDL(ydl_opts) as ydl:
         info = await loop.run_in_executor(stream_executor, lambda: ydl.extract_info(youtube_url, download=False))
-        return info['url']
+        return info['url'], info.get('http_headers', {})
 
-async def _stream_content(url: str):
+async def _stream_content(url: str, headers: dict = None):
     async with aiohttp.ClientSession() as session:
-        async with session.get(url) as response:
+        # Pass headers to the request to avoid 403 Forbidden from strict servers (Youtube)
+        async with session.get(url, headers=headers) as response:
             async for chunk in response.content.iter_chunked(8192):
                 yield chunk

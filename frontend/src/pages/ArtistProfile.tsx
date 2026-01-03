@@ -93,9 +93,15 @@ export default function ArtistProfile() {
       {/* Hero Section */}
       <div className="relative h-64 md:h-80 rounded-3xl overflow-hidden group">
         {heroImage ? (
-          // deepcode ignore DomXss: Validated by isValidImageUrl
+          // deepcode ignore DomXss: Source is validated by strict protocol check
           <img
-            src={heroImage}
+            src={
+              heroImage &&
+              (heroImage.startsWith("http://") ||
+                heroImage.startsWith("https://"))
+                ? heroImage
+                : "/placeholder-artist.png"
+            }
             alt={artist.name}
             className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
           />
@@ -190,9 +196,15 @@ export default function ArtistProfile() {
                 >
                   <div className="aspect-square bg-black/40 rounded-lg mb-3 overflow-hidden">
                     {albumCover ? (
-                      // deepcode ignore DomXss: Validated by isValidImageUrl
+                      // deepcode ignore DomXss: Source is validated by strict protocol check
                       <img
-                        src={albumCover}
+                        src={
+                          albumCover &&
+                          (albumCover.startsWith("http://") ||
+                            albumCover.startsWith("https://"))
+                            ? albumCover
+                            : "/placeholder-album.png"
+                        }
                         alt={album.title}
                         className="w-full h-full object-cover group-hover:scale-105 transition-transform"
                       />

@@ -97,9 +97,11 @@ The recommended way to run Audiovault is via **Docker**.
     docker compose up -d --build
     ```
 
-4.  **Access the App**:
-    - **Frontend**: `http://localhost:5173`
     - **Backend API**: `http://localhost:8000/docs`
+
+    > **Note:** On first launch, a random admin password will be generated and printed to the container logs (`docker compose logs backend`).
+    > To set a custom password, add `FIRST_SUPERUSER_PASSWORD=yourpassword` to your `.env` file before starting.
+    > Default email: `admin@example.com`
 
 ### Reverse Proxy Configuration
 

@@ -48,8 +48,8 @@ function getLegacyTheme(): "light" | "dark" | undefined {
       user?: { preferences?: { theme?: string } };
     }
 
+    // deepcode ignore ObservableTimingDiscrepancy: Client-side token check not vulnerable to timing attacks
     const session = Object.values(sessions).find(
-      // deepcode ignore ObservableTimingDiscrepancy: Client-side token check not vulnerable to timing attacks
       (s) => (s as LegacySession).token === currentToken
     ) as LegacySession | undefined;
 

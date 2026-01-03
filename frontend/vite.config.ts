@@ -5,9 +5,17 @@ import fs from "fs";
 import path from "path";
 
 // Read version from root directory
-const version = fs
-  .readFileSync(path.resolve(__dirname, "../VERSION"), "utf-8")
-  .trim();
+// Read version from root directory or fallback
+let version = "0.0.0";
+try {
+  version = fs
+    .readFileSync(path.resolve(__dirname, "../VERSION"), "utf-8")
+    .trim();
+} catch (e) {
+  console.warn(
+    "Could not read VERSION file (likely in Docker build), using fallback."
+  );
+}
 
 // https://vite.dev/config/
 export default defineConfig({

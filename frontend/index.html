@@ -20,8 +20,8 @@
             const sessions = JSON.parse(
               localStorage.getItem("sessions") || "{}"
             );
+            // deepcode ignore ObservableTimingDiscrepancy: Non-sensitive theme restoration
             const session = Object.values(sessions).find(
-              // deepcode ignore ObservableTimingDiscrepancy: Non-sensitive theme restoration
               (s) => s.token === token
             );
             if (
