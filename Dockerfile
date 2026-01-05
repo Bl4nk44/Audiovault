@@ -1,5 +1,6 @@
 # Multi-stage build for Audiovault
-# This Dockerfile builds both backend and frontend
+# Backend structure: backend/requirements.txt
+# Frontend structure: frontend/package.json
 
 # Stage 1: Backend builder
 FROM python:3.11-slim as backend-builder
@@ -11,8 +12,8 @@ RUN apt-get update && apt-get install -y \
     ffmpeg \
     && rm -rf /var/lib/apt/lists/*
 
-# Copy backend requirements
-COPY requirements.txt .
+# Copy backend requirements from backend folder
+COPY backend/requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Stage 2: Frontend builder
@@ -20,12 +21,12 @@ FROM node:18-alpine as frontend-builder
 
 WORKDIR /frontend
 
-# Copy frontend package files
-COPY package*.json ./
+# Copy frontend package files from frontend folder
+COPY frontend/package*.json ./
 RUN npm ci
 
 # Copy frontend source
-COPY . .
+COPY frontend/ .
 RUN npm run build
 
 # Stage 3: Production image
@@ -43,7 +44,7 @@ RUN apt-get update && apt-get install -y \
 COPY --from=backend-builder /usr/local/lib/python3.11/site-packages /usr/local/lib/python3.11/site-packages
 
 # Copy backend source
-COPY . .
+COPY backend/ .
 
 # Copy frontend built assets
 COPY --from=frontend-builder /frontend/dist ./static
