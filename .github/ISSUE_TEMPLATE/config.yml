@@ -1,0 +1,11 @@
+blank_issues_enabled: false
+contact_links:
+  - name: 💬 Discussions
+    url: https://github.com/Bl4nk44/Audiovault/discussions
+    about: Ask questions and discuss ideas with the community
+  - name: 🆘 Get Support
+    url: https://github.com/Bl4nk44/Audiovault/discussions/categories/q-a
+    about: Need help? Check out our Q&A section
+  - name: 📚 Documentation
+    url: https://github.com/Bl4nk44/Audiovault/wiki
+    about: Browse comprehensive guides and documentation
