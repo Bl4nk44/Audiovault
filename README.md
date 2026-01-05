@@ -79,7 +79,7 @@ Turn Audiovault into your personal Spotify.
 ## 🛠️ Tech Stack
 
 | Component | Technology |
-|-----------|------------|
+|-----------|----------|
 | **Backend** | Python, FastAPI, yt-dlp, SQLAlchemy (Async), APScheduler |
 | **Frontend** | React, TypeScript, TailwindCSS v4, Framer Motion |
 | **Database** | SQLite (default) / PostgreSQL (supported), Redis (Caching) |
@@ -212,9 +212,9 @@ Distributed under the MIT License. See [LICENSE](LICENSE) for more information.
 
 ## 📊 Project Status
 
-- **Current Version**: v1.0.0
+- **Current Version**: v1.1.0
 - **Status**: Active Development
-- **Latest Release**: [v1.0.0](https://github.com/Bl4nk44/Audiovault/releases/tag/v1.0.0) (Jan 5, 2026)
+- **Latest Release**: [v1.1.0](https://github.com/Bl4nk44/Audiovault/releases/tag/v1.1.0) (Jan 5, 2026)
 
 ---
 
