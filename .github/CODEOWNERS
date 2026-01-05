@@ -1,0 +1,25 @@
+# This file defines who should be requested for review on pull requests.
+# Docs: https://help.github.com/en/github/creating-cloning-and-archiving-repositories/about-code-owners
+
+# Default owner for everything in the repo
+* @Bl4nk44
+
+# Backend code
+/backend/ @Bl4nk44
+/backend/app/services/ @Bl4nk44
+/backend/app/api/ @Bl4nk44
+
+# Frontend code
+/frontend/ @Bl4nk44
+/frontend/src/components/ @Bl4nk44
+/frontend/src/pages/ @Bl4nk44
+
+# Documentation
+*.md @Bl4nk44
+/.github/ @Bl4nk44
+
+# Configuration
+docker-compose.yml @Bl4nk44
+.env.example @Bl4nk44
+pyproject.toml @Bl4nk44
+package.json @Bl4nk44
