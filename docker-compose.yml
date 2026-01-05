@@ -31,8 +31,7 @@ services:
     # Use the same Dockerfile, but override command for dev
     build:
       context: .
-      dockerfile: frontend/Dockerfile
-      target: build
+      dockerfile: frontend/Dockerfile.dev
     image: audiovault-frontend-dev
     container_name: audiovault-frontend
     restart: always

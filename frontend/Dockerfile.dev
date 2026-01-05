@@ -1,0 +1,22 @@
+FROM node:22-alpine
+
+WORKDIR /app
+
+# Copy root version file if needed (optional context, but sticking to pattern)
+COPY VERSION /VERSION
+
+# Copy root package.json for potential shared config (optional)
+COPY package*.json ./
+
+# Copy frontend dependencies
+COPY frontend/package*.json ./
+RUN npm ci
+
+# Copy source code
+COPY frontend/ .
+
+# Expose port
+EXPOSE 5173
+
+# Command for Dev
+CMD ["npm", "run", "dev", "--", "--host"]
