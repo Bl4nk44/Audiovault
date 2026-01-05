@@ -32,6 +32,7 @@ services:
     build:
       context: .
       dockerfile: frontend/Dockerfile
+      target: build
     image: audiovault-frontend-dev
     container_name: audiovault-frontend
     restart: always

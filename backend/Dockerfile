@@ -37,7 +37,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 # Copy installed dependencies from builder
 COPY --from=builder /install /install
 # Correct PYTHONPATH so python finds the libs
-ENV PYTHONPATH=/install/lib/python3.14/site-packages
+ENV PYTHONPATH=/install/lib/python3.12/site-packages
 
 # Copy application code (most frequently changed, keep last)
 COPY . .
