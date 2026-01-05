@@ -79,17 +79,6 @@ export default function DownloadQueue() {
     );
   }
 
-  const handleClearHistory = async () => {
-    try {
-      await api.post("/downloads/clear-history");
-      fetchQueue();
-      addNotification("success", "History cleared");
-    } catch (error) {
-      console.error("Failed to clear history", error);
-      addNotification("error", "Failed to clear history");
-    }
-  };
-
   return (
     <div className="space-y-4 pb-20">
       <div className="flex justify-end gap-2 mb-4">
@@ -99,7 +88,7 @@ export default function DownloadQueue() {
               await api.post("/downloads/restart-all");
               addNotification("success", "Restarted all failed downloads");
               fetchQueue();
-            } catch (e) {
+            } catch {
               addNotification("error", "Failed to restart downloads");
             }
           }}
@@ -114,7 +103,7 @@ export default function DownloadQueue() {
               await api.post("/downloads/clear-history");
               fetchQueue();
               addNotification("success", "Cleared all non-active downloads");
-            } catch (error) {
+            } catch {
               addNotification("error", "Failed to clear history");
             }
           }}
