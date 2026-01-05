@@ -1,3 +1,5 @@
+<div align="center">
+
 # Audiovault
 
 **Your Personal Music Sanctuary.**
@@ -13,6 +15,8 @@
 [🎯 Pull Requests](https://github.com/Bl4nk44/Audiovault/pulls) • 
 [💬 Discussions](https://github.com/Bl4nk44/Audiovault/discussions) • 
 [🤝 Contributing](CONTRIBUTING.md)
+
+</div>
 
 ---
 
