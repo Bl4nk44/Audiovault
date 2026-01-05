@@ -28,14 +28,22 @@ services:
       - audiovault-network
 
   frontend:
+    # Use the same Dockerfile, but override command for dev
     build:
       context: .
       dockerfile: frontend/Dockerfile
-    image: audiovault-frontend
+    image: audiovault-frontend-dev
     container_name: audiovault-frontend
     restart: always
+    # Run Vite in dev mode, listening on all interfaces
+    command: npm run dev -- --host
     ports:
-      - "5173:80"
+      - "5173:5173"
+    environment:
+      - VITE_API_URL=http://localhost:8000/api/v1
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
     depends_on:
       - backend
     networks:
