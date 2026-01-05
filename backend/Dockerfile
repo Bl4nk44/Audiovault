@@ -1,5 +1,5 @@
 # Build Stage
-FROM python:3.12-slim as builder
+FROM python:3.14-slim as builder
 
 WORKDIR /app
 
@@ -19,7 +19,7 @@ COPY requirements.txt .
 RUN pip install --no-cache-dir --prefix=/install -r requirements.txt
 
 # Runtime Stage
-FROM python:3.12-slim
+FROM python:3.14-slim
 
 WORKDIR /app
 
@@ -37,7 +37,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 # Copy installed dependencies from builder
 COPY --from=builder /install /install
 # Correct PYTHONPATH so python finds the libs
-ENV PYTHONPATH=/install/lib/python3.12/site-packages
+ENV PYTHONPATH=/install/lib/python3.14/site-packages
 
 # Copy application code (most frequently changed, keep last)
 COPY . .
