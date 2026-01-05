@@ -1,0 +1,11 @@
+[tool.semantic_release]
+version_variable = [
+    "backend/app/core/config.py:VERSION",
+    "frontend/package.json:version"
+]
+version_file = "VERSION"
+branch = "main"
+upload_to_pypi = false
+upload_to_release = true
+
+commit_message = "chore(release): v{version} [skip ci]"

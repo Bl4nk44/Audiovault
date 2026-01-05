@@ -1,0 +1,55 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+venv/
+.env
+.pytest_cache/
+
+# Node
+node_modules/
+dist/
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# System
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+
+# Project specific
+downloads/
+postgres_data/
+
+
+# Cache
+backend/.cache
+
+# Logs
+*.log
+logs.txt
+logs_full.txt
+backend/logs/
+deploy.ps1
+
+# SonarQube
+.scannerwork/
+.sonarlint/
+sonar-project.properties
+AI_CONTEXT.md
+
+# Test Artifacts
+backend/coverage_report.txt
+frontend/lint_report.txt
+.coverage
+htmlcov/
+junit.xml
+debug.log
+
+# TODO: Remove this line, tests should be versioned
+backend/tests/services/test_watchlist_engine.py
