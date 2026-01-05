@@ -279,6 +279,12 @@ class DownloadManager:
         await db.commit()
         await self._notify_start(download)
 
+    async def _notify_processing(self, download):
+        await socket_manager.emit('download:processing', {
+            'download_id': str(download.id),
+            'status': 'processing'
+        })
+
     def _create_progress_hook(self, download_id, download, loop, final_filename_container):
         def progress_hook(d):
             if d['status'] == 'downloading':
@@ -287,16 +293,46 @@ class DownloadManager:
                 self._handle_progress_update(d, download_id, download, loop)
             elif d['status'] == 'finished':
                 try:
-                    logger.info(f"Download finished: {d['filename']}")
+                    logger.info(f"Download finished: {d['filename']}. Starting conversion/processing...")
+                    
+                    # Update status to processing in DB
+                    asyncio.run_coroutine_threadsafe(
+                        self._set_processing_status(download_id),
+                        loop
+                    )
+                    
                     final_filename_container['path'] = d['filename']
                 except Exception as e:
                     logger.error(f"Finished hook error: {e}")
         return progress_hook
 
+    async def _set_processing_status(self, download_id):
+        try:
+             async with AsyncSessionLocal() as db:
+                result = await db.execute(select(Download).where(Download.id == download_id))
+                download = result.scalar_one_or_none()
+                if download:
+                    download.status = 'processing'
+                    download.progress = 100
+                    await db.commit()
+                    await self._notify_processing(download)
+        except Exception as e:
+            logger.error(f"Failed to set processing status: {e}")
+
     def _handle_progress_update(self, d, download_id, download, loop):
         try:
-            p = d.get('_percent_str', '0%').replace('%', '')
-            progress = float(p)
+            total_bytes = d.get('total_bytes') or d.get('total_bytes_estimate')
+            downloaded = d.get('downloaded_bytes', 0)
+            
+            if total_bytes:
+                progress = (downloaded / total_bytes) * 100
+            else:
+                p = d.get('_percent_str', '0%').replace('%', '')
+                progress = float(p)
+            
+            # Cap at 99% during downloading phase
+            if progress >= 100:
+                progress = 99.9
             
             asyncio.run_coroutine_threadsafe(
                 socket_manager.emit('download:progress', {
@@ -312,7 +348,10 @@ class DownloadManager:
                 loop
             )
 
-            if progress % 5 == 0:
+            # Throttle DB updates - explicitly check last update time or just modulo? 
+            # Modulo on progress is okay but for large files it might be too frequent or too sparse.
+            # Let's stick to simple modulo for now, but maybe 2% steps?
+            if int(progress) % 5 == 0:
                 asyncio.run_coroutine_threadsafe(
                     self.update_progress_db(download_id, progress),
                     loop

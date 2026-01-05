@@ -28,11 +28,15 @@ export default function DownloadQueue() {
     fetchQueue();
     const interval = setInterval(fetchQueue, 2000);
 
-    const handleProgress = () => {
-      // Logic to update local state optimistically or via store
-      // For now we rely on store updates via WebSocket or polling,
-      // but we can also use this event to animate progress bars locally.
-      // globalThis.dispatchEvent(new CustomEvent('update-progress', { detail: e.detail }));
+    const handleProgress = (event: CustomEvent) => {
+      const { download_id, progress, status } = event.detail;
+      setQueue((prevQueue) =>
+        prevQueue.map((item) =>
+          item.id === download_id
+            ? { ...item, progress, status: status || item.status }
+            : item
+        )
+      );
     };
 
     globalThis.addEventListener(
@@ -41,6 +45,7 @@ export default function DownloadQueue() {
     );
     globalThis.addEventListener("download:completed", fetchQueue);
     globalThis.addEventListener("download:error", fetchQueue);
+    globalThis.addEventListener("download:processing", fetchQueue);
 
     return () => {
       clearInterval(interval);
@@ -50,6 +55,7 @@ export default function DownloadQueue() {
       );
       globalThis.removeEventListener("download:completed", fetchQueue);
       globalThis.removeEventListener("download:error", fetchQueue);
+      globalThis.removeEventListener("download:processing", fetchQueue);
     };
   }, [fetchQueue]);
 
