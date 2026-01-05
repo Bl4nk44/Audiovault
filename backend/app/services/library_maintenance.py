@@ -98,7 +98,7 @@ class LibraryMaintenanceService:
             update(Download)
             .where(
                 Download.user_id == user_id,
-                Download.status == 'completed'
+                Download.status.in_(['completed', 'failed', 'cancelled', 'error'])
             )
             .values(archived=True)
         )

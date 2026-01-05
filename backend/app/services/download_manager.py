@@ -7,6 +7,7 @@ import aiofiles
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 from sqlalchemy.orm import selectinload
+from sqlalchemy import update
 from app.models.download import Download
 from app.models.track import Track
 from app.db.database import AsyncSessionLocal
@@ -57,6 +58,39 @@ class DownloadManager:
                 self.queue.task_done()
 
 
+
+
+    async def restart_all_downloads(self, db: AsyncSession, user_id: str):
+        """Restart all failed, cancelled, or error downloads for a user."""
+        logger.info(f"Restarting all failed downloads for user {user_id}")
+        
+        # 1. Select relevant downloads
+        result = await db.execute(
+            select(Download).where(
+                Download.user_id == user_id,
+                Download.status.in_(['failed', 'cancelled', 'error', 'paused'])
+            )
+        )
+        downloads = result.scalars().all()
+        
+        count = 0
+        for download in downloads:
+            # Reset metadata
+            download.status = 'pending'
+            download.progress = 0
+            download.error_message = None
+            download.retry_count = 0
+            
+            # Re-queue
+            await self.queue.put(download.id)
+            count += 1
+            
+        if count > 0:
+            await db.commit()
+            logger.info(f"Restarted {count} downloads")
+            await self.start_worker()
+            
+        return count
 
     def pause_download(self, download_id: str):
         self.paused_downloads.add(download_id)

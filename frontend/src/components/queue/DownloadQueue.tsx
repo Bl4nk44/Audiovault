@@ -1,7 +1,7 @@
 import { useEffect, useState, useCallback } from "react";
 import api from "../../services/api";
 import DownloadItem from "./DownloadItem";
-import { Loader2, Music2, History } from "lucide-react";
+import { Loader2, Music2, History, RefreshCw } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import type { Download } from "../../types";
 
@@ -92,13 +92,36 @@ export default function DownloadQueue() {
 
   return (
     <div className="space-y-4 pb-20">
-      <div className="flex justify-end mb-4">
+      <div className="flex justify-end gap-2 mb-4">
         <button
-          onClick={handleClearHistory}
+          onClick={async () => {
+            try {
+              await api.post("/downloads/restart-all");
+              addNotification("success", "Restarted all failed downloads");
+              fetchQueue();
+            } catch (e) {
+              addNotification("error", "Failed to restart downloads");
+            }
+          }}
+          className="flex items-center gap-2 px-3 py-1.5 bg-white/5 hover:bg-white/10 border border-white/10 rounded-lg text-sm text-gray-400 hover:text-white transition-colors"
+        >
+          <RefreshCw size={16} />
+          <span>Restart All</span>
+        </button>
+        <button
+          onClick={async () => {
+            try {
+              await api.post("/downloads/clear-history");
+              fetchQueue();
+              addNotification("success", "Cleared all non-active downloads");
+            } catch (error) {
+              addNotification("error", "Failed to clear history");
+            }
+          }}
           className="flex items-center gap-2 px-3 py-1.5 bg-white/5 hover:bg-white/10 border border-white/10 rounded-lg text-sm text-gray-400 hover:text-white transition-colors"
         >
           <History size={16} />
-          <span>Clear History</span>
+          <span>Clear All</span>
         </button>
       </div>
       <AnimatePresence mode="popLayout">

@@ -42,4 +42,15 @@ export const downloadsApi = {
     const response = await api.delete(`/downloads/${id}`);
     return response.data;
   },
+
+  restartAll: async () => {
+    const response = await api.post("/downloads/restart-all");
+    return response.data;
+  },
+
+  clearAll: async () => {
+    // Maps to clear-history but now essentially clears all non-active
+    const response = await api.post("/downloads/clear-history");
+    return response.data;
+  },
 };

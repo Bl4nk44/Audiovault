@@ -129,6 +129,15 @@ async def clear_history(
     await library_maintenance_service.clear_history(db, str(current_user.id))
     return {"status": "success"}
 
+@router.post("/restart-all")
+async def restart_all(
+    current_user: User = Depends(get_current_active_user),
+    db: AsyncSession = Depends(get_db)
+):
+    """Restart all failed/cancelled downloads."""
+    count = await download_manager.restart_all_downloads(db, str(current_user.id))
+    return {"status": "success", "count": count}
+
 @router.get("/library/folders")
 async def get_library_folders(
     current_user: User = Depends(get_current_active_user),
