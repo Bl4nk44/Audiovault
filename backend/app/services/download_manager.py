@@ -17,7 +17,9 @@ from app.schemas.download import DownloadCreate
 
 from app.services.fallback_service import fallback_service
 from app.services.socket_manager import socket_manager
+from app.core.cache import cache_manager
 from app.utils.sanitization import sanitize_filename
+import json
 
 logger = logging.getLogger(__name__)
 
@@ -361,8 +363,50 @@ class DownloadManager:
 
     async def _execute_download_task(self, loop, ydl_opts, url, download_id):
         logger.info(f"Starting download for {download_id} from URL: {url}")
-        # Run blocking download in executor
-        await loop.run_in_executor(None, lambda: yt_dlp.YoutubeDL(ydl_opts).download([url]))
+        
+        final_url = url
+        
+        # Optimization: specific handling for search queries to cache resolution
+        if url.startswith("ytsearch") or url.startswith("scsearch"):
+            cache_key = f"metadata_resolve:{url}"
+            cached_url = await cache_manager.get(cache_key)
+            
+            if cached_url:
+                logger.info(f"Cache HIT for {url} -> {cached_url}")
+                final_url = cached_url
+            else:
+                logger.info(f"Cache MISS for {url}. Resolving via extract_info...")
+                try:
+                    # Create a specific YDL for extraction (lighter options if needed, but reusing opts is fine)
+                    # We run extract_info in executor to not block loop
+                    def resolve_info():
+                        with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+                            # download=False returns the info dict
+                            return ydl.extract_info(url, download=False, process=True)
+
+                    info = await loop.run_in_executor(None, resolve_info)
+                    
+                    if info:
+                        # For search results, info is usually a playlist-like object with 'entries'
+                        if 'entries' in info and len(info['entries']) > 0:
+                            entry = info['entries'][0]
+                            # Use webpage_url as the stable direct link
+                            real_url = entry.get('webpage_url') or entry.get('url')
+                        else:
+                            # Direct result
+                            real_url = info.get('webpage_url') or info.get('url')
+                            
+                        if real_url:
+                            logger.info(f"Resolved {url} to {real_url}. Caching for 24h.")
+                            await cache_manager.set(cache_key, real_url, expire=86400)
+                            final_url = real_url
+                except Exception as e:
+                     logger.warning(f"Failed to resolve/cache metadata for {url}: {e}. Falling back to default download behavior.")
+                     # We continue with original URL (ydl will try to solve it again internally)
+                     final_url = url
+
+        # Run blocking download in executor with the (potentially resolved) URL
+        await loop.run_in_executor(None, lambda: yt_dlp.YoutubeDL(ydl_opts).download([final_url]))
         logger.info(f"Download finished for {download_id}")
 
     async def pause_download_async(self, download_id: str):
