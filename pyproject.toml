@@ -10,3 +10,16 @@ upload_to_release = true
 
 commit_parser_options = { allowed_tags = ["build", "chore", "ci", "docs", "feat", "fix", "perf", "style", "refactor", "test"], minor_tags = ["feat"], patch_tags = ["fix", "perf", "chore"] }
 commit_message = "chore(release): v{version} [skip ci]"
+
+[tool.ruff]
+line-length = 120
+target-version = "py312"
+select = ["E", "F", "B", "I", "UP", "N", "S", "C4"]
+ignore = ["B008", "S101"]
+
+[tool.mypy]
+python_version = "3.12"
+warn_return_any = true
+warn_unused_configs = true
+ignore_missing_imports = true
+check_untyped_defs = true

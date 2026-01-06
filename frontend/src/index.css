@@ -8,10 +8,11 @@
 @layer base {
   :root {
     /* Liquid Glass Core Defaults */
-    --glass-opacity: 0.25; /* More transparency for liquid feel */
-    --glass-border-opacity: 0.08;
-    --glass-blur: 40px; /* Heavy iOS-style blur */
-    --glass-saturation: 180%; /* Vibrant colors behind glass */
+    /* Liquid Glass Core Defaults */
+    --glass-opacity: 0.15; /* More transparency for liquid feel, slightly reduced for better contrast */
+    --glass-border-opacity: 0.06;
+    --glass-blur: 50px; /* Stronger blur for smoother bg */
+    --glass-saturation: 190%; /* Vibrant colors */
 
     --radius: 1.5rem; /* Rounder corners */
 
@@ -129,13 +130,15 @@
   .glass {
     @apply bg-background/(--glass-opacity) border border-white/(--glass-border-opacity) shadow-xl;
     backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturation));
-    -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturation));
+    -webkit-backdrop-filter: blur(var(--glass-blur))
+      saturate(var(--glass-saturation));
   }
 
   .glass-neon {
     @apply bg-background/(--glass-opacity) border border-primary/50 shadow-[0_0_15px_rgba(var(--primary),0.3)];
     backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturation));
-    -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturation));
+    -webkit-backdrop-filter: blur(var(--glass-blur))
+      saturate(var(--glass-saturation));
   }
 
   .glass-hover {
