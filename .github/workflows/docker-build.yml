@@ -4,8 +4,9 @@ on:
   push:
     branches:
       - main
+      - dev
     tags:
-      - 'v*'
+      - "v*"
   pull_request:
     branches:
       - main
@@ -13,20 +14,20 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
-    
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-      
+
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
-      
+
       - name: Login to Docker Hub
         uses: docker/login-action@v3
         with:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
-      
+
       - name: Extract metadata
         id: meta
         uses: docker/metadata-action@v5
@@ -38,7 +39,7 @@ jobs:
             type=semver,pattern={{major}}.{{minor}}
             type=sha
             type=raw,value=latest,enable={{is_default_branch}}
-      
+
       - name: Build and push Docker image
         uses: docker/build-push-action@v5
         with:
@@ -49,7 +50,7 @@ jobs:
           labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
-      
+
       - name: Docker Hub Description
         uses: peter-evans/dockerhub-description@v4
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
@@ -60,7 +61,7 @@ jobs:
           short-description: Your Personal Music Sanctuary - Self-hosted music downloader
           description: |
             Audiovault is a powerful, self-hosted application designed to import, manage, and download your music libraries from any major streaming platform directly to your local server.
-            
+
             ## Supported Platforms
             - Spotify
             - YouTube
@@ -69,17 +70,17 @@ jobs:
             - Apple Music
             - Tidal
             - Amazon Music
-            
+
             ## Features
             - Download music from multiple streaming services
             - Personal Subsonic API server
             - Stream to mobile apps (Symfonium, Amperfy, DSub)
             - Auto-sync playlists
             - Smart fallback system
-            
+
             ## Documentation
             Visit the wiki for complete documentation: https://github.com/Bl4nk44/Audiovault/wiki
-            
+
             ## Support
             - GitHub Issues: https://github.com/Bl4nk44/Audiovault/issues
             - GitHub Discussions: https://github.com/Bl4nk44/Audiovault/discussions
