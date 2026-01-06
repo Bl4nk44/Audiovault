@@ -186,9 +186,12 @@ class DownloadManager:
             else:
                 download.file_path = final_filename_container['path']
         else:
-            download_path = download.user.preferences.get('downloadPath')
+            download_path = None
+            if download.user and download.user.preferences:
+                 download_path = download.user.preferences.get('downloadPath')
+            
             if not download_path:
-                download_path = os.path.join(settings.DOWNLOAD_DIR, download.user.username)
+                 download_path = os.path.join(settings.DOWNLOAD_DIR, download.user.username)
             
             if not os.path.exists(download_path):
                 os.makedirs(download_path, exist_ok=True)
@@ -487,7 +490,7 @@ class DownloadManager:
 
 
         schema_map = {
-            '{artist}': '%(artist|uploader|creator)s', # Try hard to find an artist-like string
+            '{artist}': '%(artist)s', # Removed fallback to uploader|creator to correspond with strict filename sanitization
             '{title}': '%(title)s',
             '{album}': '%(album|Single)s',
             '{id}': '%(id)s',
@@ -528,8 +531,13 @@ class DownloadManager:
         # Correct key is 'download_path' (snake_case) as stored in DB settings.py
         download_path = download.user.preferences.get('download_path')
         if not download_path:
-            # Default to user subdirectory
-            download_path = os.path.join(settings.DOWNLOAD_DIR, download.user.username)
+            # Smart logic: If user explicitly wants {user} in their schema at the start, 
+            # don't force a user subdirectory to avoid "admin/admin/..."
+            # Otherwise, sandbox them in their own folder by default.
+            if filename_schema.strip().startswith("{user}"):
+                 download_path = settings.DOWNLOAD_DIR
+            else:
+                 download_path = os.path.join(settings.DOWNLOAD_DIR, download.user.username)
         
         logger.info(f"Resolved base download path: {download_path}")
 
@@ -630,26 +638,33 @@ class DownloadManager:
                 return
 
             # Determine playlist file path
-            # We try to put it in the same folder as the first track if possible, 
-            # otherwise in the root download dir
+            # Put it in the same directory as the first track
+            if downloads[0].file_path:
+                target_dir = os.path.dirname(downloads[0].file_path)
+            else:
+                # Fallback
+                target_dir = os.path.join(settings.DOWNLOAD_DIR, downloads[0].user.username)
+                if not os.path.exists(target_dir):
+                    os.makedirs(target_dir, exist_ok=True)
             
-            download_path = downloads[0].user.preferences.get('downloadPath')
-            if not download_path:
-                 download_path = os.path.join(settings.DOWNLOAD_DIR, downloads[0].user.username)
-            if not download_path: # Fallback just in case
-                 download_path = settings.DOWNLOAD_DIR
-
             # Simple heuristic: Use the playlist name as filename
-            safe_playlist_name = playlist_name.replace('/', '-').replace('\\', '-')
-            playlist_file_path = f"{download_path}/{safe_playlist_name}.m3u8"
+            safe_playlist_name = sanitize_filename(playlist_name)
+            playlist_file_path = os.path.join(target_dir, f"{safe_playlist_name}.m3u8")
             
             async with aiofiles.open(playlist_file_path, 'w', encoding='utf-8') as f:
                 await f.write("#EXTM3U\n")
                 for d in downloads:
                     if d.file_path:
-                        rel_path = d.file_path.replace(f"{download_path}/", "")
-                        await f.write(f"#EXTINF:-1,{d.playlist_name} - Track\n")
-                        await f.write(f"{rel_path}\n")
+                        try:
+                            # Write path relative to the playlist file location
+                            # This makes the playlist portable within the folder
+                            rel_path = os.path.relpath(d.file_path, target_dir)
+                            await f.write(f"#EXTINF:-1,{d.track.artist} - {d.track.title}\n")
+                            await f.write(f"{rel_path}\n")
+                        except ValueError:
+                             # Fallback for different drives etc
+                             await f.write(f"#EXTINF:-1,{d.track.artist} - {d.track.title}\n")
+                             await f.write(f"{d.file_path}\n")
                         
             logger.info(f"Updated playlist {playlist_file_path}")
             

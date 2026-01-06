@@ -84,14 +84,40 @@ class LibraryDataService:
 
         filename = None
         if d.file_path:
+            # Smart path resolution for Docker <-> Local Windows mismatch
+            current_path = d.file_path
+            
+            # Check if path is valid on current OS
+            if not os.path.exists(current_path):
+                # Helper to guess relative path from absolute DB path
+                # E.g. /downloads/admin/... -> admin/...
+                potential_rel = None
+                normalized_db_path = d.file_path.replace('\\', '/')
+                
+                known_prefixes = ['/downloads/', '/app/downloads/']
+                for prefix in known_prefixes:
+                    if normalized_db_path.startswith(prefix):
+                        potential_rel = normalized_db_path[len(prefix):]
+                        break
+                
+                if potential_rel:
+                    # Check if this relative path exists in current DOWNLOAD_DIR
+                    candidate = os.path.join(settings.DOWNLOAD_DIR, potential_rel)
+                    if os.path.exists(candidate):
+                        # Found it! Use this candidate for rel_path calculation
+                        current_path = candidate
+
             try:
-                rel_path = os.path.relpath(d.file_path, settings.DOWNLOAD_DIR).replace("\\", "/")
+                rel_path = os.path.relpath(current_path, settings.DOWNLOAD_DIR).replace("\\", "/")
                 if rel_path.startswith(".."):
-                    filename = os.path.basename(d.file_path)
+                    filename = os.path.basename(current_path)
                 else:
                     filename = rel_path
+            except ValueError: 
+                # Different drives on Windows
+                filename = os.path.basename(current_path)
             except Exception:
-                filename = os.path.basename(d.file_path)
+                filename = os.path.basename(current_path)
 
         return {
             "id": str(d.id),

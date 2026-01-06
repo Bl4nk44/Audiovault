@@ -34,6 +34,10 @@ export default defineConfig({
         target: process.env.BACKEND_URL || "http://localhost:8000",
         changeOrigin: true,
       },
+      "/stream": {
+        target: process.env.BACKEND_URL || "http://localhost:8000",
+        changeOrigin: true,
+      },
     },
   },
 });

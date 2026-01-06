@@ -42,6 +42,27 @@ class Settings(BaseSettings):
             return [i.strip() for i in v.split(",")]
         return v
 
+    @field_validator("DOWNLOAD_DIR")
+    @classmethod
+    def validate_download_dir(cls, v: str) -> str:
+        # Fix for Windows running with Docker config
+        if os.name == 'nt':
+            # If path looks like Unix absolute path (e.g. /downloads)
+            if v.startswith('/'):
+                # Always check for project-local 'downloads' folder first on Windows
+                # This fixes the issue where dev environment has files in ./downloads 
+                # but .env points to /downloads (Docker volume)
+                cwd_downloads = os.path.join(os.getcwd(), 'downloads')
+                if os.path.exists(cwd_downloads):
+                    return cwd_downloads
+                
+                # Fallback logic if local folder doesn't exist
+                if not os.path.exists(v):
+                    rel_path = v.lstrip('/')
+                    if os.path.exists(rel_path):
+                        return rel_path
+        return v
+
     class Config:
         env_file = ".env"
         case_sensitive = True
