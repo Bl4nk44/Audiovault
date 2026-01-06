@@ -4,6 +4,7 @@ from fastapi import HTTPException, status
 from app.models.user import User
 from app.models.schemas import UserCreate, UserLogin
 from app.core.security import get_password_hash, verify_password, create_access_token, create_refresh_token
+import hashlib
 from app.core.config import settings
 
 class AuthManager:
@@ -30,7 +31,8 @@ class AuthManager:
         user = User(
             email=user_in.email,
             username=user_in.username,
-            hashed_password=get_password_hash(user_in.password)
+            hashed_password=get_password_hash(user_in.password),
+            subsonic_password=hashlib.md5(user_in.password.encode('utf-8')).hexdigest()
         )
         self.db.add(user)
         await self.db.commit()
