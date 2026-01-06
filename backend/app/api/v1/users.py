@@ -68,7 +68,11 @@ async def update_password_me(
     if len(password_update.new_password) < 6:
          raise HTTPException(status_code=400, detail="Password too short")
 
+    import hashlib
     current_user.hashed_password = get_password_hash(password_update.new_password)
+    # Sync Subsonic password (MD5)
+    # nosec B303: MD5 required for Subsonic Legacy Auth
+    current_user.subsonic_password = hashlib.md5(password_update.new_password.encode('utf-8')).hexdigest()
     await db.commit()
     return {"status": "success"}
 
