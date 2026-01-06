@@ -34,6 +34,33 @@ class SubsonicResponse:
 
     def as_json(self):
         return JSONResponse(content=self.response)
+        
+    def as_xml(self):
+        # Very basic XML conversion for Subsonic
+        # Root is <subsonic-response>
+        s = self.response["subsonic-response"]
+        xml_content = f'<?xml version="1.0" encoding="UTF-8"?><subsonic-response status="{s["status"]}" version="{s["version"]}" type="{s["type"]}" serverVersion="{s["serverVersion"]}">'
+        
+        # Add basic children (handles ping, license, error)
+        # Note: This is a minimal implementation. For full API we need a proper XML serializer.
+        for key, value in s.items():
+            if key in ["status", "version", "type", "serverVersion"]:
+                continue
+            if isinstance(value, dict):
+                # Simple child with attributes (like <error code="0" message="..." />)
+                attrs = " ".join([f'{k}="{v}"' for k, v in value.items()])
+                xml_content += f'<{key} {attrs}/>'
+            elif isinstance(value, list):
+                # List of items not implemented in this basic fix, but ping usually empty or simple
+                pass
+                
+        xml_content += "</subsonic-response>"
+        return Response(content=xml_content, media_type="text/xml")
+
+    def return_response(self, format_type: str = "xml"):
+        if format_type == "json":
+            return self.as_json()
+        return self.as_xml()
 
 # --- AUTHENTICATION ---
 
@@ -149,7 +176,7 @@ async def ping(
     user: User = Depends(get_subsonic_user)
 ):
     """Test connectivity"""
-    return SubsonicResponse({}, version="1.16.1").as_json()
+    return SubsonicResponse({}, version="1.16.1").return_response(f)
 
 @router.get("/getLicense.view")
 async def get_license(
