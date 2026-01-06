@@ -9,11 +9,11 @@
 [![GitHub Stars](https://img.shields.io/github/stars/Bl4nk44/Audiovault?logo=github)](https://github.com/Bl4nk44/Audiovault/stargazers)
 [![Docker Pulls](https://img.shields.io/docker/pulls/bl4nk44/audiovault?logo=docker)](https://hub.docker.com/r/bl4nk404/audiovault)
 
-🔗 **Quick Links**: 
-[📖 Wiki](https://github.com/Bl4nk44/Audiovault/wiki) • 
-[🐛 Issues](https://github.com/Bl4nk44/Audiovault/issues) • 
-[🎯 Pull Requests](https://github.com/Bl4nk44/Audiovault/pulls) • 
-[💬 Discussions](https://github.com/Bl4nk44/Audiovault/discussions) • 
+🔗 **Quick Links**:
+[📖 Wiki](https://github.com/Bl4nk44/Audiovault/wiki) •
+[🐛 Issues](https://github.com/Bl4nk44/Audiovault/issues) •
+[🎯 Pull Requests](https://github.com/Bl4nk44/Audiovault/pulls) •
+[💬 Discussions](https://github.com/Bl4nk44/Audiovault/discussions) •
 [🤝 Contributing](CONTRIBUTING.md)
 
 </div>
@@ -60,7 +60,7 @@ Turn Audiovault into your personal Spotify.
 - **Subsonic API Support**: Native implementation of the Subsonic API (v1.16.1)
 - **Mobile Apps**: Stream your library to your phone using **Symfonium**, **Amperfy**, **DSub**, or any Subsonic-compatible player
 - **Remote Access**: Works seamlessly with **Tailscale** for secure remote streaming without port forwarding
-- **Legacy Auth**: Supports legacy authentication (`u` & `p` parameters) for broad client compatibility
+- **Legacy Auth**: **REQUIRED** for most clients. Enable "Legacy Authentication" or "Use plaintext password" in your app settings (Amperfy, Symfonium).
 
 ### Redesigned Library
 
@@ -78,12 +78,12 @@ Turn Audiovault into your personal Spotify.
 
 ## 🛠️ Tech Stack
 
-| Component | Technology |
-|-----------|----------|
-| **Backend** | Python, FastAPI, yt-dlp, SQLAlchemy (Async), APScheduler |
-| **Frontend** | React, TypeScript, TailwindCSS v4, Framer Motion |
-| **Database** | SQLite (default) / PostgreSQL (supported), Redis (Caching) |
-| **Infrastructure** | Docker & Docker Compose |
+| Component          | Technology                                                 |
+| ------------------ | ---------------------------------------------------------- |
+| **Backend**        | Python, FastAPI, yt-dlp, SQLAlchemy (Async), APScheduler   |
+| **Frontend**       | React, TypeScript, TailwindCSS v4, Framer Motion           |
+| **Database**       | SQLite (default) / PostgreSQL (supported), Redis (Caching) |
+| **Infrastructure** | Docker & Docker Compose                                    |
 
 ## 🚀 Getting Started
 

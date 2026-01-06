@@ -92,6 +92,8 @@ ENABLE_SUBSONIC_API=true
 SUBSONIC_API_VERSION=1.16.1
 
 # Legacy authentication (for older Subsonic clients)
+# NOTE: Even with this enabled, you MUST enable "Legacy Auth" / "Use plaintext password"
+# in your client app settings (Amperfy, Symfonium, etc.)
 SUBSONIC_LEGACY_AUTH=true
 ```
 
@@ -114,7 +116,7 @@ USE_REDIS=true
 ### Basic Setup (SQLite)
 
 ```yaml
-version: '3.8'
+version: "3.8"
 
 services:
   backend:
@@ -144,7 +146,7 @@ services:
 ### Production Setup (PostgreSQL + Redis)
 
 ```yaml
-version: '3.8'
+version: "3.8"
 
 services:
   postgres:
@@ -218,16 +220,16 @@ tailscale ip -4
 server {
     listen 443 ssl http2;
     server_name audiovault.example.com;
-    
+
     # SSL certificates
     ssl_certificate /etc/letsencrypt/live/audiovault.example.com/fullchain.pem;
     ssl_certificate_key /etc/letsencrypt/live/audiovault.example.com/privkey.pem;
-    
+
     # Security headers
     add_header Strict-Transport-Security "max-age=31536000; includeSubDomains" always;
     add_header X-Content-Type-Options "nosniff" always;
     add_header X-Frame-Options "SAMEORIGIN" always;
-    
+
     # Frontend
     location / {
         proxy_pass http://localhost:3000;
@@ -236,7 +238,7 @@ server {
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
         proxy_set_header X-Forwarded-Proto $scheme;
     }
-    
+
     # Backend API
     location /api {
         proxy_pass http://localhost:8000;
@@ -251,6 +253,7 @@ server {
 ## Best Practices
 
 ✅ **Do**:
+
 - Set strong passwords for admin and database
 - Use PostgreSQL for production
 - Enable Redis for caching
@@ -259,6 +262,7 @@ server {
 - Keep Docker images updated
 
 ❌ **Don't**:
+
 - Commit `.env` file to version control
 - Use default/weak passwords
 - Expose backend directly to internet

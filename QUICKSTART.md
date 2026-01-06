@@ -57,12 +57,14 @@ docker compose ps
 
 1. In **Settings**, enable Subsonic API
 2. Download **Symfonium**, **Amperfy**, or **DSub** (Subsonic clients)
-3. Add server: `http://YOUR_IP:8000`
-4. Stream your music!
+3. Add server: `http://YOUR_IP:5173` (or port 8000)
+4. **IMPORTANT**: Enable "Legacy Auth" / "Use plaintext password" in app settings
+5. Stream your music!
 
 ## 🆘 Troubleshooting
 
 **Can't access?**
+
 ```bash
 # Check logs
 docker compose logs backend
@@ -72,12 +74,14 @@ docker compose restart
 ```
 
 **Password issues?**
+
 ```bash
 # Get generated password
 docker compose logs backend | grep "Initial"
 ```
 
 **Free up space?**
+
 ```bash
 # Stop and remove everything
 docker compose down
