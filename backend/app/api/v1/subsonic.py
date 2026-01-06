@@ -39,7 +39,7 @@ class SubsonicResponse:
         # Very basic XML conversion for Subsonic
         # Root is <subsonic-response>
         s = self.response["subsonic-response"]
-        xml_content = f'<?xml version="1.0" encoding="UTF-8"?><subsonic-response status="{s["status"]}" version="{s["version"]}" type="{s["type"]}" serverVersion="{s["serverVersion"]}">'
+        xml_content = f'<?xml version="1.0" encoding="UTF-8"?><subsonic-response xmlns="http://subsonic.org/restapi" status="{s["status"]}" version="{s["version"]}" type="{s["type"]}" serverVersion="{s["serverVersion"]}">'
         
         # Add basic children (handles ping, license, error)
         # Note: This is a minimal implementation. For full API we need a proper XML serializer.
@@ -189,7 +189,7 @@ async def get_license(
             "email": user.email,
             "licenseExpires": "2099-01-01T00:00:00"
         }
-    }).as_json()
+    }).return_response(f)
 
 @router.get("/getMusicFolders.view")
 async def get_music_folders(
@@ -263,13 +263,13 @@ async def get_artist(
         artist_uuid = UUID(id)
     except:
         # Handle case where ID might not be valid UUID
-        return SubsonicResponse({"error": {"code": 70, "message": "Artist not found"}}, status="failed").as_json()
+        return SubsonicResponse({"error": {"code": 70, "message": "Artist not found"}}, status="failed").return_response(f)
 
     result = await db.execute(select(Artist).where(Artist.id == artist_uuid).options(selectinload(Artist.albums)))
     artist = result.scalars().first()
     
     if not artist:
-        return SubsonicResponse({"error": {"code": 70, "message": "Artist not found"}}, status="failed").as_json()
+        return SubsonicResponse({"error": {"code": 70, "message": "Artist not found"}}, status="failed").return_response(f)
 
     albums_formatted = []
     for album in artist.albums:
@@ -303,14 +303,14 @@ async def get_album(
     try:
         album_uuid = UUID(id)
     except:
-        return SubsonicResponse({"error": {"code": 70, "message": "Album not found"}}, status="failed").as_json()
+        return SubsonicResponse({"error": {"code": 70, "message": "Album not found"}}, status="failed").return_response(f)
 
     # Load album with tracks
     result = await db.execute(select(Album).where(Album.id == album_uuid).options(selectinload(Album.tracks)))
     album = result.scalars().first()
     
     if not album:
-        return SubsonicResponse({"error": {"code": 70, "message": "Album not found"}}, status="failed").as_json()
+        return SubsonicResponse({"error": {"code": 70, "message": "Album not found"}}, status="failed").return_response(f)
 
     songs = []
     for track in album.tracks:
