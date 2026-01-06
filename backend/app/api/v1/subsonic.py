@@ -172,7 +172,7 @@ async def ping(
     p: Optional[str] = None, 
     t: Optional[str] = None, 
     s: Optional[str] = None,
-    f: str = "json",
+    f: str = "xml",
     user: User = Depends(get_subsonic_user)
 ):
     """Test connectivity"""
@@ -180,7 +180,7 @@ async def ping(
 
 @router.get("/getLicense.view")
 async def get_license(
-    u: str, p: Optional[str] = None, t: Optional[str] = None, s: Optional[str] = None, f: str = "json",
+    u: str, p: Optional[str] = None, t: Optional[str] = None, s: Optional[str] = None, f: str = "xml",
     user: User = Depends(get_subsonic_user)
 ):
     return SubsonicResponse({
@@ -193,7 +193,7 @@ async def get_license(
 
 @router.get("/getMusicFolders.view")
 async def get_music_folders(
-    u: str, p: Optional[str] = None, t: Optional[str] = None, s: Optional[str] = None, f: str = "json",
+    u: str, p: Optional[str] = None, t: Optional[str] = None, s: Optional[str] = None, f: str = "xml",
     user: User = Depends(get_subsonic_user)
 ):
     return SubsonicResponse({
@@ -208,7 +208,7 @@ async def get_music_folders(
 async def get_indexes(
     musicFolderId: Optional[int] = None,
     ifModifiedSince: Optional[int] = None,
-    u: str = Query(...), p: Optional[str] = None, t: Optional[str] = None, s: Optional[str] = None, f: str = "json",
+    u: str = Query(...), p: Optional[str] = None, t: Optional[str] = None, s: Optional[str] = None, f: str = "xml",
     db: AsyncSession = Depends(get_db),
     user: User = Depends(get_subsonic_user)
 ):
@@ -252,7 +252,7 @@ async def get_indexes(
 @router.get("/getArtist.view")
 async def get_artist(
     id: str,
-    u: str, p: Optional[str] = None, t: Optional[str] = None, s: Optional[str] = None, f: str = "json",
+    u: str, p: Optional[str] = None, t: Optional[str] = None, s: Optional[str] = None, f: str = "xml",
     db: AsyncSession = Depends(get_db),
     user: User = Depends(get_subsonic_user)
 ):
@@ -295,7 +295,7 @@ async def get_artist(
 @router.get("/getAlbum.view")
 async def get_album(
     id: str,
-    u: str, p: Optional[str] = None, t: Optional[str] = None, s: Optional[str] = None, f: str = "json",
+    u: str, p: Optional[str] = None, t: Optional[str] = None, s: Optional[str] = None, f: str = "xml",
     db: AsyncSession = Depends(get_db),
     user: User = Depends(get_subsonic_user)
 ):
@@ -354,7 +354,7 @@ async def get_album(
 @router.get("/stream.view")
 async def stream_music(
     id: str,
-    u: str, p: Optional[str] = None, t: Optional[str] = None, s: Optional[str] = None, f: str = "json",
+    u: str, p: Optional[str] = None, t: Optional[str] = None, s: Optional[str] = None, f: str = "xml",
     db: AsyncSession = Depends(get_db),
     user: User = Depends(get_subsonic_user)
 ):
@@ -402,7 +402,7 @@ async def stream_music(
 async def get_cover_art(
     id: str,
     size: Optional[int] = None,
-    u: str = Query(...), p: Optional[str] = None, t: Optional[str] = None, s: Optional[str] = None, f: str = "json",
+    u: str = Query(...), p: Optional[str] = None, t: Optional[str] = None, s: Optional[str] = None, f: str = "xml",
     db: AsyncSession = Depends(get_db)
     # Auth is simpler here because players often load images aggressively.
     # But ideally strictly protected.
