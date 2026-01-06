@@ -17,7 +17,9 @@ from app.schemas.download import DownloadCreate
 
 from app.services.fallback_service import fallback_service
 from app.services.socket_manager import socket_manager
+from app.core.cache import cache_manager
 from app.utils.sanitization import sanitize_filename
+import json
 
 logger = logging.getLogger(__name__)
 
@@ -184,9 +186,12 @@ class DownloadManager:
             else:
                 download.file_path = final_filename_container['path']
         else:
-            download_path = download.user.preferences.get('downloadPath')
+            download_path = None
+            if download.user and download.user.preferences:
+                 download_path = download.user.preferences.get('downloadPath')
+            
             if not download_path:
-                download_path = os.path.join(settings.DOWNLOAD_DIR, download.user.username)
+                 download_path = os.path.join(settings.DOWNLOAD_DIR, download.user.username)
             
             if not os.path.exists(download_path):
                 os.makedirs(download_path, exist_ok=True)
@@ -361,8 +366,50 @@ class DownloadManager:
 
     async def _execute_download_task(self, loop, ydl_opts, url, download_id):
         logger.info(f"Starting download for {download_id} from URL: {url}")
-        # Run blocking download in executor
-        await loop.run_in_executor(None, lambda: yt_dlp.YoutubeDL(ydl_opts).download([url]))
+        
+        final_url = url
+        
+        # Optimization: specific handling for search queries to cache resolution
+        if url.startswith("ytsearch") or url.startswith("scsearch"):
+            cache_key = f"metadata_resolve:{url}"
+            cached_url = await cache_manager.get(cache_key)
+            
+            if cached_url:
+                logger.info(f"Cache HIT for {url} -> {cached_url}")
+                final_url = cached_url
+            else:
+                logger.info(f"Cache MISS for {url}. Resolving via extract_info...")
+                try:
+                    # Create a specific YDL for extraction (lighter options if needed, but reusing opts is fine)
+                    # We run extract_info in executor to not block loop
+                    def resolve_info():
+                        with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+                            # download=False returns the info dict
+                            return ydl.extract_info(url, download=False, process=True)
+
+                    info = await loop.run_in_executor(None, resolve_info)
+                    
+                    if info:
+                        # For search results, info is usually a playlist-like object with 'entries'
+                        if 'entries' in info and len(info['entries']) > 0:
+                            entry = info['entries'][0]
+                            # Use webpage_url as the stable direct link
+                            real_url = entry.get('webpage_url') or entry.get('url')
+                        else:
+                            # Direct result
+                            real_url = info.get('webpage_url') or info.get('url')
+                            
+                        if real_url:
+                            logger.info(f"Resolved {url} to {real_url}. Caching for 24h.")
+                            await cache_manager.set(cache_key, real_url, expire=86400)
+                            final_url = real_url
+                except Exception as e:
+                     logger.warning(f"Failed to resolve/cache metadata for {url}: {e}. Falling back to default download behavior.")
+                     # We continue with original URL (ydl will try to solve it again internally)
+                     final_url = url
+
+        # Run blocking download in executor with the (potentially resolved) URL
+        await loop.run_in_executor(None, lambda: yt_dlp.YoutubeDL(ydl_opts).download([final_url]))
         logger.info(f"Download finished for {download_id}")
 
     async def pause_download_async(self, download_id: str):
@@ -436,12 +483,14 @@ class DownloadManager:
             'progress_hooks': [progress_hook],
             'quiet': True,
             'no_warnings': True,
+            'external_downloader': 'aria2c',
+            'external_downloader_args': ['-x16', '-s16', '-k1M'],
         }
 
 
 
         schema_map = {
-            '{artist}': '%(artist|uploader|creator)s', # Try hard to find an artist-like string
+            '{artist}': '%(artist)s', # Removed fallback to uploader|creator to correspond with strict filename sanitization
             '{title}': '%(title)s',
             '{album}': '%(album|Single)s',
             '{id}': '%(id)s',
@@ -482,8 +531,13 @@ class DownloadManager:
         # Correct key is 'download_path' (snake_case) as stored in DB settings.py
         download_path = download.user.preferences.get('download_path')
         if not download_path:
-            # Default to user subdirectory
-            download_path = os.path.join(settings.DOWNLOAD_DIR, download.user.username)
+            # Smart logic: If user explicitly wants {user} in their schema at the start, 
+            # don't force a user subdirectory to avoid "admin/admin/..."
+            # Otherwise, sandbox them in their own folder by default.
+            if filename_schema.strip().startswith("{user}"):
+                 download_path = settings.DOWNLOAD_DIR
+            else:
+                 download_path = os.path.join(settings.DOWNLOAD_DIR, download.user.username)
         
         logger.info(f"Resolved base download path: {download_path}")
 
@@ -584,26 +638,33 @@ class DownloadManager:
                 return
 
             # Determine playlist file path
-            # We try to put it in the same folder as the first track if possible, 
-            # otherwise in the root download dir
+            # Put it in the same directory as the first track
+            if downloads[0].file_path:
+                target_dir = os.path.dirname(downloads[0].file_path)
+            else:
+                # Fallback
+                target_dir = os.path.join(settings.DOWNLOAD_DIR, downloads[0].user.username)
+                if not os.path.exists(target_dir):
+                    os.makedirs(target_dir, exist_ok=True)
             
-            download_path = downloads[0].user.preferences.get('downloadPath')
-            if not download_path:
-                 download_path = os.path.join(settings.DOWNLOAD_DIR, downloads[0].user.username)
-            if not download_path: # Fallback just in case
-                 download_path = settings.DOWNLOAD_DIR
-
             # Simple heuristic: Use the playlist name as filename
-            safe_playlist_name = playlist_name.replace('/', '-').replace('\\', '-')
-            playlist_file_path = f"{download_path}/{safe_playlist_name}.m3u8"
+            safe_playlist_name = sanitize_filename(playlist_name)
+            playlist_file_path = os.path.join(target_dir, f"{safe_playlist_name}.m3u8")
             
             async with aiofiles.open(playlist_file_path, 'w', encoding='utf-8') as f:
                 await f.write("#EXTM3U\n")
                 for d in downloads:
                     if d.file_path:
-                        rel_path = d.file_path.replace(f"{download_path}/", "")
-                        await f.write(f"#EXTINF:-1,{d.playlist_name} - Track\n")
-                        await f.write(f"{rel_path}\n")
+                        try:
+                            # Write path relative to the playlist file location
+                            # This makes the playlist portable within the folder
+                            rel_path = os.path.relpath(d.file_path, target_dir)
+                            await f.write(f"#EXTINF:-1,{d.track.artist} - {d.track.title}\n")
+                            await f.write(f"{rel_path}\n")
+                        except ValueError:
+                             # Fallback for different drives etc
+                             await f.write(f"#EXTINF:-1,{d.track.artist} - {d.track.title}\n")
+                             await f.write(f"{d.file_path}\n")
                         
             logger.info(f"Updated playlist {playlist_file_path}")
             
