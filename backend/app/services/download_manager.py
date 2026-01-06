@@ -436,6 +436,8 @@ class DownloadManager:
             'progress_hooks': [progress_hook],
             'quiet': True,
             'no_warnings': True,
+            'external_downloader': 'aria2c',
+            'external_downloader_args': ['-x16', '-s16', '-k1M'],
         }
 
 
