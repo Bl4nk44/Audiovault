@@ -85,11 +85,8 @@ async def get_subsonic_user(
         # 401 code 40: Wrong username or password
         raise HTTPException(status_code=401, detail="Invalid credentials")
 
-    logger.info(f"Subsonic Auth Attempt: User={u} P={'Yes' if p else 'No'} T={'Yes' if t else 'No'} S={'Yes' if s else 'No'}")
-    
     # Stored password is MD5(real_password)
     stored_md5 = user.subsonic_password
-    logger.info(f"Stored Hash: {stored_md5}")
 
     # Case 1: Token Auth (t = md5(password + salt))
     # Standard Subsonic requires the cleartext password to compute this check:
@@ -133,10 +130,8 @@ async def get_subsonic_user(
             
             # Hash candidate
             candidate_md5 = hashlib.md5(password_candidate.encode('utf-8')).hexdigest()
-            logger.info(f"Legacy Auth Check: Candidate={password_candidate} CandidateHash={candidate_md5} Stored={stored_md5}")
             
             if candidate_md5 == stored_md5:
-                logger.info("Legacy Auth Success!")
                 return user
                 
         except Exception as e:
