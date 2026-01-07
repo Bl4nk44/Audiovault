@@ -4,7 +4,6 @@ import tailwindcss from "@tailwindcss/vite";
 import fs from "fs";
 import path from "path";
 
-// Read version from root directory
 // Read version from root directory or fallback
 let version = "0.0.0";
 try {
@@ -30,19 +29,14 @@ export default defineConfig({
         target: process.env.BACKEND_URL || "http://localhost:8000",
         changeOrigin: true,
       },
-<<<<<<< HEAD
       "/rest": {
         target: process.env.BACKEND_URL || "http://localhost:8000",
         changeOrigin: true,
       },
-=======
->>>>>>> temp/release-prep
       "/stream": {
         target: process.env.BACKEND_URL || "http://localhost:8000",
         changeOrigin: true,
       },
-<<<<<<< HEAD
-=======
       "/static": {
         target: process.env.BACKEND_URL || "http://localhost:8000",
         changeOrigin: true,
@@ -52,7 +46,6 @@ export default defineConfig({
         changeOrigin: true,
         ws: true,
       },
->>>>>>> temp/release-prep
     },
   },
 });

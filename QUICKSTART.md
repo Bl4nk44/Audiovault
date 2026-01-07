@@ -53,17 +53,15 @@ docker compose ps
 4. Go to **Download**
 5. Search for a track and download!
 
-<<<<<<< HEAD
 ## 📱 Stream to Phone
 
-1. In **Settings**, enable Subsonic API
-2. Download **Symfonium**, **Amperfy**, or **DSub** (Subsonic clients)
-3. Add server: `http://YOUR_IP:5173` (or port 8000)
-4. **IMPORTANT**: Enable "Legacy Auth" / "Use plaintext password" in app settings
-5. Stream your music!
+1.  In **Settings**, enable Subsonic API
+2.  Download **Sonixd** (Desktop/Linux), **Symfonium** (Android), or **Amperfy** (iOS)
+3.  Add server: `http://YOUR_IP:80` (or leave port blank for default 80)
+    - If connecting locally: `http://localhost:80`
+4.  **IMPORTANT**: Enable "Legacy Auth" / "Use plaintext password" in app settings
+5.  Stream your music!
 
-=======
->>>>>>> temp/release-prep
 ## 🆘 Troubleshooting
 
 **Can't access?**

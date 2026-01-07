@@ -10,6 +10,7 @@ from uvicorn.middleware.proxy_headers import ProxyHeadersMiddleware
 
 from app.core.config import settings
 from app.utils.logger import setup_logging
+import app.models  # noqa: F401 - Ensure models are registered
 from app.api.v1 import (
     artists,
     downloads,
@@ -27,6 +28,7 @@ from app.api.v1 import (
     system,
 )
 from app.api.v1 import settings as settings_router
+from app.api.subsonic import router as subsonic_router
 from app.services.socket_manager import socket_manager
 from app.db.database import AsyncSessionLocal
 from app.db.init_data import init_db
@@ -86,6 +88,9 @@ app.include_router(spotify.router, prefix="/api/v1/spotify", tags=["spotify"])
 app.include_router(deezer.router, prefix="/api/v1/deezer", tags=["deezer"])
 app.include_router(sync.router, prefix="/api/v1/sync", tags=["sync"])
 app.include_router(system.router, prefix="/api/v1/system", tags=["system"])
+
+# Subsonic API (compatible with Sonixd, Amperfy, DSub, etc.)
+app.include_router(subsonic_router)
 
 
 @app.get("/")

@@ -3,18 +3,20 @@ import Sidebar from "./Sidebar";
 import Navbar from "./Navbar";
 import Player from "../player/Player";
 import DownloadNotifications from "./DownloadNotifications";
-<<<<<<< HEAD
 import MobileNav from "./MobileNav";
-=======
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import api from "../../services/api";
 import toast from "react-hot-toast";
->>>>>>> temp/release-prep
 
 export default function Layout() {
   const isDev = import.meta.env.DEV;
 
+  const hasChecked = useRef(false);
+
   useEffect(() => {
+    if (hasChecked.current) return;
+    hasChecked.current = true;
+
     const checkUpdates = async () => {
       try {
         const { data } = await api.get("/system/check-update");
@@ -24,7 +26,9 @@ export default function Layout() {
               <div className="flex flex-col gap-2">
                 <span className="font-bold">New Version Available! 🚀</span>
                 <span className="text-sm">
-                  Version {data.latest_version} is now available.
+                  {isDev
+                    ? "New commits on dev branch."
+                    : `Version ${data.latest_version} is available.`}
                 </span>
                 <div className="flex gap-2 mt-1">
                   <a
@@ -34,7 +38,7 @@ export default function Layout() {
                     className="px-3 py-1 bg-primary text-black rounded-lg text-xs font-bold hover:opacity-90"
                     onClick={() => toast.dismiss(t.id)}
                   >
-                    View Release
+                    View
                   </a>
                   <button
                     onClick={() => toast.dismiss(t.id)}
@@ -57,22 +61,17 @@ export default function Layout() {
     };
 
     checkUpdates();
-  }, []);
+  }, [isDev]);
 
   return (
-<<<<<<< HEAD
     <div className="flex h-screen text-foreground overflow-hidden p-0 md:p-3 gap-0 md:gap-3 relative group bg-background">
-      {/* Sidebar - Desktop Only */}
-      <div className="hidden md:block w-72 h-full shrink-0 z-30">
-=======
-    <div className="flex h-screen text-foreground overflow-hidden p-3 gap-3 relative group">
       {isDev && (
         <div className="fixed bottom-4 right-4 z-[100] bg-orange-500 text-black px-3 py-1 rounded-full text-xs font-black tracking-wider shadow-lg pointer-events-none animate-pulse">
           DEV BUILD
         </div>
       )}
-      <div className="w-72 h-full shrink-0 z-30">
->>>>>>> temp/release-prep
+      {/* Sidebar - Desktop Only */}
+      <div className="hidden md:block w-72 h-full shrink-0 z-30">
         <Sidebar />
       </div>
 

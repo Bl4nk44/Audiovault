@@ -1,12 +1,16 @@
 services:
   backend:
-    image: bl4nk404/audiovault:latest
+    build:
+      context: ./backend
+    image: bl4nk404/audiovault:dev
     container_name: audiovault-backend
     restart: unless-stopped
-    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --proxy-headers --forwarded-allow-ips '*'
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload --proxy-headers --forwarded-allow-ips '*'
     volumes:
+      - ./backend:/app
       - ./downloads:/downloads
-      # No code mounts in production
+      - ../../.git:/app/.git:ro
+      - ./VERSION:/app/VERSION
     ports:
       - "8000:8000"
     env_file:
@@ -16,7 +20,7 @@ services:
       - REDIS_URL=redis://redis:6379/0
       - ALLOWED_HOSTS=*
       - BACKEND_CORS_ORIGINS=*
-      - ENVIRONMENT=production
+      - ENVIRONMENT=development
     depends_on:
       db:
         condition: service_healthy
@@ -26,11 +30,22 @@ services:
       - audiovault-network
 
   frontend:
-    image: bl4nk404/audiovault-frontend:latest
+    build:
+      context: .
+      dockerfile: frontend/Dockerfile.dev
+    image: audiovault-frontend-dev
     container_name: audiovault-frontend
     restart: unless-stopped
+    command: npm run dev -- --host
     ports:
-      - "80:80"
+      - "5173:5173"
+    environment:
+      - VITE_API_URL=/api/v1
+      - BACKEND_URL=http://backend:8000
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+      - ./VERSION:/VERSION:ro
     depends_on:
       - backend
     networks:
@@ -46,13 +61,13 @@ services:
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=postgres
       - POSTGRES_DB=audiovault
+    ports:
+      - "5432:5432"
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres"]
       interval: 10s
       timeout: 5s
       retries: 5
-    ports:
-      - "5432:5432"
     networks:
       - audiovault-network
 
@@ -60,16 +75,13 @@ services:
     image: redis:7-alpine
     container_name: audiovault-redis
     restart: always
-    command: redis-server --appendonly yes
-    volumes:
-      - audiovault-redis-data:/data
+    ports:
+      - "6379:6379"
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 10s
       timeout: 5s
       retries: 5
-    ports:
-      - "6379:6379"
     networks:
       - audiovault-network
 
@@ -79,4 +91,3 @@ networks:
 
 volumes:
   audiovault-db-data:
-  audiovault-redis-data:

@@ -7,7 +7,7 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![GitHub Release](https://img.shields.io/github/v/release/Bl4nk44/Audiovault?logo=github)](https://github.com/Bl4nk44/Audiovault/releases)
 [![GitHub Stars](https://img.shields.io/github/stars/Bl4nk44/Audiovault?logo=github)](https://github.com/Bl4nk44/Audiovault/stargazers)
-[![Docker Pulls](https://img.shields.io/docker/pulls/bl4nk44/audiovault?logo=docker)](https://hub.docker.com/r/bl4nk404/audiovault)
+[![Docker Pulls](https://img.shields.io/docker/pulls/bl4nk404/audiovault?logo=docker)](https://hub.docker.com/r/bl4nk404/audiovault)
 
 🔗 **Quick Links**:
 [📖 Wiki](https://github.com/Bl4nk44/Audiovault/wiki) •
@@ -52,6 +52,16 @@ Never miss a track. If a download fails (e.g., due to geo-restrictions or broken
 - **Safe Purge**: Automatically removes local tracks that were deleted from remote playlists (with specific user approval & dry-run safety)
 - **Smart De-duplication**: Prevents duplicate downloads by checking both ID3 tags and internal database history
 - **Universal Search**: Unified search bar for all supported providers
+
+### Personal Streaming Server
+
+Turn Audiovault into your personal Spotify.
+
+- **Subsonic API Support**: Native implementation of the Subsonic API (v1.16.1)
+  > [![Sonixd](https://img.shields.io/badge/Verified-Sonixd-success?style=flat-square)](https://github.com/tempugh/Sonixd) [![Amperfy](https://img.shields.io/badge/Testing-Amperfy-orange?style=flat-square)](https://github.com/amperfy/amperfy)
+- **Mobile Apps**: Stream your library to your phone using **Symfonium**, **Amperfy**, **DSub**, or any Subsonic-compatible player
+- **Remote Access**: Works seamlessly with **Tailscale** for secure remote streaming without port forwarding
+- **Legacy Auth**: **REQUIRED** for most clients. Enable "Legacy Authentication" or "Use plaintext password" in your app settings (Amperfy, Symfonium).
 
 ### Redesigned Library
 

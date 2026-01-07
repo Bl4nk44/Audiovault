@@ -37,6 +37,7 @@ class Settings(BaseSettings):
     MAX_PARALLEL_DOWNLOADS: int = 3
     STORAGE_QUOTA_GB: int = 500
     LOG_LEVEL: str = "INFO"
+    ENVIRONMENT: str = "production"
 
     BACKEND_CORS_ORIGINS: Union[List[str], str] = [
         "http://localhost:3000",
