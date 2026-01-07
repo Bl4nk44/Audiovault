@@ -2,7 +2,7 @@ services:
   backend:
     build:
       context: ./backend
-    image: bl4nk404/audiovault:latest
+    image: bl4nk404/audiovault:dev
     container_name: audiovault-backend
     restart: always
     command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --proxy-headers --forwarded-allow-ips '*'

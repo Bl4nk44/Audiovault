@@ -4,6 +4,7 @@ from sqlalchemy.orm import relationship
 from datetime import datetime, timezone
 from uuid import uuid4
 from app.db.base import Base
+from app.models.download import Download
 
 CASCADE_DELETE = "all, delete-orphan"
 
@@ -35,7 +36,7 @@ class User(Base):
     credentials = relationship(
         "ServiceCredentials", back_populates="user", cascade=CASCADE_DELETE
     )
-    downloads = relationship("Download", back_populates="user", cascade=CASCADE_DELETE)
+    downloads = relationship(Download, back_populates="user", cascade=CASCADE_DELETE)
     watchlist = relationship("Watchlist", back_populates="user", cascade=CASCADE_DELETE)
     history = relationship(
         "ListeningHistory", back_populates="user", cascade=CASCADE_DELETE
