@@ -5,21 +5,25 @@ Welcome to the Audiovault documentation! This wiki contains comprehensive guides
 ## 📚 Quick Navigation
 
 ### Getting Started
+
 - **[Getting Started](WIKI_GETTING_STARTED.md)** - Installation, initial setup, and first steps
 - **[Quick Start Guide](../QUICKSTART.md)** - 5-minute setup for Docker
 
 ### Using Audiovault
+
 - **[Configuration](WIKI_CONFIGURATION.md)** - All available configuration options
 - **[Usage Guide](WIKI_USAGE.md)** - How to download, organize, and stream music (coming soon)
-- **[Streaming with Subsonic API](WIKI_STREAMING.md)** - Setup mobile apps and remote access (coming soon)
+
 - **[FAQ & Troubleshooting](../SUPPORT.md)** - Common issues and solutions
 
 ### For Developers
+
 - **[Architecture](WIKI_ARCHITECTURE.md)** - System design and component overview (coming soon)
 - **[Development Setup](../CONTRIBUTING.md#development-setup)** - Setting up your development environment
 - **[Contributing](../CONTRIBUTING.md)** - How to contribute to Audiovault
 
 ### Additional Resources
+
 - **[Security Policy](../SECURITY.md)** - Security information and best practices
 - **[Changelog](../CHANGELOG.md)** - Release notes and version history
 
@@ -30,15 +34,15 @@ Welcome to the Audiovault documentation! This wiki contains comprehensive guides
 ### I want to...
 
 **...download music from Spotify**
+
 - See [Getting Started](WIKI_GETTING_STARTED.md) → Setup Spotify integration
 
-**...stream music to my phone**
-- See [Streaming with Subsonic API](WIKI_STREAMING.md) (coming soon)
-
 **...help improve Audiovault**
+
 - See [Contributing](../CONTRIBUTING.md)
 
 **...troubleshoot a problem**
+
 - See [FAQ & Support](../SUPPORT.md)
 
 ---

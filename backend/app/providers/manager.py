@@ -2,6 +2,7 @@ from typing import List, Optional
 from app.providers.base import MusicProvider
 from app.schemas.metadata import PlaylistMetadata, TrackMetadata
 
+
 class ProviderManager:
     def __init__(self):
         self.providers: List[MusicProvider] = []
@@ -35,5 +36,6 @@ class ProviderManager:
         if not provider:
             return None
         return await provider.get_track(url)
+
 
 provider_manager = ProviderManager()

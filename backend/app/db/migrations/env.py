@@ -18,7 +18,7 @@ from app.models import (  # noqa: F401
     Watchlist,
     WatchlistItem,
     ServiceCredentials,
-    ListeningHistory
+    ListeningHistory,
 )
 
 # this is the Alembic Config object, which provides
@@ -40,6 +40,7 @@ target_metadata = Base.metadata
 # ... etc.
 
 SA_URL_KEY = "sqlalchemy.url"
+
 
 def run_migrations_offline() -> None:
     """Run migrations in 'offline' mode.
@@ -81,13 +82,15 @@ async def run_migrations_online() -> None:
     """
     configuration = config.get_section(config.config_ini_section)
     configuration[SA_URL_KEY] = settings.DATABASE_URL
-    
+
     # Handle async url conversion if needed, though settings.DATABASE_URL should be correct or handled
     # But alembic config needs the string.
     # If settings.DATABASE_URL is postgresql:// we might need to change it for async engine
     # But here we use async_engine_from_config which expects async driver.
     if configuration[SA_URL_KEY].startswith("postgresql://"):
-        configuration[SA_URL_KEY] = configuration[SA_URL_KEY].replace("postgresql://", "postgresql+asyncpg://", 1)
+        configuration[SA_URL_KEY] = configuration[SA_URL_KEY].replace(
+            "postgresql://", "postgresql+asyncpg://", 1
+        )
 
     connectable = async_engine_from_config(
         configuration,

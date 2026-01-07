@@ -30,14 +30,29 @@ export default defineConfig({
         target: process.env.BACKEND_URL || "http://localhost:8000",
         changeOrigin: true,
       },
+<<<<<<< HEAD
       "/rest": {
         target: process.env.BACKEND_URL || "http://localhost:8000",
         changeOrigin: true,
       },
+=======
+>>>>>>> temp/release-prep
       "/stream": {
         target: process.env.BACKEND_URL || "http://localhost:8000",
         changeOrigin: true,
       },
+<<<<<<< HEAD
+=======
+      "/static": {
+        target: process.env.BACKEND_URL || "http://localhost:8000",
+        changeOrigin: true,
+      },
+      "/socket.io": {
+        target: process.env.BACKEND_URL || "http://localhost:8000",
+        changeOrigin: true,
+        ws: true,
+      },
+>>>>>>> temp/release-prep
     },
   },
 });

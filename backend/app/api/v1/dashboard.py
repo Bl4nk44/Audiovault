@@ -21,12 +21,12 @@ router = APIRouter()
 @router.get("/stats")
 async def get_dashboard_stats(
     current_user: User = Depends(get_current_active_user),
-    db: AsyncSession = Depends(get_db)
+    db: AsyncSession = Depends(get_db),
 ):
     total_downloads = await _get_count(db, current_user.id)
-    tracks_in_library = await _get_count(db, current_user.id, status='completed')
+    tracks_in_library = await _get_count(db, current_user.id, status="completed")
     pending_queue = await _get_queue_count(db, current_user.id)
-    
+
     storage_free_text = _get_storage_free_space()
     recent_activity = await _get_recent_activity(db, current_user.id)
     active_download = await _get_active_download(db, current_user.id)
@@ -37,8 +37,9 @@ async def get_dashboard_stats(
         "pending_queue": str(pending_queue),
         "storage_free": storage_free_text,
         "recent_activity": recent_activity,
-        "active_download": active_download
+        "active_download": active_download,
     }
+
 
 async def _get_count(db: AsyncSession, user_id: int, status: str = None) -> int:
     query = select(func.count(Download.id)).where(Download.user_id == user_id)
@@ -47,13 +48,15 @@ async def _get_count(db: AsyncSession, user_id: int, status: str = None) -> int:
     result = await db.execute(query)
     return result.scalar() or 0
 
+
 async def _get_queue_count(db: AsyncSession, user_id: int) -> int:
     query = select(func.count(Download.id)).where(
         Download.user_id == user_id,
-        Download.status.in_(['pending', 'downloading', 'processing'])
+        Download.status.in_(["pending", "downloading", "processing"]),
     )
     result = await db.execute(query)
     return result.scalar() or 0
+
 
 def _get_storage_free_space() -> str:
     try:
@@ -65,48 +68,66 @@ def _get_storage_free_space() -> str:
     except Exception:
         return "Unknown"
 
+
 # ... (skipping unchanged helper functions)
 
+
 async def _get_recent_activity(db: AsyncSession, user_id: int) -> List[Dict[str, Any]]:
-    recent_query = select(Download).options(selectinload(Download.track)).where(
-        Download.user_id == user_id,
-        Download.status == 'completed'
-    ).order_by(Download.completed_at.desc()).limit(20)
+    recent_query = (
+        select(Download)
+        .options(selectinload(Download.track))
+        .where(Download.user_id == user_id, Download.status == "completed")
+        .order_by(Download.completed_at.desc())
+        .limit(20)
+    )
     result = await db.execute(recent_query)
     recent_downloads = result.scalars().all()
-    
+
     activity = []
     for d in recent_downloads:
-        activity.append({
-            "id": str(d.id),
-            "track_id": str(d.track_id),
-            "title": d.track.title if d.track else "Unknown Title",
-            "artist": d.track.artist if d.track else "Unknown Artist",
-            "time_ago": _calculate_time_ago(d.completed_at),
-            "progress": 100,
-            "image_url": _get_image_url(d),
-            "filename": _get_filename(d)
-        })
+        activity.append(
+            {
+                "id": str(d.id),
+                "track_id": str(d.track_id),
+                "title": d.track.title if d.track else "Unknown Title",
+                "artist": d.track.artist if d.track else "Unknown Artist",
+                "time_ago": _calculate_time_ago(d.completed_at),
+                "progress": 100,
+                "image_url": _get_image_url(d),
+                "filename": _get_filename(d),
+            }
+        )
     return activity
 
-async def _get_active_download(db: AsyncSession, user_id: int) -> Optional[Dict[str, Any]]:
+
+async def _get_active_download(
+    db: AsyncSession, user_id: int
+) -> Optional[Dict[str, Any]]:
     # Priority: Downloading
-    active_query = select(Download).options(selectinload(Download.track)).where(
-        Download.user_id == user_id,
-        Download.status == 'downloading'
-    ).limit(1)
+    active_query = (
+        select(Download)
+        .options(selectinload(Download.track))
+        .where(Download.user_id == user_id, Download.status == "downloading")
+        .limit(1)
+    )
     active_result = await db.execute(active_query)
     active_item = active_result.scalar_one_or_none()
 
     # Fallback: Pending/Processing
     if not active_item:
-        pending_query = select(Download).options(selectinload(Download.track)).where(
-            Download.user_id == user_id,
-            Download.status.in_(['pending', 'processing'])
-        ).order_by(Download.created_at.asc()).limit(1)
+        pending_query = (
+            select(Download)
+            .options(selectinload(Download.track))
+            .where(
+                Download.user_id == user_id,
+                Download.status.in_(["pending", "processing"]),
+            )
+            .order_by(Download.created_at.asc())
+            .limit(1)
+        )
         pending_result = await db.execute(pending_query)
         active_item = pending_result.scalar_one_or_none()
-    
+
     if active_item:
         return {
             "id": str(active_item.id),
@@ -114,19 +135,20 @@ async def _get_active_download(db: AsyncSession, user_id: int) -> Optional[Dict[
             "artist": active_item.track.artist if active_item.track else "Unknown",
             "status": active_item.status,
             "progress": active_item.progress or 0,
-            "image_url": _get_image_url(active_item)
+            "image_url": _get_image_url(active_item),
         }
     return None
+
 
 def _calculate_time_ago(dt: datetime) -> str:
     if not dt:
         return "Just now"
-    # Assuming dt is stored as naive UTC or aware UTC. 
+    # Assuming dt is stored as naive UTC or aware UTC.
     # If naive, assume UTC.
     now = datetime.now(timezone.utc)
     if dt.tzinfo is None:
         dt = dt.replace(tzinfo=timezone.utc)
-        
+
     diff = now - dt
     if diff.days > 0:
         return f"{diff.days}d ago"
@@ -136,17 +158,21 @@ def _calculate_time_ago(dt: datetime) -> str:
         return f"{diff.seconds // 60}m ago"
     return "Just now"
 
+
 def _get_image_url(download: Download) -> Optional[str]:
     if not download.track or not download.track.metadata_content:
         return None
     meta = download.track.metadata_content
-    return meta.get('image_url') or meta.get('album_art')
+    return meta.get("image_url") or meta.get("album_art")
+
 
 def _get_filename(download: Download) -> str:
     if not download.file_path:
         return "Unknown"
     try:
-        rel_path = os.path.relpath(download.file_path, settings.DOWNLOAD_DIR).replace("\\", "/")
+        rel_path = os.path.relpath(download.file_path, settings.DOWNLOAD_DIR).replace(
+            "\\", "/"
+        )
         if rel_path.startswith(".."):
             return os.path.basename(download.file_path)
         return rel_path

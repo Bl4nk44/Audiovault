@@ -5,12 +5,13 @@ from app.models.user import User
 
 router = APIRouter()
 
+
 @router.get("/search")
 async def search_soundcloud(
-    q: str, 
+    q: str,
     limit: int = 20,
     offset: int = 0,
-    current_user: User = Depends(get_current_active_user)
+    current_user: User = Depends(get_current_active_user),
 ):
     # SoundCloud via yt-dlp primarily works with URLs
     if soundcloud_service.can_handle(q):

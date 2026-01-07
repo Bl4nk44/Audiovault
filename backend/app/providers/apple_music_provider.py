@@ -3,6 +3,7 @@ from app.providers.base import MusicProvider
 from app.schemas.metadata import PlaylistMetadata, TrackMetadata
 from app.services.apple_music_service import apple_music_service
 
+
 class AppleMusicProvider(MusicProvider):
     @property
     def name(self) -> str:
@@ -19,46 +20,48 @@ class AppleMusicProvider(MusicProvider):
         tracks = await apple_music_service.get_tracks(url)
         if not tracks:
             return None
-        
+
         # Apple Music Service returns dicts, need to convert to schemas
         # And we need playlist info. Currently service returns flat list of tracks.
         # Ideally service should return structured data. But for now we infer.
-        
+
         # Let's assume the first track has common info or we just use default
         # Since we use extract_flat, we might miss playlist title if we iterate entries only.
-        
-        # Optimization: Modify service to return Playlist object? 
+
+        # Optimization: Modify service to return Playlist object?
         # For now, let's just make it work.
-        
+
         # We need to map dicts to TrackMetadata
         track_metadatas = []
         for t in tracks:
-            track_metadatas.append(TrackMetadata(
-                title=t['title'],
-                artist=t['artist'],
-                album=t['album'],
-                duration_ms=t['duration_ms'],
-                image_url=t['image_url'],
-                source_id=t['id'],
-                source_url=t.get('source_url'),
-                source="apple_music"
-            ))
-            
+            track_metadatas.append(
+                TrackMetadata(
+                    title=t["title"],
+                    artist=t["artist"],
+                    album=t["album"],
+                    duration_ms=t["duration_ms"],
+                    image_url=t["image_url"],
+                    source_id=t["id"],
+                    source_url=t.get("source_url"),
+                    source="apple_music",
+                )
+            )
+
         # Try to guess playlist title from first track album or similar?
         # Or just "Apple Music Import"
         title = "Apple Music Import"
         if track_metadatas:
-             # In extract_flat album field often contains playlist title if it came from playlist URL
-             if "playlist" in url:
-                 title = track_metadatas[0].album or "Apple Music Playlist"
-             else:
-                 title = track_metadatas[0].album or "Apple Music Album"
+            # In extract_flat album field often contains playlist title if it came from playlist URL
+            if "playlist" in url:
+                title = track_metadatas[0].album or "Apple Music Playlist"
+            else:
+                title = track_metadatas[0].album or "Apple Music Album"
 
         return PlaylistMetadata(
             title=title,
             description="Imported from Apple Music",
             author="Unknown",
-            tracks=track_metadatas
+            tracks=track_metadatas,
         )
 
     async def get_track(self, url: str) -> Optional[TrackMetadata]:
@@ -66,12 +69,12 @@ class AppleMusicProvider(MusicProvider):
         if tracks:
             t = tracks[0]
             return TrackMetadata(
-                title=t['title'],
-                artist=t['artist'],
-                album=t['album'],
-                duration_ms=t['duration_ms'],
-                image_url=t['image_url'],
-                source_id=t['id'],
-                source_url=t.get('source_url'),
+                title=t["title"],
+                artist=t["artist"],
+                album=t["album"],
+                duration_ms=t["duration_ms"],
+                image_url=t["image_url"],
+                source_id=t["id"],
+                source_url=t.get("source_url"),
             )
         return None

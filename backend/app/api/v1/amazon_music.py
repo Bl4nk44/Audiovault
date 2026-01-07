@@ -5,12 +5,13 @@ from app.models.user import User
 
 router = APIRouter()
 
+
 @router.get("/search")
 async def search_amazon_music(
-    q: str, 
+    q: str,
     limit: int = 20,
     offset: int = 0,
-    current_user: User = Depends(get_current_active_user)
+    current_user: User = Depends(get_current_active_user),
 ):
     # Amazon Music Service currently only supports URL extraction via yt-dlp
     if amazon_music_service.can_handle(q):

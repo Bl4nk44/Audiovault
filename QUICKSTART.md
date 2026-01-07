@@ -53,6 +53,7 @@ docker compose ps
 4. Go to **Download**
 5. Search for a track and download!
 
+<<<<<<< HEAD
 ## 📱 Stream to Phone
 
 1. In **Settings**, enable Subsonic API
@@ -61,6 +62,8 @@ docker compose ps
 4. **IMPORTANT**: Enable "Legacy Auth" / "Use plaintext password" in app settings
 5. Stream your music!
 
+=======
+>>>>>>> temp/release-prep
 ## 🆘 Troubleshooting
 
 **Can't access?**

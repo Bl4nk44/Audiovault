@@ -131,6 +131,7 @@ docker compose logs backend | grep "password"
 ### Other Services
 
 See [Configuration Guide](WIKI_CONFIGURATION.md) for detailed instructions for:
+
 - Apple Music
 - Deezer
 - Tidal
@@ -183,7 +184,6 @@ services:
 
 1. **[Configure Streaming Services](WIKI_CONFIGURATION.md)** - Add your favorite music sources
 2. **[Learn Usage Basics](WIKI_USAGE.md)** - Download and manage music
-3. **[Setup Streaming](WIKI_STREAMING.md)** - Stream to your phone
 
 ## Useful Docker Commands
 

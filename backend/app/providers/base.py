@@ -2,6 +2,7 @@ from abc import ABC, abstractmethod
 from typing import List, Optional
 from app.schemas.metadata import TrackMetadata, PlaylistMetadata
 
+
 class MusicProvider(ABC):
     @property
     @abstractmethod

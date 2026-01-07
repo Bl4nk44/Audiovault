@@ -3,6 +3,7 @@ from app.providers.base import MusicProvider
 from app.schemas.metadata import PlaylistMetadata, TrackMetadata
 from app.services.soundcloud_service import soundcloud_service
 
+
 class SoundCloudProvider(MusicProvider):
     @property
     def name(self) -> str:
@@ -19,34 +20,36 @@ class SoundCloudProvider(MusicProvider):
         tracks = await soundcloud_service.get_tracks(url)
         if not tracks:
             return None
-        
+
         track_metadatas = []
         for t in tracks:
-            track_metadatas.append(TrackMetadata(
-                title=t['title'],
-                artist=t['artist'],
-                album=t['album'],
-                duration_ms=t['duration_ms'],
-                image_url=t['image_url'],
-                source_id=t['id'],
-                source_url=t.get('source_url'),
-                source="soundcloud"
-            ))
-            
-        # Try to infer title from first track or URL structure if possible, 
+            track_metadatas.append(
+                TrackMetadata(
+                    title=t["title"],
+                    artist=t["artist"],
+                    album=t["album"],
+                    duration_ms=t["duration_ms"],
+                    image_url=t["image_url"],
+                    source_id=t["id"],
+                    source_url=t.get("source_url"),
+                    source="soundcloud",
+                )
+            )
+
+        # Try to infer title from first track or URL structure if possible,
         # but yt-dlp flat extract might not give container title easily if it was a flat list of entries.
         # Often 'title' of the main info object is the playlist title.
-        # But we are using a service that returns list of dicts. 
+        # But we are using a service that returns list of dicts.
         # For now, generic title or 'SoundCloud Import'.
         title = "SoundCloud Import"
         if len(track_metadatas) > 0 and "sets" in url:
-             title = "SoundCloud Set" # Simple heuristic
+            title = "SoundCloud Set"  # Simple heuristic
 
         return PlaylistMetadata(
             title=title,
             description="Imported from SoundCloud",
             author="Unknown",
-            tracks=track_metadatas
+            tracks=track_metadatas,
         )
 
     async def get_track(self, url: str) -> Optional[TrackMetadata]:
@@ -54,13 +57,13 @@ class SoundCloudProvider(MusicProvider):
         if tracks:
             t = tracks[0]
             return TrackMetadata(
-                title=t['title'],
-                artist=t['artist'],
-                album=t['album'],
-                duration_ms=t['duration_ms'],
-                image_url=t['image_url'],
-                source_id=t['id'],
-                source_url=t.get('source_url'),
-                source="soundcloud"
+                title=t["title"],
+                artist=t["artist"],
+                album=t["album"],
+                duration_ms=t["duration_ms"],
+                image_url=t["image_url"],
+                source_id=t["id"],
+                source_url=t.get("source_url"),
+                source="soundcloud",
             )
         return None

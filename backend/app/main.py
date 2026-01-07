@@ -6,13 +6,25 @@ from fastapi.staticfiles import StaticFiles
 import os
 import logging
 import asyncio
+from uvicorn.middleware.proxy_headers import ProxyHeadersMiddleware
 
 from app.core.config import settings
 from app.utils.logger import setup_logging
 from app.api.v1 import (
-    artists, downloads, watchlist, import_routes, auth, 
-    dashboard, history, youtube, users, stream, spotify, 
-    deezer, sync, system
+    artists,
+    downloads,
+    watchlist,
+    import_routes,
+    auth,
+    dashboard,
+    history,
+    youtube,
+    users,
+    stream,
+    spotify,
+    deezer,
+    sync,
+    system,
 )
 from app.api.v1 import settings as settings_router
 from app.services.socket_manager import socket_manager
@@ -34,17 +46,15 @@ app = FastAPI(
     title=settings.PROJECT_NAME,
     description="Audiovault API for downloading and managing music",
     version=settings.VERSION,
-    openapi_url=f"{settings.API_V1_STR}/openapi.json"
+    openapi_url=f"{settings.API_V1_STR}/openapi.json",
 )
 
 # Trusted Host Middleware (Security)
-app.add_middleware(
-    TrustedHostMiddleware, 
-    allowed_hosts=settings.ALLOWED_HOSTS
-)
+app.add_middleware(TrustedHostMiddleware, allowed_hosts=settings.ALLOWED_HOSTS)
 
 # Proxy Headers Middleware (for Reverse Proxies like Nginx/Traefik)
-from uvicorn.middleware.proxy_headers import ProxyHeadersMiddleware
+
+
 app.add_middleware(ProxyHeadersMiddleware, trusted_hosts="*")
 
 # CORS
@@ -76,21 +86,22 @@ app.include_router(spotify.router, prefix="/api/v1/spotify", tags=["spotify"])
 app.include_router(deezer.router, prefix="/api/v1/deezer", tags=["deezer"])
 app.include_router(sync.router, prefix="/api/v1/sync", tags=["sync"])
 app.include_router(system.router, prefix="/api/v1/system", tags=["system"])
-# Subsonic API (Mounted at /rest for compatibility)
-from app.api.v1 import subsonic
-app.include_router(subsonic.router, prefix="/rest", tags=["subsonic"])
+
 
 @app.get("/")
 async def root():
     return {"message": "Welcome to Audiovault API"}
 
+
 @app.get("/health")
 async def health_check():
     return {"status": "healthy"}
 
+
 @app.get("/api/version")
 async def get_version():
     return {"version": settings.VERSION}
+
 
 # Ensure download directory exists
 if not os.path.exists(settings.DOWNLOAD_DIR):
@@ -104,6 +115,12 @@ except Exception as e:
     logger.error(f"❌ Error listing files: {e}")
 
 app.mount("/stream", StaticFiles(directory=settings.DOWNLOAD_DIR), name="stream")
+# Mount static files (avatars, etc.)
+static_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "static")
+if not os.path.exists(static_dir):
+    os.makedirs(static_dir)
+app.mount("/static", StaticFiles(directory=static_dir), name="static")
+
 app.mount("/socket.io", socket_manager.app)
 
 
@@ -119,7 +136,9 @@ async def startup_event():
         except Exception as e:
             if i == retries - 1:
                 raise e
-            logger.info(f"Database not ready, retrying in 2 seconds... ({i+1}/{retries})")
+            logger.info(
+                f"Database not ready, retrying in 2 seconds... ({i + 1}/{retries})"
+            )
             await asyncio.sleep(2)
 
     # Init data
@@ -130,13 +149,14 @@ async def startup_event():
 
     # Connect to Redis
     await cache_manager.connect()
-    
+
     # Init Rate Limiter
     if cache_manager.redis:
         await FastAPILimiter.init(cache_manager.redis)
 
     # Start Scheduler
     scheduler_service.start()
+
 
 @app.on_event("shutdown")
 async def shutdown_event():

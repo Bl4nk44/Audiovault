@@ -84,6 +84,7 @@ AUTO_PURGE_ENABLED=true
 AUTO_PURGE_DAYS=7
 ```
 
+<<<<<<< HEAD
 ### API & Subsonic Configuration
 
 ```bash
@@ -97,6 +98,8 @@ SUBSONIC_API_VERSION=1.16.1
 SUBSONIC_LEGACY_AUTH=true
 ```
 
+=======
+>>>>>>> temp/release-prep
 ### Advanced Configuration
 
 ```bash

@@ -4,8 +4,9 @@ import { useStore } from "../../store/useStore";
 import api from "../../services/api";
 import { notify as toast } from "../../utils/notify";
 import { motion } from "framer-motion";
-import { User, Lock, Save, Camera } from "lucide-react";
+import { User, Lock, Save, Camera, Trash2, AlertTriangle } from "lucide-react";
 import Button from "../ui/Button";
+import ConfirmModal from "../ui/ConfirmModal";
 import { useTranslation } from "../../hooks/useTranslation";
 import { AxiosError } from "axios";
 
@@ -17,12 +18,18 @@ interface ProfileFormData {
 interface PasswordFormData {
   currentPassword?: string;
   newPassword?: string;
+  confirmPassword?: string;
 }
 
 export default function AccountSettings() {
   const { t } = useTranslation();
-  const { user, setUser } = useStore();
+  const { user, setUser, logout } = useStore();
   const [isLoading, setIsLoading] = useState(false);
+
+  // Account Deletion State
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [deleteLibrary, setDeleteLibrary] = useState(false);
+
   const {
     register,
     handleSubmit,
@@ -55,8 +62,11 @@ export default function AccountSettings() {
     register: registerPassword,
     handleSubmit: handleSubmitPassword,
     reset: resetPassword,
+    watch,
     formState: { errors: passwordErrors },
   } = useForm();
+
+  const newPasswordValue = watch("newPassword");
 
   const onUpdateProfile = async (data: ProfileFormData) => {
     setIsLoading(true);
@@ -96,6 +106,21 @@ export default function AccountSettings() {
         err.response?.data?.detail || t("settings.messages.updateError")
       );
     } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleDeleteAccount = async () => {
+    setIsLoading(true);
+    try {
+      await api.delete("/users/me", {
+        params: { delete_library: deleteLibrary },
+      });
+      toast.success("Account deleted successfully");
+      logout();
+    } catch (error) {
+      const err = error as AxiosError<{ detail: string }>;
+      toast.error(err.response?.data?.detail || "Failed to delete account");
       setIsLoading(false);
     }
   };
@@ -253,7 +278,7 @@ export default function AccountSettings() {
         className="p-8 rounded-3xl border border-white/10 bg-white/5 backdrop-blur-xl shadow-xl"
       >
         <h3 className="text-xl font-bold text-white border-b border-white/10 pb-4 mb-6 flex items-center gap-3">
-          <Lock className="text-red-500" size={24} />
+          <Lock className="text-orange-500" size={24} />
           {t("settings.changePassword")}
         </h3>
 
@@ -298,18 +323,102 @@ export default function AccountSettings() {
             )}
           </div>
 
+          <div className="space-y-2">
+            <label className="text-sm font-medium text-gray-300 ml-1">
+              Confirm New Password
+            </label>
+            <input
+              type="password"
+              {...registerPassword("confirmPassword", {
+                required: "Please confirm your password",
+                validate: (val) => {
+                  if (!val) return "Please confirm your password";
+                  if (val !== newPasswordValue) return "Passwords do not match";
+                  return true;
+                },
+              })}
+              className="w-full px-4 py-3 rounded-xl bg-black/20 border border-white/10 text-white focus:outline-none focus:border-primary/50"
+            />
+            {passwordErrors.confirmPassword && (
+              <span className="text-red-400 text-xs ml-1">
+                {passwordErrors.confirmPassword.message as string}
+              </span>
+            )}
+          </div>
+
           <div className="flex justify-end">
             <Button
               type="submit"
               isLoading={isLoading}
               variant="outline"
-              className="px-6 hover:bg-red-500/10 hover:text-red-500 hover:border-red-500/50"
+              className="px-6 hover:bg-orange-500/10 hover:text-orange-500 hover:border-orange-500/50"
             >
               {t("settings.updatePassword")}
             </Button>
           </div>
         </form>
       </motion.div>
+
+      {/* Danger Zone */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.2 }}
+        className="p-8 rounded-3xl border border-red-500/20 bg-red-500/5 backdrop-blur-xl shadow-xl"
+      >
+        <h3 className="text-xl font-bold text-red-500 border-b border-red-500/20 pb-4 mb-6 flex items-center gap-3">
+          <AlertTriangle className="text-red-500" size={24} />
+          Danger Zone
+        </h3>
+
+        <div className="flex items-center justify-between">
+          <div>
+            <h4 className="text-lg font-bold text-white mb-1">
+              Delete Account
+            </h4>
+            <p className="text-gray-400 text-sm">
+              Permanently delete your account and all associated data.
+            </p>
+          </div>
+          <Button
+            variant="danger"
+            onClick={() => setIsDeleteModalOpen(true)}
+            className="shrink-0"
+          >
+            <Trash2 size={18} className="mr-2" /> Delete Account
+          </Button>
+        </div>
+      </motion.div>
+
+      <ConfirmModal
+        isOpen={isDeleteModalOpen}
+        onClose={() => setIsDeleteModalOpen(false)}
+        onConfirm={handleDeleteAccount}
+        title="Delete Account"
+        message="Are you sure you want to delete your account? This action cannot be undone."
+        confirmText="Delete Account"
+        variant="danger"
+      >
+        <div className="mt-4 flex items-start gap-3 p-3 rounded-lg bg-black/20 border border-red-500/20">
+          <input
+            type="checkbox"
+            id="deleteLibrary"
+            checked={deleteLibrary}
+            onChange={(e) => setDeleteLibrary(e.target.checked)}
+            className="mt-1 w-4 h-4 rounded border-gray-600 bg-gray-700 text-red-500 focus:ring-red-500 focus:ring-offset-gray-900"
+          />
+          <label
+            htmlFor="deleteLibrary"
+            className="text-sm text-gray-300 cursor-pointer select-none"
+          >
+            <span className="block font-medium text-white mb-1">
+              Delete my downloaded library
+            </span>
+            Also delete all music files associated with this account from the
+            server storage.
+          </label>
+        </div>
+      </ConfirmModal>
     </div>
   );
 }

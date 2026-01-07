@@ -12,6 +12,7 @@ interface ConfirmModalProps {
   confirmText?: string;
   cancelText?: string;
   variant?: "danger" | "info";
+  children?: React.ReactNode;
 }
 
 export default function ConfirmModal({
@@ -23,6 +24,7 @@ export default function ConfirmModal({
   confirmText = "Confirm",
   cancelText = "Cancel",
   variant = "danger",
+  children,
 }: ConfirmModalProps) {
   if (!isOpen) return null;
 
@@ -78,6 +80,7 @@ export default function ConfirmModal({
                       <p className="text-muted-foreground leading-relaxed">
                         {message}
                       </p>
+                      {children}
                     </div>
                     <button
                       onClick={onClose}

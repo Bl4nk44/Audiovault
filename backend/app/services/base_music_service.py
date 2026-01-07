@@ -5,6 +5,7 @@ import yt_dlp
 
 logger = logging.getLogger(__name__)
 
+
 class BaseMusicService:
     def __init__(self):
         self.source_name = "generic"
@@ -12,16 +13,18 @@ class BaseMusicService:
     def can_handle(self, url: str) -> bool:
         raise NotImplementedError("Subclasses must implement can_handle method")
 
-    async def _extract_info(self, url: str, extra_opts: Dict[str, Any] = None) -> Optional[Dict[str, Any]]:
+    async def _extract_info(
+        self, url: str, extra_opts: Dict[str, Any] = None
+    ) -> Optional[Dict[str, Any]]:
         """
         Internal helper to extract info using yt-dlp.
         """
         ydl_opts = {
-            'extract_flat': True,
-            'dump_single_json': True,
-            'quiet': True,
-            'no_warnings': True,
-            'ignoreerrors': True,
+            "extract_flat": True,
+            "dump_single_json": True,
+            "quiet": True,
+            "no_warnings": True,
+            "ignoreerrors": True,
         }
         if extra_opts:
             ydl_opts.update(extra_opts)
@@ -29,8 +32,8 @@ class BaseMusicService:
         try:
             loop = asyncio.get_running_loop()
             return await loop.run_in_executor(
-                None, 
-                lambda: yt_dlp.YoutubeDL(ydl_opts).extract_info(url, download=False)
+                None,
+                lambda: yt_dlp.YoutubeDL(ydl_opts).extract_info(url, download=False),
             )
         except Exception as e:
             logger.error(f"Error extracting metadata from {url} using yt-dlp: {e}")
@@ -45,36 +48,38 @@ class BaseMusicService:
             logger.warning(f"No info extracted from {self.source_name} URL")
             return []
 
-        entries = info.get('entries', [])
-        
+        entries = info.get("entries", [])
+
         # If it's a single track, entries might be empty but info contains the track
-        if not entries and info.get('_type') != 'playlist':
+        if not entries and info.get("_type") != "playlist":
             entries = [info]
 
         tracks = []
         for entry in entries:
             if not entry:
                 continue
-            
-            title = entry.get('title')
+
+            title = entry.get("title")
             # Fallback for artist
-            artist = entry.get('artist') or entry.get('uploader') or "Unknown Artist"
-            
+            artist = entry.get("artist") or entry.get("uploader") or "Unknown Artist"
+
             if not title:
                 continue
 
             track = {
-                "id": entry.get('id'),
+                "id": entry.get("id"),
                 "title": title,
                 "artist": artist,
-                "album": entry.get('album') or info.get('title', "Unknown Album"),
-                "duration_ms": int(entry.get('duration', 0) * 1000) if entry.get('duration') else None,
-                "image_url": entry.get('thumbnail'), 
+                "album": entry.get("album") or info.get("title", "Unknown Album"),
+                "duration_ms": int(entry.get("duration", 0) * 1000)
+                if entry.get("duration")
+                else None,
+                "image_url": entry.get("thumbnail"),
                 "source": self.source_name,
-                "source_url": entry.get('url') or entry.get('webpage_url') or url
+                "source_url": entry.get("url") or entry.get("webpage_url") or url,
             }
             tracks.append(track)
-        
+
         logger.info(f"Extracted {len(tracks)} tracks from {self.source_name}")
         return tracks
 
@@ -83,24 +88,24 @@ class BaseMusicService:
         Default implementation for extracting playlist info.
         """
         # Optimized for playlist metadata
-        info = await self._extract_info(url, {'playlist_items': '1'})
+        info = await self._extract_info(url, {"playlist_items": "1"})
 
-        if not info or info.get('_type') != 'playlist':
+        if not info or info.get("_type") != "playlist":
             return None
 
         image_url = None
-        if info.get('thumbnails'):
-            image_url = info['thumbnails'][-1]['url']
-        
-        track_count = info.get('playlist_count')
-        if not track_count and info.get('entries'):
-            track_count = len(info['entries'])
+        if info.get("thumbnails"):
+            image_url = info["thumbnails"][-1]["url"]
+
+        track_count = info.get("playlist_count")
+        if not track_count and info.get("entries"):
+            track_count = len(info["entries"])
 
         return {
-            "id": url, 
-            "title": info.get('title', "Unknown Playlist"),
+            "id": url,
+            "title": info.get("title", "Unknown Playlist"),
             "image_url": image_url,
             "source": self.source_name,
             "type": "playlist",
-            "track_count": track_count
+            "track_count": track_count,
         }
