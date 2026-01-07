@@ -1,0 +1,71 @@
+
+import pytest
+from httpx import AsyncClient
+from sqlalchemy.ext.asyncio import AsyncSession
+from app.models.user import User
+from app.core.security import get_password_hash
+from app.models.subsonic import SubsonicAuthToken
+from datetime import datetime, timedelta, timezone
+import hashlib
+
+@pytest.fixture
+async def test_user(db_session: AsyncSession):
+    user = User(
+        username="testuser",
+        email="test@example.com",
+        hashed_password=get_password_hash("testpass"),
+        is_active=True
+    )
+    db_session.add(user)
+    await db_session.commit()
+    await db_session.refresh(user)
+    return user
+
+@pytest.mark.asyncio
+async def test_ping_no_auth(client: AsyncClient):
+    response = await client.get("/rest/ping.view?u=nonexistent&p=wrong&c=test&v=1.16.1&f=json")
+    assert response.status_code == 401
+    data = response.json()
+    # FastAPI wraps error detail in "detail" key
+    sub_resp = data["detail"]["subsonic-response"]
+    assert sub_resp["status"] == "failed"
+    assert sub_resp["error"]["code"] == 40
+
+@pytest.mark.asyncio
+async def test_ping_plaintext_auth(client: AsyncClient, test_user: User):
+    response = await client.get("/rest/ping.view?u=testuser&p=testpass&c=test&v=1.16.1&f=json")
+    assert response.status_code == 200
+    data = response.json()
+    assert data["subsonic-response"]["status"] == "ok"
+
+@pytest.mark.asyncio
+async def test_ping_token_auth(client: AsyncClient, test_user: User, db_session: AsyncSession):
+    # Create a token
+    token_val = "secret_token_val"
+    salt = "somesalt"
+    auth_token = SubsonicAuthToken(
+        user_id=test_user.id,
+        token=token_val,
+        salt=salt,
+        expires_at=datetime.now(timezone.utc) + timedelta(days=1)
+    )
+    db_session.add(auth_token)
+    await db_session.commit()
+
+    # MD5(token + salt_from_request)
+    req_salt = "reqsalt"
+    token_hash = hashlib.md5(f"{token_val}{req_salt}".encode()).hexdigest()
+
+    response = await client.get(f"/rest/ping.view?u=testuser&t={token_hash}&s={req_salt}&c=test&v=1.16.1&f=json")
+    assert response.status_code == 200
+    data = response.json()
+    assert data["subsonic-response"]["status"] == "ok"
+
+@pytest.mark.asyncio
+async def test_get_token(client: AsyncClient, test_user: User):
+    response = await client.get("/rest/getToken.view?u=testuser&p=testpass&c=test&v=1.16.1&f=json")
+    assert response.status_code == 200
+    data = response.json()
+    assert data["subsonic-response"]["status"] == "ok"
+    assert "token" in data["subsonic-response"]
+    assert "salt" in data["subsonic-response"]

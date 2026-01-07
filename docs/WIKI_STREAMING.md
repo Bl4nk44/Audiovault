@@ -6,9 +6,9 @@ Audiovault implements the Subsonic API (v1.16.1), allowing you to stream your mu
 
 We recommend the following clients:
 
+- **Desktop/Linux**: [Sonixd](https://github.com/tempugh/Sonixd) (Highly Recommended), [Supersonic](https://github.com/dweymouth/supersonic), [Feishin](https://github.com/jeffvli/feishin)
 - **Android**: [Symfonium](https://symfonium.app/) (Recommended), [DSub](https://github.com/daneren2005/Subsonic-Apps)
-- **iOS**: [Amperfy](https://github.com/amperfy/amperfy), [substreamer](https://substreamerapp.com/)
-- **Web/Desktop**: [Supersonic](https://github.com/dweymouth/supersonic), [Feishin](https://github.com/jeffvli/feishin)
+- **iOS**: [Amperfy](https://github.com/amperfy/amperfy) (Verified), [substreamer](https://substreamerapp.com/)
 
 ## Connection Details
 
@@ -16,9 +16,9 @@ To connect your client to Audiovault:
 
 1.  **Server Type**: Subsonic / OpenSubsonic
 2.  **Address**:
-    - **Local**: `http://YOUR_LOCAL_IP:5173` (e.g., `http://192.168.1.100:5173`)
-    - **Tailscale**: `http://YOUR_TAILSCALE_IP:5173` (e.g., `http://100.x.x.x:5173`)
-    - _Note: Port 8000 also works if accessing backend directly._
+    - **Local**: `http://YOUR_LOCAL_IP:80` (e.g., `http://192.168.1.100`) or just `http://YOUR_LOCAL_IP`
+    - **Tailscale**: `http://YOUR_TAILSCALE_IP:80`
+    - _Note: Backend direct port is 8000, but using the main port 80 (frontend proxy) is recommended._
 3.  **Username**: Your Audiovault username (e.g., `admin`)
 4.  **Password**: Your Audiovault password
 

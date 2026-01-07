@@ -64,35 +64,85 @@ async def download_system_logs():
 async def check_for_updates():
     """
     Check for available updates on GitHub.
+    
+    Logic depends on ENVIRONMENT:
+    - production: Compare VERSION file with latest GitHub Release tag.
+    - development: Compare local git HEAD with latest commit on 'dev' branch.
     """
     import aiohttp
     from app.core.config import settings
-
-    github_url = "https://api.github.com/repos/Bl4nk44/Audiovault/releases/latest"
     
-    try:
-        async with aiohttp.ClientSession() as session:
-            async with session.get(github_url) as response:
-                if response.status == 200:
-                    data = await response.json()
-                    latest_version = data.get("tag_name", "").lstrip("v")
-                    current_version = settings.VERSION.lstrip("v")
-                    
-                    # Simple string comparison or semantic versioning check
-                    # Assuming semantic versioning (major.minor.patch)
-                    # For now, just string equality or simple inequality
-                     
-                    update_available = latest_version != current_version
-                    
-                    return {
-                        "current_version": current_version,
-                        "latest_version": latest_version,
-                        "update_available": update_available,
-                        "release_url": data.get("html_url")
-                    }
+    # 1. PRODUCTION CHECK (Releases)
+    if settings.ENVIRONMENT == "production":
+        github_url = "https://api.github.com/repos/Bl4nk44/Audiovault/releases/latest"
+        try:
+            async with aiohttp.ClientSession() as session:
+                async with session.get(github_url) as response:
+                    if response.status == 200:
+                        data = await response.json()
+                        latest_version = data.get("tag_name", "").lstrip("v")
+                        current_version = settings.VERSION.lstrip("v")
+                        
+                        update_available = latest_version != current_version
+                        
+                        return {
+                            "current_version": current_version,
+                            "latest_version": latest_version,
+                            "update_available": update_available,
+                            "release_url": data.get("html_url")
+                        }
+                    else:
+                        logger.warning(f"Failed to fetch updates from GitHub (Prod): {response.status}")
+                        return {"error": "Could not fetch updates"}
+        except Exception as e:
+             logger.error(f"Error checking for updates (Prod): {e}")
+             return {"error": str(e)}
+
+    # 2. DEVELOPMENT CHECK (Commits)
+    else:
+        # Check local git HEAD
+        git_dir = Path("/app/.git")
+        if not git_dir.exists():
+             # Fallback if .git not mounted
+             logger.warning("Development mode but .git not found. Cannot check for commit updates.")
+             return {"update_available": False, "latest_version": "Unknown (No .git)"}
+             
+        try:
+            # Read local HEAD SHA
+            head_file = git_dir / "HEAD"
+            if head_file.exists():
+                ref = head_file.read_text().strip()
+                if ref.startswith("ref:"):
+                    ref_path = git_dir / ref[5:].strip()
+                    if ref_path.exists():
+                        local_sha = ref_path.read_text().strip()
+                    else:
+                        local_sha = "unknown"
                 else:
-                    logger.warning(f"Failed to fetch updates from GitHub: {response.status}")
-                    return {"error": "Could not fetch updates"}
-    except Exception as e:
-        logger.error(f"Error checking for updates: {e}")
-        return {"error": str(e)}
+                    local_sha = ref # Detached HEAD
+            else:
+                 local_sha = "unknown"
+
+            # Check remote 'dev' branch
+            github_url = "https://api.github.com/repos/Bl4nk44/Audiovault/commits/dev"
+            async with aiohttp.ClientSession() as session:
+                async with session.get(github_url) as response:
+                    if response.status == 200:
+                        data = await response.json()
+                        remote_sha = data.get("sha")
+                        
+                        update_available = local_sha != remote_sha
+                        
+                        return {
+                            "current_version": local_sha[:7],
+                            "latest_version": remote_sha[:7],
+                            "update_available": update_available,
+                            "release_url": data.get("html_url")
+                        }
+                    else:
+                         logger.warning(f"Failed to fetch updates from GitHub (Dev): {response.status}")
+                         return {"error": "Could not fetch updates"}
+                         
+        except Exception as e:
+            logger.error(f"Error checking for updates (Dev): {e}")
+            return {"error": str(e)}

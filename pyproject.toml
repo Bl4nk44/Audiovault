@@ -14,8 +14,15 @@ commit_message = "chore(release): v{version} [skip ci]"
 [tool.ruff]
 line-length = 120
 target-version = "py312"
+
+[tool.ruff.lint]
 select = ["E", "F", "B", "I", "UP", "N", "S", "C4"]
 ignore = ["B008", "S101"]
+
+[tool.ruff.lint.per-file-ignores]
+# Subsonic API uses camelCase parameters as per API specification
+"backend/app/api/subsonic/*" = ["N803", "N815"]
+"backend/app/schemas/subsonic/*" = ["N803", "N815"]
 
 [tool.mypy]
 python_version = "3.12"

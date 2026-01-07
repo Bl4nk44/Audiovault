@@ -53,3 +53,21 @@ debug.log
 
 # TODO: Remove this line, tests should be versioned
 backend/tests/services/test_watchlist_engine.py
+
+# Helper Scripts (Local Dev)
+dev.ps1
+prod.ps1
+
+
+# Temporary Maintenance & Debug Scripts
+backend/app/backfill_genres.py
+backend/app/debug_mappers.py
+backend/app/debug_metadata.py
+backend/app/fix_filenames.py
+backend/app/import_playlists.py
+backend/app/check_query.py
+backend/app/verify_subsonic_data.py
+backend/app/backfill_metadata.py
+backend/app/fix_covers.py
+backend/app/test_genres_query.py
+backend/app/debug_genres.py

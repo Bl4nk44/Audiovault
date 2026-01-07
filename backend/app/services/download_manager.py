@@ -171,6 +171,42 @@ class DownloadManager:
         self._fix_filename_artifacts(download)
 
         logger.info(f"💾 Saving file for user '{download.user.username}' to: {download.file_path}")
+        
+        # --- UPDATE TRACK METADATA START ---
+        try:
+            if download.file_path and os.path.exists(download.file_path):
+                # Import here to avoid circular imports if possible, or move to top if safe
+                from app.services.library_scanner import library_scanner_service
+                
+                filename = os.path.basename(download.file_path)
+                title, artist, album, genre = library_scanner_service._parse_audio_metadata(
+                    download.file_path, filename
+                )
+                
+                # Update Track
+                if download.track:
+                    # Update fields if they are generic/unknown
+                    # Or overwrite? Let's overwrite as the file is the source of truth
+                    download.track.title = title
+                    download.track.artist = artist
+                    download.track.album = album
+                    
+                    # Update metadata_content
+                    meta = download.track.metadata_content or {}
+                    if genre:
+                        meta["genre"] = genre
+                    # Ensure source is generic if missing
+                    if "source" not in meta:
+                        meta["source"] = download.source
+                        
+                    download.track.metadata_content = meta
+                    db.add(download.track)
+                    logger.info(f"Updated Track metadata for {download.track.id}: {title} - {artist} [Genre: {genre}]")
+
+        except Exception as e:
+            logger.error(f"Failed to update track metadata from file: {e}")
+        # --- UPDATE TRACK METADATA END ---
+
         await db.commit()
         
         await self._notify_completion(download)
@@ -201,16 +237,34 @@ class DownloadManager:
     def _fix_filename_artifacts(self, download):
         if download.file_path and os.path.exists(download.file_path):
             directory, filename = os.path.split(download.file_path)
-            if filename.startswith("NA -"):
-                 new_filename = filename[4:].strip()
-                 if len(new_filename) > 0:
-                      new_path = os.path.join(directory, new_filename)
-                      try:
-                          os.rename(download.file_path, new_path)
-                          download.file_path = new_path
-                          logger.info(f"Renamed file to remove NA prefix: {filename} -> {new_filename}")
-                      except Exception as e:
-                          logger.warning(f"Failed to rename NA file: {e}")
+            new_filename = filename
+
+            # 1. Remove "NA - " prefix
+            if new_filename.startswith("NA -"):
+                 new_filename = new_filename[4:].strip()
+            
+            # 2. Remove "uploader｜creator - " prefix (and other variants)
+            # The user reported: "uploader｜creator - ..." (Note the distinct pipe char ｜)
+            prefixes_to_remove = [
+                "uploader｜creator - ",
+                "uploader|creator - ",
+                "uploader - ",
+                "creator - "
+            ]
+            
+            for prefix in prefixes_to_remove:
+                if new_filename.lower().startswith(prefix.lower()): # Check lower but remove from original
+                    new_filename = new_filename[len(prefix):].strip()
+            
+            # Apply rename if changed
+            if new_filename != filename and len(new_filename) > 0:
+                  new_path = os.path.join(directory, new_filename)
+                  try:
+                      os.rename(download.file_path, new_path)
+                      download.file_path = new_path
+                      logger.info(f"Renamed file to clean artifacts: {filename} -> {new_filename}")
+                  except Exception as e:
+                      logger.warning(f"Failed to rename artifact file: {e}")
 
     async def _notify_completion(self, download):
         actual_filename = os.path.basename(download.file_path) if download.file_path else f"{download.track_id}.mp3"
@@ -624,7 +678,7 @@ class DownloadManager:
             # Get all completed downloads for this playlist
             result = await db.execute(
                 select(Download)
-                .options(selectinload(Download.user))
+                .options(selectinload(Download.user), selectinload(Download.track))
                 .where(
                     Download.user_id == user_id,
                     Download.playlist_name == playlist_name,
@@ -666,7 +720,67 @@ class DownloadManager:
                              await f.write(f"#EXTINF:-1,{d.track.artist} - {d.track.title}\n")
                              await f.write(f"{d.file_path}\n")
                         
-            logger.info(f"Updated playlist {playlist_file_path}")
+            logger.info(f"Updated playlist file {playlist_file_path}")
+
+            # --- SYNC TO DB START ---
+            try:
+                from app.models.playlist import Playlist, PlaylistTrack
+                
+                # Check if playlist exists in DB
+                pl_result = await db.execute(
+                    select(Playlist).where(
+                        Playlist.owner_id == user_id,
+                        Playlist.name == playlist_name
+                    )
+                )
+                playlist = pl_result.scalar_one_or_none()
+                
+                if not playlist:
+                    playlist = Playlist(
+                        name=playlist_name,
+                        owner_id=user_id,
+                        public=False,
+                        comment=f"Auto-created from downloads"
+                    )
+                    db.add(playlist)
+                    await db.flush() # Get ID
+                    logger.info(f"Created new DB playlist: {playlist_name}")
+
+                # Sync tracks
+                # Clear existing tracks to full sync (simplest approach for now)
+                # Ideally we'd optimize this but for <1000 tracks it's fine
+                
+                # Correct deletion:
+                from sqlalchemy import delete
+                await db.execute(
+                    delete(PlaylistTrack).where(PlaylistTrack.playlist_id == playlist.id)
+                )
+                
+                # Add current tracks
+                for idx, d in enumerate(downloads):
+                    if d.track_id:
+                        # Ensure track exists in Tracks table - logic relies on Download having valid track_id that points to Track
+                        # Download.track_id is string, Track.id is UUID. 
+                        # We need to make sure we are linking correctly.
+                        # The Download model tracks `track_id` as String but often it matches `Track.id` if we inserted it that way.
+                        # Wait, `Download.track_id` might be the PROVIDER ID (Youtube ID).
+                        # Let's check `d.track` relationship. 
+                        # Download.track is relationship to Track model.
+                        if d.track:
+                             pt = PlaylistTrack(
+                                 playlist_id=playlist.id,
+                                 track_id=d.track.id,
+                                 order=idx
+                             )
+                             db.add(pt)
+                
+                await db.commit()
+                logger.info(f"Synced playlist '{playlist_name}' to DB with {len(downloads)} tracks")
+                
+            except Exception as e_db:
+                logger.error(f"Failed to sync playlist to DB: {e_db}")
+                # Don't fail the whole operation if DB sync fails, but log it
+            # --- SYNC TO DB END ---
             
         except Exception as e:
             logger.error(f"Failed to update playlist m3u: {e}")

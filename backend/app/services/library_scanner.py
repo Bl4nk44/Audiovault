@@ -44,10 +44,11 @@ class LibraryScannerService:
 
     def _parse_audio_metadata(
         self, full_path: str, filename: str
-    ) -> tuple[str, str, str]:
+    ) -> tuple[str, str, str, str]:
         title = os.path.splitext(filename)[0]
         artist = "Unknown Artist"
         album = "Unknown Album"
+        genre = None
 
         try:
             audio = EasyID3(full_path)
@@ -57,16 +58,25 @@ class LibraryScannerService:
                 artist = audio["artist"][0]
             if "album" in audio:
                 album = audio["album"][0]
+            if "genre" in audio:
+                genre = audio["genre"][0]
         except Exception:
             try:
                 m = mutagen.File(full_path)
-                if m and "TIT2" in m:
-                    title = str(m["TIT2"])
-                if m and "TPE1" in m:
-                    artist = str(m["TPE1"])
+                if m:
+                    if "TIT2" in m:
+                        title = str(m["TIT2"])
+                    if "TPE1" in m:
+                        artist = str(m["TPE1"])
+                    if "TALB" in m:
+                        # Extract Album from ID3v2
+                        album = str(m["TALB"])
+                    if "TCON" in m:
+                        # Extract Genre from ID3v2
+                        genre = str(m["TCON"])
             except Exception as e:
                 logger.debug(f"Mutagen fallback failed for {filename}: {e}")
-        return title, artist, album
+        return title, artist, album, genre
 
     def _infer_source_info(self, full_path: str, root_dir: str) -> tuple[str, str]:
         source = "local_import"
@@ -134,10 +144,14 @@ class LibraryScannerService:
                     continue
 
                 try:
-                    title, artist, album = self._parse_audio_metadata(
+                    title, artist, album, genre = self._parse_audio_metadata(
                         full_path, filename
                     )
                     source, playlist_name = self._infer_source_info(full_path, root_dir)
+
+                    metadata = {"source": source, "imported": True}
+                    if genre:
+                        metadata["genre"] = genre
 
                     new_track = Track(
                         title=title,
@@ -146,7 +160,7 @@ class LibraryScannerService:
                         filename=filename,
                         duration_ms=0,
                         source_id=f"local:{filename}",
-                        metadata_content={"source": source, "imported": True},
+                        metadata_content=metadata,
                     )
                     db.add(new_track)
                     await db.flush()
