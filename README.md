@@ -53,18 +53,6 @@ Never miss a track. If a download fails (e.g., due to geo-restrictions or broken
 - **Smart De-duplication**: Prevents duplicate downloads by checking both ID3 tags and internal database history
 - **Universal Search**: Unified search bar for all supported providers
 
-<<<<<<< HEAD
-### Personal Streaming Server
-
-Turn Audiovault into your personal Spotify.
-
-- **Subsonic API Support**: Native implementation of the Subsonic API (v1.16.1)
-- **Mobile Apps**: Stream your library to your phone using **Symfonium**, **Amperfy**, **DSub**, or any Subsonic-compatible player
-- **Remote Access**: Works seamlessly with **Tailscale** for secure remote streaming without port forwarding
-- **Legacy Auth**: **REQUIRED** for most clients. Enable "Legacy Authentication" or "Use plaintext password" in your app settings (Amperfy, Symfonium).
-
-=======
->>>>>>> temp/release-prep
 ### Redesigned Library
 
 - **Hierarchical View**: Browse by **Service → Playlist → Tracks**
