@@ -53,16 +53,10 @@ docker compose ps
 4. Go to **Download**
 5. Search for a track and download!
 
-## 📱 Stream to Phone
-
-1. In **Settings**, enable Subsonic API
-2. Download **Symfonium**, **Amperfy**, or **DSub** (Subsonic clients)
-3. Add server: `http://YOUR_IP:8000`
-4. Stream your music!
-
 ## 🆘 Troubleshooting
 
 **Can't access?**
+
 ```bash
 # Check logs
 docker compose logs backend
@@ -72,12 +66,14 @@ docker compose restart
 ```
 
 **Password issues?**
+
 ```bash
 # Get generated password
 docker compose logs backend | grep "Initial"
 ```
 
 **Free up space?**
+
 ```bash
 # Stop and remove everything
 docker compose down

@@ -2,15 +2,14 @@ import redis.asyncio as redis
 from app.core.config import settings
 from typing import Optional
 
+
 class CacheManager:
     def __init__(self):
         self.redis: Optional[redis.Redis] = None
 
     async def connect(self):
         self.redis = redis.from_url(
-            settings.REDIS_URL, 
-            encoding="utf-8", 
-            decode_responses=True
+            settings.REDIS_URL, encoding="utf-8", decode_responses=True
         )
 
     async def close(self):
@@ -26,5 +25,6 @@ class CacheManager:
         if not self.redis:
             await self.connect()
         await self.redis.set(key, value, ex=expire)
+
 
 cache_manager = CacheManager()

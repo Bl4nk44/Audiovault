@@ -3,6 +3,7 @@ from typing import Optional, Dict, Any
 from uuid import UUID
 from datetime import datetime
 
+
 class ArtistBase(BaseModel):
     name: str
     bio: Optional[str] = None
@@ -10,8 +11,10 @@ class ArtistBase(BaseModel):
     deezer_id: Optional[str] = None
     images: Optional[Dict[str, Any]] = {}
 
+
 class ArtistCreate(ArtistBase):
     pass
+
 
 class ArtistResponse(ArtistBase):
     id: UUID
@@ -21,10 +24,12 @@ class ArtistResponse(ArtistBase):
     class Config:
         from_attributes = True
 
+
 class AlbumBase(BaseModel):
     title: str
     release_date: Optional[datetime] = None
     images: Optional[Dict[str, Any]] = {}
+
 
 class AlbumResponse(AlbumBase):
     id: UUID

@@ -4,9 +4,11 @@ from logging.handlers import TimedRotatingFileHandler
 from pathlib import Path
 from app.core.config import settings
 
+
 class HealthCheckFilter(logging.Filter):
     def filter(self, record):
         return record.getMessage().find("/health") == -1
+
 
 def setup_logging():
     # Define logs directory
@@ -17,7 +19,7 @@ def setup_logging():
 
     logger = logging.getLogger("uvicorn.access")
     logger.addFilter(HealthCheckFilter())
-    
+
     # Root logger configuration
     handlers = [
         logging.StreamHandler(sys.stdout),
@@ -26,19 +28,19 @@ def setup_logging():
             when="midnight",
             interval=1,
             backupCount=7,
-            encoding="utf-8"
-        )
+            encoding="utf-8",
+        ),
     ]
 
     logging.basicConfig(
         level=settings.LOG_LEVEL,
         format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
         handlers=handlers,
-        force=True
+        force=True,
     )
-    
+
     # Silence some noisy libraries
     logging.getLogger("passlib").setLevel(logging.ERROR)
-    
+
     main_logger = logging.getLogger("app")
     main_logger.info(f"Logging setup complete. Logs writing to: {LOG_FILE}")

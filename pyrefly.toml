@@ -1,0 +1,5 @@
+[tool.pyrefly]
+python-version = "3.12"
+import-roots = ["backend"]
+project-includes = ["backend", "debug_subsonic.py"]
+project-excludes = ["**/__pycache__", "**/.venv", "**/.git", "frontend", "docs"]

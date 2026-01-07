@@ -10,56 +10,56 @@ import uuid
 
 logger = logging.getLogger(__name__)
 
+
 class LibraryMaintenanceService:
-    
     async def fix_legacy_data(self, db: AsyncSession) -> int:
         """Fix missing source/playlist info based on track metadata or heuristics."""
         # Fix Source
         result = await db.execute(
-            select(Download)
-            .where(
-                (Download.source.is_(None)) | 
-                (Download.source == "") | 
-                (Download.source == "other")
+            select(Download).where(
+                (Download.source.is_(None))
+                | (Download.source == "")
+                | (Download.source == "other")
             )
         )
         downloads = result.scalars().all()
         fixed_source_count = 0
-        
+
         for d in downloads:
-            new_source = "youtube" 
-            
+            new_source = "youtube"
+
             if d.track:
-                if d.track.metadata_content and d.track.metadata_content.get('source'):
-                    new_source = d.track.metadata_content.get('source').lower()
+                if d.track.metadata_content and d.track.metadata_content.get("source"):
+                    new_source = d.track.metadata_content.get("source").lower()
                 elif d.track.spotify_id:
-                    new_source = 'spotify'
+                    new_source = "spotify"
                 elif d.track.deezer_id:
-                    new_source = 'deezer'
+                    new_source = "deezer"
                 elif d.track.youtube_id:
-                    new_source = 'youtube'
-                elif d.track.metadata_content and d.track.metadata_content.get('apple_music_id'):
-                    new_source = 'apple_music'
-            
+                    new_source = "youtube"
+                elif d.track.metadata_content and d.track.metadata_content.get(
+                    "apple_music_id"
+                ):
+                    new_source = "apple_music"
+
             if d.source != new_source:
-                 d.source = new_source
-                 fixed_source_count += 1
-        
+                d.source = new_source
+                fixed_source_count += 1
+
         if fixed_source_count > 0:
             await db.commit()
-            
+
         return fixed_source_count
 
     async def rescan_library_integrity(self, db: AsyncSession, user_id: str) -> int:
         """Check for missing files and re-queue them."""
         result = await db.execute(
             select(Download).where(
-                Download.user_id == user_id,
-                Download.status == 'completed'
+                Download.user_id == user_id, Download.status == "completed"
             )
         )
         downloads = result.scalars().all()
-        
+
         requeued_ids = []
         for download in downloads:
             file_missing = False
@@ -68,28 +68,30 @@ class LibraryMaintenanceService:
                     file_missing = True
             else:
                 file_missing = True
-                
+
             if file_missing:
                 # Reset to pending
-                download.status = 'pending'
+                download.status = "pending"
                 download.progress = 0
                 download.error_message = None
                 download.file_path = None
                 requeued_ids.append(download.id)
-                
+
         if requeued_ids:
             await db.commit()
             for d_id in requeued_ids:
                 await download_manager.queue.put(d_id)
             await download_manager.start_worker()
-            
+
         return len(requeued_ids)
 
     async def clear_history(self, db: AsyncSession, user_id: str):
         """Archive all completed downloads."""
         # Auto-migration check (safe-guard)
         try:
-            await db.execute(text("ALTER TABLE downloads ADD COLUMN archived BOOLEAN DEFAULT 0"))
+            await db.execute(
+                text("ALTER TABLE downloads ADD COLUMN archived BOOLEAN DEFAULT 0")
+            )
             await db.commit()
         except Exception:
             await db.rollback()
@@ -98,30 +100,35 @@ class LibraryMaintenanceService:
             update(Download)
             .where(
                 Download.user_id == user_id,
-                Download.status.in_(['completed', 'failed', 'cancelled', 'error'])
+                Download.status.in_(["completed", "failed", "cancelled", "error"]),
             )
             .values(archived=True)
         )
         await db.execute(stmt)
         await db.commit()
 
-
-    async def update_download_item(self, db: AsyncSession, user_id: str, download_id: str, updates: dict):
+    async def update_download_item(
+        self, db: AsyncSession, user_id: str, download_id: str, updates: dict
+    ):
         try:
             u_uuid = uuid.UUID(str(user_id))
             d_uuid = uuid.UUID(str(download_id))
         except ValueError:
             raise ValueError("Invalid UUID format")
 
-        result = await db.execute(select(Download).options(joinedload(Download.track)).where(Download.id == d_uuid, Download.user_id == u_uuid))
+        result = await db.execute(
+            select(Download)
+            .options(joinedload(Download.track))
+            .where(Download.id == d_uuid, Download.user_id == u_uuid)
+        )
         download = result.scalar_one_or_none()
-        
+
         if not download:
             raise ValueError("Item not found")
-            
+
         # Handle filename rename
-        if 'filename' in updates:
-            new_filename = updates['filename']
+        if "filename" in updates:
+            new_filename = updates["filename"]
             if download.file_path and os.path.exists(download.file_path):
                 dir_path = os.path.dirname(download.file_path)
                 new_path = os.path.join(dir_path, new_filename)
@@ -130,16 +137,17 @@ class LibraryMaintenanceService:
                     download.file_path = new_path
                 except Exception as e:
                     raise ValueError(f"Failed to rename file: {e}")
-        
+
         # Handle metadata updates (title, artist)
-        if 'title' in updates:
-            download.track.title = updates['title']
-        if 'artist' in updates:
-            download.track.artist = updates['artist']
-        if 'album' in updates:
-            download.track.album = updates['album']
-            
+        if "title" in updates:
+            download.track.title = updates["title"]
+        if "artist" in updates:
+            download.track.artist = updates["artist"]
+        if "album" in updates:
+            download.track.album = updates["album"]
+
         await db.commit()
         return True
+
 
 library_maintenance_service = LibraryMaintenanceService()

@@ -10,17 +10,17 @@ from uuid import UUID
 
 router = APIRouter()
 
+
 class HistoryRecord(BaseModel):
     track_id: UUID
     duration_played: int
-
 
 
 @router.post("/record")
 async def record_history(
     record: HistoryRecord,
     current_user: User = Depends(get_current_active_user),
-    db: AsyncSession = Depends(get_db)
+    db: AsyncSession = Depends(get_db),
 ):
     # Verify track exists
     track = await db.get(Track, record.track_id)
@@ -30,10 +30,8 @@ async def record_history(
     history_entry = ListeningHistory(
         user_id=current_user.id,
         track_id=record.track_id,
-        duration_played=record.duration_played
+        duration_played=record.duration_played,
     )
     db.add(history_entry)
     await db.commit()
     return {"status": "success"}
-
-

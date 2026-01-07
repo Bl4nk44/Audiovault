@@ -5,12 +5,13 @@ from app.models.user import User
 
 router = APIRouter()
 
+
 @router.get("/search")
 async def search_apple_music(
-    q: str, 
+    q: str,
     limit: int = 20,
     offset: int = 0,
-    current_user: User = Depends(get_current_active_user)
+    current_user: User = Depends(get_current_active_user),
 ):
     # Apple Music Service currently only supports URL extraction via yt-dlp
     if "music.apple.com" in q:
@@ -19,7 +20,7 @@ async def search_apple_music(
             playlist_info = await apple_music_service.get_playlist_info(q)
             if playlist_info:
                 return [playlist_info]
-        
+
         # Fallback to returning tracks
         return await apple_music_service.get_tracks(q)
     return []

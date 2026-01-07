@@ -10,6 +10,7 @@ from typing import Optional
 
 router = APIRouter()
 
+
 class SettingsUpdate(BaseModel):
     spotifyClientId: Optional[str] = None
     spotifyClientSecret: Optional[str] = None
@@ -26,24 +27,25 @@ class VerifySpotify(BaseModel):
     clientId: str
     clientSecret: str
 
+
 class VerifyYouTube(BaseModel):
     apiKey: str
+
 
 @router.post("/verify/spotify")
 async def verify_spotify(creds: VerifySpotify):
     import spotipy
     from spotipy.oauth2 import SpotifyClientCredentials
     import asyncio
-    
+
     def _check_spotify():
         client = spotipy.Spotify(
             auth_manager=SpotifyClientCredentials(
-                client_id=creds.clientId,
-                client_secret=creds.clientSecret
+                client_id=creds.clientId, client_secret=creds.clientSecret
             )
         )
-        client.search(q='test', limit=1)
-    
+        client.search(q="test", limit=1)
+
     try:
         loop = asyncio.get_event_loop()
         await loop.run_in_executor(None, _check_spotify)
@@ -51,15 +53,17 @@ async def verify_spotify(creds: VerifySpotify):
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
 
+
 @router.post("/verify/youtube")
 async def verify_youtube(creds: VerifyYouTube):
     import httpx
+
     try:
         # Simple test request to YouTube Data API
         url = f"https://www.googleapis.com/youtube/v3/search?part=snippet&q=test&key={creds.apiKey}&maxResults=1"
         async with httpx.AsyncClient() as client:
             response = await client.get(url)
-            
+
         if response.status_code == 200:
             return {"status": "valid"}
         else:
@@ -67,94 +71,112 @@ async def verify_youtube(creds: VerifyYouTube):
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
 
+
 @router.get("/")
 async def get_settings(
     current_user: User = Depends(get_current_active_user),
-    db: AsyncSession = Depends(get_db)
+    db: AsyncSession = Depends(get_db),
 ):
     # Get credentials
-    stmt = select(ServiceCredentials).where(ServiceCredentials.user_id == current_user.id)
+    stmt = select(ServiceCredentials).where(
+        ServiceCredentials.user_id == current_user.id
+    )
     result = await db.execute(stmt)
     credentials = result.scalars().all()
-    
+
     creds_map = {c.service: c for c in credentials}
-    
-    spotify_creds = creds_map.get('spotify')
-    youtube_creds = creds_map.get('youtube')
-    
+
+    spotify_creds = creds_map.get("spotify")
+    youtube_creds = creds_map.get("youtube")
+
     return {
-        "spotifyClientId": spotify_creds.extra_data.get('client_id', '') if spotify_creds else '',
-        "spotifyClientSecret": spotify_creds.extra_data.get('client_secret', '') if spotify_creds else '',
-        "youtubeApiKey": youtube_creds.extra_data.get('api_key', '') if youtube_creds else '',
-        "downloadPath": current_user.preferences.get('download_path', '/downloads'),
-        "maxParallelDownloads": current_user.preferences.get('max_parallel_downloads', 3),
-        "theme": current_user.preferences.get('theme', 'dark'),
-        "language": current_user.preferences.get('language', 'en'),
-        "filenameSchema": current_user.preferences.get('filename_schema', '{artist} - {title}'),
-        "audioQuality": current_user.preferences.get('audio_quality', 'high')
+        "spotifyClientId": spotify_creds.extra_data.get("client_id", "")
+        if spotify_creds
+        else "",
+        "spotifyClientSecret": spotify_creds.extra_data.get("client_secret", "")
+        if spotify_creds
+        else "",
+        "youtubeApiKey": youtube_creds.extra_data.get("api_key", "")
+        if youtube_creds
+        else "",
+        "downloadPath": current_user.preferences.get("download_path", "/downloads"),
+        "maxParallelDownloads": current_user.preferences.get(
+            "max_parallel_downloads", 3
+        ),
+        "theme": current_user.preferences.get("theme", "dark"),
+        "language": current_user.preferences.get("language", "en"),
+        "filenameSchema": current_user.preferences.get(
+            "filename_schema", "{artist} - {title}"
+        ),
+        "audioQuality": current_user.preferences.get("audio_quality", "high"),
     }
+
 
 @router.post("/")
 async def update_settings(
     settings: SettingsUpdate,
     current_user: User = Depends(get_current_active_user),
-    db: AsyncSession = Depends(get_db)
+    db: AsyncSession = Depends(get_db),
 ):
     _update_user_preferences(current_user, settings)
-    
-    await _update_service_credentials(db, current_user, 'spotify', {
-        'client_id': settings.spotifyClientId,
-        'client_secret': settings.spotifyClientSecret
-    })
-    
-    await _update_service_credentials(db, current_user, 'youtube', {
-        'api_key': settings.youtubeApiKey
-    })
+
+    await _update_service_credentials(
+        db,
+        current_user,
+        "spotify",
+        {
+            "client_id": settings.spotifyClientId,
+            "client_secret": settings.spotifyClientSecret,
+        },
+    )
+
+    await _update_service_credentials(
+        db, current_user, "youtube", {"api_key": settings.youtubeApiKey}
+    )
 
     await db.commit()
     return {"status": "success"}
 
+
 def _update_user_preferences(user: User, settings: SettingsUpdate):
     current_prefs = dict(user.preferences) if user.preferences else {}
     mapping = {
-        'download_path': settings.downloadPath,
-        'max_parallel_downloads': settings.maxParallelDownloads,
-        'theme': settings.theme,
-        'language': settings.language,
-        'filename_schema': settings.filenameSchema,
-        'audio_quality': settings.audioQuality
+        "download_path": settings.downloadPath,
+        "max_parallel_downloads": settings.maxParallelDownloads,
+        "theme": settings.theme,
+        "language": settings.language,
+        "filename_schema": settings.filenameSchema,
+        "audio_quality": settings.audioQuality,
     }
-    
+
     updated = False
     for key, value in mapping.items():
         if value is not None:
             current_prefs[key] = value
             updated = True
-            
+
     if updated:
         user.preferences = current_prefs
 
-async def _update_service_credentials(db: AsyncSession, user: User, service: str, updates: dict):
+
+async def _update_service_credentials(
+    db: AsyncSession, user: User, service: str, updates: dict
+):
     # Filter out None values
     valid_updates = {k: v for k, v in updates.items() if v is not None}
     if not valid_updates:
         return
 
     stmt = select(ServiceCredentials).where(
-        ServiceCredentials.user_id == user.id,
-        ServiceCredentials.service == service
+        ServiceCredentials.user_id == user.id, ServiceCredentials.service == service
     )
     result = await db.execute(stmt)
     creds = result.scalars().first()
-    
+
     if not creds:
-        creds = ServiceCredentials(
-            user_id=user.id,
-            service=service,
-            extra_data={}
-        )
+        creds = ServiceCredentials(user_id=user.id, service=service, extra_data={})
         db.add(creds)
-    
+
     extra_data = dict(creds.extra_data) if creds.extra_data else {}
     extra_data.update(valid_updates)
     creds.extra_data = extra_data
