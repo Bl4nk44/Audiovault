@@ -202,19 +202,3 @@ Distributed under the MIT License. See [LICENSE](LICENSE) for more information.
 - **[SQLAlchemy](https://www.sqlalchemy.org/)** - Python SQL toolkit
 
 
-<<<<<<< HEAD
-=======
-- **Current Version**: v1.1.0
-- **Status**: Active Development
-- **Latest Release**: [v1.1.0](https://github.com/Bl4nk44/Audiovault/releases/tag/v1.1.0) (Jan 5, 2026)
-
----
-
-<div align="center">
-
-**[🔝 Back to top](#audiovault)**
-
-Made with ❤️ by [Bl4nk44](https://github.com/Bl4nk44)
-
-</div>
->>>>>>> temp/release-prep
