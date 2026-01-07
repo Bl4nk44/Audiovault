@@ -210,3 +210,5 @@ Distributed under the MIT License. See [LICENSE](LICENSE) for more information.
 - **[React](https://react.dev/)** - JavaScript library for building UIs
 - **[TailwindCSS](https://tailwindcss.com/)** - Utility-first CSS framework
 - **[SQLAlchemy](https://www.sqlalchemy.org/)** - Python SQL toolkit
+
+
