@@ -1,11 +1,9 @@
 # Build Stage
-FROM node:22-alpine as build
+FROM node:22-alpine AS build
 
 WORKDIR /app
 
 COPY package*.json ./
-# Clean install for reproducible builds
-COPY VERSION /VERSION
 
 COPY frontend/package*.json ./
 RUN npm ci
@@ -14,7 +12,7 @@ COPY frontend/ .
 RUN npm run build
 
 # Production Stage
-FROM nginx:alpine as production
+FROM nginx:alpine AS production
 
 # Copy built assets from builder
 COPY --from=build /app/dist /usr/share/nginx/html
