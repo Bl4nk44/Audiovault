@@ -1,4 +1,4 @@
-import { Home, Search, Music, Download, Settings, Menu } from "lucide-react";
+import { Home, Search, Music, Download, Settings } from "lucide-react";
 import { NavLink } from "react-router-dom";
 import { cn } from "../../lib/utils";
 import { motion } from "framer-motion";
