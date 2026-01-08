@@ -33,7 +33,7 @@ services:
     container_name: audiovault-frontend
     restart: unless-stopped
     ports:
-      - "80:80"
+      - "2137:80"
     depends_on:
       - backend
     networks:
