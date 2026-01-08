@@ -40,14 +40,14 @@ docker compose ps
 
 ## Step 4: Access
 
-1. **Web Interface**: http://localhost:3000
+1. **Web Interface**: http://localhost:2137
 2. **API Docs**: http://localhost:8000/docs
 3. **Email**: `admin@example.com`
 4. **Password**: Check with: `docker compose logs backend | grep "password"`
 
 ## 🎵 First Download
 
-1. Login to http://localhost:3000
+1. Login to http://localhost:2137
 2. Go to **Services** section
 3. Add your Spotify/YouTube/other service (see [Configuration Guide](https://github.com/Bl4nk44/Audiovault/wiki/Configuration))
 4. Go to **Download**
@@ -57,12 +57,12 @@ docker compose ps
 
 1.  In **Settings**, enable Subsonic API
 2.  Download **Sonixd** (Desktop/Linux), **Symfonium** (Android), or **Amperfy** (iOS)
-3.  Add server: `http://YOUR_IP:80` (or leave port blank for default 80)
-    - If connecting locally: `http://localhost:80`
+3.  Add server: `http://YOUR_IP:2137`
+    - If connecting locally: `http://localhost:2137`
 4.  **IMPORTANT**: Enable "Legacy Auth" / "Use plaintext password" in app settings
 5.  Stream your music!
 
-## 🆘 Troubleshooting
+## 🎆 Troubleshooting
 
 **Can't access?**
 
