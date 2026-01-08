@@ -123,8 +123,8 @@ The recommended way to run Audiovault is via **Docker**.
    docker compose up -d --build
    ```
 
+   - **Frontend**: `http://localhost:2137`
    - **Backend API**: `http://localhost:8000/docs`
-   - **Frontend**: `http://localhost:3000`
 
    > **Note:** On first launch, a random admin password will be generated and printed to the container logs (`docker compose logs backend`).
    > To set a custom password, add `FIRST_SUPERUSER_PASSWORD=yourpassword` to your `.env` file before starting.
@@ -210,5 +210,3 @@ Distributed under the MIT License. See [LICENSE](LICENSE) for more information.
 - **[React](https://react.dev/)** - JavaScript library for building UIs
 - **[TailwindCSS](https://tailwindcss.com/)** - Utility-first CSS framework
 - **[SQLAlchemy](https://www.sqlalchemy.org/)** - Python SQL toolkit
-
-
