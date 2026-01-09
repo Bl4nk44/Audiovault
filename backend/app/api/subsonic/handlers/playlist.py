@@ -35,6 +35,7 @@ router = APIRouter()
 @router.post("/getPlaylists.view")
 async def get_playlists(
     username: str = Query(None, description="Get playlists for specific user"),
+    f: str = "xml",
     current_user: User = Depends(subsonic_auth),
     db: AsyncSession = Depends(get_db),
 ):
@@ -92,20 +93,21 @@ async def get_playlists(
             "duration": format_duration(total_duration),
             "created": format_subsonic_date(pl.created_at),
             "changed": format_subsonic_date(pl.updated_at),
-            "coverArt": None,  # Could get first track's cover
+            "coverArt": f"pl-{pl.id}",  # Use new pl- supported prefix
         })
     
     return subsonic_response({
         "playlists": {
             "playlist": playlist_list
         }
-    })
+    }, f=f)
 
 
 @router.get("/getPlaylist.view")
 @router.post("/getPlaylist.view")
 async def get_playlist(
     id: str = Query(..., description="Playlist ID"),
+    f: str = "xml",
     current_user: User = Depends(subsonic_auth),
     db: AsyncSession = Depends(get_db),
 ):
@@ -134,7 +136,7 @@ async def get_playlist(
     
     # Check access
     if playlist.owner_id != current_user.id and not playlist.public:
-        return subsonic_error(50, "Access denied")
+        return subsonic_error(50, "Access denied", f=f)
     
     # Get tracks with downloads
     result = await db.execute(
@@ -178,7 +180,7 @@ async def get_playlist(
             "changed": format_subsonic_date(playlist.updated_at),
             "entry": song_list,
         }
-    })
+    }, f=f)
 
 
 @router.get("/createPlaylist.view")
@@ -187,6 +189,7 @@ async def create_playlist(
     playlistId: str = Query(None, description="Playlist ID (for update)"),
     name: str = Query(None, description="Playlist name"),
     songId: list[str] = Query(None, description="Song IDs to add"),
+    f: str = "xml",
     current_user: User = Depends(subsonic_auth),
     db: AsyncSession = Depends(get_db),
 ):
@@ -209,7 +212,7 @@ async def create_playlist(
         try:
             playlist_id = UUID(playlistId)
         except ValueError:
-            return subsonic_error(10, "Invalid playlist ID")
+            return subsonic_error(10, "Invalid playlist ID", f=f)
         
         result = await db.execute(
             select(Playlist).where(Playlist.id == playlist_id)
@@ -217,10 +220,10 @@ async def create_playlist(
         playlist = result.scalar_one_or_none()
         
         if not playlist:
-            return subsonic_error(70, "Playlist not found")
+            return subsonic_error(70, "Playlist not found", f=f)
         
         if playlist.owner_id != current_user.id:
-            return subsonic_error(50, "Access denied")
+            return subsonic_error(50, "Access denied", f=f)
         
         # Update name if provided
         if name:
@@ -252,7 +255,7 @@ async def create_playlist(
     else:
         # Create new playlist
         if not name:
-            return subsonic_error(10, "Playlist name is required")
+            return subsonic_error(10, "Playlist name is required", f=f)
         
         playlist = Playlist(
             name=name,
@@ -279,7 +282,7 @@ async def create_playlist(
         await db.commit()
     
     # Return created/updated playlist
-    return await get_playlist(id=str(playlist.id), current_user=current_user, db=db)
+    return await get_playlist(id=str(playlist.id), f=f, current_user=current_user, db=db)
 
 
 @router.get("/updatePlaylist.view")
@@ -291,6 +294,7 @@ async def update_playlist(
     public: bool = Query(None, description="Public flag"),
     songIdToAdd: list[str] = Query(None, description="Songs to add"),
     songIndexToRemove: list[int] = Query(None, description="Song indices to remove"),
+    f: str = "xml",
     current_user: User = Depends(subsonic_auth),
     db: AsyncSession = Depends(get_db),
 ):
@@ -311,7 +315,7 @@ async def update_playlist(
     try:
         playlist_id = UUID(playlistId)
     except ValueError:
-        return subsonic_error(10, "Invalid playlist ID")
+        return subsonic_error(10, "Invalid playlist ID", f=f)
     
     # Get playlist
     result = await db.execute(
@@ -390,6 +394,7 @@ async def update_playlist(
 @router.post("/deletePlaylist.view")
 async def delete_playlist(
     id: str = Query(..., description="Playlist ID"),
+    f: str = "xml",
     current_user: User = Depends(subsonic_auth),
     db: AsyncSession = Depends(get_db),
 ):

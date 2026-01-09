@@ -184,20 +184,41 @@ def build_song_response(
     }
     
     # Optional fields
+    # Optional fields
     if track.artist_id:
         song["artistId"] = str(track.artist_id)
     
+    # -- Album & Cover Art --
     if track.album_id:
         song["albumId"] = str(track.album_id)
         song["coverArt"] = f"al-{track.album_id}"
     elif metadata.get("image_url"):
         song["coverArt"] = str(track.id)
-    
+
+    # -- Parent (Mandatory) --
+    if track.album_id:
+        song["parent"] = str(track.album_id)
+    elif track.artist_id:
+        song["parent"] = str(track.artist_id)
+    else:
+        song["parent"] = "root"
+
     if metadata.get("genre"):
         song["genre"] = metadata["genre"]
     
     if metadata.get("year"):
-        song["year"] = metadata["year"]
+        # Subsonic expects integer year
+        try:
+            song["year"] = int(metadata["year"])
+        except (ValueError, TypeError):
+            song["year"] = metadata["year"]
+            
+    if metadata.get("track"):
+        # Subsonic expects integer track number
+        try:
+            song["track"] = int(metadata["track"])
+        except (ValueError, TypeError):
+            pass
     
     if track.isrc:
         song["musicBrainzId"] = track.isrc  # Not exact but useful
@@ -205,12 +226,30 @@ def build_song_response(
     # File info from download
     if download:
         song["suffix"] = download.file_path.split(".")[-1] if download.file_path else "mp3"
-        song["size"] = download.file_size or 0
+        
+        # Get file size - fallback to reading from disk if DB has 0
+        file_size = download.file_size or 0
+        if file_size == 0 and download.file_path:
+            import os
+            try:
+                if os.path.exists(download.file_path):
+                    file_size = os.path.getsize(download.file_path)
+            except (OSError, IOError):
+                pass
+        song["size"] = file_size
+        
         song["bitRate"] = 320  # Default, could be detected
         song["contentType"] = get_content_type(download.file_path) if download.file_path else "audio/mpeg"
         
         if include_path:
             song["path"] = download.file_path
+    else:
+        # Default values if not downloaded (so it appears in list)
+        song["suffix"] = "mp3"
+        song["size"] = 0
+        song["bitRate"] = 128
+        song["contentType"] = "audio/mpeg"
+        song["path"] = ""  # Explicit empty path
     
     return song
 

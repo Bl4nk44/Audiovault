@@ -1,10 +1,9 @@
 
 from app.api.subsonic.auth import subsonic_auth
-from app.api.subsonic.utils import build_song_response
 from app.db.database import get_db
 from app.models.track import Track
 from app.models.user import User
-from app.schemas.subsonic.base import subsonic_error, subsonic_response
+from app.schemas.subsonic.base import subsonic_response
 from fastapi import APIRouter, Depends, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 from uuid import UUID
@@ -17,6 +16,7 @@ async def get_lyrics(
     artist: str = Query(None),
     title: str = Query(None),
     id: str = Query(None, description="Song ID"), # Subsonic spec says 'id' is optional if artist/title provided
+    f: str = "xml",
     current_user: User = Depends(subsonic_auth),
     db: AsyncSession = Depends(get_db),
 ):
@@ -27,7 +27,7 @@ async def get_lyrics(
     if id:
         try:
              track = await db.get(Track, UUID(id))
-        except:
+        except Exception:
              pass
     
     # If no track found by ID, could search by artist/title? 
@@ -45,11 +45,11 @@ async def get_lyrics(
         # Let's return empty structure.
         return subsonic_response({
             "lyrics": {
-                "artist": artist or (track.artist if track else ""),
-                "title": title or (track.title if track else ""),
+                "artist": artist if artist else (track.artist if track else ""),
+                "title": title if title else (track.title if track else ""),
                 "content": "Lyrics not available." 
             }
-        })
+        }, f=f)
         
     return subsonic_response({
         "lyrics": {
@@ -57,4 +57,4 @@ async def get_lyrics(
             "title": track.title,
             "content": lyrics
         }
-    })
+    }, f=f)

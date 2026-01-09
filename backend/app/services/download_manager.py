@@ -7,7 +7,6 @@ import aiofiles
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 from sqlalchemy.orm import selectinload
-from sqlalchemy import update
 from app.models.download import Download
 from app.models.track import Track
 from app.db.database import AsyncSessionLocal
@@ -19,7 +18,6 @@ from app.services.fallback_service import fallback_service
 from app.services.socket_manager import socket_manager
 from app.core.cache import cache_manager
 from app.utils.sanitization import sanitize_filename
-import json
 
 logger = logging.getLogger(__name__)
 
@@ -171,6 +169,14 @@ class DownloadManager:
         self._fix_filename_artifacts(download)
 
         logger.info(f"💾 Saving file for user '{download.user.username}' to: {download.file_path}")
+        
+        # Save file size to database for faster API responses
+        if download.file_path and os.path.exists(download.file_path):
+            try:
+                download.file_size = os.path.getsize(download.file_path)
+                logger.info(f"📏 File size: {download.file_size} bytes")
+            except (OSError, IOError) as e:
+                logger.warning(f"Could not get file size: {e}")
         
         # --- UPDATE TRACK METADATA START ---
         try:
@@ -511,8 +517,29 @@ class DownloadManager:
             
             await socket_manager.emit('download:cancelled', {'download_id': download_id})
 
-    async def retry_download(self, db: AsyncSession, download_id: str):
-        await self.resume_download(db, download_id)
+    async def retry_failed_downloads(self, db: AsyncSession):
+        """Retry all failed downloads that haven't exceeded max retries."""
+        MAX_RETRIES = 3
+        
+        result = await db.execute(
+            select(Download).where(
+                Download.status == 'failed',
+                (Download.retry_count.is_(None)) | (Download.retry_count < MAX_RETRIES)
+            )
+        )
+        failed_downloads = result.scalars().all()
+        
+        count = 0
+        for download in failed_downloads:
+            logger.info(f"Auto-retrying failed download {download.id} (Attempt {download.retry_count or 0 + 1})")
+            download.status = 'pending'
+            await self.queue.put(download.id)
+            count += 1
+            
+        if count > 0:
+            await db.commit()
+            await self.start_worker()
+            logger.info(f"Scheduled {count} failed downloads for retry")
 
     def _get_ydl_options(self, download: Download, progress_hook):
         quality_setting = download.user.preferences.get('quality', 'high')
@@ -537,8 +564,8 @@ class DownloadManager:
             'progress_hooks': [progress_hook],
             'quiet': True,
             'no_warnings': True,
-            'external_downloader': 'aria2c',
-            'external_downloader_args': ['-x16', '-s16', '-k1M'],
+            # 'external_downloader': 'aria2c',  <-- REMOVED to fix progress bar jumping 0->100
+            # 'external_downloader_args': ['-x16', '-s16', '-k1M'],
         }
 
 
@@ -740,7 +767,7 @@ class DownloadManager:
                         name=playlist_name,
                         owner_id=user_id,
                         public=False,
-                        comment=f"Auto-created from downloads"
+                        comment="Auto-created from downloads"
                     )
                     db.add(playlist)
                     await db.flush() # Get ID

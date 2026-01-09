@@ -7,7 +7,6 @@ from app.models.artist import Artist
 from app.models.album import Album
 from app.models.download import Download
 from app.core.security import get_password_hash
-import uuid
 
 @pytest.fixture
 async def test_user(db_session: AsyncSession):

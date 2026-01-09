@@ -1,4 +1,4 @@
-name: CI
+name: Multi-Platform CI
 
 on:
   push:
@@ -9,17 +9,29 @@ on:
       - main
 
 jobs:
-  release:
-    runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
-    permissions:
-      contents: write
+  test:
+    name: Test on ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+        python-version: ["3.11"]
+
     steps:
       - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
 
-      - name: Python Semantic Release
-        uses: python-semantic-release/python-semantic-release@master
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
         with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
+          python-version: ${{ matrix.python-version }}
+          cache: "pip"
+
+      - name: Install dependencies
+          python -m pip install --upgrade pip
+          pip install -r backend/requirements.txt
+
+      - name: Run Tests
+        env:
+          PYTHONPATH: backend
+        run: |
+          pytest backend/tests/ -v

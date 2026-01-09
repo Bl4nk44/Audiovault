@@ -40,6 +40,7 @@ async def star(
     id: list[str] = Query(None, description="Song IDs to star"),
     albumId: list[str] = Query(None, description="Album IDs to star"),
     artistId: list[str] = Query(None, description="Artist IDs to star"),
+    f: str = "xml",
     current_user: User = Depends(subsonic_auth),
     db: AsyncSession = Depends(get_db),
 ):
@@ -122,7 +123,7 @@ async def star(
                 continue
     
     await db.commit()
-    return subsonic_response()
+    return subsonic_response(f=f)
 
 
 @router.get("/unstar.view")
@@ -131,6 +132,7 @@ async def unstar(
     id: list[str] = Query(None, description="Song IDs to unstar"),
     albumId: list[str] = Query(None, description="Album IDs to unstar"),
     artistId: list[str] = Query(None, description="Artist IDs to unstar"),
+    f: str = "xml",
     current_user: User = Depends(subsonic_auth),
     db: AsyncSession = Depends(get_db),
 ):
@@ -188,13 +190,14 @@ async def unstar(
                 continue
     
     await db.commit()
-    return subsonic_response()
+    return subsonic_response(f=f)
 
 
 @router.get("/getStarred.view")
 @router.post("/getStarred.view")
 async def get_starred(
     musicFolderId: str = Query(None, description="Music folder ID"),
+    f: str = "xml",
     current_user: User = Depends(subsonic_auth),
     db: AsyncSession = Depends(get_db),
 ):
@@ -256,7 +259,6 @@ async def get_starred(
             and_(
                 Download.track_id == Track.id,
                 Download.user_id == current_user.id,
-                Download.status == "completed",
             )
         )
         .where(StarredTrack.user_id == current_user.id)
@@ -274,13 +276,14 @@ async def get_starred(
             "album": starred_albums,
             "song": starred_songs,
         }
-    })
+    }, f=f)
 
 
 @router.get("/getStarred2.view")
 @router.post("/getStarred2.view")
 async def get_starred2(
     musicFolderId: str = Query(None, description="Music folder ID"),
+    f: str = "xml",
     current_user: User = Depends(subsonic_auth),
     db: AsyncSession = Depends(get_db),
 ):
@@ -289,15 +292,20 @@ async def get_starred2(
     
     Same as getStarred but with ID3 album format.
     """
-    # This is nearly identical to getStarred, just different format
-    # For simplicity, reuse getStarred logic
-    result = await get_starred(musicFolderId, current_user, db)
+    # Get starred items using JSON format internally for manipulation
+    result = await get_starred(musicFolderId, "json", current_user, db)
     
     # Rename to starred2
     if "subsonic-response" in result and "starred" in result["subsonic-response"]:
         result["subsonic-response"]["starred2"] = result["subsonic-response"].pop("starred")
     
-    return result
+    # Return in requested format
+    if f == "json":
+        return result
+    else:
+        # Convert to XML
+        from app.schemas.subsonic.base import subsonic_response as build_response
+        return build_response(result["subsonic-response"], f=f)
 
 
 @router.get("/setRating.view")
@@ -305,6 +313,7 @@ async def get_starred2(
 async def set_rating(
     id: str = Query(..., description="Song ID"),
     rating: int = Query(..., description="Rating (0-5)"),
+    f: str = "xml",
     current_user: User = Depends(subsonic_auth),
     db: AsyncSession = Depends(get_db),
 ):
@@ -319,7 +328,7 @@ async def set_rating(
         Empty success response
     """
     if rating < 0 or rating > 5:
-        return subsonic_error(10, "Rating must be between 0 and 5")
+        return subsonic_error(10, "Rating must be between 0 and 5", f=f)
     
     try:
         track_id = UUID(id)
@@ -353,7 +362,7 @@ async def set_rating(
         db.add(new_rating)
     
     await db.commit()
-    return subsonic_response()
+    return subsonic_response(f=f)
 
 
 @router.get("/scrobble.view")
@@ -362,6 +371,7 @@ async def scrobble(
     id: str = Query(..., description="Song ID"),
     time: int = Query(None, description="Time played (Unix timestamp in ms)"),
     submission: bool = Query(True, description="True for scrobble, false for now playing"),
+    f: str = "xml",
     current_user: User = Depends(subsonic_auth),
     db: AsyncSession = Depends(get_db),
 ):
@@ -381,7 +391,7 @@ async def scrobble(
     try:
         track_id = UUID(id)
     except ValueError:
-        return subsonic_error(10, "Invalid song ID")
+        return subsonic_error(10, "Invalid song ID", f=f)
     
     if submission:
         # Record in listening history
@@ -416,12 +426,13 @@ async def scrobble(
         db.add(now_playing)
     
     await db.commit()
-    return subsonic_response()
+    return subsonic_response(f=f)
 
 
 @router.get("/getNowPlaying.view")
 @router.post("/getNowPlaying.view")
 async def get_now_playing(
+    f: str = "xml",
     current_user: User = Depends(subsonic_auth),
     db: AsyncSession = Depends(get_db),
 ):
@@ -443,7 +454,6 @@ async def get_now_playing(
             and_(
                 Download.track_id == Track.id,
                 Download.user_id == SubsonicNowPlaying.user_id,
-                Download.status == "completed",
             )
         )
         .where(SubsonicNowPlaying.updated_at >= cutoff)
@@ -464,7 +474,7 @@ async def get_now_playing(
         "nowPlaying": {
             "entry": entries
         }
-    })
+    }, f=f)
 
 
 @router.get("/getRandomSongs.view")
@@ -475,6 +485,7 @@ async def get_random_songs(
     fromYear: int = Query(None, description="Filter from year"),
     toYear: int = Query(None, description="Filter to year"),
     musicFolderId: str = Query(None, description="Music folder ID"),
+    f: str = "xml",
     current_user: User = Depends(subsonic_auth),
     db: AsyncSession = Depends(get_db),
 ):
@@ -496,10 +507,9 @@ async def get_random_songs(
     
     query = (
         select(Track, Download)
-        .join(Download, Download.track_id == Track.id)
+        .outerjoin(Download, (Download.track_id == Track.id) & (Download.user_id == current_user.id))
         .where(
-            Download.user_id == current_user.id,
-            Download.status == "completed",
+            # Download.user_id == current_user.id, 
         )
     )
     
@@ -526,4 +536,4 @@ async def get_random_songs(
         "randomSongs": {
             "song": songs
         }
-    })
+    }, f=f)

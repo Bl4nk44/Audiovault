@@ -4,7 +4,6 @@ from fastapi import HTTPException, status
 from app.models.user import User
 from app.models.schemas import UserCreate, UserLogin
 from app.core.security import get_password_hash, verify_password, create_access_token, create_refresh_token
-import hashlib
 from app.core.config import settings
 
 class AuthManager:

@@ -37,6 +37,7 @@ async def search_legacy(
     count: int = Query(20, description="Max results"),
     offset: int = Query(0, description="Result offset"),
     newerThan: int = Query(None, description="Only return newer than timestamp"),
+    f: str = "xml",
     current_user: User = Depends(subsonic_auth),
     db: AsyncSession = Depends(get_db),
 ):
@@ -84,7 +85,7 @@ async def search_legacy(
         "searchResult": {
             "match": matches
         }
-    })
+    }, f=f)
 
 
 @router.get("/search2.view")
@@ -98,6 +99,7 @@ async def search2(
     songCount: int = Query(20, description="Max songs to return"),
     songOffset: int = Query(0, description="Song offset"),
     musicFolderId: str = Query(None, description="Music folder ID"),
+    f: str = "xml",
     current_user: User = Depends(subsonic_auth),
     db: AsyncSession = Depends(get_db),
 ):
@@ -157,10 +159,8 @@ async def search2(
         result = await db.execute(
             select(Album)
             .join(Track, Track.album_id == Album.id)
-            .join(Download, Download.track_id == Track.id)
+            .outerjoin(Download, (Download.track_id == Track.id) & (Download.user_id == current_user.id))
             .where(
-                Download.user_id == current_user.id,
-                Download.status == "completed",
                 func.lower(Album.title).like(search_term),
             )
             .group_by(Album.id)
@@ -183,11 +183,9 @@ async def search2(
             # Count songs
             song_result = await db.execute(
                 select(func.count(Track.id))
-                .join(Download, Download.track_id == Track.id)
+                .outerjoin(Download, (Download.track_id == Track.id) & (Download.user_id == current_user.id))
                 .where(
                     Track.album_id == album.id,
-                    Download.user_id == current_user.id,
-                    Download.status == "completed",
                 )
             )
             song_count = song_result.scalar() or 0
@@ -233,7 +231,7 @@ async def search2(
             "album": albums_result,
             "song": songs_result,
         }
-    })
+    }, f=f)
 
 
 @router.get("/search3.view")
@@ -247,6 +245,7 @@ async def search3(
     songCount: int = Query(20, description="Max songs to return"),
     songOffset: int = Query(0, description="Song offset"),
     musicFolderId: str = Query(None, description="Music folder ID"),
+    f: str = "xml",
     current_user: User = Depends(subsonic_auth),
     db: AsyncSession = Depends(get_db),
 ):
@@ -307,7 +306,6 @@ async def search3(
             .join(Download, Download.track_id == Track.id)
             .where(
                 Download.user_id == current_user.id,
-                Download.status == "completed",
                 func.lower(Album.title).like(search_term),
             )
             .group_by(Album.id)
@@ -328,11 +326,9 @@ async def search3(
             
             song_result = await db.execute(
                 select(func.count(Track.id))
-                .join(Download, Download.track_id == Track.id)
+                .outerjoin(Download, (Download.track_id == Track.id) & (Download.user_id == current_user.id))
                 .where(
                     Track.album_id == album.id,
-                    Download.user_id == current_user.id,
-                    Download.status == "completed",
                 )
             )
             song_count = song_result.scalar() or 0
@@ -340,11 +336,9 @@ async def search3(
             # Sum duration
             duration_result = await db.execute(
                 select(func.sum(Track.duration_ms))
-                .join(Download, Download.track_id == Track.id)
+                .outerjoin(Download, (Download.track_id == Track.id) & (Download.user_id == current_user.id))
                 .where(
                     Track.album_id == album.id,
-                    Download.user_id == current_user.id,
-                    Download.status == "completed",
                 )
             )
             total_duration = duration_result.scalar() or 0
@@ -366,10 +360,9 @@ async def search3(
     if songCount > 0:
         result = await db.execute(
             select(Track, Download)
-            .join(Download, Download.track_id == Track.id)
+            .outerjoin(Download, (Download.track_id == Track.id) & (Download.user_id == current_user.id))
             .where(
-                Download.user_id == current_user.id,
-                Download.status == "completed",
+                # Download.user_id == current_user.id,
                 or_(
                     func.lower(Track.title).like(search_term),
                     func.lower(Track.artist).like(search_term),
@@ -389,4 +382,4 @@ async def search3(
             "album": albums_result,
             "song": songs_result,
         }
-    })
+    }, f=f)

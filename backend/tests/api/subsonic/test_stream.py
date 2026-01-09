@@ -8,7 +8,6 @@ from app.models.artist import Artist
 from app.models.album import Album
 from app.models.download import Download
 from app.core.security import get_password_hash
-import uuid
 import tempfile
 
 @pytest.fixture

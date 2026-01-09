@@ -110,13 +110,7 @@ class LibraryDataService:
                         current_path = candidate
 
             try:
-<<<<<<< HEAD
                 rel_path = os.path.relpath(current_path, settings.DOWNLOAD_DIR).replace("\\", "/")
-=======
-                rel_path = os.path.relpath(d.file_path, settings.DOWNLOAD_DIR).replace(
-                    "\\", "/"
-                )
->>>>>>> temp/release-prep
                 if rel_path.startswith(".."):
                     filename = os.path.basename(current_path)
                 else:

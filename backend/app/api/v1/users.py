@@ -62,7 +62,6 @@ async def delete_user_me(
 
 class UserUpdate(BaseModel):
     username: Optional[str] = None
-    avatar_url: Optional[str] = None
 
 
 class PasswordUpdate(BaseModel):
@@ -88,14 +87,6 @@ async def update_user_me(
         # Check if username exists
         # (Implementation omitted for brevity, assuming unique constraint handles it or check manually)
         current_user.username = user_update.username
-
-    if user_update.avatar_url:
-        # Assuming we add avatar_url to User model or use preferences
-        current_prefs = (
-            dict(current_user.preferences) if current_user.preferences else {}
-        )
-        current_prefs["avatar_url"] = user_update.avatar_url
-        current_user.preferences = current_prefs
 
     await db.commit()
     return {

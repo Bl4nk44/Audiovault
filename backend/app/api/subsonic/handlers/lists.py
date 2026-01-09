@@ -9,15 +9,12 @@ Handles list-based endpoints:
 - getSimilarSongs.view
 """
 
-from datetime import datetime, timedelta, timezone, UTC
 from uuid import UUID
 
 from app.api.subsonic.auth import subsonic_auth
 from app.api.subsonic.utils import (
     build_song_response,
-    format_duration,
     format_subsonic_date,
-    get_cover_art_id,
 )
 from app.db.database import get_db
 from app.models.album import Album
@@ -27,9 +24,8 @@ from app.models.track import Track
 from app.models.user import User
 from app.schemas.subsonic.base import subsonic_error, subsonic_response
 from fastapi import APIRouter, Depends, Query
-from sqlalchemy import desc, func, select, literal
+from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.orm import selectinload
 
 router = APIRouter()
 
@@ -37,6 +33,7 @@ router = APIRouter()
 @router.get("/getGenres.view")
 @router.post("/getGenres.view")
 async def get_genres(
+    f: str = "xml",
     current_user: User = Depends(subsonic_auth),
     db: AsyncSession = Depends(get_db),
 ):
@@ -46,7 +43,6 @@ async def get_genres(
     Returns all genres found in ID3 tags.
     """
     # Updated to be dialect-aware (Postgres vs SQLite for tests)
-    from sqlalchemy import cast, String
     
     # Check dialect to use correct JSON extraction
     is_postgres = db.bind.dialect.name == "postgresql" if hasattr(db.bind, "dialect") else True
@@ -101,7 +97,7 @@ async def get_genres(
         "genres": {
             "genre": genre_list
         }
-    })
+    }, f=f)
 
 
 @router.get("/getAlbumList.view")
@@ -116,6 +112,7 @@ async def get_album_list(
     toYear: int = Query(None, description="Filter to year"),
     genre: str = Query(None, description="Filter by genre"),
     musicFolderId: str = Query(None, description="Music folder ID"),
+    f: str = "xml",
     current_user: User = Depends(subsonic_auth),
     db: AsyncSession = Depends(get_db),
 ):
@@ -134,12 +131,9 @@ async def get_album_list(
     query = (
         select(Album)
         .join(Track, Track.album_id == Album.id)
-        .join(Download, Download.track_id == Track.id)
-        .where(
-            Download.user_id == current_user.id,
-            Download.status == "completed"
-        )
+        .outerjoin(Download, (Download.track_id == Track.id) & (Download.user_id == current_user.id))
         .group_by(Album.id)
+        .order_by(func.count(Download.id).desc())
     )
     
     # Apply type sorting
@@ -173,7 +167,8 @@ async def get_album_list(
         artist_name = "Unknown Artist"
         if album.artist_id:
             artist_res = await db.get(Artist, album.artist_id)
-            if artist_res: artist_name = artist_res.name
+            if artist_res:
+                artist_name = artist_res.name
 
         # Count songs
         song_count = await db.scalar(
@@ -203,7 +198,45 @@ async def get_album_list(
         "albumList2": {
             "album": album_list
         }
-    })
+    }, f=f)
+
+
+@router.get("/getRandomSongs.view")
+@router.post("/getRandomSongs.view")
+async def get_random_songs(
+    size: int = Query(10, description="Count"),
+    genre: str = Query(None, description="Genre"),
+    fromYear: int = Query(None, description="From year"),
+    toYear: int = Query(None, description="To year"),
+    musicFolderId: str = Query(None, description="Folder ID"),
+    f: str = "xml",
+    current_user: User = Depends(subsonic_auth),
+    db: AsyncSession = Depends(get_db),
+):
+    """
+    Get random songs.
+    """
+    size = min(size, 500)
+    
+    query = (
+        select(Track, Download)
+        .outerjoin(Download, (Download.track_id == Track.id) & (Download.user_id == current_user.id))
+        .order_by(func.random())
+        .limit(size)
+    )
+    
+    # Apply filters if needed (genre, year, etc - simplified for now)
+    
+    result = await db.execute(query)
+    songs = []
+    for track, download in result.all():
+         songs.append(build_song_response(track, download))
+         
+    return subsonic_response({
+        "randomSongs": {
+            "song": songs
+        }
+    }, f=f)
 
 
 @router.get("/getTopSongs.view")
@@ -211,6 +244,7 @@ async def get_album_list(
 async def get_top_songs(
     artist: str = Query(None, description="Artist name"),
     count: int = Query(50, description="Count"),
+    f: str = "xml",
     current_user: User = Depends(subsonic_auth),
     db: AsyncSession = Depends(get_db),
 ):
@@ -223,8 +257,7 @@ async def get_top_songs(
         select(Track, Download)
         .join(Download, Download.track_id == Track.id)
         .where(
-            Download.user_id == current_user.id,
-            Download.status == "completed"
+            Download.user_id == current_user.id
         )
         .limit(count)
     )
@@ -241,7 +274,7 @@ async def get_top_songs(
         "topSongs": {
             "song": songs
         }
-    })
+    }, f=f)
 
 
 @router.get("/getSimilarSongs.view")
@@ -249,6 +282,7 @@ async def get_top_songs(
 async def get_similar_songs(
     id: str = Query(..., description="Song ID"),
     count: int = Query(50, description="Count"),
+    f: str = "xml",
     current_user: User = Depends(subsonic_auth),
     db: AsyncSession = Depends(get_db),
 ):
@@ -257,20 +291,19 @@ async def get_similar_songs(
     """
     try:
         track_id = UUID(id)
-    except:
-        return subsonic_error(10, "Invalid ID")
+    except ValueError:
+        return subsonic_error(10, "Invalid ID", f=f)
         
     track = await db.get(Track, track_id)
     if not track:
-        return subsonic_error(70, "Song not found")
+        return subsonic_error(70, "Song not found", f=f)
         
     # Find songs by same artist
     query = (
         select(Track, Download)
-        .join(Download, Download.track_id == Track.id)
+        .outerjoin(Download, (Download.track_id == Track.id) & (Download.user_id == current_user.id))
         .where(
-            Download.user_id == current_user.id,
-            Download.status == "completed",
+            Download.status == "completed", # Keep this filter if we only want completed downloads
             Track.artist_id == track.artist_id,
             Track.id != track.id
         )
@@ -286,4 +319,4 @@ async def get_similar_songs(
         "similarSongs": {
             "song": songs
         }
-    })
+    }, f=f)
