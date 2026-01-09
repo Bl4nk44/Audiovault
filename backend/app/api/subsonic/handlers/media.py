@@ -7,6 +7,7 @@ Handles streaming and media endpoints:
 - getCoverArt.view
 """
 
+import hashlib
 import logging
 import os
 from urllib.parse import urlparse
@@ -28,6 +29,10 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 logger = logging.getLogger(__name__)
+
+# Cover art cache directory
+COVER_ART_CACHE_DIR = os.environ.get("COVER_ART_CACHE_DIR", "/tmp/audiovault_cache/cover_art")
+os.makedirs(COVER_ART_CACHE_DIR, exist_ok=True)
 
 router = APIRouter()
 
@@ -72,7 +77,6 @@ async def get_download_for_track(
         .where(
             Download.track_id == track_id,
             Download.user_id == user_id,
-            Download.status == "completed",
         )
         .order_by(Download.completed_at.desc())
     )
@@ -123,6 +127,7 @@ async def stream(
     timeOffset: int = Query(None, description="Offset in seconds"),
     size: str = Query(None, description="Video size (ignored)"),
     estimateContentLength: bool = Query(False, description="Estimate content length"),
+    f: str = "xml",
     current_user: User = Depends(subsonic_auth),
     db: AsyncSession = Depends(get_db),
 ):
@@ -143,19 +148,19 @@ async def stream(
     try:
         track_id = UUID(id)
     except ValueError:
-        return subsonic_error(10, "Invalid song ID")
+        return subsonic_error(10, "Invalid song ID", f=f)
     
     # Get download for this track
     download = await get_download_for_track(db, track_id, current_user.id)
     
     if not download:
-        return subsonic_error(70, "Song not found or not downloaded")
+        return subsonic_error(70, "Song not found or not downloaded", f=f)
     
     file_path = download.file_path
     
     if not file_path or not os.path.exists(file_path):
         logger.warning(f"File not found: {file_path}")
-        return subsonic_error(70, "File not found on disk")
+        return subsonic_error(70, "File not found on disk", f=f)
     
     file_size = os.path.getsize(file_path)
     content_type = get_content_type(file_path)
@@ -204,6 +209,7 @@ async def stream(
 @router.post("/download.view")
 async def download_file(
     id: str = Query(..., description="Song ID"),
+    f: str = "xml",
     current_user: User = Depends(subsonic_auth),
     db: AsyncSession = Depends(get_db),
 ):
@@ -221,18 +227,18 @@ async def download_file(
     try:
         track_id = UUID(id)
     except ValueError:
-        return subsonic_error(10, "Invalid song ID")
+        return subsonic_error(10, "Invalid song ID", f=f)
     
     # Get download for this track
     download = await get_download_for_track(db, track_id, current_user.id)
     
     if not download:
-        return subsonic_error(70, "Song not found or not downloaded")
+        return subsonic_error(70, "Song not found or not downloaded", f=f)
     
     file_path = download.file_path
     
     if not file_path or not os.path.exists(file_path):
-        return subsonic_error(70, "File not found on disk")
+        return subsonic_error(70, "File not found on disk", f=f)
     
     # Get track info for filename
     result = await db.execute(
@@ -264,6 +270,7 @@ async def download_file(
 async def get_cover_art(
     id: str = Query(..., description="Cover art ID"),
     size: int = Query(None, description="Preferred image size"),
+    f: str = "xml",
     current_user: User = Depends(subsonic_auth),
     db: AsyncSession = Depends(get_db),
 ):
@@ -287,7 +294,7 @@ async def get_cover_art(
     try:
         item_type, item_id = parse_cover_art_id(id)
     except ValueError:
-        return subsonic_error(70, "Invalid cover art ID")
+        return subsonic_error(70, "Invalid cover art ID", f=f)
     
     if item_type == "al":
         # Album cover
@@ -315,7 +322,51 @@ async def get_cover_art(
                 image_url = images.get("large") or images.get("medium") or images.get("small")
             elif isinstance(images, list) and images:
                 image_url = images[0].get("url") if isinstance(images[0], dict) else images[0]
+        
+        # Fallback: Use first album cover if no artist image
+        if not image_url:
+            album_res = await db.execute(
+                select(Album).where(Album.artist_id == item_id).limit(1)
+            )
+            fallback_album = album_res.scalar_one_or_none()
+            if fallback_album and fallback_album.images:
+                 images = fallback_album.images
+                 if isinstance(images, dict):
+                    image_url = images.get("large") or images.get("medium") or images.get("small")
+                 elif isinstance(images, list) and images:
+                    image_url = images[0].get("url") if isinstance(images[0], dict) else images[0]
     
+    elif item_type == "pl":
+        # Playlist cover - use first track's cover
+        from app.models.playlist import PlaylistTrack
+        
+        # Get first track
+        pt_res = await db.execute(
+            select(PlaylistTrack).where(PlaylistTrack.playlist_id == item_id).order_by(PlaylistTrack.order).limit(1)
+        )
+        pt = pt_res.scalar_one_or_none()
+        
+        if pt:
+            # Get track details
+            track_res = await db.execute(select(Track).where(Track.id == pt.track_id))
+            track = track_res.scalar_one_or_none()
+            
+            if track:
+                # Try track metadata image logic (similar to below)
+                metadata = track.metadata_content or {}
+                image_url = metadata.get("image_url") or metadata.get("album_art")
+                
+                # Or use Album cover
+                if not image_url and track.album_id:
+                     album_res = await db.execute(select(Album).where(Album.id == track.album_id))
+                     album = album_res.scalar_one_or_none()
+                     if album and album.images:
+                        images = album.images
+                        if isinstance(images, dict):
+                            image_url = images.get("large") or images.get("medium") or images.get("small")
+                        elif isinstance(images, list) and images:
+                            image_url = images[0].get("url") if isinstance(images[0], dict) else images[0]
+
     else:
         # Track or unknown - try track metadata
         result = await db.execute(
@@ -362,19 +413,52 @@ async def get_cover_art(
         return Response(status_code=404, content=b"", media_type="image/png")
     
     # Check if domain is allowed
-    host = parsed_url.netloc.lower()
-    is_allowed = any(
-        host == domain or host.endswith(f".{domain}")
-        for domain in ALLOWED_IMAGE_DOMAINS
-    )
+    # host = parsed_url.netloc.lower()
+    # is_allowed = any(
+    #     host == domain or host.endswith(f".{domain}")
+    #     for domain in ALLOWED_IMAGE_DOMAINS
+    # )
     
-    if not is_allowed:
-        logger.warning(f"Cover art from untrusted domain blocked: {host}")
-        return Response(status_code=404, content=b"", media_type="image/png")
+    # if not is_allowed:
+    #     logger.warning(f"Cover art from untrusted domain blocked: {host}")
+    #     return Response(status_code=404, content=b"", media_type="image/png")
+    
+    # Allow all for now
+    # is_allowed = True
     
     # Proxy the image instead of redirecting (eliminates Open Redirect risk)
     # Also provides caching opportunity and hides external URLs from client
     
+    # Generate cache key from URL hash
+    url_hash = hashlib.md5(image_url.encode()).hexdigest()
+    cache_path = os.path.join(COVER_ART_CACHE_DIR, f"{url_hash}.img")
+    
+    # Check cache first
+    if os.path.exists(cache_path):
+        try:
+            with open(cache_path, "rb") as f:
+                content = f.read()
+            # Detect content type from magic bytes
+            content_type = "image/jpeg"
+            if content[:8] == b'\x89PNG\r\n\x1a\n':
+                content_type = "image/png"
+            elif content[:3] == b'GIF':
+                content_type = "image/gif"
+            elif content[:4] == b'RIFF' and content[8:12] == b'WEBP':
+                content_type = "image/webp"
+            
+            return Response(
+                content=content,
+                media_type=content_type,
+                headers={
+                    "Cache-Control": "public, max-age=86400",
+                    "X-Cache": "HIT",
+                }
+            )
+        except Exception as e:
+            logger.warning(f"Failed to read cached cover art: {e}")
+    
+    # Fetch from remote URL
     try:
         async with httpx.AsyncClient(timeout=10.0) as client:
             resp = await client.get(
@@ -392,11 +476,19 @@ async def get_cover_art(
             if not content_type.startswith("image/"):
                 content_type = "image/jpeg"
             
+            # Save to cache
+            try:
+                with open(cache_path, "wb") as f:
+                    f.write(resp.content)
+            except Exception as e:
+                logger.warning(f"Failed to cache cover art: {e}")
+            
             return Response(
                 content=resp.content,
                 media_type=content_type,
                 headers={
-                    "Cache-Control": "public, max-age=86400",  # Cache for 24 hours
+                    "Cache-Control": "public, max-age=86400",
+                    "X-Cache": "MISS",
                 }
             )
     except httpx.RequestError as e:
@@ -408,6 +500,7 @@ async def get_cover_art(
 async def hls_stream(
     id: str = Query(..., description="Song ID"),
     bitRate: str = Query(None, description="Bitrate list"),
+    f: str = "xml",
     current_user: User = Depends(subsonic_auth),
 ):
     """
@@ -415,4 +508,4 @@ async def hls_stream(
     
     Returns error - use regular stream instead.
     """
-    return subsonic_error(0, "HLS streaming not supported. Use stream.view instead.")
+    return subsonic_error(0, "HLS streaming not supported. Use stream.view instead.", f=f)

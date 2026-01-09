@@ -4,8 +4,6 @@ import os
 # Add /app to pythonpath if needed
 sys.path.append(os.getcwd())
 
-from app.db.base import Base
-import app.models
 from sqlalchemy.orm import configure_mappers
 
 print("Configuring mappers...")

@@ -6,6 +6,7 @@ services:
     command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --proxy-headers --forwarded-allow-ips '*'
     volumes:
       - ./downloads:/downloads
+      - audiovault-cache:/cache
       # No code mounts in production
     ports:
       - "8000:8000"
@@ -83,3 +84,4 @@ networks:
 volumes:
   audiovault-db-data:
   audiovault-redis-data:
+  audiovault-cache:

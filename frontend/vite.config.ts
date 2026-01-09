@@ -32,6 +32,11 @@ export default defineConfig({
       "/rest": {
         target: process.env.BACKEND_URL || "http://localhost:8000",
         changeOrigin: true,
+        configure: (proxy) => {
+          proxy.on("proxyReq", (_, req) => {
+            console.log("VITE PROXY: [Subsonic] sending to:", req.url);
+          });
+        },
       },
       "/stream": {
         target: process.env.BACKEND_URL || "http://localhost:8000",

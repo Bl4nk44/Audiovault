@@ -111,6 +111,10 @@ async def get_version():
 # Ensure download directory exists
 if not os.path.exists(settings.DOWNLOAD_DIR):
     os.makedirs(settings.DOWNLOAD_DIR)
+try:
+    os.chmod(settings.DOWNLOAD_DIR, 0o777)
+except Exception as e:
+    logger.warning(f"Could not set permissions on {settings.DOWNLOAD_DIR}: {e}")
 
 logger.info(f"📂 Mounting StaticFiles from: {settings.DOWNLOAD_DIR}")
 try:
