@@ -25,12 +25,15 @@ class DownloadPausedError(Exception):
     pass
 
 class DownloadManager:
+    MAX_CONCURRENT_DOWNLOADS = 3
+    
     def __init__(self):
         self.active_downloads = 0
         self.queue = asyncio.Queue()
         self.processing_task = None
         self.paused_downloads = set() # Set of download IDs that are paused
         self.active_tasks = {} # Map download_id -> asyncio.Task
+        self.semaphore = asyncio.Semaphore(self.MAX_CONCURRENT_DOWNLOADS)
 
     def _ensure_permissions(self, path: str, is_file: bool = False):
         """
@@ -55,6 +58,13 @@ class DownloadManager:
                 self.queue.task_done()
                 continue
             
+            # Don't await - start task and let it run concurrently
+            # Semaphore controls concurrency limit inside the wrapper
+            asyncio.create_task(self._process_with_semaphore(download_id))
+    
+    async def _process_with_semaphore(self, download_id: str):
+        """Wrapper that acquires semaphore before processing download."""
+        async with self.semaphore:
             # Create a task for this download to allow cancellation/pause
             task = asyncio.create_task(self.process_download(download_id))
             self.active_tasks[download_id] = task
@@ -62,7 +72,6 @@ class DownloadManager:
                 await task
             except asyncio.CancelledError:
                 logger.info(f"Download task {download_id} cancelled")
-                raise # Re-raise to ensure proper task cancellation propagation
             except Exception as e:
                 logger.error(f"Error processing download {download_id}: {e}")
             finally:
