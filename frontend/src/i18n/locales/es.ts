@@ -137,6 +137,7 @@ export const es = {
   },
   search: {
     title: "Buscar Música",
+    searching: "Buscando...",
     subtitle:
       "Encuentra tus pistas favoritas de Spotify, YouTube, Deezer, Apple Music, Tidal, Amazon Music y SoundCloud",
     placeholder: "¿Qué quieres escuchar?",
