@@ -1,5 +1,8 @@
 services:
   backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
     image: bl4nk404/audiovault:latest
     container_name: audiovault-backend
     restart: unless-stopped
