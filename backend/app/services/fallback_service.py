@@ -1,0 +1,73 @@
+import logging
+
+logger = logging.getLogger(__name__)
+
+
+class FallbackService:
+    def __init__(self):
+        self.invidious_instances = [
+            "https://inv.tux.pizza",
+            "https://invidious.jing.rocks",
+            "https://vid.puffyan.us",
+            "https://invidious.nerdvpn.de",
+        ]
+
+    def get_fallback_instruction(
+        self, download_source: str, attempt: int, track_metadata
+    ) -> dict:
+        """
+        Determine the next download strategy based on the source service and retry attempt.
+        Returns a dict with 'type' (yt_search, sc_search, direct, proxy) and 'query'/'url'.
+        """
+        artist = track_metadata.artist if track_metadata else "Unknown"
+        title = track_metadata.title if track_metadata else "Unknown"
+        base_query = f"{artist} - {title}"
+
+        STRATEGIES = {
+            "spotify": self._strategy_streaming_service,
+            "apple_music": self._strategy_streaming_service,
+            "tidal": self._strategy_streaming_service,
+            "deezer": self._strategy_streaming_service,
+            "amazon_music": self._strategy_streaming_service,
+            "imported": self._strategy_streaming_service,
+            "youtube": self._strategy_youtube,
+            "soundcloud": self._strategy_soundcloud,
+        }
+
+        strategy_func = STRATEGIES.get(download_source)
+        if strategy_func:
+            return strategy_func(attempt, base_query)
+
+        return {"type": "none", "value": None}
+
+    def _strategy_streaming_service(self, attempt: int, base_query: str) -> dict:
+        if attempt == 1:
+            return {"type": "yt_search", "value": f"{base_query} official video"}
+        if attempt == 2:
+            return {"type": "yt_search", "value": f"{base_query} audio"}
+        if attempt == 3:
+            return {"type": "sc_search", "value": base_query}
+        if attempt == 4:
+            return {"type": "yt_search", "value": base_query}
+        return {"type": "none", "value": None}
+
+    def _strategy_youtube(self, attempt: int, base_query: str) -> dict:
+        if attempt == 1:
+            return {"type": "direct_youtube", "value": None}
+        if attempt == 2:
+            return {"type": "sc_search", "value": base_query}
+        if attempt == 3:
+            return {"type": "yt_search", "value": base_query}
+        return {"type": "none", "value": None}
+
+    def _strategy_soundcloud(self, attempt: int, base_query: str) -> dict:
+        if attempt == 1:
+            return {"type": "direct_soundcloud", "value": None}
+        if attempt == 2:
+            return {"type": "sc_search", "value": base_query}
+        if attempt == 3:
+            return {"type": "yt_search", "value": base_query}
+        return {"type": "none", "value": None}
+
+
+fallback_service = FallbackService()

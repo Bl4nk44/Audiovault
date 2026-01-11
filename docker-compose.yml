@@ -1,0 +1,87 @@
+services:
+  backend:
+    image: bl4nk404/audiovault:latest
+    container_name: audiovault-backend
+    restart: unless-stopped
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --proxy-headers --forwarded-allow-ips '*'
+    volumes:
+      - ./downloads:/downloads
+      - audiovault-cache:/cache
+      # No code mounts in production
+    ports:
+      - "8000:8000"
+    env_file:
+      - .env
+    environment:
+      - DATABASE_URL=postgresql+asyncpg://postgres:postgres@db:5432/audiovault
+      - REDIS_URL=redis://redis:6379/0
+      - ALLOWED_HOSTS=*
+      - BACKEND_CORS_ORIGINS=*
+      - ENVIRONMENT=production
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - audiovault-network
+
+  frontend:
+    build:
+      context: .
+      dockerfile: frontend/Dockerfile
+    image: bl4nk404/audiovault-frontend:latest
+    container_name: audiovault-frontend
+    restart: unless-stopped
+    ports:
+      - "2137:80"
+    depends_on:
+      - backend
+    networks:
+      - audiovault-network
+
+  db:
+    image: postgres:16-alpine
+    container_name: audiovault-db
+    restart: always
+    volumes:
+      - audiovault-db-data:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=audiovault
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    ports:
+      - "5432:5432"
+    networks:
+      - audiovault-network
+
+  redis:
+    image: redis:7-alpine
+    container_name: audiovault-redis
+    restart: always
+    command: redis-server --appendonly yes
+    volumes:
+      - audiovault-redis-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    ports:
+      - "6379:6379"
+    networks:
+      - audiovault-network
+
+networks:
+  audiovault-network:
+    driver: bridge
+
+volumes:
+  audiovault-db-data:
+  audiovault-redis-data:
+  audiovault-cache:

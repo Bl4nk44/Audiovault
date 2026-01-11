@@ -1,0 +1,44 @@
+fastapi>=0.109.0
+uvicorn[standard]>=0.27.0
+h11>=0.16.0
+sqlalchemy>=2.0.0
+asyncpg>=0.29.0
+pydantic>=2.5.0
+pydantic-settings>=2.1.0
+PyJWT>=2.8.0
+cryptography>=41.0.0
+passlib[bcrypt]>=1.7.4
+bcrypt>=4.0.1
+python-multipart>=0.0.18
+aiohttp>=3.9.0
+spotipy>=2.25.1
+yt-dlp>=2025.12.0
+ytmusicapi>=1.4.1
+redis>=5.0.1
+apscheduler>=3.10.4
+ffmpeg-python>=0.2.0
+mutagen>=1.47.0
+alembic>=1.18.0
+psycopg2-binary>=2.9.9
+python-socketio>=5.14.0
+email-validator>=2.1.0
+fastapi-limiter>=0.1.6
+pytest>=7.4.0
+httpx>=0.25.0
+# Security: urllib3>=2.6.0 required to fix CVE (Allocation of Resources Without Limits or Throttling)
+# https://security.snyk.io/vuln/SNYK-PYTHON-URLLIB3-14192443
+urllib3>=2.6.3
+pytest-asyncio>=0.21.0
+aiosqlite>=0.19.0
+fakeredis[lua]>=2.20.0
+aiofiles>=23.2.1
+uvloop>=0.19.0; sys_platform != 'win32'
+ruff>=0.1.0
+mypy>=1.8.0
+types-redis
+types-requests
+types-aiofiles
+
+zipp>=3.19.1 # not directly required, pinned by Snyk to avoid a vulnerability
+dnspython>=2.6.1 # not directly required, pinned by Snyk to avoid a vulnerability
+greenlet>=3.0.0

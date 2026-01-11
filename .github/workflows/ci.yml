@@ -1,0 +1,47 @@
+name: Multi-Platform CI
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  test:
+    name: Test on ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+        python-version: ["3.12"]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: "pip"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r backend/requirements.txt
+
+      - name: Create .env file for tests
+        run: |
+          echo "DATABASE_URL=sqlite+aiosqlite:///test.db" >> backend/.env
+          echo "REDIS_URL=redis://localhost:6379/0" >> backend/.env
+          echo "JWT_SECRET_KEY=test_secret_key_for_ci_tests_only" >> backend/.env
+
+      - name: Run Tests
+        env:
+          PYTHONPATH: backend
+          DATABASE_URL: "sqlite+aiosqlite:///test.db"
+          REDIS_URL: "redis://localhost:6379/0"
+          JWT_SECRET_KEY: "test_secret_key_for_ci_tests_only"
+        run: |
+          pytest backend/tests/ -v
