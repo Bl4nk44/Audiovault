@@ -1,4 +1,5 @@
 import unittest
+
 from app.utils.sanitization import sanitize_filename
 
 
@@ -9,9 +10,7 @@ class TestSanitization(unittest.TestCase):
 
     def test_windows_restricted_chars(self):
         # Testing characters illegal on Windows: < > : " / \ | ? *
-        self.assertEqual(
-            sanitize_filename("AC/DC: Back in Black"), "AC_DC_ Back in Black"
-        )
+        self.assertEqual(sanitize_filename("AC/DC: Back in Black"), "AC_DC_ Back in Black")
         self.assertEqual(sanitize_filename('Song "Title"'), "Song _Title_")
         self.assertEqual(sanitize_filename("Star*"), "Star_")
         self.assertEqual(sanitize_filename("Question?"), "Question_")

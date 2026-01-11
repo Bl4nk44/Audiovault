@@ -1,13 +1,13 @@
-from apscheduler.schedulers.asyncio import AsyncIOScheduler
-from apscheduler.triggers.interval import IntervalTrigger
-from app.core.cache import cache_manager
-from app.db.database import AsyncSessionLocal
-from app.services.watchlist_engine import watchlist_engine
-from sqlalchemy import select
-from app.models.user import User
 import logging
 
+from app.core.cache import cache_manager
+from app.db.database import AsyncSessionLocal
+from app.models.user import User
 from app.services.download_manager import download_manager
+from app.services.watchlist_engine import watchlist_engine
+from apscheduler.schedulers.asyncio import AsyncIOScheduler
+from apscheduler.triggers.interval import IntervalTrigger
+from sqlalchemy import select
 
 logger = logging.getLogger(__name__)
 
@@ -63,9 +63,7 @@ class SchedulerService:
         # Try to acquire lock
         is_locked = await cache_manager.redis.get(self.lock_key)
         if is_locked:
-            logger.info(
-                "🔒 Sync job already in progress (locked). Skipping this cycle."
-            )
+            logger.info("🔒 Sync job already in progress (locked). Skipping this cycle.")
             return
 
         try:
@@ -83,16 +81,12 @@ class SchedulerService:
                 for user in users:
                     try:
                         logger.info(f"Syncing for user: {user.username}")
-                        new_count = await watchlist_engine.check_for_updates(
-                            db, user.id
-                        )
+                        new_count = await watchlist_engine.check_for_updates(db, user.id)
                         total_new += new_count
                     except Exception as e:
                         logger.error(f"Error syncing for user {user.username}: {e}")
 
-            logger.info(
-                f"✅ Scheduled sync completed. Total new items queued: {total_new}"
-            )
+            logger.info(f"✅ Scheduled sync completed. Total new items queued: {total_new}")
 
         except Exception as e:
             logger.error(f"🔥 Critical error in scheduled_sync: {e}")

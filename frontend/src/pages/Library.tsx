@@ -350,12 +350,12 @@ const PlaylistView = ({
         <>
           <div className="bg-black/20 border border-white/5 rounded-2xl overflow-hidden">
             <table className="w-full text-left">
-              <thead className="bg-white/5 text-gray-400 text-sm uppercase font-medium">
+              <thead className="bg-white/5 text-gray-400 text-sm uppercase font-medium hidden md:table-header-group">
                 <tr>
-                  <th className="px-6 py-4">Track</th>
-                  <th className="px-6 py-4">Artist</th>
-                  <th className="px-6 py-4">Album</th>
-                  <th className="px-6 py-4 text-right">Actions</th>
+                  <th className="px-4 md:px-6 py-4">Track</th>
+                  <th className="px-4 md:px-6 py-4">Artist</th>
+                  <th className="px-4 md:px-6 py-4 hidden lg:table-cell">Album</th>
+                  <th className="px-4 md:px-6 py-4 text-right">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-white/5">
@@ -380,10 +380,10 @@ const PlaylistView = ({
                             }
                           `}
                       >
-                        <td className="px-6 py-4">
-                          <div className="flex items-center gap-4">
+                        <td className="px-3 md:px-6 py-3 md:py-4">
+                          <div className="flex items-center gap-3 md:gap-4 min-w-0">
                             <button
-                              className={`relative w-10 h-10 rounded overflow-hidden cursor-pointer group/img shrink-0 border-0 p-0 m-0 ${
+                              className={`relative w-10 h-10 md:w-10 md:h-10 rounded overflow-hidden cursor-pointer group/img shrink-0 border-0 p-0 m-0 ${
                                 isCurrent
                                   ? "shadow-[0_0_10px_rgba(var(--primary-rgb),0.5)]"
                                   : ""
@@ -464,21 +464,27 @@ const PlaylistView = ({
                                 </div>
                               )}
                             </button>
-                            <span
-                              className={`font-medium transition-colors ${
-                                isCurrent
-                                  ? "text-primary font-bold"
-                                  : "text-white"
-                              }`}
-                            >
-                              {item.track.title}
-                            </span>
+                            <div className="min-w-0 flex-1">
+                              <span
+                                className={`block font-medium truncate max-w-[150px] sm:max-w-[200px] md:max-w-[280px] lg:max-w-none transition-colors ${
+                                  isCurrent
+                                    ? "text-primary font-bold"
+                                    : "text-white"
+                                }`}
+                              >
+                                {item.track.title}
+                              </span>
+                              {/* Mobile Artist (show below title on small screens) */}
+                              <span className="block md:hidden text-sm text-gray-400 truncate">
+                                {item.track.artist}
+                              </span>
+                            </div>
                           </div>
                         </td>
-                        <td className="px-6 py-4 text-gray-300">
+                        <td className="px-3 md:px-6 py-3 md:py-4 text-gray-300 hidden md:table-cell truncate max-w-[150px]">
                           {item.track.artist}
                         </td>
-                        <td className="px-6 py-4 text-gray-400">
+                        <td className="px-3 md:px-6 py-3 md:py-4 text-gray-400 hidden lg:table-cell truncate max-w-[120px]">
                           {item.track.album || "-"}
                         </td>
                         <td className="px-6 py-4 text-right">

@@ -1,4 +1,3 @@
-from typing import List, Optional
 from app.providers.base import MusicProvider
 from app.schemas.metadata import PlaylistMetadata, TrackMetadata
 from app.services.apple_music_service import apple_music_service
@@ -10,13 +9,13 @@ class AppleMusicProvider(MusicProvider):
         return "apple_music"
 
     @property
-    def domains(self) -> List[str]:
+    def domains(self) -> list[str]:
         return ["music.apple.com"]
 
     def can_handle(self, url: str) -> bool:
         return apple_music_service.can_handle(url)
 
-    async def extract_playlist(self, url: str) -> Optional[PlaylistMetadata]:
+    async def extract_playlist(self, url: str) -> PlaylistMetadata | None:
         tracks = await apple_music_service.get_tracks(url)
         if not tracks:
             return None
@@ -64,7 +63,7 @@ class AppleMusicProvider(MusicProvider):
             tracks=track_metadatas,
         )
 
-    async def get_track(self, url: str) -> Optional[TrackMetadata]:
+    async def get_track(self, url: str) -> TrackMetadata | None:
         tracks = await apple_music_service.get_tracks(url)
         if tracks:
             t = tracks[0]

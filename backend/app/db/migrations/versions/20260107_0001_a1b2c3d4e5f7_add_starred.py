@@ -6,8 +6,8 @@ Create Date: 2026-01-07 00:01:00.000000
 
 """
 
-from alembic import op
 import sqlalchemy as sa
+from alembic import op
 
 # revision identifiers, used by Alembic.
 revision = "a1b2c3d4e5f7"
@@ -41,9 +41,7 @@ def upgrade() -> None:
         ["artist_id"],
         unique=False,
     )
-    op.create_index(
-        op.f("ix_starred_artists_user_id"), "starred_artists", ["user_id"], unique=False
-    )
+    op.create_index(op.f("ix_starred_artists_user_id"), "starred_artists", ["user_id"], unique=False)
 
     # Starred Albums
     op.create_table(
@@ -63,12 +61,8 @@ def upgrade() -> None:
         sa.PrimaryKeyConstraint("id"),
         sa.UniqueConstraint("user_id", "album_id", name="unique_starred_album"),
     )
-    op.create_index(
-        op.f("ix_starred_albums_album_id"), "starred_albums", ["album_id"], unique=False
-    )
-    op.create_index(
-        op.f("ix_starred_albums_user_id"), "starred_albums", ["user_id"], unique=False
-    )
+    op.create_index(op.f("ix_starred_albums_album_id"), "starred_albums", ["album_id"], unique=False)
+    op.create_index(op.f("ix_starred_albums_user_id"), "starred_albums", ["user_id"], unique=False)
 
     # Starred Tracks
     op.create_table(
@@ -88,12 +82,8 @@ def upgrade() -> None:
         sa.PrimaryKeyConstraint("id"),
         sa.UniqueConstraint("user_id", "track_id", name="unique_starred_track"),
     )
-    op.create_index(
-        op.f("ix_starred_tracks_track_id"), "starred_tracks", ["track_id"], unique=False
-    )
-    op.create_index(
-        op.f("ix_starred_tracks_user_id"), "starred_tracks", ["user_id"], unique=False
-    )
+    op.create_index(op.f("ix_starred_tracks_track_id"), "starred_tracks", ["track_id"], unique=False)
+    op.create_index(op.f("ix_starred_tracks_user_id"), "starred_tracks", ["user_id"], unique=False)
 
 
 def downgrade() -> None:

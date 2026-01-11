@@ -12,9 +12,7 @@ class FallbackService:
             "https://invidious.nerdvpn.de",
         ]
 
-    def get_fallback_instruction(
-        self, download_source: str, attempt: int, track_metadata
-    ) -> dict:
+    def get_fallback_instruction(self, download_source: str, attempt: int, track_metadata) -> dict:
         """
         Determine the next download strategy based on the source service and retry attempt.
         Returns a dict with 'type' (yt_search, sc_search, direct, proxy) and 'query'/'url'.

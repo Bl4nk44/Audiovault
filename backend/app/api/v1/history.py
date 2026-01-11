@@ -1,12 +1,13 @@
-from fastapi import APIRouter, Depends, HTTPException
-from sqlalchemy.ext.asyncio import AsyncSession
-from app.db.database import get_db
+from uuid import UUID
+
 from app.core.dependencies import get_current_active_user
-from app.models.user import User
+from app.db.database import get_db
 from app.models.history import ListeningHistory
 from app.models.track import Track
+from app.models.user import User
+from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
-from uuid import UUID
+from sqlalchemy.ext.asyncio import AsyncSession
 
 router = APIRouter()
 

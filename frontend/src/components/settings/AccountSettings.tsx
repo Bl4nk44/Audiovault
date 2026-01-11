@@ -239,22 +239,6 @@ export default function AccountSettings() {
                 </span>
               )}
             </div>
-            <div className="space-y-2">
-              <label className="text-sm font-medium text-gray-300 ml-1">
-                {t("settings.avatarUrl")}
-              </label>
-              <input
-                {...register("avatar_url")}
-                placeholder={
-                  typeof user?.preferences?.avatar_url === "string" &&
-                  user.preferences.avatar_url &&
-                  !user.preferences.avatar_url.startsWith("http")
-                    ? "Uploaded Image Activity (Enter URL to override)"
-                    : "https://example.com/avatar.jpg"
-                }
-                className="w-full px-4 py-3 rounded-xl bg-black/20 border border-white/10 text-white focus:outline-none focus:border-primary/50 placeholder:text-gray-600"
-              />
-            </div>
           </div>
 
           <div className="flex justify-end">

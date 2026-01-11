@@ -1,7 +1,8 @@
-import aiohttp
-import re
 import logging
-from typing import List, Dict, Any, Optional
+import re
+from typing import Any
+
+import aiohttp
 
 logger = logging.getLogger(__name__)
 
@@ -12,9 +13,7 @@ class DeezerService:
     def __init__(self):
         pass
 
-    async def search(
-        self, query: str, limit: int = 20, offset: int = 0
-    ) -> List[Dict[str, Any]]:
+    async def search(self, query: str, limit: int = 20, offset: int = 0) -> list[dict[str, Any]]:
         # Resolve short links (deezer.page.link)
         if (
             "deezer.page.link" in query or "deezer.com" in query
@@ -59,7 +58,7 @@ class DeezerService:
 
                 return tracks
 
-    async def get_track(self, track_id: str) -> Optional[Dict[str, Any]]:
+    async def get_track(self, track_id: str) -> dict[str, Any] | None:
         async with aiohttp.ClientSession() as session:
             async with session.get(f"{self.BASE_URL}/track/{track_id}") as response:
                 if response.status != 200:
@@ -69,11 +68,9 @@ class DeezerService:
                     return None
                 return self._format_track(data)
 
-    async def get_album_tracks(self, album_id: str) -> List[Dict[str, Any]]:
+    async def get_album_tracks(self, album_id: str) -> list[dict[str, Any]]:
         async with aiohttp.ClientSession() as session:
-            async with session.get(
-                f"{self.BASE_URL}/album/{album_id}/tracks", params={"limit": 500}
-            ) as response:
+            async with session.get(f"{self.BASE_URL}/album/{album_id}/tracks", params={"limit": 500}) as response:
                 if response.status != 200:
                     return []
                 data = await response.json()
@@ -89,11 +86,9 @@ class DeezerService:
                     tracks.append(self._format_track(item))
                 return tracks
 
-    async def get_playlist_tracks(self, playlist_id: str) -> List[Dict[str, Any]]:
+    async def get_playlist_tracks(self, playlist_id: str) -> list[dict[str, Any]]:
         async with aiohttp.ClientSession() as session:
-            async with session.get(
-                f"{self.BASE_URL}/playlist/{playlist_id}/tracks", params={"limit": 500}
-            ) as response:
+            async with session.get(f"{self.BASE_URL}/playlist/{playlist_id}/tracks", params={"limit": 500}) as response:
                 if response.status != 200:
                     return []
                 data = await response.json()
@@ -102,11 +97,9 @@ class DeezerService:
                     tracks.append(self._format_track(item))
                 return tracks
 
-    async def get_playlist_details(self, playlist_id: str) -> Optional[Dict[str, Any]]:
+    async def get_playlist_details(self, playlist_id: str) -> dict[str, Any] | None:
         async with aiohttp.ClientSession() as session:
-            async with session.get(
-                f"{self.BASE_URL}/playlist/{playlist_id}"
-            ) as response:
+            async with session.get(f"{self.BASE_URL}/playlist/{playlist_id}") as response:
                 if response.status != 200:
                     return None
                 data = await response.json()
@@ -123,15 +116,13 @@ class DeezerService:
                     "id": str(data["id"]),
                     "title": data["title"],
                     "description": data.get("description", ""),
-                    "image_url": data.get("picture_medium")
-                    or data.get("picture_big")
-                    or data.get("picture"),
+                    "image_url": data.get("picture_medium") or data.get("picture_big") or data.get("picture"),
                     "source": "deezer",
                     "author": data.get("creator", {}).get("name"),
                     "tracks": tracks,
                 }
 
-    async def get_artist_details(self, artist_id: str) -> Optional[Dict[str, Any]]:
+    async def get_artist_details(self, artist_id: str) -> dict[str, Any] | None:
         async with aiohttp.ClientSession() as session:
             # 1. Get Artist Info
             async with session.get(f"{self.BASE_URL}/artist/{artist_id}") as response:
@@ -143,9 +134,7 @@ class DeezerService:
 
             # 2. Get Top Tracks
             top_tracks = []
-            async with session.get(
-                f"{self.BASE_URL}/artist/{artist_id}/top", params={"limit": 10}
-            ) as response:
+            async with session.get(f"{self.BASE_URL}/artist/{artist_id}/top", params={"limit": 10}) as response:
                 if response.status == 200:
                     data = await response.json()
                     for item in data.get("data", []):
@@ -153,9 +142,7 @@ class DeezerService:
 
             # 3. Get Albums
             albums = []
-            async with session.get(
-                f"{self.BASE_URL}/artist/{artist_id}/albums", params={"limit": 20}
-            ) as response:
+            async with session.get(f"{self.BASE_URL}/artist/{artist_id}/albums", params={"limit": 20}) as response:
                 if response.status == 200:
                     data = await response.json()
                     for item in data.get("data", []):
@@ -163,11 +150,8 @@ class DeezerService:
                             {
                                 "id": str(item["id"]),
                                 "title": item["title"],
-                                "image_url": item.get("cover_medium")
-                                or item.get("cover_big"),
-                                "year": item.get("release_date", "")[:4]
-                                if item.get("release_date")
-                                else None,
+                                "image_url": item.get("cover_medium") or item.get("cover_big"),
+                                "year": item.get("release_date", "")[:4] if item.get("release_date") else None,
                                 "source": "deezer",
                             }
                         )
@@ -182,7 +166,7 @@ class DeezerService:
                 "source": "deezer",
             }
 
-    def _format_track(self, item: Dict[str, Any]) -> Dict[str, Any]:
+    def _format_track(self, item: dict[str, Any]) -> dict[str, Any]:
         # Safe image extraction
         image_url = None
         album_name = "Unknown Album"

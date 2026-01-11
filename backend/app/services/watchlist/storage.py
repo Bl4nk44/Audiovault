@@ -1,9 +1,8 @@
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.future import select
+from app.models.download import Download
 from app.models.track import Track
 from app.models.watchlist_item import WatchlistItem
-from app.models.download import Download
-from typing import Optional, Set
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.future import select
 
 
 class WatchlistStorage:
@@ -15,22 +14,16 @@ class WatchlistStorage:
 
         if existing_track:
             if not is_legacy_source:
-                self._update_existing_track_metadata(
-                    db, existing_track, track_data, source
-                )
+                self._update_existing_track_metadata(db, existing_track, track_data, source)
             return existing_track.id, False
         else:
-            new_track = self._create_new_track_instance(
-                track_data, source, is_legacy_source
-            )
+            new_track = self._create_new_track_instance(track_data, source, is_legacy_source)
             db.add(new_track)
             await db.commit()
             await db.refresh(new_track)
             return new_track.id, True
 
-    async def _find_existing_track(
-        self, db: AsyncSession, track_data: dict, source: str
-    ) -> Optional[Track]:
+    async def _find_existing_track(self, db: AsyncSession, track_data: dict, source: str) -> Track | None:
         track_query = select(Track)
         if source == "spotify":
             track_query = track_query.where(Track.spotify_id == track_data["id"])
@@ -39,15 +32,11 @@ class WatchlistStorage:
         elif source == "deezer":
             track_query = track_query.where(Track.deezer_id == track_data["id"])
         else:
-            track_query = track_query.where(
-                Track.title == track_data["title"], Track.artist == track_data["artist"]
-            )
+            track_query = track_query.where(Track.title == track_data["title"], Track.artist == track_data["artist"])
         result = await db.execute(track_query)
         return result.scalar_one_or_none()
 
-    def _update_existing_track_metadata(
-        self, db: AsyncSession, track: Track, track_data: dict, source: str
-    ):
+    def _update_existing_track_metadata(self, db: AsyncSession, track: Track, track_data: dict, source: str):
         source_id_key = f"{source}_id"
         meta = dict(track.metadata_content or {})
         if source_id_key not in meta:
@@ -55,9 +44,7 @@ class WatchlistStorage:
             track.metadata_content = meta
             db.add(track)
 
-    def _create_new_track_instance(
-        self, track_data: dict, source: str, is_legacy_source: bool
-    ) -> Track:
+    def _create_new_track_instance(self, track_data: dict, source: str, is_legacy_source: bool) -> Track:
         meta = {"image_url": track_data.get("image_url")}
         if not is_legacy_source:
             meta[f"{source}_id"] = track_data["id"]
@@ -81,9 +68,7 @@ class WatchlistStorage:
 
         return Track(**track_kwargs)
 
-    async def ensure_watchlist_item_link(
-        self, db: AsyncSession, watchlist_id: str, track_id: str
-    ):
+    async def ensure_watchlist_item_link(self, db: AsyncSession, watchlist_id: str, track_id: str):
         """Ensure the link between watchlist and track exists."""
         wl_item_check = await db.execute(
             select(WatchlistItem).where(
@@ -92,15 +77,11 @@ class WatchlistStorage:
             )
         )
         if not wl_item_check.scalar_one_or_none():
-            new_wl_item = WatchlistItem(
-                watchlist_id=watchlist_id, track_id=track_id, position=None
-            )
+            new_wl_item = WatchlistItem(watchlist_id=watchlist_id, track_id=track_id, position=None)
             db.add(new_wl_item)
             await db.commit()
 
-    async def get_existing_download_ids(
-        self, db: AsyncSession, user_id: str, source: str
-    ) -> Set[str]:
+    async def get_existing_download_ids(self, db: AsyncSession, user_id: str, source: str) -> set[str]:
         """Get set of source IDs for tracks already downloaded by the user."""
         downloaded_tracks_query = (
             select(Track)

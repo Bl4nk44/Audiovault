@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 
-import { notify as toast } from '../../utils/notify';
+import { notify as toast } from "../../utils/notify";
 import { motion } from "framer-motion";
 import {
   Save,
@@ -242,6 +242,25 @@ export default function SettingsPanel() {
                   </div>
                 </div>
               </div>
+
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-gray-300 ml-1 flex items-center gap-2">
+                  <Download size={16} /> {t("settings.maxDownloads")}
+                </label>
+                <input
+                  type="number"
+                  min="1"
+                  max="10"
+                  value={settings.maxParallelDownloads}
+                  onChange={(e) =>
+                    setSettings({
+                      ...settings,
+                      maxParallelDownloads: parseInt(e.target.value),
+                    })
+                  }
+                  className="w-full px-4 py-3 rounded-xl bg-black/20 border border-white/10 text-white focus:outline-none focus:border-primary/50"
+                />
+              </div>
             </div>
           </motion.div>
         )}
@@ -406,25 +425,6 @@ export default function SettingsPanel() {
                     ))}
                 </div>
               </div>
-
-              <div className="space-y-2">
-                <label className="text-sm font-medium text-gray-300 ml-1 flex items-center gap-2">
-                  <Download size={16} /> {t("settings.maxDownloads")}
-                </label>
-                <input
-                  type="number"
-                  min="1"
-                  max="10"
-                  value={settings.maxParallelDownloads}
-                  onChange={(e) =>
-                    setSettings({
-                      ...settings,
-                      maxParallelDownloads: parseInt(e.target.value),
-                    })
-                  }
-                  className="w-full px-4 py-3 rounded-xl bg-black/20 border border-white/10 text-white focus:outline-none focus:border-primary/50"
-                />
-              </div>
             </div>
           </motion.div>
         )}
@@ -444,4 +444,3 @@ export default function SettingsPanel() {
     </div>
   );
 }
-

@@ -355,17 +355,17 @@ export default function Dashboard() {
                           }}
                           className="flex items-center gap-4 p-3 rounded-2xl bg-white/5 border-b-4 border-white/5 transition-all group cursor-pointer border-t border-r border-l hover:border-white/10 hover:bg-white/10"
                         >
-                          <div className="w-12 h-12 rounded-xl bg-linear-to-br from-primary to-primary/60 flex items-center justify-center shadow-lg shadow-primary/20 group-hover:scale-110 transition-transform duration-300 relative overflow-hidden shrink-0">
+                          <div className="w-12 h-12 rounded-xl bg-linear-to-br from-primary to-primary/60 flex items-center justify-center group-hover:scale-110 transition-transform duration-300 relative overflow-hidden shrink-0">
                             {activity.image_url ? (
                               <img
                                 src={activity.image_url}
                                 alt={activity.title}
-                                className="w-full h-full object-cover opacity-90 group-hover:opacity-100 transition-opacity"
+                                className="w-full h-full object-cover transition-opacity"
                               />
                             ) : (
                               <Music size={24} className="text-black/50" />
                             )}
-                            <div className="absolute inset-0 bg-black/30 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity backdrop-blur-[1px] z-10">
+                            <div className="absolute inset-0 bg-black/10 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity z-10">
                               <Play
                                 size={20}
                                 className="text-white fill-white drop-shadow-md"

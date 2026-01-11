@@ -1,8 +1,8 @@
-from typing import List, Optional
-from app.providers.base import MusicProvider
-from app.schemas.metadata import TrackMetadata, PlaylistMetadata
-from app.services.youtube_service import YouTubeService
 import re
+
+from app.providers.base import MusicProvider
+from app.schemas.metadata import PlaylistMetadata, TrackMetadata
+from app.services.youtube_service import YouTubeService
 
 
 class YouTubeProvider(MusicProvider):
@@ -14,13 +14,13 @@ class YouTubeProvider(MusicProvider):
         return "youtube"
 
     @property
-    def domains(self) -> List[str]:
+    def domains(self) -> list[str]:
         return ["youtube.com", "youtu.be", "music.youtube.com"]
 
     def can_handle(self, url: str) -> bool:
         return any(domain in url for domain in self.domains)
 
-    async def extract_playlist(self, url: str) -> Optional[PlaylistMetadata]:
+    async def extract_playlist(self, url: str) -> PlaylistMetadata | None:
         # Handle ID or URL
         playlist_id = url
         match = re.search(r"[?&]list=([a-zA-Z0-9_-]+)", url)
@@ -79,7 +79,7 @@ class YouTubeProvider(MusicProvider):
             source_id=playlist_id,
         )
 
-    async def get_track(self, url: str) -> Optional[TrackMetadata]:
+    async def get_track(self, url: str) -> TrackMetadata | None:
         # Not implemented for generic YT link yet, usually used for search
         # But if needed:
         return None

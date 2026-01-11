@@ -1,8 +1,9 @@
-from fastapi import APIRouter, HTTPException
-from pydantic import BaseModel, model_validator
+import logging
+
 from app.providers import provider_manager
 from app.schemas.metadata import PlaylistMetadata
-import logging
+from fastapi import APIRouter, HTTPException
+from pydantic import BaseModel, model_validator
 
 router = APIRouter()
 logger = logging.getLogger(__name__)
@@ -45,19 +46,14 @@ class ImportRequest(BaseModel):
                 domain = domain[4:]
 
             # Check for exact matches or subdomains (simplified for now to exact allowed list or ends with)
-            return any(
-                domain == allowed or domain.endswith("." + allowed)
-                for allowed in allowed_domains
-            )
+            return any(domain == allowed or domain.endswith("." + allowed) for allowed in allowed_domains)
         except Exception:
             return False
 
     @model_validator(mode="after")
     def validate_url(self):
         if not self.is_valid_domain:
-            raise ValueError(
-                f"Invalid URL: {self.url}. Domain not supported or invalid scheme."
-            )
+            raise ValueError(f"Invalid URL: {self.url}. Domain not supported or invalid scheme.")
         return self
 
 
@@ -83,4 +79,4 @@ async def import_playlist(request: ImportRequest):
 
     except Exception as e:
         logger.error(f"Import failed: {e}", exc_info=True)
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail=str(e)) from e

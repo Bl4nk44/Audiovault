@@ -2,6 +2,7 @@ import logging
 import sys
 from logging.handlers import TimedRotatingFileHandler
 from pathlib import Path
+
 from app.core.config import settings
 
 

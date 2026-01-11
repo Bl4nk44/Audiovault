@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
-from typing import List, Optional
-from app.schemas.metadata import TrackMetadata, PlaylistMetadata
+
+from app.schemas.metadata import PlaylistMetadata, TrackMetadata
 
 
 class MusicProvider(ABC):
@@ -12,7 +12,7 @@ class MusicProvider(ABC):
 
     @property
     @abstractmethod
-    def domains(self) -> List[str]:
+    def domains(self) -> list[str]:
         """List of supported domains (e.g., ['spotify.com', 'open.spotify.com'])"""
         pass
 
@@ -22,11 +22,11 @@ class MusicProvider(ABC):
         pass
 
     @abstractmethod
-    async def extract_playlist(self, url: str) -> Optional[PlaylistMetadata]:
+    async def extract_playlist(self, url: str) -> PlaylistMetadata | None:
         """Extract metadata from a playlist URL"""
         pass
 
     @abstractmethod
-    async def get_track(self, url: str) -> Optional[TrackMetadata]:
+    async def get_track(self, url: str) -> TrackMetadata | None:
         """Extract metadata from a single track URL"""
         pass

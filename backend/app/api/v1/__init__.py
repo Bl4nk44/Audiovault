@@ -1,22 +1,22 @@
-from fastapi import APIRouter
 from app.api.v1 import (
-    auth,
-    spotify,
-    downloads,
-    settings,
-    watchlist,
-    history,
-    youtube,
-    dashboard,
-    stream,
-    users,
-    deezer,
-    artists,
-    apple_music,
-    tidal,
     amazon_music,
+    apple_music,
+    artists,
+    auth,
+    dashboard,
+    deezer,
+    downloads,
+    history,
+    settings,
     soundcloud,
+    spotify,
+    stream,
+    tidal,
+    users,
+    watchlist,
+    youtube,
 )
+from fastapi import APIRouter
 
 api_router = APIRouter()
 api_router.include_router(auth.router, prefix="/auth", tags=["auth"])
@@ -32,11 +32,7 @@ api_router.include_router(stream.router, prefix="/stream", tags=["stream"])
 api_router.include_router(users.router, prefix="/users", tags=["users"])
 api_router.include_router(deezer.router, prefix="/deezer", tags=["deezer"])
 api_router.include_router(artists.router, prefix="/artists", tags=["artists"])
-api_router.include_router(
-    apple_music.router, prefix="/apple_music", tags=["apple_music"]
-)
+api_router.include_router(apple_music.router, prefix="/apple_music", tags=["apple_music"])
 api_router.include_router(tidal.router, prefix="/tidal", tags=["tidal"])
-api_router.include_router(
-    amazon_music.router, prefix="/amazon_music", tags=["amazon_music"]
-)
+api_router.include_router(amazon_music.router, prefix="/amazon_music", tags=["amazon_music"])
 api_router.include_router(soundcloud.router, prefix="/soundcloud", tags=["soundcloud"])

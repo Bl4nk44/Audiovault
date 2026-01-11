@@ -33,7 +33,7 @@ DEFAULT_TOKEN_LIFETIME_DAYS = 30
 
 class SubsonicAuthError(Exception):
     """Raised when Subsonic authentication fails."""
-    
+
     def __init__(self, code: int, message: str):
         self.code = code
         self.message = message
@@ -43,23 +43,23 @@ class SubsonicAuthError(Exception):
 def generate_token() -> tuple[str, str]:
     """
     Generate a random token and salt for Subsonic auth.
-    
+
     Returns:
         Tuple of (token, salt)
     """
     token = secrets.token_hex(32)  # 64 chars
-    salt = secrets.token_hex(16)   # 32 chars
+    salt = secrets.token_hex(16)  # 32 chars
     return token, salt
 
 
 def compute_md5_token(password: str, salt: str) -> str:
     """
     Compute MD5(password+salt) as per Subsonic spec.
-    
+
     Args:
         password: The password or token
         salt: The salt value
-        
+
     Returns:
         MD5 hash as hex string
     """
@@ -73,9 +73,7 @@ async def get_user_by_username(
     username: str,
 ) -> User | None:
     """Get user by username."""
-    result = await db.execute(
-        select(User).where(User.username == username)
-    )
+    result = await db.execute(select(User).where(User.username == username))
     return result.scalar_one_or_none()
 
 
@@ -87,16 +85,16 @@ async def verify_token_auth(
 ) -> bool:
     """
     Verify token-based authentication.
-    
+
     Client sends: t=MD5(token+s), s=salt
     We check if any of user's tokens match.
-    
+
     Args:
         db: Database session
         user: User to verify
         client_token: MD5 hash from client (t parameter)
         client_salt: Salt from client (s parameter)
-        
+
     Returns:
         True if authentication successful
     """
@@ -111,17 +109,17 @@ async def verify_token_auth(
         )
     )
     tokens = result.scalars().all()
-    
+
     for token_obj in tokens:
         # Compute expected hash: MD5(stored_token + client_salt)
         expected = compute_md5_token(token_obj.token, client_salt)
-        
+
         if secrets.compare_digest(client_token, expected):
             # Update last used timestamp
             token_obj.last_used_at = datetime.now(UTC)
             await db.commit()
             return True
-    
+
     return False
 
 
@@ -134,20 +132,20 @@ async def create_auth_token(
 ) -> SubsonicAuthToken:
     """
     Create a new authentication token for a user.
-    
+
     Args:
         db: Database session
         user: User to create token for
         client_name: Name of the client application
         client_version: Version of the client
         lifetime_days: Token lifetime in days
-        
+
     Returns:
         Created SubsonicAuthToken
     """
     token, salt = generate_token()
     expires_at = datetime.now(UTC) + timedelta(days=lifetime_days)
-    
+
     auth_token = SubsonicAuthToken(
         user_id=user.id,
         token=token,
@@ -156,23 +154,23 @@ async def create_auth_token(
         client_version=client_version,
         expires_at=expires_at,
     )
-    
+
     db.add(auth_token)
     await db.commit()
     await db.refresh(auth_token)
-    
+
     return auth_token
 
 
 def decode_hex_password(password: str) -> str:
     """
     Decode hex-encoded password (enc: prefix).
-    
+
     Some clients send passwords as: enc:48656c6c6f (hex for "Hello")
-    
+
     Args:
         password: Password string, possibly with enc: prefix
-        
+
     Returns:
         Decoded password
     """
@@ -196,12 +194,12 @@ async def subsonic_auth(
 ) -> User:
     """
     Subsonic authentication dependency.
-    
+
     Supports three authentication methods:
     1. Plaintext password: p=mypassword
     2. Hex-encoded password: p=enc:6d7970617373776f7264
     3. Token-based: t=md5hash&s=salt
-    
+
     Args:
         u: Username
         p: Password (plaintext or hex-encoded)
@@ -211,16 +209,16 @@ async def subsonic_auth(
         v: API version
         f: Response format
         db: Database session
-        
+
     Returns:
         Authenticated User object
-        
+
     Raises:
         HTTPException: If authentication fails
     """
     # Get user by username
     user = await get_user_by_username(db, u)
-    
+
     if not user:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
@@ -228,11 +226,11 @@ async def subsonic_auth(
                 "subsonic-response": {
                     "status": "failed",
                     "version": "1.16.1",
-                    "error": {"code": 40, "message": "Wrong username or password"}
+                    "error": {"code": 40, "message": "Wrong username or password"},
                 }
-            }
+            },
         )
-    
+
     if not user.is_active:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
@@ -240,24 +238,24 @@ async def subsonic_auth(
                 "subsonic-response": {
                     "status": "failed",
                     "version": "1.16.1",
-                    "error": {"code": 50, "message": "User is disabled"}
+                    "error": {"code": 50, "message": "User is disabled"},
                 }
-            }
+            },
         )
-    
+
     auth_success = False
-    
+
     # Method 1: Token-based authentication (t + s)
     # Some clients might send both t/s and p. We try token first.
     if t and s:
         auth_success = await verify_token_auth(db, user, t, s)
-    
+
     # Method 2: Password-based authentication (p)
     # Include fallback: If token auth failed (or wasn't provided), but password IS provided, try password.
     if not auth_success and p:
         password = decode_hex_password(p)
         auth_success = verify_password(password, user.hashed_password)
-    
+
     if not auth_success:
         logger.warning(f"Subsonic auth failed for user {u}. Token provided: {bool(t)}, Password provided: {bool(p)}")
         raise HTTPException(
@@ -266,18 +264,18 @@ async def subsonic_auth(
                 "subsonic-response": {
                     "status": "failed",
                     "version": "1.16.1",
-                    "error": {"code": 40, "message": "Wrong username or password"}
+                    "error": {"code": 40, "message": "Wrong username or password"},
                 }
-            }
+            },
         )
-    
+
     return user
 
 
 # Dependency that also returns common query params
 class SubsonicParams:
     """Common Subsonic request parameters."""
-    
+
     def __init__(
         self,
         u: str = Query(..., description="Username"),

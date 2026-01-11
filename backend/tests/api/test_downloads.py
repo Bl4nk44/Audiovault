@@ -1,16 +1,15 @@
-import pytest
-from httpx import AsyncClient
-from app.models.user import User
-from app.models.download import Download
-from app.models.track import Track
-from sqlalchemy.ext.asyncio import AsyncSession
 import uuid
 
+import pytest
+
 # Assuming client and db_session fixtures are from conftest.py
-
-
 from app.core.dependencies import get_current_active_user
 from app.main import app
+from app.models.download import Download
+from app.models.track import Track
+from app.models.user import User
+from httpx import AsyncClient
+from sqlalchemy.ext.asyncio import AsyncSession
 
 
 @pytest.fixture
@@ -33,9 +32,7 @@ def override_auth_dependency(db_session):
 
 
 @pytest.mark.asyncio
-async def test_get_library(
-    client: AsyncClient, db_session: AsyncSession, override_auth_dependency
-):
+async def test_get_library(client: AsyncClient, db_session: AsyncSession, override_auth_dependency):
     user = override_auth_dependency
     db_session.add(user)
 
@@ -51,9 +48,7 @@ async def test_get_library(
         source="spotify",
         file_path="/tmp/test_lib.mp3",
     )
-    dl.track = (
-        track  # Manual rel assignment for unit test, but here it's full integration?
-    )
+    dl.track = track  # Manual rel assignment for unit test, but here it's full integration?
     # In full integration with DB, relationship loads via foreign keys.
     # But since SQLite in-memory, we must ensure flush/commit happens.
 
@@ -62,18 +57,14 @@ async def test_get_library(
 
     response = await client.get("/api/v1/downloads/library")
     print(f"DEBUG: {response.text}")
-    assert response.status_code == 200, (
-        f"Status code {response.status_code}, response: {response.text}"
-    )
+    assert response.status_code == 200, f"Status code {response.status_code}, response: {response.text}"
     data = response.json()
     assert data["total"] == 1
     assert data["items"][0]["track"]["title"] == "Lib Track"
 
 
 @pytest.mark.asyncio
-async def test_get_queue(
-    client: AsyncClient, db_session: AsyncSession, override_auth_dependency
-):
+async def test_get_queue(client: AsyncClient, db_session: AsyncSession, override_auth_dependency):
     user = override_auth_dependency
     # User already added by fixture? No, fixture returns object but doesn't persist if we don't ADD it in fixture or test.
     # The fixture above defines the object. I should add it to DB in the test body to be safely scoped.
@@ -108,9 +99,7 @@ async def test_get_queue(
 
 
 @pytest.mark.asyncio
-async def test_update_library_item(
-    client: AsyncClient, db_session: AsyncSession, override_auth_dependency
-):
+async def test_update_library_item(client: AsyncClient, db_session: AsyncSession, override_auth_dependency):
     user = override_auth_dependency
     db_session.add(user)
 
@@ -118,9 +107,7 @@ async def test_update_library_item(
     db_session.add(track)
     await db_session.flush()
 
-    dl = Download(
-        id=uuid.uuid4(), user_id=user.id, track_id=track.id, status="completed"
-    )
+    dl = Download(id=uuid.uuid4(), user_id=user.id, track_id=track.id, status="completed")
     db_session.add(dl)
     await db_session.commit()
 
@@ -135,12 +122,8 @@ async def test_update_library_item(
 
 
 @pytest.mark.asyncio
-async def test_update_library_item_not_found(
-    client: AsyncClient, override_auth_dependency
-):
+async def test_update_library_item_not_found(client: AsyncClient, override_auth_dependency):
     # Don't add any item
     random_id = uuid.uuid4()
-    response = await client.put(
-        f"/api/v1/downloads/library/{random_id}", json={"title": "fail"}
-    )
+    response = await client.put(f"/api/v1/downloads/library/{random_id}", json={"title": "fail"})
     assert response.status_code == 404

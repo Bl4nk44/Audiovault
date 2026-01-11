@@ -1,19 +1,18 @@
 import os
 import shutil
-from datetime import datetime, timezone
-from typing import List, Dict, Any, Optional
+from datetime import UTC, datetime
+from typing import Any
 
+from app.core.config import settings
+from app.core.dependencies import get_current_active_user
+from app.db.database import get_db
+from app.models.download import Download
+from app.models.user import User
 from fastapi import APIRouter, Depends
+from sqlalchemy import func
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
-from sqlalchemy import func
 from sqlalchemy.orm import selectinload
-
-from app.db.database import get_db
-from app.core.dependencies import get_current_active_user
-from app.models.user import User
-from app.models.download import Download
-from app.core.config import settings
 
 router = APIRouter()
 
@@ -72,7 +71,7 @@ def _get_storage_free_space() -> str:
 # ... (skipping unchanged helper functions)
 
 
-async def _get_recent_activity(db: AsyncSession, user_id: int) -> List[Dict[str, Any]]:
+async def _get_recent_activity(db: AsyncSession, user_id: int) -> list[dict[str, Any]]:
     recent_query = (
         select(Download)
         .options(selectinload(Download.track))
@@ -100,9 +99,7 @@ async def _get_recent_activity(db: AsyncSession, user_id: int) -> List[Dict[str,
     return activity
 
 
-async def _get_active_download(
-    db: AsyncSession, user_id: int
-) -> Optional[Dict[str, Any]]:
+async def _get_active_download(db: AsyncSession, user_id: int) -> dict[str, Any] | None:
     # Priority: Downloading
     active_query = (
         select(Download)
@@ -145,9 +142,9 @@ def _calculate_time_ago(dt: datetime) -> str:
         return "Just now"
     # Assuming dt is stored as naive UTC or aware UTC.
     # If naive, assume UTC.
-    now = datetime.now(timezone.utc)
+    now = datetime.now(UTC)
     if dt.tzinfo is None:
-        dt = dt.replace(tzinfo=timezone.utc)
+        dt = dt.replace(tzinfo=UTC)
 
     diff = now - dt
     if diff.days > 0:
@@ -159,20 +156,23 @@ def _calculate_time_ago(dt: datetime) -> str:
     return "Just now"
 
 
-def _get_image_url(download: Download) -> Optional[str]:
+def _get_image_url(download: Download) -> str | None:
     if not download.track or not download.track.metadata_content:
         return None
     meta = download.track.metadata_content
-    return meta.get("image_url") or meta.get("album_art")
+    url = meta.get("image_url") or meta.get("album_art")
+    if url:
+        return url
+    
+    # Fallback to native endpoint
+    return f"{settings.API_V1_STR}/stream/{download.track.id}/cover"
 
 
 def _get_filename(download: Download) -> str:
     if not download.file_path:
         return "Unknown"
     try:
-        rel_path = os.path.relpath(download.file_path, settings.DOWNLOAD_DIR).replace(
-            "\\", "/"
-        )
+        rel_path = os.path.relpath(download.file_path, settings.DOWNLOAD_DIR).replace("\\", "/")
         if rel_path.startswith(".."):
             return os.path.basename(download.file_path)
         return rel_path

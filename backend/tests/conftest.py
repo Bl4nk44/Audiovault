@@ -1,14 +1,15 @@
-import pytest
 import asyncio
-from typing import AsyncGenerator
-from httpx import AsyncClient, ASGITransport
-from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
-from sqlalchemy.orm import sessionmaker
-from app.db.base import Base
-from app.main import app
-from app.db.database import get_db
-from unittest.mock import MagicMock, patch
 import os
+from collections.abc import AsyncGenerator
+from unittest.mock import MagicMock, patch
+
+import pytest
+from app.db.base import Base
+from app.db.database import get_db
+from app.main import app
+from httpx import ASGITransport, AsyncClient
+from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
+from sqlalchemy.orm import sessionmaker
 
 # Use in-memory SQLite for tests
 SQLALCHEMY_DATABASE_URL = "sqlite+aiosqlite:///:memory:"
@@ -51,21 +52,23 @@ async def db_session():
 @pytest.fixture(scope="function")
 async def mock_cache_manager():
     """Mock Redis cache manager to avoid connecting to real Redis."""
-    from app.core.cache import cache_manager as real_cache_manager
     from unittest.mock import AsyncMock
 
+    from app.core.cache import cache_manager as real_cache_manager
+
     # Patch the methods on the instance itself so all references see the mock
-    with patch.object(real_cache_manager, "connect", new_callable=AsyncMock) as mock_connect, \
-         patch.object(real_cache_manager, "close", new_callable=AsyncMock) as mock_close, \
-         patch.object(real_cache_manager, "get", new_callable=AsyncMock) as mock_get, \
-         patch.object(real_cache_manager, "set", new_callable=AsyncMock) as mock_set:
-        
+    with (
+        patch.object(real_cache_manager, "connect", new_callable=AsyncMock) as mock_connect,
+        patch.object(real_cache_manager, "close", new_callable=AsyncMock) as mock_close,
+        patch.object(real_cache_manager, "get", new_callable=AsyncMock) as mock_get,
+        patch.object(real_cache_manager, "set", new_callable=AsyncMock) as mock_set,
+    ):
         # Also mock the redis attribute if accessed directly
         real_cache_manager.redis = MagicMock()
         mock_get.return_value = None
-        
+
         yield real_cache_manager
-        
+
         # Cleanup
         real_cache_manager.redis = None
 
@@ -73,17 +76,23 @@ async def mock_cache_manager():
 @pytest.fixture(scope="function")
 async def mock_scheduler():
     """Mock scheduler service to prevent background tasks during tests."""
-    with patch("app.services.scheduler.scheduler_service.start"), \
-         patch("app.services.scheduler.scheduler_service.stop"), \
-         patch("app.services.scheduler.scheduler_service.scheduler.shutdown"):
+    with (
+        patch("app.services.scheduler.scheduler_service.start"),
+        patch("app.services.scheduler.scheduler_service.stop"),
+        patch("app.services.scheduler.scheduler_service.scheduler.shutdown"),
+    ):
         yield
+
 
 @pytest.fixture(scope="function")
 async def mock_download_manager():
     """Mock download manager worker to prevent background tasks."""
-    with patch("app.services.download_manager.download_manager.start_worker"), \
-         patch("app.services.download_manager.download_manager.resume_pending_downloads"):
+    with (
+        patch("app.services.download_manager.download_manager.start_worker"),
+        patch("app.services.download_manager.download_manager.resume_pending_downloads"),
+    ):
         yield
+
 
 @pytest.fixture(scope="function")
 async def client(
@@ -104,9 +113,7 @@ async def client(
         if not os.path.exists(temp_dir):
             os.makedirs(temp_dir, exist_ok=True)
 
-        async with AsyncClient(
-            transport=ASGITransport(app=app), base_url="http://localhost"
-        ) as c:
+        async with AsyncClient(transport=ASGITransport(app=app), base_url="http://localhost") as c:
             yield c
 
     app.dependency_overrides.clear()
@@ -116,4 +123,3 @@ async def client(
 async def cleanup_engine():
     yield
     await engine.dispose()
-

@@ -1,6 +1,7 @@
-import socketio
 import logging
 from typing import Any
+
+import socketio
 
 
 class SocketManager:

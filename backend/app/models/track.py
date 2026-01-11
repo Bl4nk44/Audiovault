@@ -1,8 +1,9 @@
-from sqlalchemy import Column, String, Integer, JSON, DateTime, ForeignKey
-from sqlalchemy import Uuid
-from sqlalchemy.orm import relationship
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from uuid import uuid4
+
+from sqlalchemy import JSON, Column, DateTime, ForeignKey, Integer, String, Uuid
+from sqlalchemy.orm import relationship
+
 from app.db.base import Base
 
 
@@ -11,9 +12,7 @@ class Track(Base):
 
     id = Column(Uuid(as_uuid=True), primary_key=True, default=uuid4)
     title = Column(String(500), index=True, nullable=False)
-    artist = Column(
-        String(500), index=True, nullable=True
-    )  # Kept for simple search/display, nullable if using rel
+    artist = Column(String(500), index=True, nullable=True)  # Kept for simple search/display, nullable if using rel
     album = Column(String(500), nullable=True)  # Kept for simple search/display
 
     # Foreign Keys
@@ -41,12 +40,8 @@ class Track(Base):
         },
     )
 
-    created_at = Column(
-        DateTime(timezone=True), default=lambda: datetime.now(timezone.utc)
-    )
-    updated_at = Column(
-        DateTime(timezone=True), onupdate=lambda: datetime.now(timezone.utc)
-    )
+    created_at = Column(DateTime(timezone=True), default=lambda: datetime.now(UTC))
+    updated_at = Column(DateTime(timezone=True), onupdate=lambda: datetime.now(UTC))
 
     # Relationships
     downloads = relationship("Download", back_populates="track")

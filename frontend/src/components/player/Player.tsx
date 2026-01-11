@@ -307,7 +307,7 @@ export default function Player() {
         <div
           className={cn(
             "flex items-center gap-3 md:gap-4 transition-all overflow-hidden",
-            isExpanded ? "flex-col text-center mb-8 w-full" : "w-1/2 md:w-1/3"
+            isExpanded ? "flex-col text-center mb-8 w-full" : "flex-1 w-0 min-w-0 md:w-1/3 md:min-w-0"
           )}
         >
           <div
@@ -331,11 +331,11 @@ export default function Player() {
               </div>
             )}
           </div>
-          <div>
+          <div className={cn("min-w-0", isExpanded ? "w-full" : "flex-1")}>
             <h3
               className={cn(
                 "font-bold text-white truncate",
-                isExpanded ? "text-3xl" : "text-base"
+                isExpanded ? "text-3xl" : "text-sm md:text-base"
               )}
             >
               {currentTrack.title}
@@ -501,9 +501,11 @@ export default function Player() {
       <audio
         ref={audioRef}
         src={streamUrl}
-        crossOrigin="anonymous"
+        crossOrigin={/iPhone|iPad|iPod/i.test(navigator.userAgent) ? undefined : "anonymous"}
         onTimeUpdate={handleTimeUpdate}
         onEnded={() => togglePlay()}
+        playsInline
+        preload="auto"
       >
         <track kind="captions" src="" label="English" />
       </audio>

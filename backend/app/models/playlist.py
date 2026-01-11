@@ -1,7 +1,8 @@
-from sqlalchemy import Column, Integer, String, ForeignKey, DateTime, Boolean, Uuid
-from sqlalchemy.orm import relationship
 from datetime import datetime
 from uuid import uuid4
+
+from sqlalchemy import Boolean, Column, DateTime, ForeignKey, Integer, String, Uuid
+from sqlalchemy.orm import relationship
 
 from app.db.base import Base
 
@@ -30,9 +31,7 @@ class Playlist(Base):
 class PlaylistTrack(Base):
     __tablename__ = "playlist_tracks"
 
-    playlist_id = Column(
-        Uuid(as_uuid=True), ForeignKey("playlists.id"), primary_key=True
-    )
+    playlist_id = Column(Uuid(as_uuid=True), ForeignKey("playlists.id"), primary_key=True)
     track_id = Column(Uuid(as_uuid=True), ForeignKey("tracks.id"), primary_key=True)
     order = Column(Integer, nullable=False, default=0)
 

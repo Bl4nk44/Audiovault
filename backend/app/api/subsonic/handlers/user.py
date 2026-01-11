@@ -46,15 +46,15 @@ async def star(
 ):
     """
     Add items to starred/favorites.
-    
+
     Can star songs, albums, and/or artists in a single request.
     Uses existing StarredTrack, StarredAlbum, StarredArtist models.
-    
+
     Args:
         id: Song/track IDs
         albumId: Album IDs
         artistId: Artist IDs
-        
+
     Returns:
         Empty success response
     """
@@ -63,7 +63,7 @@ async def star(
         for track_id_str in id:
             try:
                 track_id = UUID(track_id_str)
-                
+
                 # Check if already starred
                 result = await db.execute(
                     select(StarredTrack).where(
@@ -79,13 +79,13 @@ async def star(
                     db.add(starred)
             except ValueError:
                 continue
-    
+
     # Star albums
     if albumId:
         for album_id_str in albumId:
             try:
                 album_id = UUID(album_id_str)
-                
+
                 result = await db.execute(
                     select(StarredAlbum).where(
                         StarredAlbum.user_id == current_user.id,
@@ -100,13 +100,13 @@ async def star(
                     db.add(starred)
             except ValueError:
                 continue
-    
+
     # Star artists
     if artistId:
         for artist_id_str in artistId:
             try:
                 artist_id = UUID(artist_id_str)
-                
+
                 result = await db.execute(
                     select(StarredArtist).where(
                         StarredArtist.user_id == current_user.id,
@@ -121,7 +121,7 @@ async def star(
                     db.add(starred)
             except ValueError:
                 continue
-    
+
     await db.commit()
     return subsonic_response(f=f)
 
@@ -138,12 +138,12 @@ async def unstar(
 ):
     """
     Remove items from starred/favorites.
-    
+
     Args:
         id: Song/track IDs
         albumId: Album IDs
         artistId: Artist IDs
-        
+
     Returns:
         Empty success response
     """
@@ -160,7 +160,7 @@ async def unstar(
                 )
             except ValueError:
                 continue
-    
+
     # Unstar albums
     if albumId:
         for album_id_str in albumId:
@@ -174,7 +174,7 @@ async def unstar(
                 )
             except ValueError:
                 continue
-    
+
     # Unstar artists
     if artistId:
         for artist_id_str in artistId:
@@ -188,7 +188,7 @@ async def unstar(
                 )
             except ValueError:
                 continue
-    
+
     await db.commit()
     return subsonic_response(f=f)
 
@@ -203,7 +203,7 @@ async def get_starred(
 ):
     """
     Get all starred items (folder view format).
-    
+
     Returns:
         Starred artists, albums, and songs
     """
@@ -216,12 +216,14 @@ async def get_starred(
     )
     starred_artists = []
     for starred, artist in result.all():
-        starred_artists.append({
-            "id": str(artist.id),
-            "name": artist.name,
-            "starred": format_subsonic_date(starred.created_at),
-        })
-    
+        starred_artists.append(
+            {
+                "id": str(artist.id),
+                "name": artist.name,
+                "starred": format_subsonic_date(starred.created_at),
+            }
+        )
+
     # Get starred albums
     result = await db.execute(
         select(StarredAlbum, Album)
@@ -233,23 +235,23 @@ async def get_starred(
     for starred, album in result.all():
         artist_name = "Unknown Artist"
         if album.artist_id:
-            artist_result = await db.execute(
-                select(Artist.name).where(Artist.id == album.artist_id)
-            )
+            artist_result = await db.execute(select(Artist.name).where(Artist.id == album.artist_id))
             name = artist_result.scalar()
             if name:
                 artist_name = name
-        
-        starred_albums.append({
-            "id": str(album.id),
-            "parent": str(album.artist_id) if album.artist_id else "1",
-            "title": album.title,
-            "artist": artist_name,
-            "isDir": True,
-            "coverArt": f"al-{album.id}",
-            "starred": format_subsonic_date(starred.created_at),
-        })
-    
+
+        starred_albums.append(
+            {
+                "id": str(album.id),
+                "parent": str(album.artist_id) if album.artist_id else "1",
+                "title": album.title,
+                "artist": artist_name,
+                "isDir": True,
+                "coverArt": f"al-{album.id}",
+                "starred": format_subsonic_date(starred.created_at),
+            }
+        )
+
     # Get starred tracks
     result = await db.execute(
         select(StarredTrack, Track, Download)
@@ -259,7 +261,7 @@ async def get_starred(
             and_(
                 Download.track_id == Track.id,
                 Download.user_id == current_user.id,
-            )
+            ),
         )
         .where(StarredTrack.user_id == current_user.id)
         .order_by(Track.title)
@@ -269,14 +271,17 @@ async def get_starred(
         song = build_song_response(track, download)
         song["starred"] = format_subsonic_date(starred.created_at)
         starred_songs.append(song)
-    
-    return subsonic_response({
-        "starred": {
-            "artist": starred_artists,
-            "album": starred_albums,
-            "song": starred_songs,
-        }
-    }, f=f)
+
+    return subsonic_response(
+        {
+            "starred": {
+                "artist": starred_artists,
+                "album": starred_albums,
+                "song": starred_songs,
+            }
+        },
+        f=f,
+    )
 
 
 @router.get("/getStarred2.view")
@@ -289,22 +294,23 @@ async def get_starred2(
 ):
     """
     Get all starred items (ID3 format).
-    
+
     Same as getStarred but with ID3 album format.
     """
     # Get starred items using JSON format internally for manipulation
     result = await get_starred(musicFolderId, "json", current_user, db)
-    
+
     # Rename to starred2
     if "subsonic-response" in result and "starred" in result["subsonic-response"]:
         result["subsonic-response"]["starred2"] = result["subsonic-response"].pop("starred")
-    
+
     # Return in requested format
     if f == "json":
         return result
     else:
         # Convert to XML
         from app.schemas.subsonic.base import subsonic_response as build_response
+
         return build_response(result["subsonic-response"], f=f)
 
 
@@ -319,22 +325,22 @@ async def set_rating(
 ):
     """
     Set rating for a song.
-    
+
     Args:
         id: Song/track ID
         rating: Rating value 0-5 (0 = unrated)
-        
+
     Returns:
         Empty success response
     """
     if rating < 0 or rating > 5:
         return subsonic_error(10, "Rating must be between 0 and 5", f=f)
-    
+
     try:
         track_id = UUID(id)
     except ValueError:
         return subsonic_error(10, "Invalid song ID")
-    
+
     # Get or create rating
     result = await db.execute(
         select(SubsonicRating).where(
@@ -343,7 +349,7 @@ async def set_rating(
         )
     )
     existing = result.scalar_one_or_none()
-    
+
     if rating == 0:
         # Remove rating
         if existing:
@@ -360,7 +366,7 @@ async def set_rating(
             rating=rating,
         )
         db.add(new_rating)
-    
+
     await db.commit()
     return subsonic_response(f=f)
 
@@ -377,14 +383,14 @@ async def scrobble(
 ):
     """
     Record play/scrobble.
-    
+
     Uses existing ListeningHistory model.
-    
+
     Args:
         id: Song/track ID
         time: Timestamp when played (milliseconds)
         submission: True = full scrobble, False = now playing only
-        
+
     Returns:
         Empty success response
     """
@@ -392,13 +398,13 @@ async def scrobble(
         track_id = UUID(id)
     except ValueError:
         return subsonic_error(10, "Invalid song ID", f=f)
-    
+
     if submission:
         # Record in listening history
         played_at = datetime.now(UTC)
         if time:
             played_at = datetime.fromtimestamp(time / 1000, tz=UTC)
-        
+
         history_entry = ListeningHistory(
             user_id=current_user.id,
             track_id=track_id,
@@ -406,7 +412,7 @@ async def scrobble(
             duration_played=None,  # Could track this with now_playing
         )
         db.add(history_entry)
-    
+
     # Update now playing regardless
     result = await db.execute(
         select(SubsonicNowPlaying).where(
@@ -414,7 +420,7 @@ async def scrobble(
         )
     )
     now_playing = result.scalar_one_or_none()
-    
+
     if now_playing:
         now_playing.track_id = track_id
         now_playing.updated_at = datetime.now(UTC)
@@ -424,7 +430,7 @@ async def scrobble(
             track_id=track_id,
         )
         db.add(now_playing)
-    
+
     await db.commit()
     return subsonic_response(f=f)
 
@@ -438,13 +444,13 @@ async def get_now_playing(
 ):
     """
     Get currently playing tracks across all users.
-    
+
     Returns entries updated in the last 5 minutes.
     """
     from datetime import timedelta
-    
+
     cutoff = datetime.now(UTC) - timedelta(minutes=5)
-    
+
     result = await db.execute(
         select(SubsonicNowPlaying, Track, User, Download)
         .join(Track, Track.id == SubsonicNowPlaying.track_id)
@@ -454,27 +460,21 @@ async def get_now_playing(
             and_(
                 Download.track_id == Track.id,
                 Download.user_id == SubsonicNowPlaying.user_id,
-            )
+            ),
         )
         .where(SubsonicNowPlaying.updated_at >= cutoff)
         .order_by(SubsonicNowPlaying.updated_at.desc())
     )
-    
+
     entries = []
     for now_playing, track, user, download in result.all():
         song = build_song_response(track, download)
         song["username"] = user.username
-        song["minutesAgo"] = int(
-            (datetime.now(UTC) - now_playing.updated_at).total_seconds() / 60
-        )
+        song["minutesAgo"] = int((datetime.now(UTC) - now_playing.updated_at).total_seconds() / 60)
         song["playerId"] = now_playing.player_id or "0"
         entries.append(song)
-    
-    return subsonic_response({
-        "nowPlaying": {
-            "entry": entries
-        }
-    }, f=f)
+
+    return subsonic_response({"nowPlaying": {"entry": entries}}, f=f)
 
 
 @router.get("/getRandomSongs.view")
@@ -491,49 +491,43 @@ async def get_random_songs(
 ):
     """
     Get random songs.
-    
+
     Args:
         size: Number of songs to return (max 500)
         genre: Filter by genre
         fromYear: Filter from year
         toYear: Filter to year
-        
+
     Returns:
         Random song list
     """
     from sqlalchemy import func as sqlfunc
-    
+
     size = min(size, 500)
-    
+
     query = (
         select(Track, Download)
         .outerjoin(Download, (Download.track_id == Track.id) & (Download.user_id == current_user.id))
         .where(
-            # Download.user_id == current_user.id, 
+            # Download.user_id == current_user.id,
         )
     )
-    
+
     # Apply filters
     if fromYear:
         query = query.where(
             Track.metadata_content["year"].astext.cast(db.bind.dialect.type_descriptor(int)) >= fromYear
         )
     if toYear:
-        query = query.where(
-            Track.metadata_content["year"].astext.cast(db.bind.dialect.type_descriptor(int)) <= toYear
-        )
-    
+        query = query.where(Track.metadata_content["year"].astext.cast(db.bind.dialect.type_descriptor(int)) <= toYear)
+
     # Random order
     query = query.order_by(sqlfunc.random()).limit(size)
-    
+
     result = await db.execute(query)
-    
+
     songs = []
     for track, download in result.all():
         songs.append(build_song_response(track, download))
-    
-    return subsonic_response({
-        "randomSongs": {
-            "song": songs
-        }
-    }, f=f)
+
+    return subsonic_response({"randomSongs": {"song": songs}}, f=f)

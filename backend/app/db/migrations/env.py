@@ -1,25 +1,23 @@
 import asyncio
 from logging.config import fileConfig
 
-from sqlalchemy import pool
-from sqlalchemy.engine import Connection
-from sqlalchemy.ext.asyncio import async_engine_from_config
-
 from alembic import context
-
 from app.core.config import settings
 from app.db.base import Base
 from app.models import (  # noqa: F401
-    User,
-    Artist,
     Album,
-    Track,
+    Artist,
     Download,
+    ListeningHistory,
+    ServiceCredentials,
+    Track,
+    User,
     Watchlist,
     WatchlistItem,
-    ServiceCredentials,
-    ListeningHistory,
 )
+from sqlalchemy import pool
+from sqlalchemy.engine import Connection
+from sqlalchemy.ext.asyncio import async_engine_from_config
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
@@ -88,9 +86,7 @@ async def run_migrations_online() -> None:
     # If settings.DATABASE_URL is postgresql:// we might need to change it for async engine
     # But here we use async_engine_from_config which expects async driver.
     if configuration[SA_URL_KEY].startswith("postgresql://"):
-        configuration[SA_URL_KEY] = configuration[SA_URL_KEY].replace(
-            "postgresql://", "postgresql+asyncpg://", 1
-        )
+        configuration[SA_URL_KEY] = configuration[SA_URL_KEY].replace("postgresql://", "postgresql+asyncpg://", 1)
 
     connectable = async_engine_from_config(
         configuration,

@@ -10,7 +10,7 @@ try {
   version = fs
     .readFileSync(path.resolve(__dirname, "../VERSION"), "utf-8")
     .trim();
-} catch (e) {
+} catch {
   console.warn(
     "Could not read VERSION file (likely in Docker build), using fallback."
   );

@@ -1,7 +1,7 @@
-from fastapi import APIRouter, Depends, HTTPException
-from app.services.spotify_service import SpotifyService
 from app.core.dependencies import get_current_active_user
 from app.models.user import User
+from app.services.spotify_service import SpotifyService
+from fastapi import APIRouter, Depends, HTTPException
 
 router = APIRouter()
 
@@ -29,13 +29,11 @@ async def search_spotify(
         return service.search(q, limit, offset, type)
     except Exception as e:
         logger.error(f"Error in spotify search endpoint: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail=str(e)) from e
 
 
 @router.get("/track/{track_id}")
-async def get_spotify_track(
-    track_id: str, current_user: User = Depends(get_current_active_user)
-):
+async def get_spotify_track(track_id: str, current_user: User = Depends(get_current_active_user)):
     service = SpotifyService()
     if not service.client:
         raise HTTPException(status_code=503, detail=SPOTIFY_NOT_CONFIGURED_MSG)
@@ -48,9 +46,7 @@ async def get_spotify_track(
 
 
 @router.get("/playlist/{playlist_id}")
-async def get_spotify_playlist(
-    playlist_id: str, current_user: User = Depends(get_current_active_user)
-):
+async def get_spotify_playlist(playlist_id: str, current_user: User = Depends(get_current_active_user)):
     service = SpotifyService()
     if not service.client:
         raise HTTPException(status_code=503, detail=SPOTIFY_NOT_CONFIGURED_MSG)
@@ -63,9 +59,7 @@ async def get_spotify_playlist(
 
 
 @router.get("/artist/{artist_id}")
-async def get_spotify_artist(
-    artist_id: str, current_user: User = Depends(get_current_active_user)
-):
+async def get_spotify_artist(artist_id: str, current_user: User = Depends(get_current_active_user)):
     service = SpotifyService()
     if not service.client:
         raise HTTPException(status_code=503, detail=SPOTIFY_NOT_CONFIGURED_MSG)

@@ -17,6 +17,7 @@ from app.api.subsonic.handlers import (
 )
 from fastapi import APIRouter, Depends, Request, Response
 
+
 async def log_subsonic_request(request: Request):
     """Debug log for Subsonic requests to identify mobile client issues."""
     path = request.url.path
@@ -26,7 +27,7 @@ async def log_subsonic_request(request: Request):
         params["p"] = "***"
     if "t" in params:
         params["t"] = "***"
-    
+
     log_line = f"DEBUG: {path} | Params: {params}\n"
     try:
         with open("/app/subsonic_debug.log", "a") as f:
@@ -36,12 +37,10 @@ async def log_subsonic_request(request: Request):
     # Still print for console
     print(log_line, flush=True)
 
+
 # Create main router with logging dependency
 router = APIRouter(
-    prefix="/rest", 
-    tags=["subsonic"], 
-    dependencies=[Depends(log_subsonic_request)],
-    redirect_slashes=False
+    prefix="/rest", tags=["subsonic"], dependencies=[Depends(log_subsonic_request)], redirect_slashes=False
 )
 
 # Include all handler routers
@@ -54,6 +53,7 @@ router.include_router(user.router)
 router.include_router(lists.router)
 router.include_router(lyrics.router)
 router.include_router(info.router)
+
 
 @router.api_route("/{path_name:path}", methods=["GET", "POST"])
 async def catch_all_subsonic(request: Request, path_name: str):
@@ -68,5 +68,5 @@ async def catch_all_subsonic(request: Request, path_name: str):
     return Response(
         content='<?xml version="1.0" encoding="UTF-8"?>\n<subsonic-response xmlns="http://subsonic.org/restapi" status="failed" version="1.16.1"><error code="70" message="The requested data was not found"/></subsonic-response>',
         media_type="application/xml",
-        status_code=404
+        status_code=404,
     )

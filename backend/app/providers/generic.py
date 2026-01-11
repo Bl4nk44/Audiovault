@@ -1,9 +1,10 @@
-import yt_dlp
 import asyncio
-from typing import List, Optional
-from app.providers.base import MusicProvider
-from app.schemas.metadata import TrackMetadata, PlaylistMetadata
 import logging
+
+import yt_dlp
+
+from app.providers.base import MusicProvider
+from app.schemas.metadata import PlaylistMetadata, TrackMetadata
 
 logger = logging.getLogger(__name__)
 
@@ -17,7 +18,7 @@ class GenericProvider(MusicProvider):
         return self._name
 
     @property
-    def domains(self) -> List[str]:
+    def domains(self) -> list[str]:
         # yt-dlp supports hundreds of domains.
         # We return a wildcard or empty list implies "try this if specific ones fail"
         return ["*"]
@@ -27,7 +28,7 @@ class GenericProvider(MusicProvider):
         # For now, we assume it handles everything that specific providers don't.
         return True
 
-    async def extract_playlist(self, url: str) -> Optional[PlaylistMetadata]:
+    async def extract_playlist(self, url: str) -> PlaylistMetadata | None:
         ydl_opts = {
             "extract_flat": True,  # Extract metadata only, fast
             "dump_single_json": True,
@@ -47,7 +48,7 @@ class GenericProvider(MusicProvider):
                 return None
 
             entries = info.get("entries", [])
-            tracks: List[TrackMetadata] = []
+            tracks: list[TrackMetadata] = []
 
             # If single item (not playlist), entries might be empty/None, check plain info
             if not entries and info.get("_type") != "playlist":
@@ -60,12 +61,7 @@ class GenericProvider(MusicProvider):
 
                 title = entry.get("title")
                 # yt-dlp might put artist in 'uploader', 'artist', 'creator'
-                artist = (
-                    entry.get("artist")
-                    or entry.get("uploader")
-                    or entry.get("creator")
-                    or "Unknown Artist"
-                )
+                artist = entry.get("artist") or entry.get("uploader") or entry.get("creator") or "Unknown Artist"
 
                 if not title:
                     continue
@@ -75,9 +71,7 @@ class GenericProvider(MusicProvider):
                         title=title,
                         artist=artist,
                         album=entry.get("album"),
-                        duration_ms=int(entry.get("duration", 0) * 1000)
-                        if entry.get("duration")
-                        else None,
+                        duration_ms=int(entry.get("duration", 0) * 1000) if entry.get("duration") else None,
                         source_id=entry.get("id"),
                         source_url=entry.get("url") or entry.get("webpage_url"),
                         image_url=entry.get("thumbnail"),
@@ -95,7 +89,7 @@ class GenericProvider(MusicProvider):
             logger.error(f"GenericProvider extraction failed: {e}")
             return None
 
-    async def get_track(self, url: str) -> Optional[TrackMetadata]:
+    async def get_track(self, url: str) -> TrackMetadata | None:
         # Reuse playlist logic but expect single result
         playlist = await self.extract_playlist(url)
         if playlist and playlist.tracks:

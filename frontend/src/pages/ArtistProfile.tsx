@@ -185,7 +185,7 @@ export default function ArtistProfile() {
           </h2>
           <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4">
             {artist.albums.map((album) => {
-              // @ts-ignore - Backend returns simple image_url, type definition has images Record
+              // @ts-expect-error - Backend returns simple image_url, type definition has images Record
               const albumCover = album.image_url || album.images?.url;
 
               const isValid = isValidImageUrl(albumCover);

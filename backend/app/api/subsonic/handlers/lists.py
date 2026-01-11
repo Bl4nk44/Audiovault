@@ -39,19 +39,19 @@ async def get_genres(
 ):
     """
     Get genres.
-    
+
     Returns all genres found in ID3 tags.
     """
     # Updated to be dialect-aware (Postgres vs SQLite for tests)
-    
+
     # Check dialect to use correct JSON extraction
     is_postgres = db.bind.dialect.name == "postgresql" if hasattr(db.bind, "dialect") else True
-    
+
     if is_postgres:
-        genre_query = func.json_extract_path_text(Track.metadata_content, 'genre')
+        genre_query = func.json_extract_path_text(Track.metadata_content, "genre")
     else:
         # SQLite way for tests
-        genre_query = func.json_extract(Track.metadata_content, '$.genre')
+        genre_query = func.json_extract(Track.metadata_content, "$.genre")
 
     result = await db.execute(
         select(genre_query)
@@ -62,42 +62,35 @@ async def get_genres(
         )
         .distinct()
     )
-    
+
     genres_found = [r for r in result.scalars().all() if r]
-    
+
     # Sort and count (could be optimized with group_by in SQL if needed)
     genre_list = []
-    
+
     for genre_name in sorted(genres_found):
         # Count songs and albums (approximate)
         # Doing simple count query for each genre
         if is_postgres:
-             count_filter = func.json_extract_path_text(Track.metadata_content, 'genre') == genre_name
+            count_filter = func.json_extract_path_text(Track.metadata_content, "genre") == genre_name
         else:
-             count_filter = func.json_extract(Track.metadata_content, '$.genre') == genre_name
+            count_filter = func.json_extract(Track.metadata_content, "$.genre") == genre_name
 
         song_count = await db.scalar(
             select(func.count(Track.id))
             .join(Download, Download.track_id == Track.id)
-            .where(
-                Download.user_id == current_user.id,
-                Download.status == "completed",
-                count_filter
-            )
+            .where(Download.user_id == current_user.id, Download.status == "completed", count_filter)
         )
 
-        
-        genre_list.append({
-            "value": genre_name,
-            "songCount": song_count,
-            "albumCount": 1 # Dummy value for now as calculating distinct albums per genre is complex
-        })
-        
-    return subsonic_response({
-        "genres": {
-            "genre": genre_list
-        }
-    }, f=f)
+        genre_list.append(
+            {
+                "value": genre_name,
+                "songCount": song_count,
+                "albumCount": 1,  # Dummy value for now as calculating distinct albums per genre is complex
+            }
+        )
+
+    return subsonic_response({"genres": {"genre": genre_list}}, f=f)
 
 
 @router.get("/getAlbumList.view")
@@ -105,7 +98,9 @@ async def get_genres(
 @router.get("/getAlbumList2.view")
 @router.post("/getAlbumList2.view")
 async def get_album_list(
-    type: str = Query(..., description="List type: random, newest, frequent, recent, starred, alphabetical, byName, byYear"),
+    type: str = Query(
+        ..., description="List type: random, newest, frequent, recent, starred, alphabetical, byName, byYear"
+    ),
     size: int = Query(10, description="Return size"),
     offset: int = Query(0, description="Offset"),
     fromYear: int = Query(None, description="Filter from year"),
@@ -118,16 +113,16 @@ async def get_album_list(
 ):
     """
     Get list of albums.
-    
+
     Supports various sorting types.
     """
     size = min(size, 500)
-    
+
     # Base query: Albums that have at least one downloaded track for this user
     # This is a bit complex in SQL, so we simplify by querying Albums directly
     # and filtering by join, making sure we don't return partial albums without checks
     # For performance, we check Download existence
-    
+
     query = (
         select(Album)
         .join(Track, Track.album_id == Album.id)
@@ -135,7 +130,7 @@ async def get_album_list(
         .group_by(Album.id)
         .order_by(func.count(Download.id).desc())
     )
-    
+
     # Apply type sorting
     if type == "random":
         query = query.order_by(func.random())
@@ -148,19 +143,19 @@ async def get_album_list(
         query = query.order_by(Album.created_at.desc())
     elif type == "starred":
         # Need to join starred tables - skip for now or implement if StarredAlbum is used
-        query = query.order_by(Album.created_at.desc()) # Fallback
+        query = query.order_by(Album.created_at.desc())  # Fallback
     elif type == "byYear":
-        query = query.order_by(Album.id) # Fallback if release_date not reliable sort
+        query = query.order_by(Album.id)  # Fallback if release_date not reliable sort
         if fromYear:
             # We don't have year column easily queryable yet without cast, assume filters applied elsewhere
             pass
-            
+
     # Apply pagination
     query = query.offset(offset).limit(size)
-    
+
     result = await db.execute(query)
     albums = result.scalars().all()
-    
+
     album_list = []
     for album in albums:
         # Get artist name
@@ -174,31 +169,25 @@ async def get_album_list(
         song_count = await db.scalar(
             select(func.count(Track.id))
             .join(Download, Download.track_id == Track.id)
-            .where(
-                Track.album_id == album.id,
-                Download.user_id == current_user.id,
-                Download.status == "completed"
-            )
+            .where(Track.album_id == album.id, Download.user_id == current_user.id, Download.status == "completed")
         )
-            
-        album_list.append({
-            "id": str(album.id),
-            "parent": str(album.artist_id) if album.artist_id else None,
-            "title": album.title,
-            "artist": artist_name,
-            "artistId": str(album.artist_id) if album.artist_id else None,
-            "isDir": True, 
-            "coverArt": f"al-{album.id}",
-            "songCount": song_count or 0,
-            "year": int(album.release_date[:4]) if album.release_date and len(album.release_date) >= 4 else None,
-            "created": format_subsonic_date(album.created_at),
-        })
-        
-    return subsonic_response({
-        "albumList2": {
-            "album": album_list
-        }
-    }, f=f)
+
+        album_list.append(
+            {
+                "id": str(album.id),
+                "parent": str(album.artist_id) if album.artist_id else None,
+                "title": album.title,
+                "artist": artist_name,
+                "artistId": str(album.artist_id) if album.artist_id else None,
+                "isDir": True,
+                "coverArt": f"al-{album.id}",
+                "songCount": song_count or 0,
+                "year": int(album.release_date[:4]) if album.release_date and len(album.release_date) >= 4 else None,
+                "created": format_subsonic_date(album.created_at),
+            }
+        )
+
+    return subsonic_response({"albumList2": {"album": album_list}}, f=f)
 
 
 @router.get("/getRandomSongs.view")
@@ -217,26 +206,22 @@ async def get_random_songs(
     Get random songs.
     """
     size = min(size, 500)
-    
+
     query = (
         select(Track, Download)
         .outerjoin(Download, (Download.track_id == Track.id) & (Download.user_id == current_user.id))
         .order_by(func.random())
         .limit(size)
     )
-    
+
     # Apply filters if needed (genre, year, etc - simplified for now)
-    
+
     result = await db.execute(query)
     songs = []
     for track, download in result.all():
-         songs.append(build_song_response(track, download))
-         
-    return subsonic_response({
-        "randomSongs": {
-            "song": songs
-        }
-    }, f=f)
+        songs.append(build_song_response(track, download))
+
+    return subsonic_response({"randomSongs": {"song": songs}}, f=f)
 
 
 @router.get("/getTopSongs.view")
@@ -256,25 +241,19 @@ async def get_top_songs(
     query = (
         select(Track, Download)
         .join(Download, Download.track_id == Track.id)
-        .where(
-            Download.user_id == current_user.id
-        )
+        .where(Download.user_id == current_user.id)
         .limit(count)
     )
-    
+
     if artist:
         query = query.where(Track.artist == artist)
-        
+
     result = await db.execute(query)
     songs = []
     for track, download in result.all():
-         songs.append(build_song_response(track, download))
-         
-    return subsonic_response({
-        "topSongs": {
-            "song": songs
-        }
-    }, f=f)
+        songs.append(build_song_response(track, download))
+
+    return subsonic_response({"topSongs": {"song": songs}}, f=f)
 
 
 @router.get("/getSimilarSongs.view")
@@ -293,30 +272,26 @@ async def get_similar_songs(
         track_id = UUID(id)
     except ValueError:
         return subsonic_error(10, "Invalid ID", f=f)
-        
+
     track = await db.get(Track, track_id)
     if not track:
         return subsonic_error(70, "Song not found", f=f)
-        
+
     # Find songs by same artist
     query = (
         select(Track, Download)
         .outerjoin(Download, (Download.track_id == Track.id) & (Download.user_id == current_user.id))
         .where(
-            Download.status == "completed", # Keep this filter if we only want completed downloads
+            Download.status == "completed",  # Keep this filter if we only want completed downloads
             Track.artist_id == track.artist_id,
-            Track.id != track.id
+            Track.id != track.id,
         )
         .limit(count)
     )
-    
+
     result = await db.execute(query)
     songs = []
     for t, d in result.all():
         songs.append(build_song_response(t, d))
-        
-    return subsonic_response({
-        "similarSongs": {
-            "song": songs
-        }
-    }, f=f)
+
+    return subsonic_response({"similarSongs": {"song": songs}}, f=f)

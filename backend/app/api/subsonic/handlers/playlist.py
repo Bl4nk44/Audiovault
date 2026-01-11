@@ -41,34 +41,26 @@ async def get_playlists(
 ):
     """
     Get all playlists.
-    
+
     Returns playlists owned by current user plus public playlists.
-    
+
     Args:
         username: Optional username to filter (admin only)
-        
+
     Returns:
         List of playlists
     """
     # Get playlists (own + public)
     result = await db.execute(
-        select(Playlist)
-        .where(
-            (Playlist.owner_id == current_user.id) | 
-            (Playlist.public)
-        )
-        .order_by(Playlist.name)
+        select(Playlist).where((Playlist.owner_id == current_user.id) | (Playlist.public)).order_by(Playlist.name)
     )
     playlists = result.scalars().all()
-    
+
     playlist_list = []
     for pl in playlists:
         # Count songs and total duration
         track_result = await db.execute(
-            select(
-                func.count(PlaylistTrack.track_id),
-                func.sum(Track.duration_ms)
-            )
+            select(func.count(PlaylistTrack.track_id), func.sum(Track.duration_ms))
             .select_from(PlaylistTrack)
             .join(Track, Track.id == PlaylistTrack.track_id)
             .where(PlaylistTrack.playlist_id == pl.id)
@@ -76,31 +68,27 @@ async def get_playlists(
         row = track_result.first()
         song_count = row[0] or 0
         total_duration = row[1] or 0
-        
+
         # Get owner username
-        owner_result = await db.execute(
-            select(User.username).where(User.id == pl.owner_id)
-        )
+        owner_result = await db.execute(select(User.username).where(User.id == pl.owner_id))
         owner_name = owner_result.scalar() or "unknown"
-        
-        playlist_list.append({
-            "id": str(pl.id),
-            "name": pl.name,
-            "comment": pl.comment or "",
-            "owner": owner_name,
-            "public": pl.public,
-            "songCount": song_count,
-            "duration": format_duration(total_duration),
-            "created": format_subsonic_date(pl.created_at),
-            "changed": format_subsonic_date(pl.updated_at),
-            "coverArt": f"pl-{pl.id}",  # Use new pl- supported prefix
-        })
-    
-    return subsonic_response({
-        "playlists": {
-            "playlist": playlist_list
-        }
-    }, f=f)
+
+        playlist_list.append(
+            {
+                "id": str(pl.id),
+                "name": pl.name,
+                "comment": pl.comment or "",
+                "owner": owner_name,
+                "public": pl.public,
+                "songCount": song_count,
+                "duration": format_duration(total_duration),
+                "created": format_subsonic_date(pl.created_at),
+                "changed": format_subsonic_date(pl.updated_at),
+                "coverArt": f"pl-{pl.id}",  # Use new pl- supported prefix
+            }
+        )
+
+    return subsonic_response({"playlists": {"playlist": playlist_list}}, f=f)
 
 
 @router.get("/getPlaylist.view")
@@ -113,10 +101,10 @@ async def get_playlist(
 ):
     """
     Get playlist details including all tracks.
-    
+
     Args:
         id: Playlist ID
-        
+
     Returns:
         Playlist with track list
     """
@@ -124,63 +112,71 @@ async def get_playlist(
         playlist_id = UUID(id)
     except ValueError:
         return subsonic_error(10, "Invalid playlist ID")
-    
+
     # Get playlist
-    result = await db.execute(
-        select(Playlist).where(Playlist.id == playlist_id)
-    )
+    result = await db.execute(select(Playlist).where(Playlist.id == playlist_id))
     playlist = result.scalar_one_or_none()
-    
+
     if not playlist:
         return subsonic_error(70, "Playlist not found")
-    
+
     # Check access
     if playlist.owner_id != current_user.id and not playlist.public:
         return subsonic_error(50, "Access denied", f=f)
-    
+
     # Get tracks with downloads
-    result = await db.execute(
+    stmt = (
         select(PlaylistTrack, Track, Download)
         .join(Track, Track.id == PlaylistTrack.track_id)
         .outerjoin(
             Download,
-            (Download.track_id == Track.id) & 
-            (Download.user_id == current_user.id) &
-            (Download.status == "completed")
+            (Download.track_id == Track.id) & (Download.user_id == current_user.id) & (Download.status == "completed"),
         )
         .where(PlaylistTrack.playlist_id == playlist_id)
         .order_by(PlaylistTrack.order)
     )
+    result = await db.execute(stmt)
     entries = result.all()
     
+    # DEBUG LOGGING
+    import logging
+    logger = logging.getLogger("app.api.subsonic.handlers.playlist")
+    logger.info(f"getPlaylist: ID={playlist_id}, entries_found={len(entries)}")
+    if len(entries) == 0:
+        # Check if any tracks exist at all for this playlist (raw check)
+        raw_count = await db.execute(select(func.count(PlaylistTrack.track_id)).where(PlaylistTrack.playlist_id == playlist_id))
+        logger.info(f"getPlaylist: Raw PlaylistTrack count={raw_count.scalar()}")
+
+
     song_list = []
     total_duration = 0
-    
+
     for _playlist_track, track, download in entries:
         song = build_song_response(track, download)
         song_list.append(song)
         total_duration += track.duration_ms or 0
-    
+
     # Get owner username
-    owner_result = await db.execute(
-        select(User.username).where(User.id == playlist.owner_id)
-    )
+    owner_result = await db.execute(select(User.username).where(User.id == playlist.owner_id))
     owner_name = owner_result.scalar() or "unknown"
-    
-    return subsonic_response({
-        "playlist": {
-            "id": str(playlist.id),
-            "name": playlist.name,
-            "comment": playlist.comment or "",
-            "owner": owner_name,
-            "public": playlist.public,
-            "songCount": len(song_list),
-            "duration": format_duration(total_duration),
-            "created": format_subsonic_date(playlist.created_at),
-            "changed": format_subsonic_date(playlist.updated_at),
-            "entry": song_list,
-        }
-    }, f=f)
+
+    return subsonic_response(
+        {
+            "playlist": {
+                "id": str(playlist.id),
+                "name": playlist.name,
+                "comment": playlist.comment or "",
+                "owner": owner_name,
+                "public": playlist.public,
+                "songCount": len(song_list),
+                "duration": format_duration(total_duration),
+                "created": format_subsonic_date(playlist.created_at),
+                "changed": format_subsonic_date(playlist.updated_at),
+                "entry": song_list,
+            }
+        },
+        f=f,
+    )
 
 
 @router.get("/createPlaylist.view")
@@ -195,15 +191,15 @@ async def create_playlist(
 ):
     """
     Create or update playlist.
-    
+
     If playlistId is provided, updates existing playlist.
     Otherwise creates new playlist.
-    
+
     Args:
         playlistId: Existing playlist ID (for update)
         name: Playlist name
         songId: List of song IDs to add
-        
+
     Returns:
         Created/updated playlist
     """
@@ -213,29 +209,25 @@ async def create_playlist(
             playlist_id = UUID(playlistId)
         except ValueError:
             return subsonic_error(10, "Invalid playlist ID", f=f)
-        
-        result = await db.execute(
-            select(Playlist).where(Playlist.id == playlist_id)
-        )
+
+        result = await db.execute(select(Playlist).where(Playlist.id == playlist_id))
         playlist = result.scalar_one_or_none()
-        
+
         if not playlist:
             return subsonic_error(70, "Playlist not found", f=f)
-        
+
         if playlist.owner_id != current_user.id:
             return subsonic_error(50, "Access denied", f=f)
-        
+
         # Update name if provided
         if name:
             playlist.name = name
-        
+
         # Replace songs if provided
         if songId:
             # Delete existing tracks
-            await db.execute(
-                delete(PlaylistTrack).where(PlaylistTrack.playlist_id == playlist_id)
-            )
-            
+            await db.execute(delete(PlaylistTrack).where(PlaylistTrack.playlist_id == playlist_id))
+
             # Add new tracks
             for i, song_id in enumerate(songId):
                 try:
@@ -248,15 +240,15 @@ async def create_playlist(
                     db.add(playlist_track)
                 except ValueError:
                     continue
-        
+
         playlist.updated_at = datetime.utcnow()
         await db.commit()
-        
+
     else:
         # Create new playlist
         if not name:
             return subsonic_error(10, "Playlist name is required", f=f)
-        
+
         playlist = Playlist(
             name=name,
             owner_id=current_user.id,
@@ -264,7 +256,7 @@ async def create_playlist(
         )
         db.add(playlist)
         await db.flush()
-        
+
         # Add songs if provided
         if songId:
             for i, song_id in enumerate(songId):
@@ -278,9 +270,9 @@ async def create_playlist(
                     db.add(playlist_track)
                 except ValueError:
                     continue
-        
+
         await db.commit()
-    
+
     # Return created/updated playlist
     return await get_playlist(id=str(playlist.id), f=f, current_user=current_user, db=db)
 
@@ -300,7 +292,7 @@ async def update_playlist(
 ):
     """
     Update playlist metadata and contents.
-    
+
     Args:
         playlistId: Playlist ID
         name: New playlist name
@@ -308,7 +300,7 @@ async def update_playlist(
         public: Public visibility flag
         songIdToAdd: Song IDs to add
         songIndexToRemove: Indices of songs to remove (0-based)
-        
+
     Returns:
         Empty success response
     """
@@ -316,19 +308,17 @@ async def update_playlist(
         playlist_id = UUID(playlistId)
     except ValueError:
         return subsonic_error(10, "Invalid playlist ID", f=f)
-    
+
     # Get playlist
-    result = await db.execute(
-        select(Playlist).where(Playlist.id == playlist_id)
-    )
+    result = await db.execute(select(Playlist).where(Playlist.id == playlist_id))
     playlist = result.scalar_one_or_none()
-    
+
     if not playlist:
         return subsonic_error(70, "Playlist not found")
-    
+
     if playlist.owner_id != current_user.id:
         return subsonic_error(50, "Access denied")
-    
+
     # Update metadata
     if name is not None:
         playlist.name = name
@@ -336,41 +326,34 @@ async def update_playlist(
         playlist.comment = comment
     if public is not None:
         playlist.public = public
-    
+
     # Remove songs by index
     if songIndexToRemove:
         # Get current tracks ordered
         result = await db.execute(
-            select(PlaylistTrack)
-            .where(PlaylistTrack.playlist_id == playlist_id)
-            .order_by(PlaylistTrack.order)
+            select(PlaylistTrack).where(PlaylistTrack.playlist_id == playlist_id).order_by(PlaylistTrack.order)
         )
         tracks = list(result.scalars().all())
-        
+
         # Remove by index (reverse order to preserve indices)
         for idx in sorted(songIndexToRemove, reverse=True):
             if 0 <= idx < len(tracks):
                 await db.delete(tracks[idx])
-        
+
         # Reorder remaining tracks
         result = await db.execute(
-            select(PlaylistTrack)
-            .where(PlaylistTrack.playlist_id == playlist_id)
-            .order_by(PlaylistTrack.order)
+            select(PlaylistTrack).where(PlaylistTrack.playlist_id == playlist_id).order_by(PlaylistTrack.order)
         )
         remaining = list(result.scalars().all())
         for i, track in enumerate(remaining):
             track.order = i
-    
+
     # Add songs
     if songIdToAdd:
         # Get current max order
-        result = await db.execute(
-            select(func.max(PlaylistTrack.order))
-            .where(PlaylistTrack.playlist_id == playlist_id)
-        )
+        result = await db.execute(select(func.max(PlaylistTrack.order)).where(PlaylistTrack.playlist_id == playlist_id))
         max_order = result.scalar() or -1
-        
+
         for song_id in songIdToAdd:
             try:
                 track_id = UUID(song_id)
@@ -383,10 +366,10 @@ async def update_playlist(
                 db.add(playlist_track)
             except ValueError:
                 continue
-    
+
     playlist.updated_at = datetime.utcnow()
     await db.commit()
-    
+
     return subsonic_response()
 
 
@@ -400,10 +383,10 @@ async def delete_playlist(
 ):
     """
     Delete playlist.
-    
+
     Args:
         id: Playlist ID
-        
+
     Returns:
         Empty success response
     """
@@ -411,21 +394,19 @@ async def delete_playlist(
         playlist_id = UUID(id)
     except ValueError:
         return subsonic_error(10, "Invalid playlist ID")
-    
+
     # Get playlist
-    result = await db.execute(
-        select(Playlist).where(Playlist.id == playlist_id)
-    )
+    result = await db.execute(select(Playlist).where(Playlist.id == playlist_id))
     playlist = result.scalar_one_or_none()
-    
+
     if not playlist:
         return subsonic_error(70, "Playlist not found")
-    
+
     if playlist.owner_id != current_user.id:
         return subsonic_error(50, "Access denied")
-    
+
     # Delete playlist (cascade will delete PlaylistTrack entries)
     await db.delete(playlist)
     await db.commit()
-    
+
     return subsonic_response()

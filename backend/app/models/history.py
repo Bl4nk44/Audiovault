@@ -1,8 +1,9 @@
-from sqlalchemy import Column, Integer, DateTime, ForeignKey
-from sqlalchemy import Uuid
-from sqlalchemy.orm import relationship
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from uuid import uuid4
+
+from sqlalchemy import Column, DateTime, ForeignKey, Integer, Uuid
+from sqlalchemy.orm import relationship
+
 from app.db.base import Base
 
 
@@ -13,9 +14,7 @@ class ListeningHistory(Base):
     user_id = Column(Uuid(as_uuid=True), ForeignKey("users.id"), index=True)
     track_id = Column(Uuid(as_uuid=True), ForeignKey("tracks.id"))
 
-    played_at = Column(
-        DateTime(timezone=True), default=lambda: datetime.now(timezone.utc)
-    )
+    played_at = Column(DateTime(timezone=True), default=lambda: datetime.now(UTC))
     duration_played = Column(Integer)  # Seconds played
 
     # Relationships

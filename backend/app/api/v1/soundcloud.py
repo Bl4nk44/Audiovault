@@ -1,7 +1,7 @@
-from fastapi import APIRouter, Depends
-from app.services.soundcloud_service import soundcloud_service
 from app.core.dependencies import get_current_active_user
 from app.models.user import User
+from app.services.soundcloud_service import soundcloud_service
+from fastapi import APIRouter, Depends
 
 router = APIRouter()
 

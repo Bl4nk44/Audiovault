@@ -4,15 +4,16 @@ Base schemas and response helpers for Subsonic API.
 Subsonic API uses a specific response format with nested 'subsonic-response' object.
 """
 
+import xml.etree.ElementTree as ET  # noqa: S314
 from typing import Any
-import xml.etree.ElementTree as ET
+
 from fastapi import Response
 from pydantic import BaseModel
 
 
 class SubsonicError(BaseModel):
     """Subsonic error object."""
-    
+
     code: int
     message: str
 
@@ -20,18 +21,18 @@ class SubsonicError(BaseModel):
 class SubsonicResponseWrapper(BaseModel):
     """
     Wrapper for Subsonic API responses.
-    
+
     All Subsonic responses are wrapped in a 'subsonic-response' object.
     """
-    
+
     status: str = "ok"
     version: str = "1.16.1"
     serverVersion: str = "1.0.0"
     type: str = "audiovault"
     openSubsonic: bool = True
-    
+
     error: SubsonicError | None = None
-    
+
     class Config:
         extra = "allow"
 
@@ -53,13 +54,13 @@ SUBSONIC_ERROR_CODES = {
 def dict_to_xml(tag: str, d: Any) -> str:
     """
     Simple dict to XML converter for Subsonic format.
-    
+
     Audiovault Subsonic XML style:
     - Lists are children elements
     - Dicts are attributes if they contain simple values, or nested elements if complex
     """
     elem = ET.Element(tag)
-    
+
     def build_xml(parent, data):
         if isinstance(data, dict):
             for key, value in data.items():
@@ -71,10 +72,10 @@ def dict_to_xml(tag: str, d: Any) -> str:
                     # List -> create sibling children with the same name (flattened)
                     # The key of the dict becomes the tag name for EACH item
                     child_tag = key
-                    
+
                     # Special overrides if needed, but usually exact key match works
                     # for standard Subsonic JSON (e.g., 'song', 'album', 'child')
-                    
+
                     for item in value:
                         child = ET.SubElement(parent, child_tag)
                         build_xml(child, item)
@@ -84,29 +85,29 @@ def dict_to_xml(tag: str, d: Any) -> str:
                     if isinstance(value, bool):
                         val_str = "true" if value else "false"
                     parent.set(key, val_str)
-        
+
         elif isinstance(data, list):
             # Should not happen given the structure above, but just in case
             # If we passed a list to the root or something
             for item in data:
                 child = ET.SubElement(parent, "item")
                 build_xml(child, item)
-                
+
     build_xml(elem, d)
     # Add namespace for subsonic
     elem.set("xmlns", "http://subsonic.org/restapi")
-    
-    return ET.tostring(elem, encoding='unicode', method='xml')
+
+    return ET.tostring(elem, encoding="unicode", method="xml")
 
 
 def subsonic_response(data: dict[str, Any] | None = None, f: str = "json") -> Any:
     """
     Build a successful Subsonic response.
-    
+
     Args:
         data: Optional data to include in the response
         f: Format ('json' or 'xml')
-        
+
     Returns:
         Dict with Subsonic response format or Response object with XML
     """
@@ -117,10 +118,10 @@ def subsonic_response(data: dict[str, Any] | None = None, f: str = "json") -> An
         "type": "audiovault",
         "openSubsonic": True,
     }
-    
+
     if data:
         response.update(data)
-    
+
     if f == "json":
         return {"subsonic-response": response}
     else:
@@ -131,18 +132,18 @@ def subsonic_response(data: dict[str, Any] | None = None, f: str = "json") -> An
 def subsonic_error(code: int, message: str | None = None, f: str = "json") -> Any:
     """
     Build a Subsonic error response.
-    
+
     Args:
         code: Subsonic error code
         message: Optional custom error message
         f: Format ('json' or 'xml')
-        
+
     Returns:
         Dict with Subsonic error response format or Response object with XML
     """
     if message is None:
         message = SUBSONIC_ERROR_CODES.get(code, "Unknown error")
-    
+
     response = {
         "status": "failed",
         "version": "1.16.1",
@@ -152,9 +153,9 @@ def subsonic_error(code: int, message: str | None = None, f: str = "json") -> An
         "error": {
             "code": code,
             "message": message,
-        }
+        },
     }
-    
+
     if f == "json":
         return {"subsonic-response": response}
     else:

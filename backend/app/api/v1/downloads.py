@@ -1,17 +1,16 @@
+import os
+from uuid import UUID
+
+from app.core.dependencies import get_current_active_user
+from app.db.database import get_db
+from app.models.download import Download
+from app.models.user import User
+from app.schemas.download import DownloadCreate
+from app.services.download_manager import download_manager
 from fastapi import APIRouter, Depends, HTTPException
+from pydantic import BaseModel
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
-from typing import Optional
-from app.db.database import get_db
-from app.services.download_manager import download_manager
-from app.core.dependencies import get_current_active_user
-from app.models.user import User
-from app.models.download import Download
-from pydantic import BaseModel
-from uuid import UUID
-import os
-from app.schemas.download import DownloadCreate
-
 
 router = APIRouter()
 
@@ -26,7 +25,7 @@ class TrackResponse(BaseModel):
     id: UUID
     title: str
     artist: str
-    image_url: Optional[str] = None
+    image_url: str | None = None
 
 
 @router.post("/add")
@@ -44,9 +43,7 @@ async def add_download(
 
 
 @router.post("/{download_id}/pause")
-async def pause_download(
-    download_id: UUID, current_user: User = Depends(get_current_active_user)
-):
+async def pause_download(download_id: UUID, current_user: User = Depends(get_current_active_user)):
     await download_manager.pause_download(str(download_id))
     return {"status": "success"}
 
@@ -78,11 +75,7 @@ async def remove_download(
     db: AsyncSession = Depends(get_db),
 ):
     # First check if file exists to delete it (as cancel_download deletes the DB record)
-    result = await db.execute(
-        select(Download).where(
-            Download.id == download_id, Download.user_id == current_user.id
-        )
-    )
+    result = await db.execute(select(Download).where(Download.id == download_id, Download.user_id == current_user.id))
     download = result.scalar_one_or_none()
 
     if not download:
@@ -114,9 +107,7 @@ async def delete_playlist(
     db: AsyncSession = Depends(get_db),
 ):
     """Delete an entire playlist and its contents."""
-    await download_manager.delete_playlist(
-        db, str(current_user.id), source, playlist_name
-    )
+    await download_manager.delete_playlist(db, str(current_user.id), source, playlist_name)
     return {"status": "success", "message": f"Playlist {playlist_name} deleted"}
 
 
@@ -127,9 +118,7 @@ async def rescan_library(
 ):
     from app.services.library_maintenance import library_maintenance_service
 
-    requeued_count = await library_maintenance_service.rescan_library_integrity(
-        db, str(current_user.id)
-    )
+    requeued_count = await library_maintenance_service.rescan_library_integrity(db, str(current_user.id))
     return {"status": "success", "rescanned_count": requeued_count}
 
 
@@ -196,16 +185,14 @@ async def get_library_folders(
 async def get_library(
     skip: int = 0,
     limit: int = 50,
-    source: Optional[str] = None,
-    playlist: Optional[str] = None,
+    source: str | None = None,
+    playlist: str | None = None,
     current_user: User = Depends(get_current_active_user),
     db: AsyncSession = Depends(get_db),
 ):
     from app.services.library_data import library_data_service
 
-    return await library_data_service.get_library_items(
-        db, str(current_user.id), skip, limit, source, playlist
-    )
+    return await library_data_service.get_library_items(db, str(current_user.id), skip, limit, source, playlist)
 
 
 @router.put("/library/{download_id}")
@@ -218,14 +205,12 @@ async def update_library_item(
     from app.services.library_maintenance import library_maintenance_service
 
     try:
-        await library_maintenance_service.update_download_item(
-            db, str(current_user.id), str(download_id), updates
-        )
+        await library_maintenance_service.update_download_item(db, str(current_user.id), str(download_id), updates)
         return {"status": "success"}
     except ValueError as e:
         if str(e) == "Item not found":
-            raise HTTPException(status_code=404, detail="Item not found")
-        raise HTTPException(status_code=400, detail=str(e))
+            raise HTTPException(status_code=404, detail="Item not found") from e
+        raise HTTPException(status_code=400, detail=str(e)) from e
 
 
 @router.get("/queue")
@@ -254,7 +239,7 @@ async def fix_legacy_data(
 
 @router.post("/maintenance/scan-library")
 async def scan_library(
-    scan_path: Optional[str] = None,
+    scan_path: str | None = None,
     current_user: User = Depends(get_current_active_user),
     db: AsyncSession = Depends(get_db),
 ):
@@ -263,9 +248,7 @@ async def scan_library(
     """
     from app.services.library_scanner import library_scanner_service
 
-    result = await library_scanner_service.scan_directory(
-        db, str(current_user.id), scan_path
-    )
+    result = await library_scanner_service.scan_directory(db, str(current_user.id), scan_path)
 
     if result.get("status") == "error" and "Access denied" in result.get("message", ""):
         from fastapi import HTTPException

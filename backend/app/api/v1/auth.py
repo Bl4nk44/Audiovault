@@ -1,17 +1,17 @@
-from fastapi import APIRouter, Depends, HTTPException, status
-from sqlalchemy.ext.asyncio import AsyncSession
+from app.core.dependencies import get_current_active_user
 from app.db.database import get_db
-from app.services.auth_manager import AuthManager
 from app.models.schemas import (
+    RefreshTokenRequest,
+    Token,
     UserCreate,
     UserLogin,
     UserResponse,
-    Token,
-    RefreshTokenRequest,
 )
 from app.models.user import User
-from app.core.dependencies import get_current_active_user
+from app.services.auth_manager import AuthManager
+from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi_limiter.depends import RateLimiter
+from sqlalchemy.ext.asyncio import AsyncSession
 
 router = APIRouter()
 
@@ -45,9 +45,7 @@ async def login(user_in: UserLogin, db: AsyncSession = Depends(get_db)):
 
 
 @router.post("/refresh", response_model=Token)
-async def refresh_token(
-    request: RefreshTokenRequest, db: AsyncSession = Depends(get_db)
-):
+async def refresh_token(request: RefreshTokenRequest, db: AsyncSession = Depends(get_db)):
     auth_manager = AuthManager(db)
     return await auth_manager.refresh_access_token(request.refresh_token)
 

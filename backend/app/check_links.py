@@ -1,11 +1,13 @@
-
 import asyncio
-from sqlalchemy import select, func
+
+from sqlalchemy import func, select
+
 from app.db.database import AsyncSessionLocal
-from app.models.track import Track
-from app.models.artist import Artist
 from app.models.album import Album
+from app.models.artist import Artist
 from app.models.download import Download
+from app.models.track import Track
+
 
 async def check_links():
     async with AsyncSessionLocal() as db:
@@ -22,9 +24,7 @@ async def check_links():
 
         # Tracks with completed downloads
         completed_dl = await db.execute(
-            select(Track)
-            .join(Download, Download.track_id == Track.id)
-            .where(Download.status == 'completed')
+            select(Track).join(Download, Download.track_id == Track.id).where(Download.status == "completed")
         )
         dl_tracks = completed_dl.scalars().all()
         print(f"Tracks with completed downloads: {len(dl_tracks)}")
@@ -43,6 +43,7 @@ async def check_links():
         # Album count
         albums = await db.execute(select(func.count(Album.id)))
         print(f"Total Albums: {albums.scalar()}")
+
 
 if __name__ == "__main__":
     asyncio.run(check_links())

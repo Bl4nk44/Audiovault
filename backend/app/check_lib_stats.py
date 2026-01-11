@@ -1,10 +1,12 @@
-
 import asyncio
-from sqlalchemy import select, func
+
+from sqlalchemy import func, select
+
 from app.db.database import AsyncSessionLocal as SessionLocal
-from app.models.track import Track
 from app.models.download import Download
+from app.models.track import Track
 from app.models.user import User
+
 
 async def check_stats():
     async with SessionLocal() as db:
@@ -31,8 +33,11 @@ async def check_stats():
 
         # Downloads per user
         for u in user_list:
-            u_dl = await db.execute(select(func.count(Download.id)).where(Download.user_id == u.id, Download.status == 'completed'))
+            u_dl = await db.execute(
+                select(func.count(Download.id)).where(Download.user_id == u.id, Download.status == "completed")
+            )
             print(f"Completed Downloads for {u.username}: {u_dl.scalar()}")
+
 
 if __name__ == "__main__":
     asyncio.run(check_stats())

@@ -1,6 +1,6 @@
 import pytest
-from pydantic import ValidationError
 from app.api.v1.import_routes import ImportRequest
+from pydantic import ValidationError
 
 
 def test_valid_import_urls():

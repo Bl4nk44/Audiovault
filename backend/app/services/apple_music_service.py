@@ -1,6 +1,8 @@
 import logging
-from typing import List, Dict, Any, Optional
+from typing import Any
+
 from app.services.base_music_service import BaseMusicService
+
 # Lazy import or direct import if circular dependency is not an issue.
 # Assuming unl_helper is fine.
 # We will do dynamic import inside methods to be safe as done in original code effectively (it was imported inside try block? No it was inside method).
@@ -25,11 +27,11 @@ class AppleMusicService(BaseMusicService):
             return resolved
         return url
 
-    async def get_tracks(self, url: str) -> List[Dict[str, Any]]:
+    async def get_tracks(self, url: str) -> list[dict[str, Any]]:
         url = await self._resolve_url(url)
         return await super().get_tracks(url)
 
-    async def get_playlist_info(self, url: str) -> Optional[Dict[str, Any]]:
+    async def get_playlist_info(self, url: str) -> dict[str, Any] | None:
         url = await self._resolve_url(url)
         return await super().get_playlist_info(url)
 

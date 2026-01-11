@@ -1,6 +1,5 @@
-from typing import List, Optional
 from app.providers.base import MusicProvider
-from app.schemas.metadata import TrackMetadata, PlaylistMetadata
+from app.schemas.metadata import PlaylistMetadata, TrackMetadata
 from app.services.spotify_service import SpotifyService
 
 
@@ -13,15 +12,13 @@ class SpotifyProvider(MusicProvider):
         return "spotify"
 
     @property
-    def domains(self) -> List[str]:
+    def domains(self) -> list[str]:
         return ["open.spotify.com", "spotify.com"]
 
     def can_handle(self, url: str) -> bool:
-        return any(domain in url for domain in self.domains) or url.startswith(
-            "spotify:"
-        )
+        return any(domain in url for domain in self.domains) or url.startswith("spotify:")
 
-    async def extract_playlist(self, url: str) -> Optional[PlaylistMetadata]:
+    async def extract_playlist(self, url: str) -> PlaylistMetadata | None:
         # Handle both URL and direct ID if passed
         # Currently Watchlist passes ID for Spotify.
         # If url is just an ID, self.service.get_playlist_tracks should handle it if we clean it?
@@ -95,7 +92,7 @@ class SpotifyProvider(MusicProvider):
 
         return None
 
-    async def get_track(self, url: str) -> Optional[TrackMetadata]:
+    async def get_track(self, url: str) -> TrackMetadata | None:
         import re
 
         track_id = url

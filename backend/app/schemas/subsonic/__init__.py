@@ -9,7 +9,7 @@ from app.schemas.subsonic.base import (
 
 __all__ = [
     "SubsonicError",
-    "SubsonicResponseWrapper", 
+    "SubsonicResponseWrapper",
     "subsonic_response",
     "subsonic_error",
 ]

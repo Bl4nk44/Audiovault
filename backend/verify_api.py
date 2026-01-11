@@ -1,7 +1,7 @@
-
 import asyncio
-import httpx
 import logging
+
+import httpx
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -12,6 +12,7 @@ BASE_URL = "http://localhost:8000"
 USERNAME = "admin"
 PASSWORD = "admin"
 
+
 async def verify_api():
     async with httpx.AsyncClient(base_url=BASE_URL, timeout=10.0) as client:
         # 1. Login
@@ -19,15 +20,17 @@ async def verify_api():
         try:
             response = await client.post(
                 "/api/v1/auth/login",
-                json={"email": f"{USERNAME}@example.com", "password": PASSWORD} if "@" not in USERNAME else {"email": USERNAME, "password": PASSWORD},
-                # Attempting with email since UserLogin usually requires email. 
-                # If username is supported, adapt. 
+                json={"email": f"{USERNAME}@example.com", "password": PASSWORD}
+                if "@" not in USERNAME
+                else {"email": USERNAME, "password": PASSWORD},
+                # Attempting with email since UserLogin usually requires email.
+                # If username is supported, adapt.
                 # Let's try standard username first if that's what UserLogin uses.
-                # Actually, check auth.py imports UserLogin. 
+                # Actually, check auth.py imports UserLogin.
             )
             # Retrying with simple username payload just in case schema matches
             if response.status_code == 422:
-                 response = await client.post(
+                response = await client.post(
                     "/api/v1/auth/login",
                     json={"username": USERNAME, "password": PASSWORD},
                 )
@@ -35,7 +38,7 @@ async def verify_api():
             if response.status_code != 200:
                 logger.error(f"❌ Login failed: {response.text}")
                 return
-            
+
             token = response.json()["access_token"]
             headers = {"Authorization": f"Bearer {token}"}
             logger.info("✅ Login successful")
@@ -59,9 +62,9 @@ async def verify_api():
         try:
             # Send a valid update
             response = await client.put(
-                "/api/v1/users/me", 
+                "/api/v1/users/me",
                 headers=headers,
-                json={"username": USERNAME} # Keep same username
+                json={"username": USERNAME},  # Keep same username
             )
             if response.status_code == 200:
                 logger.info("✅ /users/me (PUT) OK")
@@ -71,9 +74,9 @@ async def verify_api():
             # Send update with avatar_url (simulate old frontend)
             logger.info("📝 Testing /api/v1/users/me (PUT) with avatar_url...")
             response = await client.put(
-                "/api/v1/users/me", 
+                "/api/v1/users/me",
                 headers=headers,
-                json={"username": USERNAME, "avatar_url": "http://example.com/foo.jpg"}
+                json={"username": USERNAME, "avatar_url": "http://example.com/foo.jpg"},
             )
             if response.status_code == 200:
                 logger.info("✅ /users/me (PUT with avatar_url) OK (ignored)")
@@ -89,10 +92,10 @@ async def verify_api():
         logger.info("🎵 Testing Subsonic API...")
         SUBSONIC_PARAMS = {
             "u": USERNAME,
-            "p": PASSWORD, # Plaintext for simplicity in test
+            "p": PASSWORD,  # Plaintext for simplicity in test
             "v": "1.16.1",
             "c": "verify_script",
-            "f": "json"
+            "f": "json",
         }
 
         # 4.1 Ping
@@ -115,26 +118,32 @@ async def verify_api():
                 data = response.json()["subsonic-response"]
                 if data["status"] == "ok":
                     logger.info("✅ Subsonic getIndexes OK")
-                    
+
                     # Try to get an artist ID for Cover Art test
                     artists = []
                     if "indexes" in data and "index" in data["indexes"]:
-                         for index in data["indexes"]["index"]:
-                             if "artist" in index:
-                                 artists.extend(index["artist"])
-                    
+                        for index in data["indexes"]["index"]:
+                            if "artist" in index:
+                                artists.extend(index["artist"])
+
                     if artists:
                         artist_id = artists[0]["id"]
                         logger.info(f"🎨 Testing getCoverArt for ID: {artist_id}")
-                        cover_response = await client.get("/rest/getCoverArt.view", params={**SUBSONIC_PARAMS, "id": artist_id})
+                        cover_response = await client.get(
+                            "/rest/getCoverArt.view", params={**SUBSONIC_PARAMS, "id": artist_id}
+                        )
                         if cover_response.status_code == 200:
-                             logger.info(f"✅ Subsonic getCoverArt (ID: {artist_id}) OK (Size: {len(cover_response.content)})")
-                             if "X-Cache" in cover_response.headers:
-                                 logger.info(f"   Cache Status: {cover_response.headers['X-Cache']}")
+                            logger.info(
+                                f"✅ Subsonic getCoverArt (ID: {artist_id}) OK (Size: {len(cover_response.content)})"
+                            )
+                            if "X-Cache" in cover_response.headers:
+                                logger.info(f"   Cache Status: {cover_response.headers['X-Cache']}")
                         else:
-                             try:
-                                logger.error(f"❌ Subsonic getCoverArt Failed: {cover_response.status_code} {cover_response.text[:200]}")
-                             except Exception:
+                            try:
+                                logger.error(
+                                    f"❌ Subsonic getCoverArt Failed: {cover_response.status_code} {cover_response.text[:200]}"
+                                )
+                            except Exception:
                                 logger.error(f"❌ Subsonic getCoverArt Failed: {cover_response.status_code}")
                     else:
                         logger.warning("⚠️ No artists found to test Cover Art")
@@ -156,10 +165,12 @@ async def verify_api():
             if response.status_code == 200:
                 data = response.json()
                 if isinstance(data, list):
-                    logs = "".join(data) if data and isinstance(data[0], str) else "\n".join([str(line) for line in data])
+                    logs = (
+                        "".join(data) if data and isinstance(data[0], str) else "\n".join([str(line) for line in data])
+                    )
                 else:
                     logs = data.get("logs", "")
-                
+
                 logger.info(f"✅ Fetched {len(logs)} characters of logs")
                 with open("/app/fetched_logs.txt", "w", encoding="utf-8") as f:
                     f.write(logs)
@@ -167,6 +178,7 @@ async def verify_api():
                 logger.error(f"❌ Failed to fetch logs: {response.status_code}")
         except Exception as e:
             logger.error(f"❌ Error fetching logs: {e}")
+
 
 if __name__ == "__main__":
     asyncio.run(verify_api())

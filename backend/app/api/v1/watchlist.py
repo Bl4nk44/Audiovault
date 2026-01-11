@@ -1,11 +1,12 @@
-from fastapi import APIRouter, Depends, HTTPException
-from sqlalchemy.ext.asyncio import AsyncSession
-from app.db.database import get_db
-from app.services.watchlist_engine import watchlist_engine
-from app.core.dependencies import get_current_active_user
-from app.models.user import User
-from pydantic import BaseModel
 from uuid import UUID
+
+from app.core.dependencies import get_current_active_user
+from app.db.database import get_db
+from app.models.user import User
+from app.services.watchlist_engine import watchlist_engine
+from fastapi import APIRouter, Depends, HTTPException
+from pydantic import BaseModel
+from sqlalchemy.ext.asyncio import AsyncSession
 
 router = APIRouter()
 
@@ -47,9 +48,7 @@ async def remove_from_watchlist(
     current_user: User = Depends(get_current_active_user),
     db: AsyncSession = Depends(get_db),
 ):
-    success = await watchlist_engine.remove_from_watchlist(
-        db, watchlist_id, current_user.id
-    )
+    success = await watchlist_engine.remove_from_watchlist(db, watchlist_id, current_user.id)
     if not success:
         raise HTTPException(status_code=404, detail="Item not found")
     return {"status": "success"}

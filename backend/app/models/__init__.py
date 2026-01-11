@@ -1,15 +1,15 @@
-from .download import Download
-from .user import User
-from .artist import Artist
 from .album import Album
-from .track import Track
-from .watchlist import Watchlist
-from .watchlist_item import WatchlistItem
+from .artist import Artist
 from .credentials import ServiceCredentials
+from .download import Download
 from .history import ListeningHistory
 from .playlist import Playlist, PlaylistTrack
-from .starred import StarredArtist, StarredAlbum, StarredTrack
-from .subsonic import SubsonicAuthToken, SubsonicRating, SubsonicNowPlaying
+from .starred import StarredAlbum, StarredArtist, StarredTrack
+from .subsonic import SubsonicAuthToken, SubsonicNowPlaying, SubsonicRating
+from .track import Track
+from .user import User
+from .watchlist import Watchlist
+from .watchlist_item import WatchlistItem
 
 __all__ = [
     "User",

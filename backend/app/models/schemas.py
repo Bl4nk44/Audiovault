@@ -1,7 +1,7 @@
-from pydantic import BaseModel, EmailStr, Field
-from typing import Optional, Dict
-from uuid import UUID
 from datetime import datetime
+from uuid import UUID
+
+from pydantic import BaseModel, EmailStr, Field
 
 
 # Token
@@ -13,8 +13,8 @@ class Token(BaseModel):
 
 
 class TokenPayload(BaseModel):
-    sub: Optional[str] = None
-    type: Optional[str] = None
+    sub: str | None = None
+    type: str | None = None
 
 
 class RefreshTokenRequest(BaseModel):
@@ -40,7 +40,7 @@ class UserResponse(UserBase):
     id: UUID
     is_active: bool
     created_at: datetime
-    preferences: Dict = {}
+    preferences: dict = {}
 
     class Config:
         from_attributes = True
@@ -54,7 +54,7 @@ class TrackBase(BaseModel):
 
 class TrackResponse(TrackBase):
     id: UUID
-    duration_ms: Optional[int] = None
+    duration_ms: int | None = None
 
     class Config:
         from_attributes = True

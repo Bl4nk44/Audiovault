@@ -1,12 +1,12 @@
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.future import select
-from sqlalchemy import func, case
-from sqlalchemy.orm import joinedload
-from app.models.download import Download
-from app.core.config import settings
 import os
 import uuid
-from typing import List
+
+from app.core.config import settings
+from app.models.download import Download
+from sqlalchemy import case, func
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.future import select
+from sqlalchemy.orm import joinedload
 
 
 class LibraryDataService:
@@ -71,9 +71,18 @@ class LibraryDataService:
         updated = False
         image_url = None
         if d.track.metadata_content:
-            image_url = d.track.metadata_content.get(
-                "image_url"
-            ) or d.track.metadata_content.get("album_art")
+            image_url = d.track.metadata_content.get("image_url") or d.track.metadata_content.get("album_art")
+
+        # Fallback to native cover endpoint if no external URL
+        if not image_url:
+             # Use absolute path or relative? Frontend usually prepends API_URL if relative?
+             # But here we are returning data. Frontend code in PlaylistCard uses `playlist.image_url` directly.
+             # If it starts with http, it uses it. If not?
+             # Let's check api.ts or component.
+             # Actually PlaylistCard just sets src={playlist.image_url}. 
+             # If we send "/api/v1/stream/.../cover", browser resolves relative to domain.
+             # That works.
+             image_url = f"{settings.API_V1_STR}/stream/{d.track.id}/cover"
 
         # Auto-fix for extension mismatch
         if d.file_path and not os.path.exists(d.file_path):
@@ -88,20 +97,20 @@ class LibraryDataService:
         if d.file_path:
             # Smart path resolution for Docker <-> Local Windows mismatch
             current_path = d.file_path
-            
+
             # Check if path is valid on current OS
             if not os.path.exists(current_path):
                 # Helper to guess relative path from absolute DB path
                 # E.g. /downloads/admin/... -> admin/...
                 potential_rel = None
-                normalized_db_path = d.file_path.replace('\\', '/')
-                
-                known_prefixes = ['/downloads/', '/app/downloads/']
+                normalized_db_path = d.file_path.replace("\\", "/")
+
+                known_prefixes = ["/downloads/", "/app/downloads/"]
                 for prefix in known_prefixes:
                     if normalized_db_path.startswith(prefix):
-                        potential_rel = normalized_db_path[len(prefix):]
+                        potential_rel = normalized_db_path[len(prefix) :]
                         break
-                
+
                 if potential_rel:
                     # Check if this relative path exists in current DOWNLOAD_DIR
                     candidate = os.path.join(settings.DOWNLOAD_DIR, potential_rel)
@@ -115,7 +124,7 @@ class LibraryDataService:
                     filename = os.path.basename(current_path)
                 else:
                     filename = rel_path
-            except ValueError: 
+            except ValueError:
                 # Different drives on Windows
                 filename = os.path.basename(current_path)
             except Exception:
@@ -140,7 +149,7 @@ class LibraryDataService:
             },
         }, updated
 
-    async def get_queue_items(self, db: AsyncSession, user_id: str) -> List[dict]:
+    async def get_queue_items(self, db: AsyncSession, user_id: str) -> list[dict]:
         try:
             u_uuid = uuid.UUID(str(user_id))
         except ValueError:

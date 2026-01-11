@@ -1,11 +1,12 @@
-import pytest
-from app.services.library_maintenance import library_maintenance_service
-from app.models.user import User
-from app.models.download import Download
-from app.models.track import Track
-from sqlalchemy.ext.asyncio import AsyncSession
 import os
 import uuid
+
+import pytest
+from app.models.download import Download
+from app.models.track import Track
+from app.models.user import User
+from app.services.library_maintenance import library_maintenance_service
+from sqlalchemy.ext.asyncio import AsyncSession
 
 
 @pytest.mark.asyncio
@@ -53,9 +54,7 @@ async def test_update_download_item_success(db_session: AsyncSession):
     try:
         # Test Execution
         updates = {"filename": "new.mp3", "title": "New Title"}
-        await library_maintenance_service.update_download_item(
-            db_session, str(user_id), str(download_id), updates
-        )
+        await library_maintenance_service.update_download_item(db_session, str(user_id), str(download_id), updates)
 
         # Verify
         await db_session.refresh(download)
@@ -85,6 +84,4 @@ async def test_update_download_item_not_found(db_session: AsyncSession):
     download_id = str(uuid.uuid4())
 
     with pytest.raises(ValueError, match="Item not found"):
-        await library_maintenance_service.update_download_item(
-            db_session, user_id, download_id, {}
-        )
+        await library_maintenance_service.update_download_item(db_session, user_id, download_id, {})

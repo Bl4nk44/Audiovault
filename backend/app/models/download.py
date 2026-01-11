@@ -1,8 +1,9 @@
-from sqlalchemy import Column, String, Integer, DateTime, ForeignKey, Boolean
-from sqlalchemy import Uuid
-from sqlalchemy.orm import relationship
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from uuid import uuid4
+
+from sqlalchemy import Boolean, Column, DateTime, ForeignKey, Integer, String, Uuid
+from sqlalchemy.orm import relationship
+
 from app.db.base import Base
 
 
@@ -15,9 +16,7 @@ class Download(Base):
 
     # Download details
     source = Column(String(20), nullable=True)  # spotify, youtube, deezer
-    playlist_name = Column(
-        String(255), nullable=True
-    )  # Name of the playlist if part of one
+    playlist_name = Column(String(255), nullable=True)  # Name of the playlist if part of one
     status = Column(String(20), default="pending", nullable=True)
     # pending, downloading, processing, completed, failed
 
@@ -34,14 +33,10 @@ class Download(Base):
     retry_count = Column(Integer, default=0)
 
     # UI State
-    archived = Column(
-        Boolean, default=False
-    )  # If true, hidden from queue but visible in library
+    archived = Column(Boolean, default=False)  # If true, hidden from queue but visible in library
 
     # Timestamps
-    created_at = Column(
-        DateTime(timezone=True), default=lambda: datetime.now(timezone.utc)
-    )
+    created_at = Column(DateTime(timezone=True), default=lambda: datetime.now(UTC))
     started_at = Column(DateTime(timezone=True), nullable=True)
     completed_at = Column(DateTime(timezone=True), nullable=True)
 

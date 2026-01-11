@@ -1,8 +1,9 @@
+import logging
+
+from app.core.security import get_password_hash
+from app.models.user import User
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
-from app.models.user import User
-from app.core.security import get_password_hash
-import logging
 
 logger = logging.getLogger(__name__)
 
@@ -22,9 +23,7 @@ async def init_db(db: AsyncSession) -> None:
             admin_password = getattr(settings, "FIRST_SUPERUSER_PASSWORD", None)
 
             if not admin_password:
-                logger.warning(
-                    "FIRST_SUPERUSER_PASSWORD not set. Creating admin with random password."
-                )
+                logger.warning("FIRST_SUPERUSER_PASSWORD not set. Creating admin with random password.")
                 import secrets
 
                 admin_password = secrets.token_urlsafe(16)

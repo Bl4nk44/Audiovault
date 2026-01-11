@@ -1,4 +1,5 @@
 import logging
+
 from app.services.spotify_service import SpotifyService
 from app.services.youtube_service import YouTubeService
 
@@ -63,7 +64,5 @@ class WatchlistItemProcessor:
         elif item.source == "youtube":
             tracks = self.youtube_service.get_artist_tracks(item.source_id)
         elif item.source == "deezer":
-            logger.warning(
-                f"Deezer artist fetching not implemented for {item.source_id}"
-            )
+            logger.warning(f"Deezer artist fetching not implemented for {item.source_id}")
         return tracks

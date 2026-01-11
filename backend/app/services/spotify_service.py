@@ -1,9 +1,10 @@
-import spotipy
-from spotipy.oauth2 import SpotifyClientCredentials
-from app.core.config import settings
-from typing import List, Dict, Any
-import re
 import logging
+import re
+from typing import Any
+
+import spotipy
+from app.core.config import settings
+from spotipy.oauth2 import SpotifyClientCredentials
 
 logger = logging.getLogger(__name__)
 
@@ -20,9 +21,7 @@ class SpotifyService:
         else:
             self.client = None
 
-    def search(
-        self, query: str, limit: int = 20, offset: int = 0, type: str = "track"
-    ) -> List[Dict[str, Any]]:
+    def search(self, query: str, limit: int = 20, offset: int = 0, type: str = "track") -> list[dict[str, Any]]:
         if not self.client:
             logger.warning("Spotify client not configured")
             return []
@@ -117,7 +116,7 @@ class SpotifyService:
 
         return items
 
-    def _format_artist(self, item: Dict[str, Any]) -> Dict[str, Any]:
+    def _format_artist(self, item: dict[str, Any]) -> dict[str, Any]:
         image_url = item["images"][0]["url"] if item.get("images") else None
         return {
             "id": item["id"],
@@ -127,15 +126,9 @@ class SpotifyService:
             "type": "artist",
         }
 
-    def _format_playlist(
-        self, item: Dict[str, Any], is_album: bool = False
-    ) -> Dict[str, Any]:
+    def _format_playlist(self, item: dict[str, Any], is_album: bool = False) -> dict[str, Any]:
         image_url = item["images"][0]["url"] if item.get("images") else None
-        track_count = (
-            item.get("tracks", {}).get("total")
-            if not is_album
-            else item.get("total_tracks")
-        )
+        track_count = item.get("tracks", {}).get("total") if not is_album else item.get("total_tracks")
         return {
             "id": item["id"],
             "title": item["name"],
@@ -145,14 +138,14 @@ class SpotifyService:
             "track_count": track_count,
         }
 
-    def get_track(self, track_id: str) -> Dict[str, Any]:
+    def get_track(self, track_id: str) -> dict[str, Any]:
         if not self.client:
             return None
 
         item = self.client.track(track_id)
         return self._format_track(item)
 
-    def get_playlist_tracks(self, playlist_id: str) -> List[Dict[str, Any]]:
+    def get_playlist_tracks(self, playlist_id: str) -> list[dict[str, Any]]:
         if not self.client:
             return []
 
@@ -170,7 +163,7 @@ class SpotifyService:
 
         return tracks
 
-    def get_playlist_details(self, playlist_id: str) -> Dict[str, Any]:
+    def get_playlist_details(self, playlist_id: str) -> dict[str, Any]:
         """
         Fetches full playlist details including metadata and all tracks.
         """
@@ -203,7 +196,7 @@ class SpotifyService:
             logger.error(f"Error fetching playlist details {playlist_id}: {e}")
             return None
 
-    def get_artist_details(self, artist_id: str) -> Dict[str, Any]:
+    def get_artist_details(self, artist_id: str) -> dict[str, Any]:
         """
         Fetches full artist details including metadata, top tracks, and albums.
         """
@@ -251,7 +244,7 @@ class SpotifyService:
             logger.error(f"Error fetching artist details {artist_id}: {e}")
             return None
 
-    def get_artist_top_tracks(self, artist_id: str) -> List[Dict[str, Any]]:
+    def get_artist_top_tracks(self, artist_id: str) -> list[dict[str, Any]]:
         if not self.client:
             return []
 
@@ -262,14 +255,12 @@ class SpotifyService:
             logger.error(f"Error fetching top tracks for {artist_id}: {e}")
             return []
 
-    def get_artist_albums(self, artist_id: str) -> List[Dict[str, Any]]:
+    def get_artist_albums(self, artist_id: str) -> list[dict[str, Any]]:
         if not self.client:
             return []
 
         try:
-            results = self.client.artist_albums(
-                artist_id, album_type="album,single", limit=50
-            )
+            results = self.client.artist_albums(artist_id, album_type="album,single", limit=50)
             albums = results["items"]
             while results["next"]:
                 results = self.client.next(results)
@@ -279,28 +270,21 @@ class SpotifyService:
             logger.error(f"Error fetching albums for {artist_id}: {e}")
             return []
 
-    def get_album_tracks(self, album_id: str) -> List[Dict[str, Any]]:
+    def get_album_tracks(self, album_id: str) -> list[dict[str, Any]]:
         if not self.client:
             return []
 
         try:
             results = self.client.album_tracks(album_id)
-            tracks = [
-                self._format_track(track, album_obj=None) for track in results["items"]
-            ]
+            tracks = [self._format_track(track, album_obj=None) for track in results["items"]]
             while results["next"]:
                 results = self.client.next(results)
-                tracks.extend(
-                    [
-                        self._format_track(track, album_obj=None)
-                        for track in results["items"]
-                    ]
-                )
+                tracks.extend([self._format_track(track, album_obj=None) for track in results["items"]])
             return tracks
         except Exception:
             return []
 
-    def _format_track(self, item: Dict[str, Any], album_obj=None) -> Dict[str, Any]:
+    def _format_track(self, item: dict[str, Any], album_obj=None) -> dict[str, Any]:
         # Handle simplified track object which might not have album
         album_name = "Unknown Album"
         image_url = None

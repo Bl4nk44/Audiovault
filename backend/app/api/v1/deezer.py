@@ -1,7 +1,7 @@
-from fastapi import APIRouter, Depends
-from app.services.deezer_service import DeezerService
 from app.core.dependencies import get_current_active_user
 from app.models.user import User
+from app.services.deezer_service import DeezerService
+from fastapi import APIRouter, Depends
 
 router = APIRouter()
 
@@ -18,9 +18,7 @@ async def search_deezer(
 
 
 @router.get("/playlist/{playlist_id}")
-async def get_deezer_playlist(
-    playlist_id: str, current_user: User = Depends(get_current_active_user)
-):
+async def get_deezer_playlist(playlist_id: str, current_user: User = Depends(get_current_active_user)):
     service = DeezerService()
     from fastapi import HTTPException
 
@@ -31,9 +29,7 @@ async def get_deezer_playlist(
 
 
 @router.get("/artist/{artist_id}")
-async def get_deezer_artist(
-    artist_id: str, current_user: User = Depends(get_current_active_user)
-):
+async def get_deezer_artist(artist_id: str, current_user: User = Depends(get_current_active_user)):
     service = DeezerService()
     from fastapi import HTTPException
 

@@ -1,43 +1,43 @@
+import asyncio
+import logging
+import os
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
 from fastapi.middleware.trustedhost import TrustedHostMiddleware
 from fastapi.staticfiles import StaticFiles
-import os
-import logging
-import asyncio
+from fastapi_limiter import FastAPILimiter
 from uvicorn.middleware.proxy_headers import ProxyHeadersMiddleware
 
-from app.core.config import settings
-from app.utils.logger import setup_logging
 import app.models  # noqa: F401 - Ensure models are registered
+from app.api.subsonic import router as subsonic_router
 from app.api.v1 import (
     artists,
-    downloads,
-    watchlist,
-    import_routes,
     auth,
     dashboard,
-    history,
-    youtube,
-    users,
-    stream,
-    spotify,
     deezer,
+    downloads,
+    history,
+    import_routes,
+    spotify,
+    stream,
     sync,
     system,
+    users,
+    watchlist,
+    youtube,
 )
 from app.api.v1 import settings as settings_router
-from app.api.subsonic import router as subsonic_router
-from app.services.socket_manager import socket_manager
-from app.db.database import AsyncSessionLocal
-from app.db.init_data import init_db
 from app.core.cache import cache_manager
-from app.services.scheduler import scheduler_service
-from app.services.download_manager import download_manager
+from app.core.config import settings
 from app.db.base import Base
-from app.db.database import engine
-from fastapi_limiter import FastAPILimiter
+from app.db.database import AsyncSessionLocal, engine
+from app.db.init_data import init_db
+from app.services.download_manager import download_manager
+from app.services.scheduler import scheduler_service
+from app.services.socket_manager import socket_manager
+from app.utils.logger import setup_logging
 
 # Setup logging before app startup
 setup_logging()
@@ -145,9 +145,7 @@ async def startup_event():
         except Exception as e:
             if i == retries - 1:
                 raise e
-            logger.info(
-                f"Database not ready, retrying in 2 seconds... ({i + 1}/{retries})"
-            )
+            logger.info(f"Database not ready, retrying in 2 seconds... ({i + 1}/{retries})")
             await asyncio.sleep(2)
 
     # Init data

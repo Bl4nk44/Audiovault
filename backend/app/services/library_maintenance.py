@@ -1,12 +1,13 @@
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.future import select
-from sqlalchemy import update, text
-from sqlalchemy.orm import joinedload
+import logging
+import os
+import uuid
+
 from app.models.download import Download
 from app.services.download_manager import download_manager
-import os
-import logging
-import uuid
+from sqlalchemy import text, update
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.future import select
+from sqlalchemy.orm import joinedload
 
 logger = logging.getLogger(__name__)
 
@@ -16,11 +17,7 @@ class LibraryMaintenanceService:
         """Fix missing source/playlist info based on track metadata or heuristics."""
         # Fix Source
         result = await db.execute(
-            select(Download).where(
-                (Download.source.is_(None))
-                | (Download.source == "")
-                | (Download.source == "other")
-            )
+            select(Download).where((Download.source.is_(None)) | (Download.source == "") | (Download.source == "other"))
         )
         downloads = result.scalars().all()
         fixed_source_count = 0
@@ -37,9 +34,7 @@ class LibraryMaintenanceService:
                     new_source = "deezer"
                 elif d.track.youtube_id:
                     new_source = "youtube"
-                elif d.track.metadata_content and d.track.metadata_content.get(
-                    "apple_music_id"
-                ):
+                elif d.track.metadata_content and d.track.metadata_content.get("apple_music_id"):
                     new_source = "apple_music"
 
             if d.source != new_source:
@@ -53,11 +48,7 @@ class LibraryMaintenanceService:
 
     async def rescan_library_integrity(self, db: AsyncSession, user_id: str) -> int:
         """Check for missing files and re-queue them."""
-        result = await db.execute(
-            select(Download).where(
-                Download.user_id == user_id, Download.status == "completed"
-            )
-        )
+        result = await db.execute(select(Download).where(Download.user_id == user_id, Download.status == "completed"))
         downloads = result.scalars().all()
 
         requeued_ids = []
@@ -89,9 +80,7 @@ class LibraryMaintenanceService:
         """Archive all completed downloads."""
         # Auto-migration check (safe-guard)
         try:
-            await db.execute(
-                text("ALTER TABLE downloads ADD COLUMN archived BOOLEAN DEFAULT 0")
-            )
+            await db.execute(text("ALTER TABLE downloads ADD COLUMN archived BOOLEAN DEFAULT 0"))
             await db.commit()
         except Exception:
             await db.rollback()
@@ -107,14 +96,12 @@ class LibraryMaintenanceService:
         await db.execute(stmt)
         await db.commit()
 
-    async def update_download_item(
-        self, db: AsyncSession, user_id: str, download_id: str, updates: dict
-    ):
+    async def update_download_item(self, db: AsyncSession, user_id: str, download_id: str, updates: dict):
         try:
             u_uuid = uuid.UUID(str(user_id))
             d_uuid = uuid.UUID(str(download_id))
-        except ValueError:
-            raise ValueError("Invalid UUID format")
+        except ValueError as e:
+            raise ValueError("Invalid UUID format") from e
 
         result = await db.execute(
             select(Download)
@@ -136,7 +123,7 @@ class LibraryMaintenanceService:
                     os.rename(download.file_path, new_path)
                     download.file_path = new_path
                 except Exception as e:
-                    raise ValueError(f"Failed to rename file: {e}")
+                    raise ValueError(f"Failed to rename file: {e}") from e
 
         # Handle metadata updates (title, artist)
         if "title" in updates:

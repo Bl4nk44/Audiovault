@@ -12,12 +12,12 @@ from uuid import UUID
 def format_subsonic_date(dt: datetime | None) -> str | None:
     """
     Format datetime for Subsonic API.
-    
+
     Subsonic uses ISO 8601 format: 2024-01-15T10:30:00.000Z
-    
+
     Args:
         dt: Datetime to format
-        
+
     Returns:
         ISO 8601 formatted string or None
     """
@@ -29,12 +29,12 @@ def format_subsonic_date(dt: datetime | None) -> str | None:
 def format_duration(duration_ms: int | None) -> int:
     """
     Convert milliseconds to seconds for Subsonic.
-    
+
     Subsonic uses seconds for duration.
-    
+
     Args:
         duration_ms: Duration in milliseconds
-        
+
     Returns:
         Duration in seconds
     """
@@ -46,15 +46,15 @@ def format_duration(duration_ms: int | None) -> int:
 def parse_subsonic_id(subsonic_id: str) -> UUID:
     """
     Parse Subsonic ID to UUID.
-    
+
     Subsonic IDs in Audiovault are just UUID strings.
-    
+
     Args:
         subsonic_id: ID from Subsonic client
-        
+
     Returns:
         UUID object
-        
+
     Raises:
         ValueError: If ID is not a valid UUID
     """
@@ -64,10 +64,10 @@ def parse_subsonic_id(subsonic_id: str) -> UUID:
 def to_subsonic_id(uuid_obj: UUID) -> str:
     """
     Convert UUID to Subsonic ID.
-    
+
     Args:
         uuid_obj: UUID to convert
-        
+
     Returns:
         String representation of UUID
     """
@@ -81,14 +81,14 @@ def get_cover_art_id(
 ) -> str | None:
     """
     Generate cover art ID for Subsonic.
-    
+
     We prefix IDs with type to distinguish them in getCoverArt.
-    
+
     Args:
         track_id: Track UUID
-        album_id: Album UUID  
+        album_id: Album UUID
         artist_id: Artist UUID
-        
+
     Returns:
         Cover art ID string or None
     """
@@ -104,10 +104,10 @@ def get_cover_art_id(
 def parse_cover_art_id(cover_art_id: str) -> tuple[str, UUID]:
     """
     Parse cover art ID to type and UUID.
-    
+
     Args:
         cover_art_id: Cover art ID (e.g., "al-uuid" or just "uuid")
-        
+
     Returns:
         Tuple of (type, UUID) where type is 'al', 'tr', 'ar', or 'unknown'
     """
@@ -118,22 +118,22 @@ def parse_cover_art_id(cover_art_id: str) -> tuple[str, UUID]:
     else:
         item_type = "unknown"
         uuid_str = cover_art_id
-    
+
     return item_type, UUID(uuid_str)
 
 
 def get_content_type(file_path: str) -> str:
     """
     Get MIME type from file extension.
-    
+
     Args:
         file_path: Path to file
-        
+
     Returns:
         MIME type string
     """
     ext = file_path.lower().split(".")[-1] if "." in file_path else ""
-    
+
     mime_types = {
         "mp3": "audio/mpeg",
         "flac": "audio/flac",
@@ -149,7 +149,7 @@ def get_content_type(file_path: str) -> str:
         "gif": "image/gif",
         "webp": "image/webp",
     }
-    
+
     return mime_types.get(ext, "application/octet-stream")
 
 
@@ -160,17 +160,17 @@ def build_song_response(
 ) -> dict:
     """
     Build Subsonic song/child response from Track.
-    
+
     Args:
         track: Track model instance
         download: Optional Download model with file info
         include_path: Include file path in response
-        
+
     Returns:
         Dict with Subsonic song fields
     """
     metadata = track.metadata_content or {}
-    
+
     song = {
         "id": str(track.id),
         "title": track.title or "Unknown",
@@ -182,12 +182,12 @@ def build_song_response(
         "type": "music",
         "created": format_subsonic_date(track.created_at),
     }
-    
+
     # Optional fields
     # Optional fields
     if track.artist_id:
         song["artistId"] = str(track.artist_id)
-    
+
     # -- Album & Cover Art --
     if track.album_id:
         song["albumId"] = str(track.album_id)
@@ -205,42 +205,43 @@ def build_song_response(
 
     if metadata.get("genre"):
         song["genre"] = metadata["genre"]
-    
+
     if metadata.get("year"):
         # Subsonic expects integer year
         try:
             song["year"] = int(metadata["year"])
         except (ValueError, TypeError):
             song["year"] = metadata["year"]
-            
+
     if metadata.get("track"):
         # Subsonic expects integer track number
         try:
             song["track"] = int(metadata["track"])
         except (ValueError, TypeError):
             pass
-    
+
     if track.isrc:
         song["musicBrainzId"] = track.isrc  # Not exact but useful
-    
+
     # File info from download
     if download:
         song["suffix"] = download.file_path.split(".")[-1] if download.file_path else "mp3"
-        
+
         # Get file size - fallback to reading from disk if DB has 0
         file_size = download.file_size or 0
         if file_size == 0 and download.file_path:
             import os
+
             try:
                 if os.path.exists(download.file_path):
                     file_size = os.path.getsize(download.file_path)
-            except (OSError, IOError):
+            except OSError:
                 pass
         song["size"] = file_size
-        
+
         song["bitRate"] = 320  # Default, could be detected
         song["contentType"] = get_content_type(download.file_path) if download.file_path else "audio/mpeg"
-        
+
         if include_path:
             song["path"] = download.file_path
     else:
@@ -250,22 +251,22 @@ def build_song_response(
         song["bitRate"] = 128
         song["contentType"] = "audio/mpeg"
         song["path"] = ""  # Explicit empty path
-    
+
     return song
 
 
 def build_album_response(album: Any, song_count: int = 0) -> dict:
     """
     Build Subsonic album response from Album model.
-    
+
     Args:
         album: Album model instance
         song_count: Number of songs in album
-        
+
     Returns:
         Dict with Subsonic album fields
     """
-    
+
     return {
         "id": str(album.id),
         "name": album.title or "Unknown Album",
@@ -283,16 +284,16 @@ def build_album_response(album: Any, song_count: int = 0) -> dict:
 def build_artist_response(artist: Any, album_count: int = 0) -> dict:
     """
     Build Subsonic artist response from Artist model.
-    
+
     Args:
         artist: Artist model instance
         album_count: Number of albums
-        
+
     Returns:
         Dict with Subsonic artist fields
     """
     images = artist.images or {}
-    
+
     return {
         "id": str(artist.id),
         "name": artist.name or "Unknown Artist",

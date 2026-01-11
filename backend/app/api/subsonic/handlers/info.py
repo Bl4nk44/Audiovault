@@ -10,13 +10,13 @@ Handles info/metadata endpoints:
 from uuid import UUID
 
 from app.api.subsonic.auth import subsonic_auth
+from app.api.subsonic.utils import build_song_response
 from app.db.database import get_db
 from app.models.artist import Artist
 from app.models.download import Download
 from app.models.track import Track
 from app.models.user import User
 from app.schemas.subsonic.base import subsonic_error, subsonic_response
-from app.api.subsonic.utils import build_song_response
 from fastapi import APIRouter, Depends, Query
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -36,39 +36,37 @@ async def get_artist_info(
 ):
     """
     Get metadata for an artist (folder view format).
-    
+
     Returns basic artist info. Similar artists not implemented.
     """
     try:
         artist_id = UUID(id)
     except ValueError:
         return subsonic_error(10, "Invalid artist ID", f=f)
-    
-    result = await db.execute(
-        select(Artist).where(Artist.id == artist_id)
-    )
+
+    result = await db.execute(select(Artist).where(Artist.id == artist_id))
     artist = result.scalar_one_or_none()
-    
+
     if not artist:
         return subsonic_error(70, "Artist not found", f=f)
-    
+
     # Build artist info response
     artist_info = {
         "biography": artist.bio or "",
-        "musicBrainzId": str(artist.musicbrainz_id) if hasattr(artist, 'musicbrainz_id') and artist.musicbrainz_id else None,
+        "musicBrainzId": str(artist.musicbrainz_id)
+        if hasattr(artist, "musicbrainz_id") and artist.musicbrainz_id
+        else None,
         "lastFmUrl": "",  # Not implemented
         "smallImageUrl": f"/api/subsonic/getCoverArt.view?id=ar-{artist.id}&size=64" if artist.images else None,
         "mediumImageUrl": f"/api/subsonic/getCoverArt.view?id=ar-{artist.id}&size=126" if artist.images else None,
         "largeImageUrl": f"/api/subsonic/getCoverArt.view?id=ar-{artist.id}&size=300" if artist.images else None,
         "similarArtist": [],  # Not implemented
     }
-    
+
     # Remove None values for cleaner XML
     artist_info = {k: v for k, v in artist_info.items() if v is not None}
-    
-    return subsonic_response({
-        "artistInfo": artist_info
-    }, f=f)
+
+    return subsonic_response({"artistInfo": artist_info}, f=f)
 
 
 @router.get("/getArtistInfo2.view")
@@ -83,39 +81,37 @@ async def get_artist_info2(
 ):
     """
     Get metadata for an artist (ID3 format).
-    
+
     Same as getArtistInfo but with ID3 naming.
     """
     try:
         artist_id = UUID(id)
     except ValueError:
         return subsonic_error(10, "Invalid artist ID", f=f)
-    
-    result = await db.execute(
-        select(Artist).where(Artist.id == artist_id)
-    )
+
+    result = await db.execute(select(Artist).where(Artist.id == artist_id))
     artist = result.scalar_one_or_none()
-    
+
     if not artist:
         return subsonic_error(70, "Artist not found", f=f)
-    
+
     # Build artist info response
     artist_info = {
         "biography": artist.bio or "",
-        "musicBrainzId": str(artist.musicbrainz_id) if hasattr(artist, 'musicbrainz_id') and artist.musicbrainz_id else None,
+        "musicBrainzId": str(artist.musicbrainz_id)
+        if hasattr(artist, "musicbrainz_id") and artist.musicbrainz_id
+        else None,
         "lastFmUrl": "",  # Not implemented
         "smallImageUrl": f"/api/subsonic/getCoverArt.view?id=ar-{artist.id}&size=64" if artist.images else None,
         "mediumImageUrl": f"/api/subsonic/getCoverArt.view?id=ar-{artist.id}&size=126" if artist.images else None,
         "largeImageUrl": f"/api/subsonic/getCoverArt.view?id=ar-{artist.id}&size=300" if artist.images else None,
         "similarArtist": [],  # Not implemented
     }
-    
+
     # Remove None values for cleaner XML
     artist_info = {k: v for k, v in artist_info.items() if v is not None}
-    
-    return subsonic_response({
-        "artistInfo2": artist_info
-    }, f=f)
+
+    return subsonic_response({"artistInfo2": artist_info}, f=f)
 
 
 @router.get("/getSimilarSongs2.view")
@@ -129,35 +125,31 @@ async def get_similar_songs2(
 ):
     """
     Get similar songs (ID3 format).
-    
+
     Returns songs from the same artist as the given song/artist.
     """
     try:
         item_id = UUID(id)
     except ValueError:
         return subsonic_error(10, "Invalid ID", f=f)
-    
+
     # Try to find as track first
-    result = await db.execute(
-        select(Track).where(Track.id == item_id)
-    )
+    result = await db.execute(select(Track).where(Track.id == item_id))
     track = result.scalar_one_or_none()
-    
+
     artist_id = None
     if track:
         artist_id = track.artist_id
     else:
         # Try as artist ID
-        result = await db.execute(
-            select(Artist).where(Artist.id == item_id)
-        )
+        result = await db.execute(select(Artist).where(Artist.id == item_id))
         artist = result.scalar_one_or_none()
         if artist:
             artist_id = artist.id
-    
+
     if not artist_id:
         return subsonic_error(70, "Song or artist not found", f=f)
-    
+
     # Get songs by the same artist (only downloaded ones)
     result = await db.execute(
         select(Track, Download)
@@ -168,16 +160,12 @@ async def get_similar_songs2(
         )
         .limit(count)
     )
-    
+
     songs = []
     for t, d in result.all():
         songs.append(build_song_response(t, d))
-    
-    return subsonic_response({
-        "similarSongs2": {
-            "song": songs
-        }
-    }, f=f)
+
+    return subsonic_response({"similarSongs2": {"song": songs}}, f=f)
 
 
 @router.get("/getPodcasts.view")
@@ -191,14 +179,10 @@ async def get_podcasts(
 ):
     """
     Get all podcasts.
-    
+
     Returns empty list as podcasts are not implemented.
     """
-    return subsonic_response({
-        "podcasts": {
-            "channel": []
-        }
-    }, f=f)
+    return subsonic_response({"podcasts": {"channel": []}}, f=f)
 
 
 @router.get("/getNewestPodcasts.view")
@@ -211,14 +195,10 @@ async def get_newest_podcasts(
 ):
     """
     Get newest podcast episodes.
-    
+
     Returns empty list as podcasts are not implemented.
     """
-    return subsonic_response({
-        "newestPodcasts": {
-            "episode": []
-        }
-    }, f=f)
+    return subsonic_response({"newestPodcasts": {"episode": []}}, f=f)
 
 
 @router.get("/getBookmarks.view")
@@ -230,14 +210,10 @@ async def get_bookmarks(
 ):
     """
     Get all bookmarks.
-    
+
     Returns empty list as bookmarks are not implemented.
     """
-    return subsonic_response({
-        "bookmarks": {
-            "bookmark": []
-        }
-    }, f=f)
+    return subsonic_response({"bookmarks": {"bookmark": []}}, f=f)
 
 
 @router.get("/getInternetRadioStations.view")
@@ -249,11 +225,7 @@ async def get_internet_radio_stations(
 ):
     """
     Get all internet radio stations.
-    
+
     Returns empty list as radio is not implemented.
     """
-    return subsonic_response({
-        "internetRadioStations": {
-            "internetRadioStation": []
-        }
-    }, f=f)
+    return subsonic_response({"internetRadioStations": {"internetRadioStation": []}}, f=f)

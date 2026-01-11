@@ -1,5 +1,6 @@
+from unittest.mock import AsyncMock, patch
+
 import pytest
-from unittest.mock import patch, AsyncMock
 from app.api.v1.stream import _extract_direct_url, _stream_content
 
 

@@ -1,11 +1,12 @@
-import pytest
-from app.services.library_data import library_data_service
-from app.models.user import User
-from app.models.download import Download
-from app.models.track import Track
-from sqlalchemy.ext.asyncio import AsyncSession
 import uuid
 from unittest.mock import patch
+
+import pytest
+from app.models.download import Download
+from app.models.track import Track
+from app.models.user import User
+from app.services.library_data import library_data_service
+from sqlalchemy.ext.asyncio import AsyncSession
 
 
 @pytest.mark.asyncio
@@ -36,9 +37,7 @@ async def test_get_library_items_filtering(db_session: AsyncSession):
     )
     dl1.source = "spotify"
 
-    dl2 = Download(
-        id=uuid.uuid4(), user_id=user_id, track_id=track2.id, status="pending"
-    )
+    dl2 = Download(id=uuid.uuid4(), user_id=user_id, track_id=track2.id, status="pending")
     dl2.source = "youtube"
 
     print(f"DEBUG: dl1 source: {dl1.source}")
@@ -55,17 +54,11 @@ async def test_get_library_items_filtering(db_session: AsyncSession):
     assert result["items"][0]["track"]["title"] == "Completed Track"
 
     # Test Source Filtering
-    result_spotify = await library_data_service.get_library_items(
-        db_session, str(user_id), source="spotify"
-    )
+    result_spotify = await library_data_service.get_library_items(db_session, str(user_id), source="spotify")
     assert result_spotify["total"] == 1
 
-    result_youtube = await library_data_service.get_library_items(
-        db_session, str(user_id), source="youtube"
-    )
-    assert (
-        result_youtube["total"] == 0
-    )  # because status is pending, and get_library_items filters by completed
+    result_youtube = await library_data_service.get_library_items(db_session, str(user_id), source="youtube")
+    assert result_youtube["total"] == 0  # because status is pending, and get_library_items filters by completed
 
 
 @pytest.mark.asyncio
@@ -127,9 +120,7 @@ async def test_get_queue_items_sorting(db_session: AsyncSession):
         source="spotify",
     )
 
-    db_session.add_all(
-        [dl_pending, dl_downloading, dl_processing, dl_failed, dl_archived]
-    )
+    db_session.add_all([dl_pending, dl_downloading, dl_processing, dl_failed, dl_archived])
     await db_session.commit()
 
     items = await library_data_service.get_queue_items(db_session, str(user_id))

@@ -1,6 +1,7 @@
-import logging
 import asyncio
-from typing import List, Dict, Any, Optional
+import logging
+from typing import Any
+
 import yt_dlp
 
 logger = logging.getLogger(__name__)
@@ -13,9 +14,7 @@ class BaseMusicService:
     def can_handle(self, url: str) -> bool:
         raise NotImplementedError("Subclasses must implement can_handle method")
 
-    async def _extract_info(
-        self, url: str, extra_opts: Dict[str, Any] = None
-    ) -> Optional[Dict[str, Any]]:
+    async def _extract_info(self, url: str, extra_opts: dict[str, Any] = None) -> dict[str, Any] | None:
         """
         Internal helper to extract info using yt-dlp.
         """
@@ -39,7 +38,7 @@ class BaseMusicService:
             logger.error(f"Error extracting metadata from {url} using yt-dlp: {e}")
             return None
 
-    async def get_tracks(self, url: str) -> List[Dict[str, Any]]:
+    async def get_tracks(self, url: str) -> list[dict[str, Any]]:
         """
         Default implementation for extracting tracks.
         """
@@ -71,9 +70,7 @@ class BaseMusicService:
                 "title": title,
                 "artist": artist,
                 "album": entry.get("album") or info.get("title", "Unknown Album"),
-                "duration_ms": int(entry.get("duration", 0) * 1000)
-                if entry.get("duration")
-                else None,
+                "duration_ms": int(entry.get("duration", 0) * 1000) if entry.get("duration") else None,
                 "image_url": entry.get("thumbnail"),
                 "source": self.source_name,
                 "source_url": entry.get("url") or entry.get("webpage_url") or url,
@@ -83,7 +80,7 @@ class BaseMusicService:
         logger.info(f"Extracted {len(tracks)} tracks from {self.source_name}")
         return tracks
 
-    async def get_playlist_info(self, url: str) -> Optional[Dict[str, Any]]:
+    async def get_playlist_info(self, url: str) -> dict[str, Any] | None:
         """
         Default implementation for extracting playlist info.
         """

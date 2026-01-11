@@ -1,7 +1,8 @@
-import logging
-from typing import List, Dict, Any, Optional
-import yt_dlp
 import asyncio
+import logging
+from typing import Any
+
+import yt_dlp
 
 logger = logging.getLogger(__name__)
 
@@ -13,7 +14,7 @@ class SoundCloudService:
     def can_handle(self, url: str) -> bool:
         return "soundcloud.com" in url or "on.soundcloud.com" in url
 
-    async def get_tracks(self, url: str) -> List[Dict[str, Any]]:
+    async def get_tracks(self, url: str) -> list[dict[str, Any]]:
         """
         Extract tracks from SoundCloud URL using yt-dlp.
         SoundCloud is well supported by yt-dlp.
@@ -60,9 +61,7 @@ class SoundCloudService:
                 # SoundCloud specific: id usually exists
                 track_id = entry.get("id")
                 title = entry.get("title")
-                uploader = (
-                    entry.get("uploader") or entry.get("artist") or "Unknown Artist"
-                )
+                uploader = entry.get("uploader") or entry.get("artist") or "Unknown Artist"
 
                 if not title:
                     continue
@@ -75,9 +74,7 @@ class SoundCloudService:
                     "title": title,
                     "artist": uploader,
                     "album": "SoundCloud",  # SoundCloud rarely has albums in typical sense
-                    "duration_ms": int(entry.get("duration", 0) * 1000)
-                    if entry.get("duration")
-                    else None,
+                    "duration_ms": int(entry.get("duration", 0) * 1000) if entry.get("duration") else None,
                     "image_url": entry.get("thumbnail"),
                     "source": "soundcloud",
                     "source_url": source_url,
@@ -91,7 +88,7 @@ class SoundCloudService:
             logger.error(f"Error extracting SoundCloud data: {e}")
             return []
 
-    async def get_playlist_info(self, url: str) -> Optional[Dict[str, Any]]:
+    async def get_playlist_info(self, url: str) -> dict[str, Any] | None:
         """
         Extract playlist info (title, image, id) from SoundCloud URL.
         """

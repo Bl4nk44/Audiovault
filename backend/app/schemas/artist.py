@@ -1,15 +1,16 @@
-from pydantic import BaseModel
-from typing import Optional, Dict, Any
-from uuid import UUID
 from datetime import datetime
+from typing import Any
+from uuid import UUID
+
+from pydantic import BaseModel
 
 
 class ArtistBase(BaseModel):
     name: str
-    bio: Optional[str] = None
-    spotify_id: Optional[str] = None
-    deezer_id: Optional[str] = None
-    images: Optional[Dict[str, Any]] = {}
+    bio: str | None = None
+    spotify_id: str | None = None
+    deezer_id: str | None = None
+    images: dict[str, Any] | None = {}
 
 
 class ArtistCreate(ArtistBase):
@@ -19,7 +20,7 @@ class ArtistCreate(ArtistBase):
 class ArtistResponse(ArtistBase):
     id: UUID
     created_at: datetime
-    updated_at: Optional[datetime] = None
+    updated_at: datetime | None = None
 
     class Config:
         from_attributes = True
@@ -27,8 +28,8 @@ class ArtistResponse(ArtistBase):
 
 class AlbumBase(BaseModel):
     title: str
-    release_date: Optional[datetime] = None
-    images: Optional[Dict[str, Any]] = {}
+    release_date: datetime | None = None
+    images: dict[str, Any] | None = {}
 
 
 class AlbumResponse(AlbumBase):

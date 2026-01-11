@@ -1,11 +1,12 @@
+import uuid
+from unittest.mock import AsyncMock, MagicMock, patch
+
 import pytest
-from unittest.mock import MagicMock, patch, AsyncMock
-from app.services.download_manager import DownloadManager
 from app.models.download import Download
 from app.models.track import Track
 from app.models.user import User
+from app.services.download_manager import DownloadManager
 from sqlalchemy.ext.asyncio import AsyncSession
-import uuid
 
 
 @pytest.fixture
@@ -14,9 +15,7 @@ def manager():
 
 
 @pytest.mark.asyncio
-async def test_process_download_success(
-    db_session: AsyncSession, manager: DownloadManager
-):
+async def test_process_download_success(db_session: AsyncSession, manager: DownloadManager):
     user_id = uuid.uuid4()
     user = User(
         id=user_id,
@@ -59,9 +58,7 @@ async def test_process_download_success(
         ),
         patch("app.services.download_manager.socket_manager") as mock_socket,
         patch("app.services.download_manager.yt_dlp.YoutubeDL"),
-        patch.object(
-            manager, "_execute_download_task", new_callable=AsyncMock
-        ) as mock_exec,
+        patch.object(manager, "_execute_download_task", new_callable=AsyncMock) as mock_exec,
         patch.object(manager, "_resolve_url", new_callable=AsyncMock) as mock_resolve,
     ):
         mock_socket.emit = AsyncMock()
@@ -91,9 +88,7 @@ async def test_process_download_success(
 
 
 @pytest.mark.asyncio
-async def test_process_download_failure(
-    db_session: AsyncSession, manager: DownloadManager
-):
+async def test_process_download_failure(db_session: AsyncSession, manager: DownloadManager):
     user_id = uuid.uuid4()
     user = User(
         id=user_id,
@@ -129,9 +124,7 @@ async def test_process_download_failure(
             return_value=mock_session_ctx,
         ),
         patch("app.services.download_manager.socket_manager") as mock_socket,
-        patch.object(
-            manager, "_resolve_url", side_effect=ValueError("Resolution failed")
-        ),
+        patch.object(manager, "_resolve_url", side_effect=ValueError("Resolution failed")),
     ):
         mock_socket.emit = AsyncMock()
         await manager.process_download(dl.id)
@@ -140,6 +133,4 @@ async def test_process_download_failure(
         assert dl.status == "failed"
         assert "Resolution failed" in dl.error_message
 
-        mock_socket.emit.assert_called_with(
-            "download:error", {"download_id": str(dl.id), "error": "Resolution failed"}
-        )
+        mock_socket.emit.assert_called_with("download:error", {"download_id": str(dl.id), "error": "Resolution failed"})

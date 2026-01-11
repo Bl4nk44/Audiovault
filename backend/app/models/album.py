@@ -1,8 +1,9 @@
-from sqlalchemy import Column, String, Integer, DateTime, ForeignKey, JSON
-from sqlalchemy import Uuid
-from sqlalchemy.orm import relationship
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from uuid import uuid4
+
+from sqlalchemy import JSON, Column, DateTime, ForeignKey, Integer, String, Uuid
+from sqlalchemy.orm import relationship
+
 from app.db.base import Base
 
 
@@ -23,12 +24,8 @@ class Album(Base):
     # Images (cover art)
     images = Column(JSON, default={})
 
-    created_at = Column(
-        DateTime(timezone=True), default=lambda: datetime.now(timezone.utc)
-    )
-    updated_at = Column(
-        DateTime(timezone=True), onupdate=lambda: datetime.now(timezone.utc)
-    )
+    created_at = Column(DateTime(timezone=True), default=lambda: datetime.now(UTC))
+    updated_at = Column(DateTime(timezone=True), onupdate=lambda: datetime.now(UTC))
 
     # Relationships
     artist = relationship("Artist", back_populates="albums")

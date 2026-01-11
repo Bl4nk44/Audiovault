@@ -1,8 +1,9 @@
-from sqlalchemy import Column, String, DateTime, ForeignKey, JSON
-from sqlalchemy import Uuid
-from sqlalchemy.orm import relationship
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from uuid import uuid4
+
+from sqlalchemy import JSON, Column, DateTime, ForeignKey, String, Uuid
+from sqlalchemy.orm import relationship
+
 from app.db.base import Base
 
 
@@ -22,8 +23,8 @@ class ServiceCredentials(Base):
 
     updated_at = Column(
         DateTime(timezone=True),
-        default=lambda: datetime.now(timezone.utc),
-        onupdate=lambda: datetime.now(timezone.utc),
+        default=lambda: datetime.now(UTC),
+        onupdate=lambda: datetime.now(UTC),
     )
 
     user = relationship("User", back_populates="credentials")

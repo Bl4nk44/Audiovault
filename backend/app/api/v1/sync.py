@@ -1,11 +1,11 @@
-from fastapi import APIRouter, Depends, HTTPException, Body
-from sqlalchemy.ext.asyncio import AsyncSession
 from uuid import UUID
 
-from app.db.database import get_db
 from app.core.dependencies import get_current_active_user
+from app.db.database import get_db
 from app.models.user import User
 from app.services.sync_manager import sync_manager
+from fastapi import APIRouter, Body, Depends, HTTPException
+from sqlalchemy.ext.asyncio import AsyncSession
 
 router = APIRouter()
 
@@ -21,17 +21,15 @@ async def analyze_sync(
     Returns list of items to be removed and safety warnings.
     """
     try:
-        report = await sync_manager.analyze_watchlist(
-            db, str(current_user.id), str(watchlist_id)
-        )
+        report = await sync_manager.analyze_watchlist(db, str(current_user.id), str(watchlist_id))
         return report
     except ValueError as e:
-        raise HTTPException(status_code=404, detail=str(e))
+        raise HTTPException(status_code=404, detail=str(e)) from e
     except Exception as e:
         import traceback
 
         traceback.print_exc()
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail=str(e)) from e
 
 
 @router.post("/{watchlist_id}/execute")
@@ -54,11 +52,9 @@ async def execute_sync(
         raise HTTPException(status_code=400, detail="Missing sync_token")
 
     try:
-        result = await sync_manager.execute_sync(
-            db, str(current_user.id), sync_token, approved_removals
-        )
+        result = await sync_manager.execute_sync(db, str(current_user.id), sync_token, approved_removals)
         return result
     except ValueError as e:
-        raise HTTPException(status_code=400, detail=str(e))
+        raise HTTPException(status_code=400, detail=str(e)) from e
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail=str(e)) from e

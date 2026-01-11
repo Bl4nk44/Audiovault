@@ -1,7 +1,7 @@
-from fastapi import APIRouter, Depends
-from app.services.youtube_service import YouTubeService
 from app.core.dependencies import get_current_active_user
 from app.models.user import User
+from app.services.youtube_service import YouTubeService
+from fastapi import APIRouter, Depends
 
 router = APIRouter()
 
@@ -24,9 +24,7 @@ async def search_youtube(
 
 
 @router.get("/playlist/{playlist_id}")
-async def get_youtube_playlist(
-    playlist_id: str, current_user: User = Depends(get_current_active_user)
-):
+async def get_youtube_playlist(playlist_id: str, current_user: User = Depends(get_current_active_user)):
     service = YouTubeService()
     playlist = service.get_playlist_details(playlist_id)
 

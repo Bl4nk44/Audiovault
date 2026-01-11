@@ -1,17 +1,19 @@
-from sqlalchemy import (
-    Column,
-    String,
-    Integer,
-    Boolean,
-    DateTime,
-    JSON,
-    ForeignKey,
-    UniqueConstraint,
-)
-from sqlalchemy import Uuid
-from sqlalchemy.orm import relationship
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from uuid import uuid4
+
+from sqlalchemy import (
+    JSON,
+    Boolean,
+    Column,
+    DateTime,
+    ForeignKey,
+    Integer,
+    String,
+    UniqueConstraint,
+    Uuid,
+)
+from sqlalchemy.orm import relationship
+
 from app.db.base import Base
 
 
@@ -38,16 +40,10 @@ class Watchlist(Base):
     # Metadata
     metadata_content = Column("metadata", JSON, default={})
 
-    created_at = Column(
-        DateTime(timezone=True), default=lambda: datetime.now(timezone.utc)
-    )
+    created_at = Column(DateTime(timezone=True), default=lambda: datetime.now(UTC))
 
     # Relationships
     user = relationship("User", back_populates="watchlist")
-    items = relationship(
-        "WatchlistItem", back_populates="watchlist", cascade="all, delete-orphan"
-    )
+    items = relationship("WatchlistItem", back_populates="watchlist", cascade="all, delete-orphan")
 
-    __table_args__ = (
-        UniqueConstraint("user_id", "source_id", "source", name="unique_watch"),
-    )
+    __table_args__ = (UniqueConstraint("user_id", "source_id", "source", name="unique_watch"),)

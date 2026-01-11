@@ -1,11 +1,11 @@
-from app.providers.manager import provider_manager
-from app.providers.generic import GenericProvider
+from app.providers.amazon_music_provider import AmazonMusicProvider
 from app.providers.apple_music_provider import AppleMusicProvider
 from app.providers.deezer_provider import DeezerProvider
-from app.providers.tidal_provider import TidalProvider
-from app.providers.amazon_music_provider import AmazonMusicProvider
+from app.providers.generic import GenericProvider
+from app.providers.manager import provider_manager
 from app.providers.soundcloud_provider import SoundCloudProvider
 from app.providers.spotify_provider import SpotifyProvider
+from app.providers.tidal_provider import TidalProvider
 from app.providers.youtube_provider import YouTubeProvider
 
 # Register providers

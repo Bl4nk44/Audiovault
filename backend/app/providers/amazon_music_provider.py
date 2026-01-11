@@ -1,4 +1,3 @@
-from typing import List, Optional
 from app.providers.base import MusicProvider
 from app.schemas.metadata import PlaylistMetadata, TrackMetadata
 from app.services.amazon_music_service import amazon_music_service
@@ -10,7 +9,7 @@ class AmazonMusicProvider(MusicProvider):
         return "amazon_music"
 
     @property
-    def domains(self) -> List[str]:
+    def domains(self) -> list[str]:
         return [
             "music.amazon.com",
             "amazon.com",
@@ -22,7 +21,7 @@ class AmazonMusicProvider(MusicProvider):
     def can_handle(self, url: str) -> bool:
         return amazon_music_service.can_handle(url)
 
-    async def extract_playlist(self, url: str) -> Optional[PlaylistMetadata]:
+    async def extract_playlist(self, url: str) -> PlaylistMetadata | None:
         tracks = await amazon_music_service.get_tracks(url)
         if not tracks:
             return None
@@ -46,9 +45,7 @@ class AmazonMusicProvider(MusicProvider):
         title = "Amazon Music Import"
         if track_metadatas:
             # In extract_flat album field often contains playlist title if it came from playlist URL
-            if (
-                "playlist" in url or "albums" in url
-            ):  # Amazon URLs often have /albums/ or /playlists/
+            if "playlist" in url or "albums" in url:  # Amazon URLs often have /albums/ or /playlists/
                 title = track_metadatas[0].album or "Amazon Music Playlist"
             else:
                 title = track_metadatas[0].album or "Amazon Music Album"
@@ -60,7 +57,7 @@ class AmazonMusicProvider(MusicProvider):
             tracks=track_metadatas,
         )
 
-    async def get_track(self, url: str) -> Optional[TrackMetadata]:
+    async def get_track(self, url: str) -> TrackMetadata | None:
         tracks = await amazon_music_service.get_tracks(url)
         if tracks:
             t = tracks[0]

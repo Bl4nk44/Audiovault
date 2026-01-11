@@ -1,8 +1,8 @@
-from typing import List, Optional
+import re
+
 from app.providers.base import MusicProvider
 from app.schemas.metadata import PlaylistMetadata, TrackMetadata
 from app.services.deezer_service import deezer_service
-import re
 
 
 class DeezerProvider(MusicProvider):
@@ -11,13 +11,13 @@ class DeezerProvider(MusicProvider):
         return "deezer"
 
     @property
-    def domains(self) -> List[str]:
+    def domains(self) -> list[str]:
         return ["deezer.com", "www.deezer.com"]
 
     def can_handle(self, url: str) -> bool:
         return "deezer.com" in url
 
-    async def extract_playlist(self, url: str) -> Optional[PlaylistMetadata]:
+    async def extract_playlist(self, url: str) -> PlaylistMetadata | None:
         # Parse URL to know what to call
         url_match = re.search(
             r"(?:https?://)?(?:www\.)?deezer\.com/(?:\w{2}/)?(track|album|playlist)/(\d+)",
@@ -67,7 +67,7 @@ class DeezerProvider(MusicProvider):
             tracks=track_metadatas,
         )
 
-    async def get_track(self, url: str) -> Optional[TrackMetadata]:
+    async def get_track(self, url: str) -> TrackMetadata | None:
         # Reuse logic
         playlist = await self.extract_playlist(url)
         if playlist and playlist.tracks:

@@ -1,21 +1,19 @@
+import logging
 import os
 import shutil
-import logging
-from typing import List, Dict
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from uuid import uuid4
 
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.future import select
-from sqlalchemy import func, delete
-
+from app.core.config import settings
+from app.models.download import Download
 from app.models.watchlist import Watchlist
 from app.models.watchlist_item import WatchlistItem
-from app.models.download import Download
-from app.core.config import settings
 from app.providers import provider_manager
 from app.services.spotify_service import SpotifyService
 from app.services.youtube_service import YouTubeService
+from sqlalchemy import delete, func
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.future import select
 
 logger = logging.getLogger(__name__)
 
@@ -24,20 +22,14 @@ class SyncManager:
     def __init__(self):
         self._pending_reports = {}  # Token -> Report Data
 
-    async def analyze_watchlist(
-        self, db: AsyncSession, user_id: str, watchlist_id: str
-    ) -> Dict:
+    async def analyze_watchlist(self, db: AsyncSession, user_id: str, watchlist_id: str) -> dict:
         """
         Analyzes a watchlist for synchronization.
         Returns a report containing items to add, remove, and safety warnings.
         Does NOT modify the database (Dry-Run).
         """
         # 1. Fetch Watchlist
-        result = await db.execute(
-            select(Watchlist).where(
-                Watchlist.id == watchlist_id, Watchlist.user_id == user_id
-            )
-        )
+        result = await db.execute(select(Watchlist).where(Watchlist.id == watchlist_id, Watchlist.user_id == user_id))
         watchlist = result.scalar_one_or_none()
 
         if not watchlist:
@@ -84,10 +76,7 @@ class SyncManager:
                 is_found = True
             elif watchlist.source == "youtube" and track.youtube_id in remote_ids:
                 is_found = True
-            elif (
-                track.metadata_content
-                and f"{watchlist.source}_id" in track.metadata_content
-            ):
+            elif track.metadata_content and f"{watchlist.source}_id" in track.metadata_content:
                 if track.metadata_content[f"{watchlist.source}_id"] in remote_ids:
                     is_found = True
 
@@ -126,9 +115,7 @@ class SyncManager:
 
         if local_count > 10 and len(remote_ids) == 0:
             safety_warning = True
-            warning_message = (
-                "Remote playlist is empty but local has tracks. Possible API error."
-            )
+            warning_message = "Remote playlist is empty but local has tracks. Possible API error."
 
         # 5. Generate Token
         sync_token = str(uuid4())
@@ -143,7 +130,7 @@ class SyncManager:
             "safety_warning": safety_warning,
             "warning_message": warning_message,
             "sync_token": sync_token,
-            "generated_at": datetime.now(timezone.utc).isoformat(),
+            "generated_at": datetime.now(UTC).isoformat(),
         }
 
         # Store for Execute phase
@@ -156,7 +143,7 @@ class SyncManager:
         db: AsyncSession,
         user_id: str,
         sync_token: str,
-        approved_removals: List[str],
+        approved_removals: list[str],
     ):
         """
         Executes the sync based on approval.
@@ -197,9 +184,7 @@ class SyncManager:
             ref_count_result = await db.execute(
                 select(func.count(WatchlistItem.id))
                 .join(Watchlist)
-                .where(
-                    Watchlist.user_id == user_id, WatchlistItem.track_id == track_uuid
-                )
+                .where(Watchlist.user_id == user_id, WatchlistItem.track_id == track_uuid)
             )
             ref_count = ref_count_result.scalar()
 
@@ -209,9 +194,7 @@ class SyncManager:
 
                 # Get Download
                 d_result = await db.execute(
-                    select(Download).where(
-                        Download.user_id == user_id, Download.track_id == track_uuid
-                    )
+                    select(Download).where(Download.user_id == user_id, Download.track_id == track_uuid)
                 )
                 download = d_result.scalar_one_or_none()
 
@@ -258,7 +241,7 @@ class SyncManager:
             logger.error(f"Failed to soft delete {file_path}: {e}")
             return False
 
-    async def _fetch_remote_tracks(self, item: Watchlist) -> List[dict]:
+    async def _fetch_remote_tracks(self, item: Watchlist) -> list[dict]:
         """
         Helper to fetch remote tracks using Providers.
         Simplified logic from WatchlistEngine.

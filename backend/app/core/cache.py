@@ -1,22 +1,19 @@
 import redis.asyncio as redis
 from app.core.config import settings
-from typing import Optional
 
 
 class CacheManager:
     def __init__(self):
-        self.redis: Optional[redis.Redis] = None
+        self.redis: redis.Redis | None = None
 
     async def connect(self):
-        self.redis = redis.from_url(
-            settings.REDIS_URL, encoding="utf-8", decode_responses=True
-        )
+        self.redis = redis.from_url(settings.REDIS_URL, encoding="utf-8", decode_responses=True)
 
     async def close(self):
         if self.redis:
             await self.redis.close()
 
-    async def get(self, key: str) -> Optional[str]:
+    async def get(self, key: str) -> str | None:
         if not self.redis:
             await self.connect()
         return await self.redis.get(key)
