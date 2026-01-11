@@ -25,7 +25,7 @@ class DownloadPausedError(Exception):
     pass
 
 class DownloadManager:
-    MAX_CONCURRENT_DOWNLOADS = 3
+    DEFAULT_CONCURRENT_DOWNLOADS = 3
     
     def __init__(self):
         self.active_downloads = 0
@@ -33,7 +33,21 @@ class DownloadManager:
         self.processing_task = None
         self.paused_downloads = set() # Set of download IDs that are paused
         self.active_tasks = {} # Map download_id -> asyncio.Task
-        self.semaphore = asyncio.Semaphore(self.MAX_CONCURRENT_DOWNLOADS)
+        # Per-user semaphores for concurrent download limits
+        self.user_semaphores: dict[str, asyncio.Semaphore] = {}
+    
+    def get_user_semaphore(self, user_id: str, max_concurrent: int = None) -> asyncio.Semaphore:
+        """Get or create a semaphore for a specific user."""
+        if max_concurrent is None:
+            max_concurrent = self.DEFAULT_CONCURRENT_DOWNLOADS
+        
+        if user_id not in self.user_semaphores:
+            self.user_semaphores[user_id] = asyncio.Semaphore(max_concurrent)
+        return self.user_semaphores[user_id]
+    
+    def update_user_concurrency(self, user_id: str, max_concurrent: int):
+        """Update concurrency limit for a user (creates new semaphore)."""
+        self.user_semaphores[user_id] = asyncio.Semaphore(max_concurrent)
 
     def _ensure_permissions(self, path: str, is_file: bool = False):
         """
@@ -63,8 +77,32 @@ class DownloadManager:
             asyncio.create_task(self._process_with_semaphore(download_id))
     
     async def _process_with_semaphore(self, download_id: str):
-        """Wrapper that acquires semaphore before processing download."""
-        async with self.semaphore:
+        """Wrapper that acquires per-user semaphore before processing download."""
+        # First, get user_id and their concurrency preference
+        async with AsyncSessionLocal() as db:
+            result = await db.execute(
+                select(Download)
+                .options(selectinload(Download.user))
+                .where(Download.id == download_id)
+            )
+            download = result.scalar_one_or_none()
+            
+            if not download:
+                self.queue.task_done()
+                return
+            
+            user_id = str(download.user_id)
+            max_concurrent = self.DEFAULT_CONCURRENT_DOWNLOADS
+            
+            if download.user and download.user.preferences:
+                max_concurrent = download.user.preferences.get(
+                    'max_parallel_downloads', self.DEFAULT_CONCURRENT_DOWNLOADS
+                )
+        
+        # Get or create user semaphore
+        semaphore = self.get_user_semaphore(user_id, max_concurrent)
+        
+        async with semaphore:
             # Create a task for this download to allow cancellation/pause
             task = asyncio.create_task(self.process_download(download_id))
             self.active_tasks[download_id] = task
