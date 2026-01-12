@@ -6,7 +6,7 @@ Covers:
 - getPlaylist.view - get playlist with entries
 """
 
-import uuid
+
 
 import pytest
 from app.core.security import get_password_hash
