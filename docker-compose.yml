@@ -31,8 +31,8 @@ services:
 
   frontend:
     build:
-      context: .
-      dockerfile: frontend/Dockerfile
+      context: ./frontend
+      dockerfile: Dockerfile
     image: bl4nk404/audiovault-frontend:latest
     container_name: audiovault-frontend
     restart: unless-stopped
