@@ -55,7 +55,6 @@ junit.xml
 *.xml
 debug.log
 
-# TODO: Remove this line, tests should be versioned
 backend/tests/services/test_watchlist_engine.py
 
 # Helper Scripts (Local Dev)
