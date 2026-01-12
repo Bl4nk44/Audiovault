@@ -58,10 +58,10 @@ async def mock_cache_manager():
 
     # Patch the methods on the instance itself so all references see the mock
     with (
-        patch.object(real_cache_manager, "connect", new_callable=AsyncMock) as mock_connect,
-        patch.object(real_cache_manager, "close", new_callable=AsyncMock) as mock_close,
+        patch.object(real_cache_manager, "connect", new_callable=AsyncMock),
+        patch.object(real_cache_manager, "close", new_callable=AsyncMock),
         patch.object(real_cache_manager, "get", new_callable=AsyncMock) as mock_get,
-        patch.object(real_cache_manager, "set", new_callable=AsyncMock) as mock_set,
+        patch.object(real_cache_manager, "set", new_callable=AsyncMock),
     ):
         # Also mock the redis attribute if accessed directly
         real_cache_manager.redis = MagicMock()

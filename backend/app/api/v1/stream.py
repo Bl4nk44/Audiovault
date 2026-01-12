@@ -5,7 +5,6 @@ import aiohttp
 import yt_dlp
 from app.services.spotify_service import SpotifyService
 from app.services.youtube_service import YouTubeService
-from fastapi import APIRouter, HTTPException
 from fastapi.responses import StreamingResponse, Response, RedirectResponse
 from app.db.database import get_db
 from fastapi import APIRouter, HTTPException, Depends
@@ -75,7 +74,6 @@ async def get_track_cover(track_id: str, db: AsyncSession = Depends(get_db)):
     # 5. Extract embedded art
     try:
         import mutagen
-        from mutagen.flac import Picture
         from mutagen.id3 import ID3, APIC
 
         audio = mutagen.File(file_path)
