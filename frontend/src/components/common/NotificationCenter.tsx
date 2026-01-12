@@ -11,7 +11,7 @@ interface NotificationCenterProps {
     onClose: () => void
 }
 
-export default function NotificationCenter({ isOpen, onClose }: NotificationCenterProps) {
+export default function NotificationCenter({ isOpen, onClose }: Readonly<NotificationCenterProps>) {
     const { notifications, markAllAsRead, clearNotifications, removeNotification, user } = useStore() // Added user
     const { t } = useTranslation()
 

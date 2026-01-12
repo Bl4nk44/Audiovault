@@ -13,7 +13,7 @@ interface TrackCardProps {
   queue?: Track[];
 }
 
-export default function TrackCard({ track, queue }: TrackCardProps) {
+export default function TrackCard({ track, queue }: Readonly<TrackCardProps>) {
   const { playTrack } = useStore();
 
   const handlePlay = () => {

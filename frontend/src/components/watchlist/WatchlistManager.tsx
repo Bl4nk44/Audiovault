@@ -1,12 +1,10 @@
 import { useEffect, useState } from "react";
 import { useStore } from "../../store/useStore";
 import WatchlistItem from "./WatchlistItem";
-import { Loader2, RefreshCw } from "lucide-react";
+import { Loader2, RefreshCw, LayoutGrid, List } from "lucide-react";
 import { notify as toast } from '../../utils/notify';
 import api from "../../services/api";
 import SyncModal from "../sync/SyncModal";
-
-import { LayoutGrid, List } from "lucide-react";
 import { type WatchlistItem as WatchlistItemType } from "../../types";
 
 export default function WatchlistManager() {

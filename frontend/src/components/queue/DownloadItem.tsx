@@ -37,7 +37,7 @@ interface DownloadItemProps {
   queue?: Track[]; // Allow queue context
 }
 
-export default function DownloadItem({ item, queue }: DownloadItemProps) {
+export default function DownloadItem({ item, queue }: Readonly<DownloadItemProps>) {
   const {
     playTrack,
     pauseDownload,

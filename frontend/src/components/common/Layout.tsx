@@ -7,6 +7,7 @@ import MobileNav from "./MobileNav";
 import { useEffect, useRef } from "react";
 import api from "../../services/api";
 import toast from "react-hot-toast";
+import { UpdateToast } from "./UpdateToast";
 
 export default function Layout() {
   const isDev = import.meta.env.DEV;
@@ -21,39 +22,17 @@ export default function Layout() {
       try {
         const { data } = await api.get("/system/check-update");
         if (data.update_available) {
-          toast(
-            (t) => (
-              <div className="flex flex-col gap-2">
-                <span className="font-bold">New Version Available! 🚀</span>
-                <span className="text-sm">
-                  {isDev
-                    ? "New commits on dev branch."
-                    : `Version ${data.latest_version} is available.`}
-                </span>
-                <div className="flex gap-2 mt-1">
-                  <a
-                    href={data.release_url}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="px-3 py-1 bg-primary text-black rounded-lg text-xs font-bold hover:opacity-90"
-                    onClick={() => toast.dismiss(t.id)}
-                  >
-                    View
-                  </a>
-                  <button
-                    onClick={() => toast.dismiss(t.id)}
-                    className="px-3 py-1 bg-white/10 rounded-lg text-xs hover:bg-white/20"
-                  >
-                    Dismiss
-                  </button>
-                </div>
-              </div>
-            ),
-            {
-              duration: 10000,
-              icon: "🎉",
-            }
-          );
+          toast((t) => (
+            <UpdateToast
+              t={t}
+              text={
+                isDev
+                  ? "New commits on dev branch."
+                  : `Version ${data.latest_version} is available.`
+              }
+              url={data.release_url}
+            />
+          ));
         }
       } catch (error) {
         console.error("Failed to check for updates:", error);
