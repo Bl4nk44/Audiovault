@@ -4,6 +4,7 @@ import PlaylistCard from "./PlaylistCard";
 import { motion } from "framer-motion";
 import { useState } from "react";
 import { useTranslation } from "../../hooks/useTranslation";
+import { v4 as uuidv4 } from "uuid";
 
 import type { Track, Artist, Playlist } from "../../types";
 
@@ -30,7 +31,7 @@ export default function SearchResults({
 }: Readonly<SearchResultsProps>) {
   const { t } = useTranslation();
 
-  const [skeletonIds] = useState(() => Array.from({ length: 10 }, () => crypto.randomUUID()));
+  const [skeletonIds] = useState(() => Array.from({ length: 10 }, () => uuidv4()));
   
   if (isLoading) {
     return (
