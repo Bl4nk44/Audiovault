@@ -201,10 +201,10 @@ export default function Search() {
         sourceParam !== currentSource ||
         typeParam !== currentType
       ) {
-        const detectedSource = detectSourceFromUrl(queryParam);
+
         handleSearch(
           queryParam,
-          sourceParam !== "all" ? sourceParam : detectedSource,
+          sourceParam,
           typeParam
         );
       }

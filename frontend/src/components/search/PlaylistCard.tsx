@@ -10,7 +10,7 @@ interface PlaylistCardProps {
   playlist: Playlist;
 }
 
-export default function PlaylistCard({ playlist }: PlaylistCardProps) {
+export default function PlaylistCard({ playlist }: Readonly<PlaylistCardProps>) {
   const [isAdded, setIsAdded] = useState(false);
   const [imageError, setImageError] = useState(false);
   const navigate = useNavigate();
@@ -68,6 +68,7 @@ export default function PlaylistCard({ playlist }: PlaylistCardProps) {
           {playlist.source === "spotify" && (
             <img
               src="/spotify-icon.svg"
+              alt="Spotify"
               title="Spotify"
               className="w-4 h-4"
               onError={(e) => (e.currentTarget.style.display = "none")}
@@ -76,6 +77,7 @@ export default function PlaylistCard({ playlist }: PlaylistCardProps) {
           {playlist.source === "youtube" && (
             <img
               src="/youtube-icon.svg"
+              alt="YouTube"
               title="YouTube"
               className="w-4 h-4"
               onError={(e) => (e.currentTarget.style.display = "none")}

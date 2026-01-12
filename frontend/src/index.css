@@ -1,5 +1,36 @@
 @import "tailwindcss";
-@config "../tailwind.config.js";
+
+@theme {
+  --color-border: hsl(var(--border));
+  --color-input: hsl(var(--input));
+  --color-ring: hsl(var(--ring));
+  --color-background: hsl(var(--background));
+  --color-foreground: hsl(var(--foreground));
+  --color-primary: hsl(var(--primary));
+  --color-primary-foreground: hsl(var(--primary-foreground));
+  --color-secondary: hsl(var(--secondary));
+  --color-secondary-foreground: hsl(var(--secondary-foreground));
+  --color-destructive: hsl(var(--destructive));
+  --color-destructive-foreground: hsl(var(--destructive-foreground));
+  --color-muted: hsl(var(--muted));
+  --color-muted-foreground: hsl(var(--muted-foreground));
+  --color-accent: hsl(var(--accent));
+  --color-accent-foreground: hsl(var(--accent-foreground));
+  --color-popover: hsl(var(--popover));
+  --color-popover-foreground: hsl(var(--popover-foreground));
+  --color-card: hsl(var(--card));
+  --color-card-foreground: hsl(var(--card-foreground));
+
+  --radius-lg: var(--radius);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-sm: calc(var(--radius) - 4px);
+
+  --animate-accordion-down: accordion-down 0.2s ease-out;
+  --animate-accordion-up: accordion-up 0.2s ease-out;
+  --animate-blob: blob 10s infinite;
+  --animate-progress-shimmer: progress-shimmer 1.5s infinite linear;
+}
+
 
 /* @tailwind base; - Removed for v4 */
 /* @tailwind components; - Removed for v4 */
@@ -9,17 +40,24 @@
   :root {
     /* Liquid Glass Core Defaults */
     /* Liquid Glass Core Defaults */
-    --glass-opacity: 0.15; /* More transparency for liquid feel, slightly reduced for better contrast */
+    --glass-opacity: 0.15;
+    /* More transparency for liquid feel, slightly reduced for better contrast */
     --glass-border-opacity: 0.06;
-    --glass-blur: 50px; /* Stronger blur for smoother bg */
-    --glass-saturation: 190%; /* Vibrant colors */
+    --glass-blur: 50px;
+    /* Stronger blur for smoother bg */
+    --glass-saturation: 190%;
+    /* Vibrant colors */
 
-    --radius: 1.5rem; /* Rounder corners */
+    --radius: 1.5rem;
+    /* Rounder corners */
 
     /* Default (Midnight) Blob Colors */
-    --blob-color-1: 260 80% 50%; /* Purple */
-    --blob-color-2: 240 70% 40%; /* Deep Blue */
-    --blob-color-3: 190 90% 60%; /* Cyan accent */
+    --blob-color-1: 260 80% 50%;
+    /* Purple */
+    --blob-color-2: 240 70% 40%;
+    /* Deep Blue */
+    --blob-color-3: 190 90% 60%;
+    /* Cyan accent */
 
     --background: 240 10% 2%;
     --foreground: 0 0% 98%;
@@ -62,9 +100,12 @@
   }
 
   .ocean {
-    --blob-color-1: 190 90% 40%; /* Teal */
-    --blob-color-2: 210 80% 30%; /* Blue */
-    --blob-color-3: 160 70% 50%; /* Sea Green */
+    --blob-color-1: 190 90% 40%;
+    /* Teal */
+    --blob-color-2: 210 80% 30%;
+    /* Blue */
+    --blob-color-3: 160 70% 50%;
+    /* Sea Green */
 
     --background: 195 60% 6%;
     --foreground: 195 20% 98%;
@@ -73,9 +114,12 @@
   }
 
   .forest {
-    --blob-color-1: 140 70% 30%; /* Green */
-    --blob-color-2: 120 60% 20%; /* Dark Green */
-    --blob-color-3: 160 80% 40%; /* Mint */
+    --blob-color-1: 140 70% 30%;
+    /* Green */
+    --blob-color-2: 120 60% 20%;
+    /* Dark Green */
+    --blob-color-3: 160 80% 40%;
+    /* Mint */
 
     --background: 150 50% 4%;
     --foreground: 150 20% 98%;
@@ -84,9 +128,12 @@
   }
 
   .sunset {
-    --blob-color-1: 10 80% 50%; /* Red/Orange */
-    --blob-color-2: 35 90% 40%; /* Gold */
-    --blob-color-3: 330 70% 40%; /* Pink */
+    --blob-color-1: 10 80% 50%;
+    /* Red/Orange */
+    --blob-color-2: 35 90% 40%;
+    /* Gold */
+    --blob-color-3: 330 70% 40%;
+    /* Pink */
 
     --background: 0 40% 4%;
     --foreground: 10 20% 98%;
@@ -100,9 +147,12 @@
     --glass-blur: 20px;
     --glass-saturation: 200%;
 
-    --blob-color-1: 320 100% 50%; /* Hot Pink */
-    --blob-color-2: 260 90% 40%; /* Purple */
-    --blob-color-3: 180 100% 50%; /* Cyan */
+    --blob-color-1: 320 100% 50%;
+    /* Hot Pink */
+    --blob-color-2: 260 90% 40%;
+    /* Purple */
+    --blob-color-3: 180 100% 50%;
+    /* Cyan */
 
     --background: 260 50% 3%;
     --foreground: 280 20% 98%;
@@ -128,17 +178,19 @@
 
 @layer utilities {
   .glass {
-    @apply bg-background/(--glass-opacity) border border-white/(--glass-border-opacity) shadow-xl;
+    background-color: hsl(var(--background) / var(--glass-opacity));
+    border: 1px solid rgb(255 255 255 / var(--glass-border-opacity));
+    @apply shadow-xl;
     backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturation));
-    -webkit-backdrop-filter: blur(var(--glass-blur))
-      saturate(var(--glass-saturation));
+    -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturation));
   }
 
   .glass-neon {
-    @apply bg-background/(--glass-opacity) border border-primary/50 shadow-[0_0_15px_rgba(var(--primary),0.3)];
+    background-color: hsl(var(--background) / var(--glass-opacity));
+    border: 1px solid hsl(var(--primary) / 0.5);
+    box-shadow: 0 0 15px hsl(var(--primary) / 0.3);
     backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturation));
-    -webkit-backdrop-filter: blur(var(--glass-blur))
-      saturate(var(--glass-saturation));
+    -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturation));
   }
 
   .glass-hover {

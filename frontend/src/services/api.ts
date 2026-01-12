@@ -69,7 +69,7 @@ api.interceptors.response.use(
             return api(originalRequest);
           })
           .catch((err) => {
-            return Promise.reject(err);
+            throw err;
           });
       }
 
@@ -81,7 +81,7 @@ api.interceptors.response.use(
 
       if (!refreshToken) {
         store?.getState().logout();
-        return Promise.reject(error);
+        throw error;
       }
 
       try {
@@ -104,13 +104,13 @@ api.interceptors.response.use(
       } catch (err) {
         processQueue(err, null);
         store?.getState().logout();
-        return Promise.reject(err);
+        throw err;
       } finally {
         isRefreshing = false;
       }
     }
 
-    return Promise.reject(error);
+    throw error;
   }
 );
 

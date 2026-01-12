@@ -45,8 +45,7 @@ function App() {
             <Route path="watchlist" element={<Watchlist />} />
             <Route path="library" element={<Library />} />
             <Route path="settings" element={<Settings />} />
-            import PlaylistDetails from "./pages/PlaylistDetails"; // ... inside
-            Routes ...
+
             <Route path="artist/:id" element={<ArtistProfile />} />
             <Route path="playlist/:id" element={<PlaylistDetails />} />
             <Route path="import" element={<Import />} />

@@ -5,7 +5,7 @@ import {
   Eye,
   Music,
   Download,
-  Github,
+  Code,
   Terminal,
 } from "lucide-react";
 import { NavLink } from "react-router-dom";
@@ -90,7 +90,7 @@ export default function Sidebar() {
               rel="noreferrer"
               className="flex items-center gap-1.5 hover:text-primary transition-colors"
             >
-              <Github size={12} />
+              <Code size={12} />
               GitHub
             </a>
           </div>

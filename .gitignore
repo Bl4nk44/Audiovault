@@ -40,7 +40,9 @@ deploy.ps1
 # SonarQube
 .scannerwork/
 .sonarlint/
-sonar-project.properties
+.sonar/
+sonar_report.md
+
 AI_CONTEXT.md
 
 # Test Artifacts
@@ -48,7 +50,9 @@ backend/coverage_report.txt
 frontend/lint_report.txt
 .coverage
 htmlcov/
+coverage/
 junit.xml
+*.xml
 debug.log
 
 # TODO: Remove this line, tests should be versioned

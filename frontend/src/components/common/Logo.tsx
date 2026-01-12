@@ -10,7 +10,7 @@ export default function Logo({
   className,
   size = "md",
   showText = true,
-}: LogoProps) {
+}: Readonly<LogoProps>) {
   const sizeClasses = {
     sm: "w-8 h-8",
     md: "w-12 h-12",

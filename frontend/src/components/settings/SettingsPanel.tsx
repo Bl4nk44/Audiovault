@@ -255,7 +255,7 @@ export default function SettingsPanel() {
                   onChange={(e) =>
                     setSettings({
                       ...settings,
-                      maxParallelDownloads: parseInt(e.target.value),
+                      maxParallelDownloads: Number.parseInt(e.target.value),
                     })
                   }
                   className="w-full px-4 py-3 rounded-xl bg-black/20 border border-white/10 text-white focus:outline-none focus:border-primary/50"
@@ -385,7 +385,7 @@ export default function SettingsPanel() {
                   <code className="text-gray-300">
                     {"{user}/{service}/{playlist}/{artist} - {title}"}
                   </code>
-                  )
+                  {" )"}
                 </p>
 
                 <div className="mt-2 p-3 rounded-lg bg-black/30 border border-white/5 text-sm text-gray-400 font-mono">
@@ -400,7 +400,7 @@ export default function SettingsPanel() {
                     .split("/")
                     .map((part, index, array) => (
                       <div
-                        key={index}
+                        key={part + index}
                         className="flex items-center gap-2 ml-4 border-l border-white/10 pl-2"
                       >
                         {index === array.length - 1 ? (
