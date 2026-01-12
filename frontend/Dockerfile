@@ -1,12 +1,18 @@
 # Build Stage
 FROM node:25-alpine AS build
 
+ARG APP_VERSION=0.9.0
+ENV VITE_APP_VERSION=${APP_VERSION}
+
 WORKDIR /app
 
-# Copy entire project first
-COPY . .
+# Copy VERSION file from root context
+COPY VERSION ./VERSION
 
-# Install dependencies for frontend
+# Copy frontend code
+COPY frontend/ ./
+
+# Install dependencies
 RUN npm ci
 
 # Build frontend
@@ -19,7 +25,7 @@ FROM nginx:alpine AS production
 COPY --from=build /app/dist /usr/share/nginx/html
 
 # Copy custom nginx config
-COPY nginx.conf /etc/nginx/conf.d/default.conf
+COPY frontend/nginx.conf /etc/nginx/conf.d/default.conf
 
 EXPOSE 80
 

@@ -8,9 +8,13 @@ import { useEffect, useRef } from "react";
 import api from "../../services/api";
 import toast from "react-hot-toast";
 import { UpdateToast } from "./UpdateToast";
+import { useSocketEvents } from "../../hooks/useSocketEvents";
 
 export default function Layout() {
   const isDev = import.meta.env.DEV;
+
+  // Initialize socket connection for real-time download progress
+  useSocketEvents();
 
   const hasChecked = useRef(false);
 

@@ -69,3 +69,17 @@ async def get_spotify_artist(artist_id: str, current_user: User = Depends(get_cu
         raise HTTPException(status_code=404, detail="Artist not found")
 
     return artist
+
+
+@router.get("/album/{album_id}")
+async def get_spotify_album(album_id: str, current_user: User = Depends(get_current_active_user)):
+    """Get album details with all tracks."""
+    service = SpotifyService()
+    if not service.client:
+        raise HTTPException(status_code=503, detail=SPOTIFY_NOT_CONFIGURED_MSG)
+
+    album = service.get_album_details(album_id)
+    if not album:
+        raise HTTPException(status_code=404, detail="Album not found")
+
+    return album

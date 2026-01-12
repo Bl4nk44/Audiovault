@@ -226,6 +226,7 @@ class SpotifyService:
                         "release_date": album["release_date"],
                         "total_tracks": album["total_tracks"],
                         "type": album["type"],
+                        "album_type": album.get("album_type", "album"),
                     }
                 )
 
@@ -275,14 +276,50 @@ class SpotifyService:
             return []
 
         try:
+            album = self.client.album(album_id)
             results = self.client.album_tracks(album_id)
-            tracks = [self._format_track(track, album_obj=None) for track in results["items"]]
+            tracks = [self._format_track(track, album_obj=album) for track in results["items"]]
             while results["next"]:
                 results = self.client.next(results)
-                tracks.extend([self._format_track(track, album_obj=None) for track in results["items"]])
+                tracks.extend([self._format_track(track, album_obj=album) for track in results["items"]])
             return tracks
         except Exception:
             return []
+
+    def get_album_details(self, album_id: str) -> dict[str, Any] | None:
+        """
+        Fetches full album details including metadata and all tracks.
+        """
+        if not self.client:
+            return None
+
+        try:
+            album = self.client.album(album_id)
+            image_url = album["images"][0]["url"] if album.get("images") else None
+            artist_name = album["artists"][0]["name"] if album.get("artists") else "Unknown Artist"
+            artist_id = album["artists"][0]["id"] if album.get("artists") else None
+
+            # Get all tracks
+            tracks = self.get_album_tracks(album_id)
+
+            return {
+                "id": album["id"],
+                "title": album["name"],
+                "artist": artist_name,
+                "artist_id": artist_id,
+                "image_url": image_url,
+                "release_date": album.get("release_date"),
+                "total_tracks": album.get("total_tracks"),
+                "album_type": album.get("album_type", "album"),
+                "label": album.get("label"),
+                "tracks": tracks,
+                "source": "spotify",
+                "type": "album",
+            }
+
+        except Exception as e:
+            logger.error(f"Error fetching album details {album_id}: {e}")
+            return None
 
     def _format_track(self, item: dict[str, Any], album_obj=None) -> dict[str, Any]:
         # Handle simplified track object which might not have album

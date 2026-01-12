@@ -80,7 +80,7 @@ docker compose logs -f frontend
 
 ### 5. Access Audiovault
 
-- **Web Interface**: http://localhost:3000
+- **Web Interface**: http://localhost:2137
 - **API Documentation**: http://localhost:8000/docs
 - **API Redoc**: http://localhost:8000/redoc
 
@@ -94,7 +94,7 @@ docker compose logs backend | grep "password"
 
 ## First Login
 
-1. Open http://localhost:3000 in your browser
+1. Open http://localhost:2137 in your browser
 2. Click "Login" and use:
    - **Email**: `admin@example.com`
    - **Password**: The one you set or generated

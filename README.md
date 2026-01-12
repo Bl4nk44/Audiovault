@@ -53,6 +53,12 @@ Never miss a track. If a download fails (e.g., due to geo-restrictions or broken
 - **Smart De-duplication**: Prevents duplicate downloads by checking both ID3 tags and internal database history
 - **Universal Search**: Unified search bar for all supported providers
 
+### Audio Quality Options
+
+- **MP3**: 128kbps, 192kbps, 320kbps
+- **FLAC**: Lossless audio for audiophiles
+- Automatic format selection based on user preferences
+
 ### Personal Streaming Server
 
 Turn Audiovault into your personal Spotify.
@@ -74,8 +80,10 @@ Turn Audiovault into your personal Spotify.
 
 - **Glassmorphism**: Stunning, responsive interface powered by React & TailwindCSS
 - **Neon Aesthetics**: New "Liquid Neon" styling with glowing borders and glass effects
+- **Audio Visualizer**: Real-time frequency equalizer synced to music playback
 - **Themes**: Deep Void (Default), Midnight, Ocean, Forest, Sunset, Neon
-- **Feedback**: Real-time progress updates via global notifications
+- **Feedback**: Real-time progress updates via WebSocket notifications
+- **i18n**: Multi-language support (English, Polish, German, French, Spanish)
 
 ## 🛠️ Tech Stack
 

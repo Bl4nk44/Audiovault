@@ -11,6 +11,7 @@ import Settings from "./pages/Settings";
 import Logs from "./pages/Logs";
 
 import ArtistProfile from "./pages/ArtistProfile";
+import AlbumDetails from "./pages/AlbumDetails";
 import PlaylistDetails from "./pages/PlaylistDetails";
 import Import from "./pages/Import";
 import NotFound from "./pages/NotFound";
@@ -47,6 +48,7 @@ function App() {
             <Route path="settings" element={<Settings />} />
 
             <Route path="artist/:id" element={<ArtistProfile />} />
+            <Route path="album/:id" element={<AlbumDetails />} />
             <Route path="playlist/:id" element={<PlaylistDetails />} />
             <Route path="import" element={<Import />} />
             <Route path="logs" element={<Logs />} />

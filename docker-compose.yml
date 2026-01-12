@@ -31,8 +31,10 @@ services:
 
   frontend:
     build:
-      context: ./frontend
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: frontend/Dockerfile
+      args:
+        - APP_VERSION=${APP_VERSION:-0.9.0}
     image: bl4nk404/audiovault-frontend:latest
     container_name: audiovault-frontend
     restart: unless-stopped
