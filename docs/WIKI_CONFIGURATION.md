@@ -84,7 +84,6 @@ AUTO_PURGE_ENABLED=true
 AUTO_PURGE_DAYS=7
 ```
 
-<<<<<<< HEAD
 ### API & Subsonic Configuration
 
 ```bash
@@ -98,8 +97,6 @@ SUBSONIC_API_VERSION=1.16.1
 SUBSONIC_LEGACY_AUTH=true
 ```
 
-=======
->>>>>>> temp/release-prep
 ### Advanced Configuration
 
 ```bash
@@ -138,7 +135,7 @@ services:
   frontend:
     image: audiovault-frontend:latest
     ports:
-      - "3000:3000"
+      - "2137:80"
     environment:
       - BACKEND_URL=http://backend:8000
     depends_on:
@@ -188,7 +185,7 @@ services:
   frontend:
     image: audiovault-frontend:latest
     ports:
-      - "3000:3000"
+      - "2137:80"
     environment:
       - BACKEND_URL=http://backend:8000
     depends_on:
@@ -214,7 +211,7 @@ sudo tailscale up
 # Get your Tailscale IP
 tailscale ip -4
 
-# Access from anywhere: http://[your-tailscale-ip]:3000
+# Access from anywhere: http://[your-tailscale-ip]:2137
 ```
 
 ### Using Reverse Proxy (Nginx)

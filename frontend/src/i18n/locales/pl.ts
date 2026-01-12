@@ -127,6 +127,7 @@ export const pl = {
     low: "Niska (128kbps)",
     normal: "Normalna (192kbps)",
     high: "Wysoka (320kbps)",
+    lossless: "Bezstratna (FLAC)",
   },
 
   filters: {

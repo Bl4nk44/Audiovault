@@ -128,6 +128,7 @@ export const de = {
     low: "Niedrig (128kbps)",
     normal: "Normal (192kbps)",
     high: "Hoch (320kbps)",
+    lossless: "Verlustfrei (FLAC)",
   },
   filters: {
     allTypes: "Alle Typen",

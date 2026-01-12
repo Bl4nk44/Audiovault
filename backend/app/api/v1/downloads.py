@@ -111,6 +111,101 @@ async def delete_playlist(
     return {"status": "success", "message": f"Playlist {playlist_name} deleted"}
 
 
+class ArtistDownloadRequest(BaseModel):
+    source: str = "spotify"
+
+
+@router.post("/artist/{artist_id}/download-all")
+async def download_all_artist_tracks(
+    artist_id: str,
+    request: ArtistDownloadRequest,
+    current_user: User = Depends(get_current_active_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """
+    Download all tracks from an artist's discography.
+    Creates a folder with the artist's name and downloads all albums/singles.
+    """
+    import logging
+    from app.services.spotify_service import SpotifyService
+    from app.models.track import Track
+    
+    logger = logging.getLogger(__name__)
+    
+    if request.source != "spotify":
+        raise HTTPException(status_code=400, detail="Only Spotify source is currently supported")
+    
+    service = SpotifyService()
+    if not service.client:
+        raise HTTPException(status_code=503, detail="Spotify service not configured")
+    
+    # Get artist details
+    artist = service.get_artist_details(artist_id)
+    if not artist:
+        raise HTTPException(status_code=404, detail="Artist not found")
+    
+    artist_name = artist["name"]
+    queued_count = 0
+    
+    # Get all albums for the artist
+    albums = service.get_artist_albums(artist_id)
+    
+    for album in albums:
+        album_id = album["id"]
+        album_name = album["name"]
+        
+        # Get tracks from the album
+        tracks = service.get_album_tracks(album_id)
+        
+        for track_data in tracks:
+            # Check if track already exists in DB
+            existing = await db.execute(
+                select(Track).where(
+                    Track.source == "spotify",
+                    Track.source_id == track_data["id"]
+                )
+            )
+            track_obj = existing.scalar_one_or_none()
+            
+            if not track_obj:
+                # Create track in DB
+                track_obj = Track(
+                    title=track_data["title"],
+                    artist=track_data["artist"],
+                    source="spotify",
+                    source_id=track_data["id"],
+                    duration_ms=track_data.get("duration_ms"),
+                    image_url=track_data.get("image_url"),
+                    album=track_data.get("album"),
+                    isrc=track_data.get("isrc"),
+                )
+                db.add(track_obj)
+                await db.flush()
+            
+            # Queue download with artist name as folder
+            download_data = DownloadCreate(
+                track_id=track_obj.id,
+                source="spotify",
+                playlist_name=artist_name,  # Use artist name as folder
+            )
+            
+            try:
+                await download_manager.add_download(db, current_user.id, download_data)
+                queued_count += 1
+            except Exception as e:
+                logger.warning(f"Failed to queue track {track_data['title']}: {e}")
+                continue
+    
+    await db.commit()
+    
+    return {
+        "status": "success",
+        "artist": artist_name,
+        "queued_count": queued_count,
+        "message": f"Queued {queued_count} tracks from {artist_name}"
+    }
+
+
 @router.post("/rescan")
 async def rescan_library(
     current_user: User = Depends(get_current_active_user),

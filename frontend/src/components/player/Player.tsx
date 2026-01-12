@@ -219,7 +219,7 @@ export default function Player() {
           /iPhone|iPad|iPod/i.test(navigator.userAgent) ? undefined : "anonymous"
         }
         onTimeUpdate={handleTimeUpdate}
-        onEnded={togglePlay} // changed from arrow function to direct ref
+        onEnded={nextTrack}
         preload="auto"
       >
         <track kind="captions" src="" label="English" />
