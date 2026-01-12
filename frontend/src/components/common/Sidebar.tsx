@@ -5,7 +5,7 @@ import {
   Eye,
   Music,
   Download,
-  Code,
+  ExternalLink,
   Terminal,
 } from "lucide-react";
 import { NavLink } from "react-router-dom";
@@ -82,7 +82,7 @@ export default function Sidebar() {
 
         <div className="mt-auto pt-6 border-t border-white/5 text-center px-2">
           <div className="flex items-center justify-center gap-3 mb-2 text-xs text-muted-foreground font-medium">
-            <span>v{__APP_VERSION__}</span>
+            <span>v{__APP_VERSION__ || "dev"}</span>
             <span className="text-white/10">|</span>
             <a
               href="https://github.com/Bl4nk44/Audiovault"
@@ -90,7 +90,7 @@ export default function Sidebar() {
               rel="noreferrer"
               className="flex items-center gap-1.5 hover:text-primary transition-colors"
             >
-              <Code size={12} />
+              <ExternalLink size={12} />
               GitHub
             </a>
           </div>

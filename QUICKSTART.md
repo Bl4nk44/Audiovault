@@ -62,6 +62,14 @@ docker compose ps
 4.  **IMPORTANT**: Enable "Legacy Auth" / "Use plaintext password" in app settings
 5.  Stream your music!
 
+## 🎵 Audio Quality
+
+Configure in **Settings → General → Audio Quality**:
+- **Low**: 128kbps MP3
+- **Normal**: 192kbps MP3
+- **High**: 320kbps MP3 (default)
+- **Lossless**: FLAC format
+
 ## 🎆 Troubleshooting
 
 **Can't access?**

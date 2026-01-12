@@ -12,7 +12,8 @@ Welcome to the Audiovault documentation! This wiki contains comprehensive guides
 ### Using Audiovault
 
 - **[Configuration](WIKI_CONFIGURATION.md)** - All available configuration options
-- **[Usage Guide](WIKI_USAGE.md)** - How to download, organize, and stream music (coming soon)
+- **[Usage Guide](WIKI_USAGE.md)** - How to download, organize, and stream music *(planned)*
+- **[Streaming Guide](WIKI_STREAMING.md)** - Configure Subsonic clients for mobile streaming
 
 - **[FAQ & Troubleshooting](../SUPPORT.md)** - Common issues and solutions
 
@@ -58,8 +59,8 @@ Welcome to the Audiovault documentation! This wiki contains comprehensive guides
 
 ## 🚀 Project Status
 
-- **Current Version**: v1.0.0
-- **Status**: Active Development
+- **Current Version**: v0.9.0
+- **Status**: Active Development (Beta)
 - **License**: [MIT](../LICENSE)
 
 Made with ❤️ by [Bl4nk44](https://github.com/Bl4nk44)

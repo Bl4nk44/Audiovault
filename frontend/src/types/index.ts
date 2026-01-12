@@ -1,7 +1,7 @@
 export interface UserPreferences {
   theme?: "light" | "dark";
   language?: string;
-  quality?: "low" | "normal" | "high" | "best";
+  quality?: "low" | "normal" | "high" | "best" | "lossless";
   downloadPath?: string;
   avatar_url?: string;
   [key: string]: string | number | boolean | undefined;
