@@ -16,9 +16,9 @@ To connect your client to Audiovault:
 
 1.  **Server Type**: Subsonic / OpenSubsonic
 2.  **Address**:
-    - **Local**: `http://YOUR_LOCAL_IP:80` (e.g., `http://192.168.1.100`) or just `http://YOUR_LOCAL_IP`
-    - **Tailscale**: `http://YOUR_TAILSCALE_IP:80`
-    - _Note: Backend direct port is 8000, but using the main port 80 (frontend proxy) is recommended._
+    - **Local**: `http://YOUR_LOCAL_IP:2137` (e.g., `http://192.168.1.100:2137`)
+    - **Tailscale**: `http://YOUR_TAILSCALE_IP:2137`
+    - _Note: Port 2137 is the frontend which proxies to the backend._
 3.  **Username**: Your Audiovault username (e.g., `admin`)
 4.  **Password**: Your Audiovault password
 
@@ -44,5 +44,5 @@ If you see a `401 Unauthorized` error, it is almost certainly because this setti
 
 ### "Connection Refused"
 
-- Ensure you are using the correct IP and Port (`5173` or `8000`).
+- Ensure you are using the correct IP and Port (`2137` for frontend or `8000` for backend direct).
 - If using Tailscale, ensure Tailscale is active on both devices.

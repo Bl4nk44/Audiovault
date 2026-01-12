@@ -223,6 +223,12 @@ export default function SettingsPanel() {
                     >
                       {t("quality.high")}
                     </option>
+                    <option
+                      value="lossless"
+                      className="bg-popover text-popover-foreground"
+                    >
+                      {t("quality.lossless")}
+                    </option>
                   </select>
                   {/* Custom Arrow Icon */}
                   <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-white/50">

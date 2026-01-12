@@ -126,6 +126,7 @@ export const en = {
     low: "Low (128kbps)",
     normal: "Normal (192kbps)",
     high: "High (320kbps)",
+    lossless: "Lossless (FLAC)",
   },
 
   filters: {

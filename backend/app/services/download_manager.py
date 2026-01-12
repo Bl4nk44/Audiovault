@@ -222,7 +222,7 @@ class DownloadManager:
         download.progress = 100
         download.completed_at = datetime.now(UTC)
 
-        self._set_download_file_path(download, final_filename_container, output_template)
+        self._set_download_file_path(download, final_filename_container, output_template, getattr(self, '_target_format', 'mp3'))
         self._fix_filename_artifacts(download)
 
         # Force file permissions
@@ -290,13 +290,18 @@ class DownloadManager:
         if download.playlist_name:
             await self.update_playlist_m3u(db, download.user_id, download.playlist_name)
 
-    def _set_download_file_path(self, download, final_filename_container, output_template):
+    def _set_download_file_path(self, download, final_filename_container, output_template, target_format="mp3"):
+        """Set the final file path for the download.
+        
+        Args:
+            target_format: 'mp3' or 'flac' - determines the file extension
+        """
+        target_ext = f".{target_format}"
+        
         if final_filename_container["path"]:
             base, ext = os.path.splitext(final_filename_container["path"])
-            if ext != ".mp3":
-                download.file_path = base + ".mp3"
-            else:
-                download.file_path = final_filename_container["path"]
+            # Always use the target format extension
+            download.file_path = base + target_ext
         else:
             download_path = None
             if download.user and download.user.preferences:
@@ -309,7 +314,7 @@ class DownloadManager:
                 os.makedirs(download_path, exist_ok=True)
                 self._ensure_permissions(download_path, is_file=False)
 
-            download.file_path = os.path.join(download_path, f"{output_template}.mp3")
+            download.file_path = os.path.join(download_path, f"{output_template}{target_ext}")
 
     def _fix_filename_artifacts(self, download):
         if download.file_path and os.path.exists(download.file_path):
@@ -612,26 +617,39 @@ class DownloadManager:
         quality_map = {
             "low": "128",
             "normal": "192",
-            "high": "320",  # Let's bump high to 320
+            "high": "320",
             "best": "320",
+            "lossless": "flac",
         }
-        bitrate = quality_map.get(quality_setting, "192")
+        bitrate_or_format = quality_map.get(quality_setting, "320")
+
+        # Determine postprocessors based on quality setting
+        if bitrate_or_format == "flac":
+            # Lossless FLAC - no lossy compression
+            postprocessors = [
+                {"key": "FFmpegExtractAudio", "preferredcodec": "flac"},
+                {"key": "FFmpegMetadata", "add_metadata": True},
+                {"key": "EmbedThumbnail"},
+            ]
+            self._target_format = "flac"
+        else:
+            # MP3 with specified bitrate
+            postprocessors = [
+                {"key": "FFmpegExtractAudio", "preferredcodec": "mp3", "preferredquality": bitrate_or_format},
+                {"key": "FFmpegMetadata", "add_metadata": True},
+                {"key": "EmbedThumbnail"},
+            ]
+            self._target_format = "mp3"
 
         ydl_opts = {
             "format": "bestaudio/best",
             "writethumbnail": True,
             "socket_timeout": 30,
-            "postprocessors": [
-                {"key": "FFmpegExtractAudio", "preferredcodec": "mp3", "preferredquality": bitrate},
-                {"key": "FFmpegMetadata", "add_metadata": True},
-                {"key": "EmbedThumbnail"},
-            ],
+            "postprocessors": postprocessors,
             "outtmpl": f"{settings.DOWNLOAD_DIR}/%(id)s.%(ext)s",
             "progress_hooks": [progress_hook],
             "quiet": True,
             "no_warnings": True,
-            # 'external_downloader': 'aria2c',  <-- REMOVED to fix progress bar jumping 0->100
-            # 'external_downloader_args': ['-x16', '-s16', '-k1M'],
         }
 
         schema_map = {
@@ -928,12 +946,33 @@ class DownloadManager:
                 self.active_tasks.pop(download.id, None)
 
     def _cleanup_empty_directory(self, downloads, playlist_name):
-        # 3. Clean up empty directory (heuristic)
+        # 3. Clean up empty directory and m3u8 playlist file
         if downloads and downloads[0].file_path:
             parent_dir = os.path.dirname(downloads[0].file_path)
+            
+            # Delete the .m3u8 playlist file
+            # m3u8 is stored in user's root download folder
+            user_download_dir = os.path.dirname(parent_dir) if parent_dir else None
+            if not user_download_dir:
+                # Fallback: try to get from user preferences or settings
+                if downloads[0].user and downloads[0].user.preferences:
+                    user_download_dir = downloads[0].user.preferences.get("downloadPath")
+                if not user_download_dir:
+                    user_download_dir = os.path.join(settings.DOWNLOAD_DIR, downloads[0].user.username)
+            
+            safe_playlist_name = sanitize_filename(playlist_name)
+            m3u8_path = os.path.join(user_download_dir, f"{safe_playlist_name}.m3u8")
+            
+            if os.path.exists(m3u8_path):
+                try:
+                    os.remove(m3u8_path)
+                    logger.info(f"Removed playlist file {m3u8_path}")
+                except Exception as e:
+                    logger.error(f"Failed to remove playlist file {m3u8_path}: {e}")
+            
             # Check if this dir name matches playlist name normalized
-            safe_playlist_name = playlist_name.replace("/", "-").replace("\\", "-")
-            if safe_playlist_name in os.path.basename(parent_dir):
+            safe_playlist_name_dir = playlist_name.replace("/", "-").replace("\\", "-")
+            if safe_playlist_name_dir in os.path.basename(parent_dir):
                 # Try to remove dir if empty
                 try:
                     os.rmdir(parent_dir)

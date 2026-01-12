@@ -5,16 +5,26 @@ import tailwindcss from "@tailwindcss/vite";
 import fs from "fs";
 import path from "path";
 
-// Read version from root directory or fallback
+// Read version from VERSION file
+// In Docker: VERSION is copied to same directory
+// Locally: VERSION is in parent directory
 let version = "0.0.0";
-try {
-  version = fs
-    .readFileSync(path.resolve(__dirname, "../VERSION"), "utf-8")
-    .trim();
-} catch {
-  console.warn(
-    "Could not read VERSION file (likely in Docker build), using fallback."
-  );
+const versionPaths = [
+  path.resolve(__dirname, "VERSION"),      // Docker build (same dir)
+  path.resolve(__dirname, "../VERSION"),   // Local development (parent)
+];
+
+for (const versionPath of versionPaths) {
+  try {
+    version = fs.readFileSync(versionPath, "utf-8").trim();
+    break; // Found it, stop looking
+  } catch {
+    // Try next path
+  }
+}
+
+if (version === "0.0.0") {
+  console.warn("Could not read VERSION file, using fallback 0.0.0");
 }
 
 // https://vite.dev/config/
