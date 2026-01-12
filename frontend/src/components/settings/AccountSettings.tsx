@@ -308,10 +308,14 @@ export default function AccountSettings() {
           </div>
 
           <div className="space-y-2">
-            <label className="text-sm font-medium text-gray-300 ml-1">
+            <label
+              htmlFor="confirmPassword"
+              className="text-sm font-medium text-gray-300 ml-1"
+            >
               Confirm New Password
             </label>
             <input
+              id="confirmPassword"
               type="password"
               {...registerPassword("confirmPassword", {
                 required: "Please confirm your password",
@@ -398,8 +402,10 @@ export default function AccountSettings() {
             <span className="block font-medium text-white mb-1">
               Delete my downloaded library
             </span>
-            Also delete all music files associated with this account from the
-            server storage.
+            <span className="block text-gray-400">
+              Also delete all music files associated with this account from the
+              server storage.
+            </span>
           </label>
         </div>
       </ConfirmModal>

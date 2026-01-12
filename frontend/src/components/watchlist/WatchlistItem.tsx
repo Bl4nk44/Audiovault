@@ -16,7 +16,7 @@ export default function WatchlistItem({
   onRemove,
   onSync,
   viewMode = "list",
-}: WatchlistItemProps) {
+}: Readonly<WatchlistItemProps>) {
   const [autoDownload, setAutoDownload] = useState(item.auto_download);
   const [imageError, setImageError] = useState(false);
 

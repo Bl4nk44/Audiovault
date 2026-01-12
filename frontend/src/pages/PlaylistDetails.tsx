@@ -143,6 +143,7 @@ export default function PlaylistDetails() {
               {source === "spotify" && (
                 <img
                   src="/spotify-icon.svg"
+                  alt="Spotify"
                   title="Spotify"
                   className="w-4 h-4"
                   onError={(e) => (e.currentTarget.style.display = "none")}
@@ -151,6 +152,7 @@ export default function PlaylistDetails() {
               {source === "youtube" && (
                 <img
                   src="/youtube-icon.svg"
+                  alt="YouTube"
                   title="YouTube"
                   className="w-4 h-4"
                   onError={(e) => (e.currentTarget.style.display = "none")}

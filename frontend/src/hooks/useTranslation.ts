@@ -3,45 +3,54 @@ import { translations } from "../i18n/translations";
 
 import { useCallback } from "react";
 
+type TranslationMap = { [key: string]: string | TranslationMap };
+
+function getNestedValue(
+  obj: TranslationMap | string,
+  keys: string[]
+): string | undefined {
+  let current: TranslationMap | string = obj;
+
+  for (const key of keys) {
+    if (
+      current === undefined ||
+      typeof current === "string" ||
+      typeof current !== "object" ||
+      current === null ||
+      !(key in current)
+    ) {
+      return undefined;
+    }
+    current = current[key];
+  }
+
+  return typeof current === "string" ? current : undefined;
+}
+
 export function useTranslation() {
   const user = useStore((state) => state.user);
   const language =
     (user?.preferences?.language as keyof typeof translations) || "en";
 
-  // Simple recursive lookup
-  type TranslationMap = { [key: string]: string | TranslationMap };
-
   const t = useCallback(
     (path: string): string => {
       const keys = path.split(".");
-      let current: TranslationMap | string =
-        translations[language] || translations["en"];
-
-      for (const key of keys) {
-        if (
-          current === undefined ||
-          typeof current === "string" ||
-          (current as TranslationMap)[key] === undefined
-        ) {
-          // Fallback to English if translation missing
-          if (language !== "en") {
-            let fallback: TranslationMap | string = translations["en"];
-            for (const fKey of keys) {
-              if (
-                fallback === undefined ||
-                typeof fallback === "string" ||
-                (fallback as TranslationMap)[fKey] === undefined
-              )
-                return path;
-              fallback = (fallback as TranslationMap)[fKey];
-            }
-            return fallback as string;
-          }
-          return path;
-        }
-        current = (current as TranslationMap)[key];
+      
+      // Try current language
+      const currentTranslation = translations[language];
+      if (currentTranslation) {
+        const found = getNestedValue(currentTranslation, keys);
+        if (found) return found;
       }
-      return current as string;
+
+      // Fallback to English
+      if (language !== "en") {
+        const fallbackTranslation = translations["en"];
+        const found = getNestedValue(fallbackTranslation, keys);
+        if (found) return found;
+      }
+
+      return path;
     },
     [language]
   );
