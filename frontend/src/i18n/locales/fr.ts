@@ -28,7 +28,7 @@ export const fr = {
     download: "Télécharger les journaux",
   },
   dashboard: {
-    title: "Tableau de bord",
+    title: "Tableau de Bord",
     subtitle: "Aperçu de votre collection musicale et des téléchargements.",
     searchPlaceholder:
       "Collez l'URL (YouTube, Spotify...) ou recherchez de la musique...",

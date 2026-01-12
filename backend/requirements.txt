@@ -24,6 +24,7 @@ python-socketio>=5.14.0
 email-validator>=2.1.0
 fastapi-limiter>=0.1.6
 pytest>=7.4.0
+pytest-cov>=4.1.0
 httpx>=0.25.0
 # Security: urllib3>=2.6.0 required to fix CVE (Allocation of Resources Without Limits or Throttling)
 # https://security.snyk.io/vuln/SNYK-PYTHON-URLLIB3-14192443

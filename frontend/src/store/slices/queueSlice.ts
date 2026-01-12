@@ -19,7 +19,7 @@ export const createQueueSlice: StateCreator<QueueSlice> = (set) => ({
     downloadQueue: [],
     addToQueue: (track) => set((state: QueueSlice) => ({
         downloadQueue: [...state.downloadQueue, {
-            id: Math.random().toString(36).substr(2, 9), // Temp ID gen
+            id: Math.random().toString(36).slice(2, 11), // Temp ID gen
             track,
             progress: 0,
             status: 'pending'

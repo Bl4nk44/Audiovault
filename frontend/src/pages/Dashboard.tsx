@@ -151,13 +151,13 @@ export default function Dashboard() {
       fetchStats();
     };
 
-    window.addEventListener("download:progress", handleProgress);
-    window.addEventListener("download:completed", handleCompleted);
+    globalThis.addEventListener("download:progress", handleProgress);
+    globalThis.addEventListener("download:completed", handleCompleted);
 
     return () => {
       clearInterval(interval);
-      window.removeEventListener("download:progress", handleProgress);
-      window.removeEventListener("download:completed", handleCompleted);
+      globalThis.removeEventListener("download:progress", handleProgress);
+      globalThis.removeEventListener("download:completed", handleCompleted);
     };
   }, []);
 

@@ -91,7 +91,7 @@ export const createAuthSlice: StateCreator<AuthSlice> = (set, get) => {
           refreshToken: session.refreshToken,
           isAuthenticated: true,
         });
-        window.location.reload(); // Reload to refresh state/sockets
+        globalThis.location.reload(); // Reload to refresh state/sockets
       }
     },
 

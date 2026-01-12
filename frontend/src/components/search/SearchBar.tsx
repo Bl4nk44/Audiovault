@@ -17,7 +17,7 @@ export default function SearchBar({
   initialQuery = "",
   initialSource = "all",
   initialType = "all",
-}: SearchBarProps) {
+}: Readonly<SearchBarProps>) {
   const { t } = useTranslation();
   const [query, setQuery] = useState(initialQuery);
   const [source, setSource] = useState(initialSource);

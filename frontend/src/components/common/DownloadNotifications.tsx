@@ -7,7 +7,7 @@ import type {
 import { notify as toast } from "../../utils/notify";
 
 export default function DownloadNotifications() {
-  // const { addNotification } = useStore(); // Unused if we use toast directly
+
 
   useEffect(() => {
     const handleCompleted = (e: CustomEvent<DownloadCompletedDetail>) => {

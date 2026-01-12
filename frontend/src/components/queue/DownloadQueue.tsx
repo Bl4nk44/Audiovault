@@ -24,40 +24,35 @@ export default function DownloadQueue() {
     }
   }, [addNotification]);
 
+  const handleProgress = useCallback((event: Event) => {
+    const customEvent = event as CustomEvent;
+    const { download_id, progress, status } = customEvent.detail;
+    setQueue((prevQueue) =>
+      prevQueue.map((item) =>
+        item.id === download_id
+          ? { ...item, progress, status: status || item.status }
+          : item
+      )
+    );
+  }, []);
+
   useEffect(() => {
     fetchQueue();
     const interval = setInterval(fetchQueue, 2000);
 
-    const handleProgress = (event: CustomEvent) => {
-      const { download_id, progress, status } = event.detail;
-      setQueue((prevQueue) =>
-        prevQueue.map((item) =>
-          item.id === download_id
-            ? { ...item, progress, status: status || item.status }
-            : item
-        )
-      );
-    };
-
-    globalThis.addEventListener(
-      "download:progress",
-      handleProgress as EventListener
-    );
+    globalThis.addEventListener("download:progress", handleProgress);
     globalThis.addEventListener("download:completed", fetchQueue);
     globalThis.addEventListener("download:error", fetchQueue);
     globalThis.addEventListener("download:processing", fetchQueue);
 
     return () => {
       clearInterval(interval);
-      globalThis.removeEventListener(
-        "download:progress",
-        handleProgress as EventListener
-      );
+      globalThis.removeEventListener("download:progress", handleProgress);
       globalThis.removeEventListener("download:completed", fetchQueue);
       globalThis.removeEventListener("download:error", fetchQueue);
       globalThis.removeEventListener("download:processing", fetchQueue);
     };
-  }, [fetchQueue]);
+  }, [fetchQueue, handleProgress]);
 
   if (isLoading) {
     return (

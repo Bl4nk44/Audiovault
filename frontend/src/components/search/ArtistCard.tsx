@@ -10,7 +10,7 @@ interface ArtistCardProps {
   artist: Artist;
 }
 
-export default function ArtistCard({ artist }: ArtistCardProps) {
+export default function ArtistCard({ artist }: Readonly<ArtistCardProps>) {
   const [isAdded, setIsAdded] = useState(false);
   const [imageError, setImageError] = useState(false);
   const navigate = useNavigate();

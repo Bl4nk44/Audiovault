@@ -2,6 +2,7 @@ import TrackCard from "./TrackCard";
 import ArtistCard from "./ArtistCard";
 import PlaylistCard from "./PlaylistCard";
 import { motion } from "framer-motion";
+import { useState } from "react";
 import { useTranslation } from "../../hooks/useTranslation";
 
 import type { Track, Artist, Playlist } from "../../types";
@@ -26,15 +27,17 @@ const container = {
 export default function SearchResults({
   results,
   isLoading,
-}: SearchResultsProps) {
+}: Readonly<SearchResultsProps>) {
   const { t } = useTranslation();
 
+  const [skeletonIds] = useState(() => Array.from({ length: 10 }, () => crypto.randomUUID()));
+  
   if (isLoading) {
     return (
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
-        {[...Array(10)].map((_, i) => (
+        {skeletonIds.map((id) => (
           <div
-            key={i}
+            key={id}
             className="aspect-3/4 rounded-2xl bg-white/5 animate-pulse border border-white/5"
           />
         ))}
