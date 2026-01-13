@@ -1,6 +1,6 @@
 <div align="center">
 
-![Audiovault Logo](https://i.imgur.com/Pto73NO.png)
+Audiovault
 
 **Your Personal Music Sanctuary.**
 
