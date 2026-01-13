@@ -1,6 +1,6 @@
 <div align="center">
 
-# (https://i.imgur.com/Pto73NO.png)
+https://i.imgur.com/Pto73NO.png
 
 **Your Personal Music Sanctuary.**
 
