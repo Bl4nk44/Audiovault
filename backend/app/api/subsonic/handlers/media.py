@@ -10,7 +10,7 @@ Handles streaming and media endpoints:
 import hashlib
 import logging
 import os
-from urllib.parse import urlparse
+from urllib.parse import quote, urlparse
 from uuid import UUID
 
 import httpx
@@ -29,6 +29,37 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 logger = logging.getLogger(__name__)
+
+
+def safe_content_disposition(filename: str, disposition: str = "inline") -> str:
+    """
+    Create a Content-Disposition header value that's safe for non-ASCII filenames.
+    
+    Uses RFC 5987 encoding (filename*=UTF-8''...) for Unicode characters.
+    Falls back to ASCII-only filename for compatibility.
+    
+    Args:
+        filename: The filename (may contain Unicode)
+        disposition: 'inline' or 'attachment'
+    
+    Returns:
+        Properly encoded Content-Disposition header value
+    """
+    # Create ASCII-safe fallback (remove non-ASCII chars)
+    ascii_filename = filename.encode('ascii', 'ignore').decode('ascii')
+    if not ascii_filename:
+        ascii_filename = "file"
+    
+    # Check if we need UTF-8 encoding
+    try:
+        filename.encode('ascii')
+        # Pure ASCII - simple format works
+        return f'{disposition}; filename="{filename}"'
+    except UnicodeEncodeError:
+        # Contains non-ASCII - use RFC 5987 format
+        encoded_filename = quote(filename, safe='')
+        return f'{disposition}; filename="{ascii_filename}"; filename*=UTF-8\'\'{encoded_filename}'
+
 
 # Cover art cache directory
 COVER_ART_CACHE_DIR = os.environ.get("COVER_ART_CACHE_DIR", "/tmp/audiovault_cache/cover_art")
@@ -175,7 +206,7 @@ async def stream(
         "Accept-Ranges": "bytes",
         "Content-Type": content_type,
         "Content-Length": str(content_length),
-        "Content-Disposition": f'inline; filename="{os.path.basename(file_path)}"',
+        "Content-Disposition": safe_content_disposition(os.path.basename(file_path), "inline"),
     }
 
     if range_header:
@@ -258,7 +289,7 @@ async def download_file(
         media_type=get_content_type(file_path),
         filename=filename,
         headers={
-            "Content-Disposition": f'attachment; filename="{filename}"',
+            "Content-Disposition": safe_content_disposition(filename, "attachment"),
         },
     )
 
