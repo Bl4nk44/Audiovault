@@ -1,6 +1,6 @@
 <div align="center">
 
-Audiovault
+***Audiovault***
 
 **Your Personal Music Sanctuary.**
 
