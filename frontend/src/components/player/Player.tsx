@@ -118,7 +118,7 @@ export default function Player() {
 
   if (!currentTrack) return null;
 
-  const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:8000/api/v1";
+  const apiUrl = import.meta.env.VITE_API_URL || "/api/v1";
   const baseUrl = apiUrl.replace(/\/api\/v1\/?$/, "");
 
   const streamUrl = currentTrack.filename
