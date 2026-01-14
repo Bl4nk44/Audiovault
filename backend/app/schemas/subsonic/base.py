@@ -4,11 +4,35 @@ Base schemas and response helpers for Subsonic API.
 Subsonic API uses a specific response format with nested 'subsonic-response' object.
 """
 
+import re
 import xml.etree.ElementTree as ET  # noqa: S314
 from typing import Any
 
 from fastapi import Response
 from pydantic import BaseModel
+
+# Pattern to match illegal XML 1.0 characters (control chars except tab, newline, carriage return)
+# XML 1.0 allows: #x9 | #xA | #xD | [#x20-#xD7FF] | [#xE000-#xFFFD] | [#x10000-#x10FFFF]
+_ILLEGAL_XML_CHARS_RE = re.compile(
+    r'[\x00-\x08\x0b\x0c\x0e-\x1f\x7f-\x9f]'
+)
+
+
+def xml_safe_string(value: str) -> str:
+    """
+    Remove illegal XML 1.0 control characters from string.
+    
+    XML 1.0 does not allow certain control characters (0x00-0x08, 0x0B, 0x0C, 0x0E-0x1F).
+    If these are present in song titles or other metadata, the XML will be malformed
+    and clients like Amperfy will fail to parse it, causing songs to be skipped.
+    
+    Args:
+        value: String that may contain illegal characters
+        
+    Returns:
+        Sanitized string safe for XML serialization
+    """
+    return _ILLEGAL_XML_CHARS_RE.sub('', value)
 
 
 class SubsonicError(BaseModel):
@@ -80,10 +104,12 @@ def dict_to_xml(tag: str, d: Any) -> str:
                         child = ET.SubElement(parent, child_tag)
                         build_xml(child, item)
                 elif value is not None:
-                    # Attribute
+                    # Attribute - sanitize strings for XML safety
                     val_str = str(value)
                     if isinstance(value, bool):
                         val_str = "true" if value else "false"
+                    elif isinstance(value, str):
+                        val_str = xml_safe_string(value)
                     parent.set(key, val_str)
 
         elif isinstance(data, list):
