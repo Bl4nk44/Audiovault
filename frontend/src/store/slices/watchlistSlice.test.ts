@@ -11,18 +11,8 @@ vi.mock("../../api/watchlist", () => ({
   },
 }));
 
-// Mock localStorage
-const localStorageMock = {
-  getItem: vi.fn(),
-  setItem: vi.fn(),
-  removeItem: vi.fn(),
-};
-
-declare global {
-  var localStorage: typeof localStorageMock;
-}
-
-Object.defineProperty(global, "localStorage", { value: localStorageMock });
+// localStorage is mocked globally in setupTests.ts
+const localStorageMock = globalThis.localStorage as any;
 
 import { watchlistApi } from "../../api/watchlist";
 
