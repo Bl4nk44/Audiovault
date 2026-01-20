@@ -8,6 +8,11 @@ const localStorageMock = {
   setItem: vi.fn(),
   removeItem: vi.fn(),
 };
+
+declare global {
+  var localStorage: typeof localStorageMock;
+}
+
 Object.defineProperty(global, "localStorage", { value: localStorageMock });
 
 describe("authSlice", () => {
