@@ -4,8 +4,14 @@
 import "@testing-library/jest-dom/vitest";
 import { vi, beforeEach, afterEach } from "vitest";
 
+declare global {
+  var localStorage: Storage;
+  var ResizeObserver: typeof ResizeObserver;
+  var IntersectionObserver: typeof IntersectionObserver;
+}
+
 // Mock localStorage
-const localStorageMock = {
+const localStorageMock: Storage = {
   getItem: vi.fn(),
   setItem: vi.fn(),
   removeItem: vi.fn(),
@@ -31,18 +37,24 @@ Object.defineProperty(window, "matchMedia", {
 });
 
 // Mock ResizeObserver
-globalThis.ResizeObserver = vi.fn().mockImplementation(() => ({
-  observe: vi.fn(),
-  unobserve: vi.fn(),
-  disconnect: vi.fn(),
-}));
+vi.stubGlobal(
+  "ResizeObserver",
+  vi.fn().mockImplementation(() => ({
+    observe: vi.fn(),
+    unobserve: vi.fn(),
+    disconnect: vi.fn(),
+  }))
+);
 
 // Mock IntersectionObserver
-globalThis.IntersectionObserver = vi.fn().mockImplementation(() => ({
-  observe: vi.fn(),
-  unobserve: vi.fn(),
-  disconnect: vi.fn(),
-}));
+vi.stubGlobal(
+  "IntersectionObserver",
+  vi.fn().mockImplementation(() => ({
+    observe: vi.fn(),
+    unobserve: vi.fn(),
+    disconnect: vi.fn(),
+  }))
+);
 
 // Mock window.location.reload
 Object.defineProperty(window, "location", {
@@ -56,7 +68,7 @@ Object.defineProperty(window, "location", {
 // Reset mocks before each test
 beforeEach(() => {
   vi.clearAllMocks();
-  localStorageMock.getItem.mockReturnValue(null);
+  (localStorageMock.getItem as any).mockReturnValue(null);
 });
 
 // Cleanup after each test
