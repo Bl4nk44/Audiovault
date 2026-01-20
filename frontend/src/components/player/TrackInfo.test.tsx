@@ -40,7 +40,7 @@ describe("TrackInfo", () => {
   });
 
   it("should apply expanded styles when isExpanded is true", () => {
-    const { container } = render(
+    render(
       <TrackInfo currentTrack={mockTrack} isExpanded={true} />,
     );
 
