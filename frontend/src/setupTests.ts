@@ -4,25 +4,35 @@
 import "@testing-library/jest-dom/vitest";
 import { vi, beforeEach, afterEach } from "vitest";
 
-declare global {
-  var localStorage: Storage;
-  var ResizeObserver: typeof ResizeObserver;
-  var IntersectionObserver: typeof IntersectionObserver;
-}
-
-// Mock localStorage
+// Create proper mock objects with correct types
 const localStorageMock: Storage = {
-  getItem: vi.fn(),
-  setItem: vi.fn(),
-  removeItem: vi.fn(),
-  clear: vi.fn(),
+  getItem: vi.fn(() => null) as any,
+  setItem: vi.fn() as any,
+  removeItem: vi.fn() as any,
+  clear: vi.fn() as any,
   length: 0,
-  key: vi.fn(),
+  key: vi.fn(() => null) as any,
 };
-Object.defineProperty(globalThis, "localStorage", { value: localStorageMock });
+
+const resizeObserverMock = vi.fn().mockImplementation(() => ({
+  observe: vi.fn(),
+  unobserve: vi.fn(),
+  disconnect: vi.fn(),
+}));
+
+const intersectionObserverMock = vi.fn().mockImplementation(() => ({
+  observe: vi.fn(),
+  unobserve: vi.fn(),
+  disconnect: vi.fn(),
+}));
+
+// Set up global mocks using vi.stubGlobal
+vi.stubGlobal('localStorage', localStorageMock);
+vi.stubGlobal('ResizeObserver', resizeObserverMock);
+vi.stubGlobal('IntersectionObserver', intersectionObserverMock);
 
 // Mock window.matchMedia
-Object.defineProperty(window, "matchMedia", {
+Object.defineProperty(window, 'matchMedia', {
   writable: true,
   value: vi.fn().mockImplementation((query: string) => ({
     matches: false,
@@ -36,28 +46,8 @@ Object.defineProperty(window, "matchMedia", {
   })),
 });
 
-// Mock ResizeObserver
-vi.stubGlobal(
-  "ResizeObserver",
-  vi.fn().mockImplementation(() => ({
-    observe: vi.fn(),
-    unobserve: vi.fn(),
-    disconnect: vi.fn(),
-  }))
-);
-
-// Mock IntersectionObserver
-vi.stubGlobal(
-  "IntersectionObserver",
-  vi.fn().mockImplementation(() => ({
-    observe: vi.fn(),
-    unobserve: vi.fn(),
-    disconnect: vi.fn(),
-  }))
-);
-
 // Mock window.location.reload
-Object.defineProperty(window, "location", {
+Object.defineProperty(window, 'location', {
   writable: true,
   value: {
     ...window.location,
