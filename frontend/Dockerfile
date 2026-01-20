@@ -9,11 +9,14 @@ WORKDIR /app
 # Copy VERSION file from root context
 COPY VERSION ./VERSION
 
-# Copy frontend code
-COPY frontend/ ./
+# Copy frontend package files first for better caching
+COPY frontend/package*.json ./
 
-# Install dependencies
-RUN npm ci
+# Install dependencies with retry logic
+RUN npm ci --prefer-offline --no-audit || npm ci --prefer-offline --no-audit
+
+# Copy remaining frontend code
+COPY frontend/ ./
 
 # Build frontend
 RUN npm run build
