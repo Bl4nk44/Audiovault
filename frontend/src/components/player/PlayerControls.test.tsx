@@ -65,7 +65,7 @@ describe("PlayerControls", () => {
   });
 
   it("should apply expanded styles when isExpanded is true", () => {
-    const { container } = render(
+    render(
       <PlayerControls {...defaultProps} isExpanded={true} />,
     );
 
