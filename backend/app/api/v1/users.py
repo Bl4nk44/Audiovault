@@ -134,7 +134,7 @@ async def upload_user_avatar(
         os.makedirs(avatar_dir, exist_ok=True)
 
     # Generate unique filename
-    file_ext = os.path.splitext(file.filename)[1]
+    file_ext = os.path.splitext(file.filename or "avatar.jpg")[1] or ".jpg"
     filename = f"avatar_{current_user.id}_{int(time.time())}{file_ext}"
     file_path = os.path.join(avatar_dir, filename)
 

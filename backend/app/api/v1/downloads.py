@@ -64,7 +64,7 @@ async def retry_download(
     current_user: User = Depends(get_current_active_user),
     db: AsyncSession = Depends(get_db),
 ):
-    await download_manager.retry_download(db, str(download_id))
+    await download_manager.resume_download(db, str(download_id))
     return {"status": "success"}
 
 

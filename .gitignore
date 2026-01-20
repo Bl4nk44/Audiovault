@@ -42,6 +42,7 @@ deploy.ps1
 .sonarlint/
 .sonar/
 sonar_report.md
+sonar-project.properties
 
 AI_CONTEXT.md
 

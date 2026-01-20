@@ -1,5 +1,5 @@
 from datetime import UTC, datetime, timedelta
-from typing import Any
+from typing import Optional, Any
 
 import bcrypt
 import jwt
@@ -8,7 +8,7 @@ from app.core.config import settings
 ALGORITHM = settings.JWT_ALGORITHM
 
 
-def create_access_token(subject: str | Any, expires_delta: timedelta = None) -> str:
+def create_access_token(subject: str | Any, expires_delta: Optional[timedelta] = None) -> str:
     if expires_delta:
         expire = datetime.now(UTC) + expires_delta
     else:
@@ -19,7 +19,7 @@ def create_access_token(subject: str | Any, expires_delta: timedelta = None) -> 
     return encoded_jwt
 
 
-def create_refresh_token(subject: str | Any, expires_delta: timedelta = None) -> str:
+def create_refresh_token(subject: str | Any, expires_delta: Optional[timedelta] = None) -> str:
     if expires_delta:
         expire = datetime.now(UTC) + expires_delta
     else:

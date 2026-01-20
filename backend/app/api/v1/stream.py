@@ -14,6 +14,7 @@ from app.models.track import Track
 from app.models.download import Download
 from app.models.album import Album
 import os
+from typing import Optional
 
 router = APIRouter()
 logger = logging.getLogger(__name__)
@@ -183,7 +184,7 @@ async def _extract_direct_url(youtube_url: str) -> tuple[str, dict]:
         return info["url"], info.get("http_headers", {})
 
 
-async def _stream_content(url: str, headers: dict = None):
+async def _stream_content(url: str, headers: Optional[dict] = None):
     async with aiohttp.ClientSession() as session:
         # Pass headers to the request to avoid 403 Forbidden from strict servers (Youtube)
         async with session.get(url, headers=headers) as response:

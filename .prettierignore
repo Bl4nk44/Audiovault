@@ -1,0 +1,40 @@
+# Dependencies
+node_modules/
+.venv/
+venv/
+__pycache__/
+
+# Build outputs
+dist/
+build/
+*.pyc
+
+# IDE/Editor
+.vscode/
+.idea/
+
+# Test & Coverage
+coverage/
+htmlcov/
+.pytest_cache/
+
+# Logs
+*.log
+logs/
+
+# Generated
+*.min.js
+*.min.css
+
+# Package locks (optional - format on save conflict)
+package-lock.json
+pnpm-lock.yaml
+yarn.lock
+
+# Python compiled
+*.so
+*.egg-info/
+
+# Environment
+.env
+.env.*

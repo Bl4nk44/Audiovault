@@ -14,6 +14,7 @@ from app.services.youtube_service import YouTubeService
 from sqlalchemy import delete, func
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
+from sqlalchemy.orm import joinedload
 
 logger = logging.getLogger(__name__)
 
@@ -53,7 +54,7 @@ class SyncManager:
         # We need to load tracks to compare source IDs
         local_items_result = await db.execute(
             select(WatchlistItem)
-            .options(select.joinedload(WatchlistItem.track))
+            .options(joinedload(WatchlistItem.track))
             .where(WatchlistItem.watchlist_id == watchlist_id)
         )
         local_items = local_items_result.scalars().all()

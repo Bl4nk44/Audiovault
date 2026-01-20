@@ -17,6 +17,7 @@ import { useStore } from "../store/useStore";
 import { notify as toast } from "../utils/notify";
 import TrackCard from "../components/search/TrackCard";
 import { isValidImageUrl } from "../utils/validation";
+import type { Album } from "../types";
 
 export default function ArtistProfile() {
   const { id } = useParams<{ id: string }>();
@@ -230,7 +231,7 @@ export default function ArtistProfile() {
       {/* Albums Section */}
       {(() => {
         const albums = artist.albums?.filter(
-          (a: any) => a.album_type === "album" || (!a.album_type && a.total_tracks > 3)
+          (a: Album) => a.album_type === "album" || (!a.album_type && (a.total_tracks ?? 0) > 3)
         ) || [];
         
         return albums.length > 0 && (
@@ -240,7 +241,7 @@ export default function ArtistProfile() {
               Albums
             </h2>
             <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4">
-              {albums.map((album: any) => {
+              {albums.map((album: Album) => {
                 const albumCover = album.image_url || album.images?.url;
                 const isValid = isValidImageUrl(albumCover);
 
@@ -283,7 +284,7 @@ export default function ArtistProfile() {
       {/* Singles & EPs Section */}
       {(() => {
         const singles = artist.albums?.filter(
-          (a: any) => a.album_type === "single" || a.album_type === "compilation"
+          (a: Album) => a.album_type === "single" || a.album_type === "compilation"
         ) || [];
         
         return singles.length > 0 && (
@@ -293,7 +294,7 @@ export default function ArtistProfile() {
               Singles & EPs
             </h2>
             <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
-              {singles.map((single: any) => {
+              {singles.map((single: Album) => {
                 const singleCover = single.image_url || single.images?.url;
                 const isValid = isValidImageUrl(singleCover);
 

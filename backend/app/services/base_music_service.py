@@ -1,6 +1,6 @@
 import asyncio
 import logging
-from typing import Any
+from typing import Optional, Any
 
 import yt_dlp
 
@@ -14,7 +14,7 @@ class BaseMusicService:
     def can_handle(self, url: str) -> bool:
         raise NotImplementedError("Subclasses must implement can_handle method")
 
-    async def _extract_info(self, url: str, extra_opts: dict[str, Any] = None) -> dict[str, Any] | None:
+    async def _extract_info(self, url: str, extra_opts: Optional[dict[str, Any]] = None) -> dict[str, Any] | None:
         """
         Internal helper to extract info using yt-dlp.
         """

@@ -31,3 +31,7 @@ class PlaylistMetadata(BaseModel):
     description: str | None = None
     author: str | None = None
     tracks: list[TrackMetadata] = []
+    image_url: str | None = None
+    source: str | None = None
+    source_id: str | None = None
+

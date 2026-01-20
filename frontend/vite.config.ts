@@ -10,8 +10,8 @@ import path from "path";
 // Locally: VERSION is in parent directory
 let version = "0.0.0";
 const versionPaths = [
-  path.resolve(__dirname, "VERSION"),      // Docker build (same dir)
-  path.resolve(__dirname, "../VERSION"),   // Local development (parent)
+  path.resolve(__dirname, "VERSION"), // Docker build (same dir)
+  path.resolve(__dirname, "../VERSION"), // Local development (parent)
 ];
 
 for (const versionPath of versionPaths) {
@@ -66,12 +66,31 @@ export default defineConfig({
   },
   test: {
     globals: true,
-    environment: 'jsdom',
-    setupFiles: './src/setupTests.ts', 
+    environment: "jsdom",
+    setupFiles: "./src/setupTests.ts",
+    include: ["src/**/*.{test,spec}.{ts,tsx}"],
     coverage: {
-      provider: 'v8',
-      reporter: ['text', 'lcov'],
-      exclude: ['node_modules/', 'src/setupTests.ts'],
+      provider: "v8",
+      reporter: ["text", "lcov", "html"],
+      reportsDirectory: "./coverage",
+      include: ["src/**/*.{ts,tsx}"],
+      exclude: [
+        "node_modules/",
+        "src/setupTests.ts",
+        "src/**/*.test.{ts,tsx}",
+        "src/**/*.spec.{ts,tsx}",
+        "src/**/*.d.ts",
+        "src/main.tsx",
+        "src/vite-env.d.ts",
+      ],
+      thresholds: {
+        // TODO: Gradually increase thresholds as more tests are added
+        // Current baseline: 20%, Target: 80% (Phase 2)
+        lines: 20,
+        branches: 15,
+        functions: 25,
+        statements: 20,
+      },
     },
   },
 });

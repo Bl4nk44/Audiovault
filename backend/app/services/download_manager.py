@@ -17,6 +17,7 @@ from app.utils.sanitization import sanitize_filename
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 from sqlalchemy.orm import selectinload
+from typing import Optional
 
 logger = logging.getLogger(__name__)
 
@@ -37,7 +38,7 @@ class DownloadManager:
         # Per-user semaphores for concurrent download limits
         self.user_semaphores: dict[str, asyncio.Semaphore] = {}
 
-    def get_user_semaphore(self, user_id: str, max_concurrent: int = None) -> asyncio.Semaphore:
+    def get_user_semaphore(self, user_id: str, max_concurrent: Optional[int] = None) -> asyncio.Semaphore:
         """Get or create a semaphore for a specific user."""
         if max_concurrent is None:
             max_concurrent = self.DEFAULT_CONCURRENT_DOWNLOADS

@@ -1,0 +1,30 @@
+{
+  "include": ["backend/app"],
+  "exclude": ["**/node_modules", "**/__pycache__", "**/.*", "backend/.venv", "backend/tests"],
+  "typeCheckingMode": "basic",
+  "pythonVersion": "3.12",
+  "pythonPlatform": "All",
+  "venvPath": "backend",
+  "venv": ".venv",
+  "reportMissingImports": true,
+  "reportMissingTypeStubs": false,
+  "reportUnusedImport": true,
+  "reportUnusedVariable": true,
+  "reportDuplicateImport": true,
+  "reportOptionalSubscript": false,
+  "reportOptionalMemberAccess": false,
+  "reportOptionalCall": false,
+  "reportOptionalIterable": false,
+  "reportOptionalContextManager": false,
+  "reportOptionalOperand": false,
+  "reportGeneralTypeIssues": "warning",
+  "reportArgumentType": false,
+  "reportAttributeAccessIssue": false,
+  "executionEnvironments": [
+    {
+      "root": "backend/app",
+      "pythonVersion": "3.12",
+      "extraPaths": ["backend"]
+    }
+  ]
+}

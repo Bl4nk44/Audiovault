@@ -7,6 +7,7 @@ from sqlalchemy import case, func
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 from sqlalchemy.orm import joinedload
+from typing import Optional
 
 
 class LibraryDataService:
@@ -16,8 +17,8 @@ class LibraryDataService:
         user_id: str,
         skip: int = 0,
         limit: int = 50,
-        source: str = None,
-        playlist: str = None,
+        source: Optional[str] = None,
+        playlist: Optional[str] = None,
     ) -> dict:
         try:
             u_uuid = uuid.UUID(str(user_id))

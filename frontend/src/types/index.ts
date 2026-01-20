@@ -61,7 +61,10 @@ export interface Album {
   title: string;
   release_date?: string;
   images?: Record<string, string>;
-  artist_id: string;
+  image_url?: string;
+  artist_id?: string;
+  album_type?: 'album' | 'single' | 'compilation';
+  total_tracks?: number;
 }
 
 export interface Artist {
