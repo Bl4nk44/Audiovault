@@ -206,6 +206,101 @@ async def download_all_artist_tracks(
     }
 
 
+@router.post("/album/{album_id}/download")
+async def download_album(
+    album_id: str,
+    request: ArtistDownloadRequest, # reusing this model as it just has 'source'
+    current_user: User = Depends(get_current_active_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """
+    Download all tracks from a specific album.
+    Creates a folder with the Album name (or Artist/Album structure handled by manager).
+    """
+    import logging
+    from app.services.spotify_service import SpotifyService
+    from app.models.track import Track
+    
+    logger = logging.getLogger(__name__)
+    
+    if request.source != "spotify":
+        raise HTTPException(status_code=400, detail="Only Spotify source is currently supported")
+    
+    service = SpotifyService()
+    if not service.client:
+        raise HTTPException(status_code=503, detail="Spotify service not configured")
+    
+    # Get album details for name
+    try:
+        album_data = service.get_album(album_id)
+        if not album_data:
+             raise HTTPException(status_code=404, detail="Album not found")
+        album_name = album_data["name"]
+    except Exception as e:
+        logger.error(f"Error fetching album {album_id}: {e}")
+        raise HTTPException(status_code=404, detail="Album not found")
+    
+    queued_count = 0
+    
+    # Get tracks from the album
+    tracks = service.get_album_tracks(album_id)
+    
+    for track_data in tracks:
+        # Check if track already exists in DB
+        existing = await db.execute(
+            select(Track).where(
+                Track.source == "spotify",
+                Track.source_id == track_data["id"]
+            )
+        )
+        track_obj = existing.scalar_one_or_none()
+        
+        if not track_obj:
+            # Create track in DB
+            track_obj = Track(
+                title=track_data["title"],
+                artist=track_data["artist"],
+                source="spotify",
+                source_id=track_data["id"],
+                duration_ms=track_data.get("duration_ms"),
+                image_url=track_data.get("image_url"),
+                album=track_data.get("album"),
+                isrc=track_data.get("isrc"),
+            )
+            db.add(track_obj)
+            await db.flush()
+        
+        # Queue download with album name as playlist/folder? 
+        # Usually user prefers Artist/Album structure.
+        # But 'playlist_name' in DownloadCreate forces a specific folder.
+        # If we pass None, the download manager uses default structure (Artist - Title).
+        # Let's pass album_name to group them if desired, OR None for default flat/artist structure.
+        # User request implies "download album", usually implying a folder.
+        # Let's use album_name as playlist_name so they end up in a folder.
+        
+        download_data = DownloadCreate(
+            track_id=track_obj.id,
+            source="spotify",
+            playlist_name=album_name, 
+        )
+        
+        try:
+            await download_manager.add_download(db, current_user.id, download_data)
+            queued_count += 1
+        except Exception as e:
+            logger.warning(f"Failed to queue track {track_data['title']}: {e}")
+            continue
+            
+    await db.commit()
+    
+    return {
+        "status": "success",
+        "album": album_name,
+        "queued_count": queued_count,
+        "message": f"Queued {queued_count} tracks from {album_name}"
+    }
+
+
 @router.post("/rescan")
 async def rescan_library(
     current_user: User = Depends(get_current_active_user),

@@ -123,6 +123,29 @@ export default function ArtistProfile() {
     }
   };
 
+  const handleDownloadAlbum = async (albumId: string) => {
+    try {
+      const response = await fetch(`/api/v1/downloads/album/${albumId}/download`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+        body: JSON.stringify({ source: "spotify" }),
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        toast.success(data.message || "Album queued for download");
+      } else {
+        toast.error("Failed to queue album download");
+      }
+    } catch (error) {
+      console.error("Failed to download album:", error);
+      toast.error("Failed to queue album download");
+    }
+  };
+
   return (
     <div className="space-y-8 pb-10">
       {/* Hero Section */}
@@ -139,7 +162,7 @@ export default function ArtistProfile() {
             <Music className="w-24 h-24 text-gray-700" />
           </div>
         )}
-        {/* ... (Overlay content remains same) ... */}
+        {/* Helper gradient for text readability */}
         <div className="absolute inset-0 bg-linear-to-t from-black/90 via-black/40 to-transparent flex flex-col justify-end p-8">
           <Button
             variant="ghost"
@@ -151,12 +174,6 @@ export default function ArtistProfile() {
           </Button>
 
           <div className="absolute top-4 right-4 flex gap-2">
-            {/* Add to Playlist (Conceptual - usually for tracks, but maybe for top tracks?) 
-                Actually user request was: "jak przegladam profil artysty zebym miał mozliwosc dodania do watchlisty lub do wybranej playlisty jego utworów albumów i singli"
-                So we need context menus on albums/tracks.
-                BUT, let's keep a "Watchlist" main button here.
-            */}
-
             <Button
               variant={isWatched ? "secondary" : "secondary"} // Keep secondary if watched to show state
               onClick={handleToggleWatchlist}
@@ -249,34 +266,57 @@ export default function ArtistProfile() {
                   const isValid = isValidImageUrl(albumCover);
 
                   return (
-                    <button
-                      key={album.id}
-                      type="button"
-                      className="bg-white/5 rounded-xl p-4 hover:bg-white/10 transition-colors group cursor-pointer w-full text-left"
-                      onClick={() =>
-                        navigate(`/album/${album.id}`, { state: { source: "spotify" } })
-                      }
-                    >
-                      <div className="aspect-square bg-black/40 rounded-lg mb-3 overflow-hidden">
-                        {isValid ? (
-                          <img
-                            src={albumCover}
-                            alt={album.title}
-                            className="w-full h-full object-cover group-hover:scale-105 transition-transform"
-                          />
-                        ) : (
-                          <div className="w-full h-full flex items-center justify-center">
-                            <Disc className="w-10 h-10 text-gray-600" />
+                    <div key={album.id} className="group relative">
+                      <div
+                        role="button"
+                        tabIndex={0}
+                        onClick={() =>
+                          navigate(`/album/${album.id}`, { state: { source: "spotify" } })
+                        }
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter" || e.key === " ") {
+                            navigate(`/album/${album.id}`, { state: { source: "spotify" } });
+                          }
+                        }}
+                        className="bg-white/5 rounded-xl p-4 hover:bg-white/10 transition-colors cursor-pointer w-full text-left"
+                      >
+                        <div className="aspect-square bg-black/40 rounded-lg mb-3 overflow-hidden relative group/image">
+                          {isValid ? (
+                            <img
+                              src={albumCover}
+                              alt={album.title}
+                              className="w-full h-full object-cover group-hover/image:scale-105 transition-transform"
+                            />
+                          ) : (
+                            <div className="w-full h-full flex items-center justify-center">
+                              <Disc className="w-10 h-10 text-gray-600" />
+                            </div>
+                          )}
+
+                          {/* Download Overlay */}
+                          <div className="absolute inset-0 bg-black/60 opacity-0 group-hover/image:opacity-100 transition-opacity flex items-center justify-center gap-2">
+                            <Button
+                              variant="primary"
+                              size="icon"
+                              className="rounded-full w-10 h-10 transform scale-90 hover:scale-100 transition-transform"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleDownloadAlbum(album.id);
+                              }}
+                              title="Download Album"
+                            >
+                              <IoDownloadOutline size={20} />
+                            </Button>
                           </div>
-                        )}
+                        </div>
+                        <h3 className="font-semibold truncate text-white">{album.title}</h3>
+                        <p className="text-sm text-gray-400">
+                          {album.release_date
+                            ? new Date(album.release_date).getFullYear()
+                            : "Unknown"}
+                        </p>
                       </div>
-                      <h3 className="font-semibold truncate text-white">{album.title}</h3>
-                      <p className="text-sm text-gray-400">
-                        {album.release_date
-                          ? new Date(album.release_date).getFullYear()
-                          : "Unknown"}
-                      </p>
-                    </button>
+                    </div>
                   );
                 })}
               </div>
@@ -305,32 +345,55 @@ export default function ArtistProfile() {
                   const isValid = isValidImageUrl(singleCover);
 
                   return (
-                    <button
-                      key={single.id}
-                      type="button"
-                      className="bg-white/5 rounded-xl p-3 hover:bg-white/10 transition-colors group cursor-pointer w-full text-left"
-                      onClick={() =>
-                        navigate(`/album/${single.id}`, { state: { source: "spotify" } })
-                      }
-                    >
-                      <div className="aspect-square bg-black/40 rounded-lg mb-2 overflow-hidden">
-                        {isValid ? (
-                          <img
-                            src={singleCover}
-                            alt={single.title}
-                            className="w-full h-full object-cover group-hover:scale-105 transition-transform"
-                          />
-                        ) : (
-                          <div className="w-full h-full flex items-center justify-center">
-                            <Music className="w-8 h-8 text-gray-600" />
+                    <div key={single.id} className="group relative">
+                      <div
+                        role="button"
+                        tabIndex={0}
+                        onClick={() =>
+                          navigate(`/album/${single.id}`, { state: { source: "spotify" } })
+                        }
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter" || e.key === " ") {
+                            navigate(`/album/${single.id}`, { state: { source: "spotify" } });
+                          }
+                        }}
+                        className="bg-white/5 rounded-xl p-3 hover:bg-white/10 transition-colors cursor-pointer w-full text-left"
+                      >
+                        <div className="aspect-square bg-black/40 rounded-lg mb-2 overflow-hidden relative group/image">
+                          {isValid ? (
+                            <img
+                              src={singleCover}
+                              alt={single.title}
+                              className="w-full h-full object-cover group-hover/image:scale-105 transition-transform"
+                            />
+                          ) : (
+                            <div className="w-full h-full flex items-center justify-center">
+                              <Music className="w-8 h-8 text-gray-600" />
+                            </div>
+                          )}
+
+                          {/* Download Overlay */}
+                          <div className="absolute inset-0 bg-black/60 opacity-0 group-hover/image:opacity-100 transition-opacity flex items-center justify-center gap-2">
+                            <Button
+                              variant="primary"
+                              size="icon"
+                              className="rounded-full w-10 h-10 transform scale-90 hover:scale-100 transition-transform"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleDownloadAlbum(single.id);
+                              }}
+                              title="Download Single/EP"
+                            >
+                              <IoDownloadOutline size={20} />
+                            </Button>
                           </div>
-                        )}
+                        </div>
+                        <h3 className="font-medium text-sm truncate text-white">{single.title}</h3>
+                        <p className="text-xs text-gray-400">
+                          {single.release_date ? new Date(single.release_date).getFullYear() : ""}
+                        </p>
                       </div>
-                      <h3 className="font-medium text-sm truncate text-white">{single.title}</h3>
-                      <p className="text-xs text-gray-400">
-                        {single.release_date ? new Date(single.release_date).getFullYear() : ""}
-                      </p>
-                    </button>
+                    </div>
                   );
                 })}
               </div>
