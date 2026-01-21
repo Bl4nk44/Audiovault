@@ -1,19 +1,19 @@
+import { motion } from "framer-motion";
 import {
-  Download,
-  Music,
+  ArrowRight,
   Clock,
+  Download,
   HardDrive,
+  List,
+  Music,
   Play,
   Search,
-  ArrowRight,
   Settings,
-  List,
 } from "lucide-react";
-import { motion } from "framer-motion";
 import { useEffect, useState } from "react";
-import api from "../services/api";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "../hooks/useTranslation";
+import api from "../services/api";
 
 interface RecentActivityItem {
   id: string;
@@ -26,8 +26,8 @@ interface RecentActivityItem {
   filename?: string;
 }
 
-import { useStore } from "../store/useStore";
 import { GlassCard } from "../components/ui/GlassCard";
+import { useStore } from "../store/useStore";
 
 interface ActiveDownloadItem {
   id: string;
@@ -213,17 +213,12 @@ export default function Dashboard() {
             <h2 className="text-4xl font-bold tracking-tight text-white drop-shadow-[0_0_15px_rgba(255,255,255,0.4)]">
               {t("dashboard.title")}
             </h2>
-            <p className="text-gray-400 mt-2 text-lg">
-              {t("dashboard.subtitle")}
-            </p>
+            <p className="text-gray-400 mt-2 text-lg">{t("dashboard.subtitle")}</p>
           </div>
         </motion.div>
 
         {/* Stats Grid */}
-        <motion.div
-          variants={container}
-          className="grid gap-6 md:grid-cols-2 lg:grid-cols-4"
-        >
+        <motion.div variants={container} className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
           {stats.map((stat) => (
             <GlassCard
               key={stat.label}
@@ -237,9 +232,7 @@ export default function Dashboard() {
               </div>
 
               <div className="flex items-center justify-between space-y-0 pb-4 relative z-10">
-                <p className="text-sm font-medium text-gray-300">
-                  {stat.label}
-                </p>
+                <p className="text-sm font-medium text-gray-300">{stat.label}</p>
               </div>
               <div className="text-4xl font-bold text-white relative z-10 drop-shadow-md">
                 {stat.value}
@@ -321,11 +314,9 @@ export default function Dashboard() {
                             marginBottom: "2px",
                           }}
                           onClick={() => {
-                            const currentTrack =
-                              useStore.getState().currentTrack;
+                            const currentTrack = useStore.getState().currentTrack;
                             const isCurrent =
-                              (activity.track_id &&
-                                currentTrack?.id === activity.track_id) ||
+                              (activity.track_id && currentTrack?.id === activity.track_id) ||
                               currentTrack?.id === activity.id;
 
                             if (isCurrent && useStore.getState().isPlaying) {
@@ -366,10 +357,7 @@ export default function Dashboard() {
                               <Music size={24} className="text-black/50" />
                             )}
                             <div className="absolute inset-0 bg-black/10 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity z-10">
-                              <Play
-                                size={20}
-                                className="text-white fill-white drop-shadow-md"
-                              />
+                              <Play size={20} className="text-white fill-white drop-shadow-md" />
                             </div>
                           </div>
                           <div className="flex-1 min-w-0">
@@ -446,100 +434,15 @@ export default function Dashboard() {
                   onClick={() => navigate(link.path)}
                   className={`flex flex-col items-center justify-center p-4 rounded-3xl border border-b-[6px] ${link.border} ${link.depth} ${link.bg} transition-colors gap-3 w-full h-full min-h-47.5 backdrop-blur-sm cursor-pointer`}
                 >
-                  <div
-                    className={`p-4 rounded-full bg-black/20 ${link.color} shadow-lg`}
-                  >
+                  <div className={`p-4 rounded-full bg-black/20 ${link.color} shadow-lg`}>
                     <link.icon size={32} />
                   </div>
-                  <span className="text-white font-bold text-lg">
-                    {link.label}
-                  </span>
+                  <span className="text-white font-bold text-lg">{link.label}</span>
                 </motion.button>
               ))}
             </div>
           </motion.div>
         </div>
-
-        {/* Active Download - Full Width Bottom Section */}
-        {dashboardStats.active_download && (
-          <motion.div variants={item} className="mt-6">
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="rounded-3xl border border-primary/30 border-b-[6px] border-b-primary/30 bg-linear-to-b from-black/80 to-black/60 backdrop-blur-xl p-8 shadow-[0_0_30px_rgba(var(--primary-rgb),0.15)] shadow-primary/20 relative overflow-hidden group flex flex-col justify-center"
-            >
-              {/* Background Image Blur Effect */}
-              {dashboardStats.active_download.image_url && (
-                <div
-                  className="absolute inset-0 opacity-20 bg-cover bg-center blur-2xl pointer-events-none"
-                  style={{
-                    backgroundImage: `url(${dashboardStats.active_download.image_url})`,
-                  }}
-                />
-              )}
-
-              <div className="flex flex-col md:flex-row items-center gap-8 relative z-10">
-                {/* Album Art */}
-                <div className="relative shrink-0">
-                  {dashboardStats.active_download.image_url ? (
-                    <img
-                      src={dashboardStats.active_download.image_url}
-                      alt="Cover"
-                      className="w-24 h-24 rounded-2xl object-cover border border-white/10 shadow-2xl animate-[spin_8s_linear_infinite]"
-                    />
-                  ) : (
-                    <div className="w-24 h-24 rounded-2xl bg-primary/20 text-primary flex items-center justify-center border border-primary/20 animate-pulse shadow-2xl">
-                      <Download size={40} />
-                    </div>
-                  )}
-                  {dashboardStats.active_download.status === "downloading" && (
-                    <div className="absolute -bottom-2 -right-2 bg-black/60 backdrop-blur-md border border-white/10 rounded-full p-2">
-                      <div className="w-3 h-3 bg-primary rounded-full animate-pulse shadow-[0_0_10px_rgba(var(--primary-rgb),1)]"></div>
-                    </div>
-                  )}
-                </div>
-
-                {/* Info & Progress */}
-                <div className="flex-1 w-full min-w-0 space-y-5">
-                  <div className="flex justify-between items-end">
-                    <div>
-                      <span className="text-sm text-primary font-bold uppercase tracking-widest mb-1 block">
-                        {dashboardStats.active_download.status === "downloading"
-                          ? t("dashboard.activeDownload.downloading")
-                          : t("dashboard.activeDownload.pending")}
-                      </span>
-                      <h4 className="text-3xl font-bold text-white truncate leading-tight mb-1">
-                        {dashboardStats.active_download.title}
-                      </h4>
-                      <p className="text-gray-400 text-xl truncate">
-                        {dashboardStats.active_download.artist}
-                      </p>
-                    </div>
-                    <div className="text-right hidden md:block">
-                      <span className="text-4xl font-bold text-white tabular-nums">
-                        {Math.round(dashboardStats.active_download.progress)}%
-                      </span>
-                    </div>
-                  </div>
-
-                  {/* Large Nice Progress Bar */}
-                  <div className="h-5 bg-white/10 rounded-full overflow-hidden border border-white/5 relative shadow-inner">
-                    <motion.div
-                      initial={{ width: 0 }}
-                      animate={{
-                        width: `${dashboardStats.active_download.progress}%`,
-                      }}
-                      transition={{ ease: "linear" }}
-                      className="h-full bg-linear-to-r from-primary via-purple-500 to-primary background-animate bg-size-[200%_auto] shadow-[0_0_20px_rgba(var(--primary-rgb),0.6)] relative"
-                    >
-                      <div className="absolute inset-0 bg-white/20 animate-[shimmer_2s_infinite] transform -skew-x-12"></div>
-                    </motion.div>
-                  </div>
-                </div>
-              </div>
-            </motion.div>
-          </motion.div>
-        )}
       </motion.div>
     </div>
   );
