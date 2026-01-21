@@ -27,7 +27,7 @@ class Settings(BaseSettings):
     SPOTIFY_REDIRECT_URI: str | None = None
 
 
-    DOWNLOAD_DIR: str = os.getenv("DOWNLOAD_DIR", str(Path.home() / "Downloads" / "Audiovault"))
+    DOWNLOAD_DIR: str = os.getenv("DOWNLOAD_DIR", os.path.join(os.getcwd(), "downloads"))
     MAX_PARALLEL_DOWNLOADS: int = 3
     STORAGE_QUOTA_GB: int = 500
     LOG_LEVEL: str = "INFO"
