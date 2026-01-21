@@ -1,23 +1,16 @@
 import { useQuery } from "@tanstack/react-query";
-import { useParams, useNavigate, useLocation } from "react-router-dom";
 import { motion } from "framer-motion";
+import { ArrowLeft, Check, Disc, Loader2, Music, PlayCircle, Plus } from "lucide-react";
 import { useState } from "react";
-import {
-  ArrowLeft,
-  Music,
-  Disc,
-  Loader2,
-  Plus,
-  Check,
-  PlayCircle,
-} from "lucide-react";
+import { IoDownloadOutline } from "react-icons/io5";
+import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { artistsApi } from "../api/artists";
+import TrackCard from "../components/search/TrackCard";
 import Button from "../components/ui/Button";
 import { useStore } from "../store/useStore";
-import { notify as toast } from "../utils/notify";
-import TrackCard from "../components/search/TrackCard";
-import { isValidImageUrl } from "../utils/validation";
 import type { Album } from "../types";
+import { notify as toast } from "../utils/notify";
+import { isValidImageUrl } from "../utils/validation";
 
 export default function ArtistProfile() {
   const { id } = useParams<{ id: string }>();
@@ -59,10 +52,7 @@ export default function ArtistProfile() {
   }
 
   const rawHeroImage =
-    artist.image_url ||
-    artist.images?.banner ||
-    artist.images?.image_url ||
-    artist.images?.url;
+    artist.image_url || artist.images?.banner || artist.images?.image_url || artist.images?.url;
 
   // Validated by isValidImageUrl to prevent XSS (javascript: etc.)
   const heroImage = isValidImageUrl(rawHeroImage) ? rawHeroImage : null;
@@ -80,45 +70,54 @@ export default function ArtistProfile() {
       item.source_id === artist.id
   );
 
-  const handleFollowAndDownload = async () => {
+  const handleToggleWatchlist = async () => {
     if (isWatched && watchedItem) {
       removeFromWatchlist(watchedItem.id);
       toast.success("Removed from watchlist");
       return;
     }
 
-    // Add to watchlist first
     addToWatchlist({
       source: "spotify",
       source_id: artist.spotify_id || artist.id,
       source_name: artist.name,
       watch_type: "artist",
-      auto_download: true,
+      auto_download: false, // Default to FALSE for just "Follow"
       new_items_count: 0,
       metadata_content: { image_url: heroImage || undefined },
     });
+    toast.success("Following " + artist.name);
+  };
 
-    // Start downloading all tracks
+  const handleDownloadDiscography = async () => {
+    // Logic for mass download
+    if (!isWatched) {
+      await handleToggleWatchlist();
+    }
+
     setIsDownloading(true);
     try {
-      const response = await fetch(`/api/v1/downloads/artist/${artist.spotify_id || artist.id}/download-all`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${localStorage.getItem("token")}`,
-        },
-        body: JSON.stringify({ source: "spotify" }),
-      });
+      const response = await fetch(
+        `/api/v1/downloads/artist/${artist.spotify_id || artist.id}/download-all`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+          },
+          body: JSON.stringify({ source: "spotify" }),
+        }
+      );
 
       if (response.ok) {
         const data = await response.json();
-        toast.success(`Following ${artist.name}! Queued ${data.queued_count} tracks`);
+        toast.success(`Queued ${data.queued_count} tracks for download`);
       } else {
-        toast.success("Added to watchlist");
+        toast.error("Failed to queue downloads");
       }
     } catch (error) {
       console.error("Failed to download all:", error);
-      toast.success("Added to watchlist");
+      toast.error("Failed to queue downloads");
     } finally {
       setIsDownloading(false);
     }
@@ -151,37 +150,39 @@ export default function ArtistProfile() {
             <ArrowLeft className="w-6 h-6" />
           </Button>
 
-          <div className="absolute top-4 right-4">
+          <div className="absolute top-4 right-4 flex gap-2">
+            {/* Add to Playlist (Conceptual - usually for tracks, but maybe for top tracks?) 
+                Actually user request was: "jak przegladam profil artysty zebym miał mozliwosc dodania do watchlisty lub do wybranej playlisty jego utworów albumów i singli"
+                So we need context menus on albums/tracks.
+                BUT, let's keep a "Watchlist" main button here.
+            */}
+
             <Button
-              variant={isWatched ? "secondary" : "primary"}
-              onClick={handleFollowAndDownload}
+              variant={isWatched ? "secondary" : "secondary"} // Keep secondary if watched to show state
+              onClick={handleToggleWatchlist}
+              className="gap-2 bg-black/50 hover:bg-black/70 border border-white/10"
+            >
+              {isWatched ? <Check size={16} /> : <Plus size={16} />}
+              {isWatched ? "Following" : "Follow"}
+            </Button>
+
+            <Button
+              variant="primary"
+              onClick={handleDownloadDiscography}
               disabled={isDownloading}
               className="gap-2"
             >
-              {(() => {
-                if (isDownloading) {
-                  return (
-                    <>
-                      <Loader2 size={16} className="animate-spin" />
-                      Downloading...
-                    </>
-                  );
-                }
-                if (isWatched) {
-                  return (
-                    <>
-                      <Check size={16} />
-                      Following
-                    </>
-                  );
-                }
-                return (
-                  <>
-                    <Plus size={16} />
-                    Follow & Download
-                  </>
-                );
-              })()}
+              {isDownloading ? (
+                <>
+                  <Loader2 size={16} className="animate-spin" />
+                  Downloading...
+                </>
+              ) : (
+                <>
+                  <IoDownloadOutline size={16} />
+                  Download Discography
+                </>
+              )}
             </Button>
           </div>
 
@@ -230,107 +231,111 @@ export default function ArtistProfile() {
 
       {/* Albums Section */}
       {(() => {
-        const albums = artist.albums?.filter(
-          (a: Album) => a.album_type === "album" || (!a.album_type && (a.total_tracks ?? 0) > 3)
-        ) || [];
-        
-        return albums.length > 0 && (
-          <div className="space-y-4">
-            <h2 className="text-2xl font-bold flex items-center gap-2">
-              <Disc className="w-6 h-6 text-primary" />
-              Albums
-            </h2>
-            <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4">
-              {albums.map((album: Album) => {
-                const albumCover = album.image_url || album.images?.url;
-                const isValid = isValidImageUrl(albumCover);
+        const albums =
+          artist.albums?.filter(
+            (a: Album) => a.album_type === "album" || (!a.album_type && (a.total_tracks ?? 0) > 3)
+          ) || [];
 
-                return (
-                  <button
-                    key={album.id}
-                    type="button"
-                    className="bg-white/5 rounded-xl p-4 hover:bg-white/10 transition-colors group cursor-pointer w-full text-left"
-                    onClick={() => navigate(`/album/${album.id}`, { state: { source: "spotify" } })}
-                  >
-                    <div className="aspect-square bg-black/40 rounded-lg mb-3 overflow-hidden">
-                      {isValid ? (
-                        <img
-                          src={albumCover}
-                          alt={album.title}
-                          className="w-full h-full object-cover group-hover:scale-105 transition-transform"
-                        />
-                      ) : (
-                        <div className="w-full h-full flex items-center justify-center">
-                          <Disc className="w-10 h-10 text-gray-600" />
-                        </div>
-                      )}
-                    </div>
-                    <h3 className="font-semibold truncate text-white">
-                      {album.title}
-                    </h3>
-                    <p className="text-sm text-gray-400">
-                      {album.release_date
-                        ? new Date(album.release_date).getFullYear()
-                        : "Unknown"}
-                    </p>
-                  </button>
-                );
-              })}
+        return (
+          albums.length > 0 && (
+            <div className="space-y-4">
+              <h2 className="text-2xl font-bold flex items-center gap-2">
+                <Disc className="w-6 h-6 text-primary" />
+                Albums
+              </h2>
+              <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4">
+                {albums.map((album: Album) => {
+                  const albumCover = album.image_url || album.images?.url;
+                  const isValid = isValidImageUrl(albumCover);
+
+                  return (
+                    <button
+                      key={album.id}
+                      type="button"
+                      className="bg-white/5 rounded-xl p-4 hover:bg-white/10 transition-colors group cursor-pointer w-full text-left"
+                      onClick={() =>
+                        navigate(`/album/${album.id}`, { state: { source: "spotify" } })
+                      }
+                    >
+                      <div className="aspect-square bg-black/40 rounded-lg mb-3 overflow-hidden">
+                        {isValid ? (
+                          <img
+                            src={albumCover}
+                            alt={album.title}
+                            className="w-full h-full object-cover group-hover:scale-105 transition-transform"
+                          />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center">
+                            <Disc className="w-10 h-10 text-gray-600" />
+                          </div>
+                        )}
+                      </div>
+                      <h3 className="font-semibold truncate text-white">{album.title}</h3>
+                      <p className="text-sm text-gray-400">
+                        {album.release_date
+                          ? new Date(album.release_date).getFullYear()
+                          : "Unknown"}
+                      </p>
+                    </button>
+                  );
+                })}
+              </div>
             </div>
-          </div>
+          )
         );
       })()}
 
       {/* Singles & EPs Section */}
       {(() => {
-        const singles = artist.albums?.filter(
-          (a: Album) => a.album_type === "single" || a.album_type === "compilation"
-        ) || [];
-        
-        return singles.length > 0 && (
-          <div className="space-y-4">
-            <h2 className="text-2xl font-bold flex items-center gap-2">
-              <Music className="w-6 h-6 text-primary" />
-              Singles & EPs
-            </h2>
-            <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
-              {singles.map((single: Album) => {
-                const singleCover = single.image_url || single.images?.url;
-                const isValid = isValidImageUrl(singleCover);
+        const singles =
+          artist.albums?.filter(
+            (a: Album) => a.album_type === "single" || a.album_type === "compilation"
+          ) || [];
 
-                return (
-                  <button
-                    key={single.id}
-                    type="button"
-                    className="bg-white/5 rounded-xl p-3 hover:bg-white/10 transition-colors group cursor-pointer w-full text-left"
-                    onClick={() => navigate(`/album/${single.id}`, { state: { source: "spotify" } })}
-                  >
-                    <div className="aspect-square bg-black/40 rounded-lg mb-2 overflow-hidden">
-                      {isValid ? (
-                        <img
-                          src={singleCover}
-                          alt={single.title}
-                          className="w-full h-full object-cover group-hover:scale-105 transition-transform"
-                        />
-                      ) : (
-                        <div className="w-full h-full flex items-center justify-center">
-                          <Music className="w-8 h-8 text-gray-600" />
-                        </div>
-                      )}
-                    </div>
-                    <h3 className="font-medium text-sm truncate text-white">
-                      {single.title}
-                    </h3>
-                    <p className="text-xs text-gray-400">
-                      {single.release_date
-                        ? new Date(single.release_date).getFullYear()
-                        : ""}
-                    </p>
-                  </button>
-                );
-              })}
+        return (
+          singles.length > 0 && (
+            <div className="space-y-4">
+              <h2 className="text-2xl font-bold flex items-center gap-2">
+                <Music className="w-6 h-6 text-primary" />
+                Singles & EPs
+              </h2>
+              <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
+                {singles.map((single: Album) => {
+                  const singleCover = single.image_url || single.images?.url;
+                  const isValid = isValidImageUrl(singleCover);
+
+                  return (
+                    <button
+                      key={single.id}
+                      type="button"
+                      className="bg-white/5 rounded-xl p-3 hover:bg-white/10 transition-colors group cursor-pointer w-full text-left"
+                      onClick={() =>
+                        navigate(`/album/${single.id}`, { state: { source: "spotify" } })
+                      }
+                    >
+                      <div className="aspect-square bg-black/40 rounded-lg mb-2 overflow-hidden">
+                        {isValid ? (
+                          <img
+                            src={singleCover}
+                            alt={single.title}
+                            className="w-full h-full object-cover group-hover:scale-105 transition-transform"
+                          />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center">
+                            <Music className="w-8 h-8 text-gray-600" />
+                          </div>
+                        )}
+                      </div>
+                      <h3 className="font-medium text-sm truncate text-white">{single.title}</h3>
+                      <p className="text-xs text-gray-400">
+                        {single.release_date ? new Date(single.release_date).getFullYear() : ""}
+                      </p>
+                    </button>
+                  );
+                })}
+              </div>
             </div>
-          </div>
+          )
         );
       })()}
     </div>

@@ -63,7 +63,7 @@ export interface Album {
   images?: Record<string, string>;
   image_url?: string;
   artist_id?: string;
-  album_type?: 'album' | 'single' | 'compilation';
+  album_type?: "album" | "single" | "compilation";
   total_tracks?: number;
 }
 
@@ -83,13 +83,43 @@ export interface Artist {
 
 export interface Playlist {
   id: string;
-  title: string;
-  description?: string;
+  name: string; // Backend uses 'name', Spotify uses 'title' usually but we map it? No, backend playlist has 'name'.
+  // But wait, existing frontend uses 'title'.
+  // I should align them. Let's add 'name' as optional or use title.
+  // The backend Pydantic model uses 'name'.
+  // The existing frontend code uses 'title'.
+  title: string; // Used for Spotify/YouTube
+
+  description?: string; // Used for Spotify/YouTube
+  comment?: string; // Used for Local Backend
+
   image_url?: string;
   tracks_count?: number;
-  source: string;
+  source: string; // 'local', 'spotify', 'youtube'
   url?: string;
-  type?: string; // Add type
+  type?: string;
+
+  // Backend specific
+  public?: boolean;
+  owner_id?: string;
+  created_at?: string;
+  updated_at?: string;
+}
+
+export interface PlaylistCreateRequest {
+  name: string;
+  comment?: string;
+  public?: boolean;
+}
+
+export interface PlaylistUpdateRequest {
+  name?: string;
+  comment?: string;
+  public?: boolean;
+}
+
+export interface PlaylistTrackAddRequest {
+  track_ids: string[];
 }
 
 export interface LoginCredentials {
