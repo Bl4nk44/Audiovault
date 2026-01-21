@@ -1,6 +1,8 @@
 import { type StateCreator } from "zustand";
 import { type Track } from "../../types";
 
+export type VisualizerMode = "classic" | "wave" | "circle" | "particles" | "glow";
+
 export interface PlayerSlice {
   currentTrack: Track | null;
   isPlaying: boolean;
@@ -13,6 +15,8 @@ export interface PlayerSlice {
   nextTrack: () => void;
   prevTrack: () => void;
   addToQueue: (track: Track) => void;
+  visualizerMode: VisualizerMode;
+  setVisualizerMode: (mode: VisualizerMode) => void;
 }
 
 export const createPlayerSlice: StateCreator<PlayerSlice> = (set, get) => ({
@@ -53,4 +57,6 @@ export const createPlayerSlice: StateCreator<PlayerSlice> = (set, get) => ({
     }
   },
   addToQueue: (track) => set((state) => ({ queue: [...state.queue, track] })),
+  visualizerMode: "classic",
+  setVisualizerMode: (mode) => set({ visualizerMode: mode }),
 });

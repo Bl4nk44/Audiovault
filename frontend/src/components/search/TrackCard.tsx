@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { Download, ListPlus, MoreHorizontal, Music, Play, Plus } from "lucide-react";
+import { AudioLines, Download, ListPlus, MoreHorizontal, Music, Play, Plus } from "lucide-react";
 import { useState } from "react";
 import api from "../../services/api";
 import { useStore } from "../../store/useStore";
@@ -13,10 +13,18 @@ interface TrackCardProps {
 }
 
 export default function TrackCard({ track, queue }: Readonly<TrackCardProps>) {
-  const { playTrack } = useStore();
+  const { playTrack, currentTrack, isPlaying, togglePlay } = useStore();
   const [showPlaylistModal, setShowPlaylistModal] = useState(false);
 
+  const isCurrentTrack = currentTrack?.id === track.id || currentTrack?.id === track.spotify_id;
+  const isNowPlaying = isCurrentTrack && isPlaying;
+
   const handlePlay = () => {
+    if (isCurrentTrack) {
+      togglePlay();
+      return;
+    }
+
     playTrack(
       {
         id: track.id,
@@ -75,27 +83,49 @@ export default function TrackCard({ track, queue }: Readonly<TrackCardProps>) {
       <motion.div
         whileHover={{ scale: 1.02, backgroundColor: "rgba(255, 255, 255, 0.1)" }}
         onClick={handlePlay}
-        className="group relative flex items-center gap-4 p-3 rounded-xl bg-white/5 border border-white/5 hover:border-white/10 transition-all cursor-pointer overflow-hidden"
+        className={`group relative flex items-center gap-4 p-3 rounded-xl transition-all cursor-pointer overflow-hidden border ${
+          isCurrentTrack
+            ? "bg-white/10 border-primary/50 shadow-[0_0_15px_rgba(var(--primary-rgb),0.1)]"
+            : "bg-white/5 border-white/5 hover:border-white/10"
+        }`}
       >
         <div className="relative w-16 h-16 rounded-lg overflow-hidden shrink-0 shadow-lg group-hover:shadow-primary/20 transition-all">
           {track.cover || track.image_url ? (
             <img
               src={track.cover || track.image_url}
               alt={track.title}
-              className="w-full h-full object-cover"
+              className={`w-full h-full object-cover transition-opacity ${
+                isNowPlaying ? "opacity-40" : ""
+              }`}
             />
           ) : (
             <div className="w-full h-full bg-linear-to-br from-gray-800 to-gray-900 flex items-center justify-center">
-              <Music className="text-gray-600" />
+              <Music className={`${isCurrentTrack ? "text-primary" : "text-gray-600"}`} />
             </div>
           )}
-          <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-            <Play className="text-white fill-white" size={24} />
+
+          {/* Overlay Icon */}
+          <div
+            className={`absolute inset-0 flex items-center justify-center transition-opacity ${
+              isCurrentTrack ? "opacity-100" : "opacity-0 group-hover:opacity-100 bg-black/40"
+            }`}
+          >
+            {isNowPlaying ? (
+              <AudioLines className="text-primary animate-pulse" size={24} />
+            ) : isCurrentTrack ? (
+              <Play className="text-primary fill-primary" size={24} />
+            ) : (
+              <Play className="text-white fill-white" size={24} />
+            )}
           </div>
         </div>
 
         <div className="flex-1 min-w-0">
-          <h3 className="font-bold text-white truncate group-hover:text-primary transition-colors">
+          <h3
+            className={`font-bold truncate transition-colors ${
+              isCurrentTrack ? "text-primary" : "text-white group-hover:text-primary"
+            }`}
+          >
             {track.title}
           </h3>
           <p className="text-sm text-gray-400 truncate">{track.artist}</p>

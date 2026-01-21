@@ -1,237 +1,300 @@
-import { useRef, useEffect } from "react";
+import { useEffect, useRef } from "react";
+import type { VisualizerMode } from "../store/slices/playerSlice";
 import type { Track } from "../types";
 
 declare global {
   var webkitAudioContext: typeof AudioContext;
 }
 
-/**
- * Modern audio equalizer visualizer with smooth animated bars.
- * Bars react to different frequency bands (bass, mids, highs).
- * Uses CSS primary color from the current theme.
- */
+interface Particle {
+  x: number;
+  y: number;
+  vx: number;
+  vy: number;
+  size: number;
+  color: string;
+  life: number;
+}
+
 export function useAudioVisualizer(
   currentTrack: Track | null,
-  isPlaying: boolean
+  isPlaying: boolean,
+  audioRef: React.RefObject<HTMLAudioElement | null>,
+  mode: VisualizerMode = "classic"
 ) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const audioContextRef = useRef<AudioContext | null>(null);
   const analyserRef = useRef<AnalyserNode | null>(null);
   const sourceRef = useRef<MediaElementAudioSourceNode | null>(null);
   const animationFrameRef = useRef<number | undefined>(undefined);
+
+  // State refs for specific modes
   const barHeightsRef = useRef<number[]>([]);
+  const particlesRef = useRef<Particle[]>([]);
+  const rotationRef = useRef(0);
 
+  // Reusable arrays to avoid GC pressure
+  const dataArrayRef = useRef<Uint8Array | null>(null);
+  const timeDataRef = useRef<Uint8Array | null>(null);
+
+  // Initialize Audio Context (once)
   useEffect(() => {
-    if (!canvasRef.current) return;
+    if (!audioContextRef.current) {
+      const AudioContextClass = globalThis.AudioContext || globalThis.webkitAudioContext;
+      const ctx = new AudioContextClass();
+      const analyser = ctx.createAnalyser();
+      analyser.smoothingTimeConstant = 0.8;
+      analyser.fftSize = 512;
 
+      audioContextRef.current = ctx;
+      analyserRef.current = analyser;
+      console.log("Visualizer: AudioContext initialized.");
+    }
+
+    const connectAudio = () => {
+      const audio = audioRef.current;
+      if (!audio) return;
+
+      // Ensure crossOrigin is set
+      if (audio.crossOrigin !== "anonymous") {
+        audio.crossOrigin = "anonymous";
+      }
+
+      if (!sourceRef.current && audioContextRef.current && analyserRef.current) {
+        try {
+          const source = audioContextRef.current.createMediaElementSource(audio);
+          source.connect(analyserRef.current);
+          analyserRef.current.connect(audioContextRef.current.destination);
+          sourceRef.current = source;
+          console.log("Visualizer: Source connected to element.");
+        } catch (e: any) {
+          if (!e.message?.includes("connected")) {
+            console.warn("Visualizer: Connection issue:", e);
+          }
+        }
+      }
+    };
+
+    connectAudio();
+
+    if (isPlaying && audioContextRef.current?.state === "suspended") {
+      audioContextRef.current.resume().catch(console.error);
+    }
+
+    const resumeContext = () => {
+      if (audioContextRef.current?.state === "suspended") {
+        audioContextRef.current.resume();
+      }
+    };
+
+    document.addEventListener("click", resumeContext);
+    document.addEventListener("touchstart", resumeContext);
+
+    return () => {
+      document.removeEventListener("click", resumeContext);
+      document.removeEventListener("touchstart", resumeContext);
+    };
+  }, [currentTrack, isPlaying, audioRef]);
+
+  // Effect to handle mode changes and drawing loop
+  useEffect(() => {
+    if (!canvasRef.current || !analyserRef.current) return;
     const canvas = canvasRef.current;
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
 
-    // Initialize Audio Context
-    if (!audioContextRef.current) {
-      const AudioContextClass =
-        globalThis.AudioContext || globalThis.webkitAudioContext;
-      audioContextRef.current = new AudioContextClass();
-      analyserRef.current = audioContextRef.current.createAnalyser();
-      analyserRef.current.fftSize = 128; // 64 frequency bins
-      analyserRef.current.smoothingTimeConstant = 0.75;
+    // Adjust FFT size based on mode
+    if (mode === "wave") {
+      analyserRef.current.fftSize = 2048;
+    } else {
+      analyserRef.current.fftSize = 512;
     }
 
-    // Connect to audio element
-    const audio = document.querySelector("audio");
-    if (audio && !sourceRef.current && audioContextRef.current && analyserRef.current) {
-      try {
-        sourceRef.current =
-          audioContextRef.current.createMediaElementSource(audio);
-        sourceRef.current.connect(analyserRef.current);
-        analyserRef.current.connect(audioContextRef.current.destination);
-      } catch (e) {
-        console.error("Audio source already connected", e);
-      }
-    }
+    const bufferLength = analyserRef.current.frequencyBinCount;
+    dataArrayRef.current = new Uint8Array(bufferLength);
+    timeDataRef.current = new Uint8Array(bufferLength);
 
-    // Get primary color from CSS variable and build proper HSLA colors
     const getPrimaryColors = () => {
       const root = document.documentElement;
       const primaryHsl = getComputedStyle(root).getPropertyValue("--primary").trim();
-      
-      // CSS variable format might be "190 90% 50%" or "190, 90%, 50%"
-      // We need to convert to proper hsla() format
       const hslValues = primaryHsl.replaceAll(",", " ").split(/\s+/).filter(Boolean);
-      
-      if (hslValues.length >= 3) {
-        const [h, s, l] = hslValues;
-        return {
-          solid: `hsl(${h}, ${s}, ${l})`,
-          bright: `hsla(${h}, ${s}, ${l}, 1)`,
-          medium: `hsla(${h}, ${s}, ${l}, 0.7)`,
-          dim: `hsla(${h}, ${s}, ${l}, 0.3)`,
-          glow: `hsla(${h}, ${s}, ${l}, 0.5)`,
-        };
-      }
-      
-      // Fallback to orange if parsing fails
+      let [h, s, l] = ["250", "100%", "50%"];
+      if (hslValues.length >= 3) [h, s, l] = hslValues;
       return {
-        solid: "hsl(25, 95%, 53%)",
-        bright: "hsla(25, 95%, 53%, 1)",
-        medium: "hsla(25, 95%, 53%, 0.7)",
-        dim: "hsla(25, 95%, 53%, 0.3)",
-        glow: "hsla(25, 95%, 53%, 0.5)",
+        base: `hsl(${h}, ${s}, ${l})`,
+        alpha: (a: number) => `hsla(${h}, ${s}, ${l}, ${a})`,
       };
     };
 
-    const NUM_BARS = 48;
-    const BAR_GAP = 4;
-    
-    // Initialize bar heights if not set
-    if (barHeightsRef.current.length !== NUM_BARS) {
-      barHeightsRef.current = new Array(NUM_BARS).fill(0);
-    }
-
-    const draw = () => {
-      if (!ctx || !analyserRef.current) return;
-
-      const bufferLength = analyserRef.current.frequencyBinCount;
-      const dataArray = new Uint8Array(bufferLength);
-      analyserRef.current.getByteFrequencyData(dataArray);
-
-      // Clear with transparency for subtle trails
-      ctx.fillStyle = "rgba(0, 0, 0, 0.15)";
+    const drawClassic = (data: Uint8Array) => {
+      ctx.fillStyle = "rgba(0, 0, 0, 0.2)";
       ctx.fillRect(0, 0, canvas.width, canvas.height);
-
       const colors = getPrimaryColors();
-      const barWidth = (canvas.width - (NUM_BARS - 1) * BAR_GAP) / NUM_BARS;
-      const maxBarHeight = canvas.height * 0.7;
+      const numBars = 64;
+      const barWidth = (canvas.width / numBars) * 0.8;
+      const gap = (canvas.width / numBars) * 0.2;
 
-      // Distribute frequency data across bars (more bass, less highs)
-      for (let i = 0; i < NUM_BARS; i++) {
-        // Map bar index to frequency bin with logarithmic scaling
-        const freqIndex = Math.floor(Math.pow(i / NUM_BARS, 1.5) * bufferLength);
-        const value = dataArray[Math.min(freqIndex, bufferLength - 1)] / 255;
-        
-        // Target height with some amplification for visual impact
-        const targetHeight = value * maxBarHeight * (1 + (1 - i / NUM_BARS) * 0.5);
-        
-        // Smooth interpolation for falling effect
-        const currentHeight = barHeightsRef.current[i];
-        const newHeight = targetHeight > currentHeight 
-          ? targetHeight // Rise quickly
-          : currentHeight * 0.92; // Fall smoothly
-        
-        barHeightsRef.current[i] = newHeight;
-
-        const x = i * (barWidth + BAR_GAP);
-        const barHeight = Math.max(newHeight, 3); // Minimum height
-        const y = (canvas.height - barHeight) / 2; // Center vertically
-
-        // Create gradient for each bar
-        const gradient = ctx.createLinearGradient(x, y, x, y + barHeight);
-        const intensity = barHeight / maxBarHeight;
-        
-        if (intensity > 0.7) {
-          // High intensity - brightest
-          gradient.addColorStop(0, colors.bright);
-          gradient.addColorStop(0.5, colors.solid);
-          gradient.addColorStop(1, colors.medium);
-        } else if (intensity > 0.3) {
-          // Medium intensity
-          gradient.addColorStop(0, colors.solid);
-          gradient.addColorStop(0.5, colors.medium);
-          gradient.addColorStop(1, colors.dim);
-        } else {
-          // Low intensity
-          gradient.addColorStop(0, colors.medium);
-          gradient.addColorStop(1, colors.dim);
-        }
-
-        // Draw glow effect for high bars
-        if (intensity > 0.5) {
-          ctx.save();
-          ctx.shadowColor = colors.glow;
-          ctx.shadowBlur = 15 * intensity;
-          ctx.fillStyle = gradient;
-          ctx.beginPath();
-          ctx.roundRect(x, y, barWidth, barHeight, barWidth / 3);
-          ctx.fill();
-          ctx.restore();
-        }
-
-        // Draw bar with rounded corners
+      for (let i = 0; i < numBars; i++) {
+        const index = Math.floor((i / numBars) * (data.length * 0.7));
+        const percent = data[index] / 255;
+        const height = percent * canvas.height * 0.6;
+        if (!barHeightsRef.current[i]) barHeightsRef.current[i] = 0;
+        barHeightsRef.current[i] += (height - barHeightsRef.current[i]) * 0.2;
+        const x = i * (barWidth + gap) + gap / 2;
+        const y = canvas.height - barHeightsRef.current[i];
+        const gradient = ctx.createLinearGradient(x, y, x, canvas.height);
+        gradient.addColorStop(0, colors.alpha(1));
+        gradient.addColorStop(1, colors.alpha(0));
         ctx.fillStyle = gradient;
-        ctx.beginPath();
-        ctx.roundRect(x, y, barWidth, barHeight, barWidth / 3);
-        ctx.fill();
-
-        // Add highlight on top of bar
-        if (barHeight > 10) {
-          ctx.fillStyle = `rgba(255, 255, 255, ${0.1 + intensity * 0.2})`;
-          ctx.beginPath();
-          ctx.roundRect(x + 1, y + 1, barWidth - 2, barHeight * 0.3, barWidth / 4);
-          ctx.fill();
-        }
+        ctx.fillRect(x, y, barWidth, barHeightsRef.current[i]);
+        ctx.fillStyle = colors.alpha(0.5);
+        ctx.fillRect(x, y - 4, barWidth, 2);
       }
+    };
 
-      // Add mirror reflection at bottom (subtle)
+    const drawWave = (data: Uint8Array) => {
+      analyserRef.current!.getByteTimeDomainData(data as any);
+      ctx.fillStyle = "rgba(0, 0, 0, 0.2)";
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      const colors = getPrimaryColors();
+      ctx.lineWidth = 3;
+      ctx.strokeStyle = colors.alpha(0.8);
+      ctx.beginPath();
+      const sliceWidth = canvas.width / data.length;
+      let x = 0;
+      for (let i = 0; i < data.length; i++) {
+        const v = data[i] / 128;
+        const y = (v * canvas.height) / 2;
+        if (i === 0) ctx.moveTo(x, y);
+        else ctx.lineTo(x, y);
+        x += sliceWidth;
+      }
+      ctx.stroke();
+    };
+
+    const drawCircle = (data: Uint8Array) => {
+      ctx.fillStyle = "rgba(0, 0, 0, 0.2)";
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      const colors = getPrimaryColors();
+      const centerX = canvas.width / 2;
+      const centerY = canvas.height / 2;
+      const radius = Math.min(centerX, centerY) * 0.4;
+      const numBars = 60;
+      rotationRef.current += 0.005;
       ctx.save();
-      ctx.globalAlpha = 0.15;
-      ctx.scale(1, -0.3);
-      ctx.translate(0, -canvas.height * 4);
-      
-      for (let i = 0; i < NUM_BARS; i++) {
-        const barHeight = barHeightsRef.current[i];
-        if (barHeight < 5) continue;
-        
-        const x = i * (barWidth + BAR_GAP);
-        const y = (canvas.height - barHeight) / 2;
-        
-        ctx.fillStyle = colors.dim;
-        ctx.beginPath();
-        ctx.roundRect(x, y, barWidth, barHeight, barWidth / 3);
-        ctx.fill();
+      ctx.translate(centerX, centerY);
+      ctx.rotate(rotationRef.current);
+      const step = (Math.PI * 2) / numBars;
+      for (let i = 0; i < numBars; i++) {
+        const index = Math.floor((i / numBars) * (data.length * 0.6));
+        const barHeight = (data[index] / 255) * (Math.min(centerX, centerY) * 0.5);
+        if (!barHeightsRef.current[i]) barHeightsRef.current[i] = 0;
+        barHeightsRef.current[i] += (barHeight - barHeightsRef.current[i]) * 0.2;
+        ctx.rotate(step);
+        ctx.fillStyle = colors.alpha(0.8);
+        ctx.fillRect(0, radius, 4, barHeightsRef.current[i]);
       }
       ctx.restore();
+    };
 
-      animationFrameRef.current = requestAnimationFrame(draw);
+    const drawParticles = (data: Uint8Array) => {
+      ctx.fillStyle = "rgba(0, 0, 0, 0.2)";
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      const colors = getPrimaryColors();
+      let bass = 0;
+      for (let i = 0; i < 10; i++) bass += data[i];
+      bass /= 10 * 255;
+      if (bass > 0.6 && particlesRef.current.length < 100) {
+        for (let k = 0; k < 5; k++) {
+          const ang = Math.random() * Math.PI * 2;
+          particlesRef.current.push({
+            x: canvas.width / 2,
+            y: canvas.height / 2,
+            vx: Math.cos(ang) * (Math.random() * 5 + 2),
+            vy: Math.sin(ang) * (Math.random() * 5 + 2),
+            size: Math.random() * 4 + 2,
+            color: colors.alpha(Math.random()),
+            life: 1,
+          });
+        }
+      }
+      for (const p of particlesRef.current) {
+        p.x += p.vx;
+        p.y += p.vy;
+        p.life -= 0.02;
+        p.size *= 0.95;
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+        ctx.fillStyle = p.color;
+        ctx.fill();
+      }
+      particlesRef.current = particlesRef.current.filter((p) => p.life > 0);
+    };
+
+    const drawGlow = (data: Uint8Array) => {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      let sum = 0;
+      for (let i = 0; i < data.length; i++) sum += data[i];
+      const intensity = sum / data.length / 255;
+      const colors = getPrimaryColors();
+      const grad = ctx.createRadialGradient(
+        canvas.width / 2,
+        canvas.height / 2,
+        0,
+        canvas.width / 2,
+        canvas.height / 2,
+        canvas.width
+      );
+      grad.addColorStop(0, colors.alpha(intensity * 0.8));
+      grad.addColorStop(1, "rgba(0,0,0,0)");
+      ctx.fillStyle = grad;
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+    };
+
+    let debugCounter = 0;
+
+    const render = () => {
+      if (!analyserRef.current || !dataArrayRef.current) return;
+      const data = dataArrayRef.current;
+      analyserRef.current.getByteFrequencyData(data as any);
+
+      // Debug logging every 100 frames
+      if (debugCounter++ % 100 === 0) {
+        const max = Math.max(...data);
+        if (max === 0) console.log("Visualizer: Silence detected (all zeros)");
+        else console.log("Visualizer: Signal detected, max amp:", max);
+      }
+
+      switch (mode) {
+        case "wave":
+          drawWave(timeDataRef.current!);
+          break;
+        case "circle":
+          drawCircle(data);
+          break;
+        case "particles":
+          drawParticles(data);
+          break;
+        case "glow":
+          drawGlow(data);
+          break;
+        default:
+          drawClassic(data);
+      }
+
+      animationFrameRef.current = requestAnimationFrame(render);
     };
 
     if (isPlaying && currentTrack) {
-      if (audioContextRef.current?.state === "suspended") {
-        audioContextRef.current.resume();
-      }
-      draw();
+      render();
     } else {
-      if (animationFrameRef.current) {
-        cancelAnimationFrame(animationFrameRef.current);
-      }
-      // Animate bars down when paused
-      const fadeOut = () => {
-        let stillAnimating = false;
-        for (let i = 0; i < barHeightsRef.current.length; i++) {
-          if (barHeightsRef.current[i] > 0.5) {
-            barHeightsRef.current[i] *= 0.9;
-            stillAnimating = true;
-          } else {
-            barHeightsRef.current[i] = 0;
-          }
-        }
-        
-        ctx.fillStyle = "rgba(0, 0, 0, 0.2)";
-        ctx.fillRect(0, 0, canvas.width, canvas.height);
-        
-        if (stillAnimating) {
-          animationFrameRef.current = requestAnimationFrame(fadeOut);
-        }
-      };
-      fadeOut();
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
     }
 
     return () => {
-      if (animationFrameRef.current) {
-        cancelAnimationFrame(animationFrameRef.current);
-      }
+      if (animationFrameRef.current) cancelAnimationFrame(animationFrameRef.current);
     };
-  }, [currentTrack, isPlaying]);
+  }, [currentTrack, isPlaying, mode]);
 
   return canvasRef;
 }

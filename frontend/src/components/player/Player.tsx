@@ -1,15 +1,15 @@
-import { useRef, useEffect, useState } from "react";
-import { createPortal } from "react-dom";
-import { useStore } from "../../store/useStore";
-import { Maximize2, X } from "lucide-react";
 import { motion } from "framer-motion";
-import { cn } from "../../lib/utils";
+import { Maximize2, X } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { useAudioVisualizer } from "../../hooks/useAudioVisualizer";
-import { TrackInfo } from "./TrackInfo";
+import { cn } from "../../lib/utils";
+import { useStore } from "../../store/useStore";
 import { PlayerControls } from "./PlayerControls";
 import { ProgressBar } from "./ProgressBar";
-import { VolumeControl } from "./VolumeControl";
+import { TrackInfo } from "./TrackInfo";
 import { VisualizerToggle } from "./VisualizerToggle";
+import { VolumeControl } from "./VolumeControl";
 
 export default function Player() {
   const {
@@ -20,6 +20,7 @@ export default function Player() {
     setVolume,
     nextTrack,
     prevTrack,
+    visualizerMode,
   } = useStore();
 
   const audioRef = useRef<HTMLAudioElement>(null);
@@ -30,7 +31,12 @@ export default function Player() {
   const hasRecordedRef = useRef(false);
 
   // Audio Visualizer Hook
-  const canvasRef = useAudioVisualizer(currentTrack, isPlaying && showVisualizer);
+  const canvasRef = useAudioVisualizer(
+    currentTrack,
+    isPlaying && showVisualizer,
+    audioRef,
+    visualizerMode
+  );
 
   // Reset recording flag on track change
   useEffect(() => {
@@ -122,10 +128,7 @@ export default function Player() {
   const baseUrl = apiUrl.replace(/\/api\/v1\/?$/, "");
 
   const streamUrl = currentTrack.filename
-    ? `${baseUrl}/stream/${currentTrack.filename
-        .split("/")
-        .map(encodeURIComponent)
-        .join("/")}`
+    ? `${baseUrl}/stream/${currentTrack.filename.split("/").map(encodeURIComponent).join("/")}`
     : `${apiUrl}/stream/${currentTrack.id}.mp3`;
 
   return (
@@ -185,16 +188,10 @@ export default function Player() {
         <div
           className={cn(
             "flex items-center justify-end gap-2 md:gap-4",
-            isExpanded
-              ? "absolute top-6 right-6 md:top-8 md:right-8"
-              : "w-auto md:w-1/3"
+            isExpanded ? "absolute top-6 right-6 md:top-8 md:right-8" : "w-auto md:w-1/3"
           )}
         >
-          <VolumeControl
-            volume={volume}
-            setVolume={setVolume}
-            isExpanded={isExpanded}
-          />
+          <VolumeControl volume={volume} setVolume={setVolume} isExpanded={isExpanded} />
 
           <VisualizerToggle
             showVisualizer={showVisualizer}
@@ -215,9 +212,7 @@ export default function Player() {
       <audio
         ref={audioRef}
         src={streamUrl}
-        crossOrigin={
-          /iPhone|iPad|iPod/i.test(navigator.userAgent) ? undefined : "anonymous"
-        }
+        crossOrigin="anonymous"
         onTimeUpdate={handleTimeUpdate}
         onEnded={nextTrack}
         preload="auto"

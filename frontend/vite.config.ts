@@ -1,9 +1,9 @@
 /// <reference types="vitest" />
-import { defineConfig } from "vitest/config";
-import react from "@vitejs/plugin-react";
 import tailwindcss from "@tailwindcss/vite";
-import fs from "fs";
-import path from "path";
+import react from "@vitejs/plugin-react";
+import fs from "node:fs";
+import path from "node:path";
+import { defineConfig } from "vitest/config";
 
 // Read version from VERSION file
 // In Docker: VERSION is copied to same directory
@@ -33,6 +33,20 @@ export default defineConfig({
     __APP_VERSION__: JSON.stringify(version),
   },
   plugins: [react(), tailwindcss()],
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          "vendor-react": ["react", "react-dom", "react-router-dom"],
+          "vendor-framer": ["framer-motion"],
+          "vendor-icons": ["lucide-react"],
+          "vendor-utils": ["clsx", "tailwind-merge", "zustand", "axios"],
+          "vendor-query": ["@tanstack/react-query"],
+        },
+      },
+    },
+    chunkSizeWarningLimit: 600,
+  },
   server: {
     host: true,
     proxy: {
