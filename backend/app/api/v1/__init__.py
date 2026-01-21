@@ -7,6 +7,7 @@ from app.api.v1 import (
     deezer,
     downloads,
     history,
+    playlists,
     settings,
     soundcloud,
     spotify,
@@ -24,6 +25,7 @@ api_router.include_router(spotify.router, prefix="/spotify", tags=["spotify"])
 api_router.include_router(downloads.router, prefix="/downloads", tags=["downloads"])
 api_router.include_router(settings.router, prefix="/settings", tags=["settings"])
 api_router.include_router(watchlist.router, prefix="/watchlist", tags=["watchlist"])
+api_router.include_router(playlists.router, prefix="/playlists", tags=["playlists"])
 api_router.include_router(history.router, prefix="/history", tags=["history"])
 api_router.include_router(youtube.router, prefix="/youtube", tags=["youtube"])
 api_router.include_router(dashboard.router, prefix="/dashboard", tags=["dashboard"])
