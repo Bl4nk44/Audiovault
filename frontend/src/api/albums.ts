@@ -1,4 +1,5 @@
 import api from "../services/api";
+import type { Track } from "../types";
 
 export interface AlbumDetails {
   id: string;
@@ -10,14 +11,7 @@ export interface AlbumDetails {
   total_tracks: number;
   album_type: "album" | "single" | "compilation";
   label: string | null;
-  tracks: Array<{
-    id: string;
-    title: string;
-    artist: string;
-    duration_ms: number;
-    image_url: string | null;
-    source: string;
-  }>;
+  tracks: Track[];
   source: string;
   type: string;
 }
