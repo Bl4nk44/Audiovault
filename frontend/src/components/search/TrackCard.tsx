@@ -1,12 +1,11 @@
-import { Play, Download, Plus, MoreHorizontal, Music } from "lucide-react";
-import api from "../../services/api";
-import { notify as toast } from "../../utils/notify";
 import { motion } from "framer-motion";
-import { type Track } from "../../types"; // Import global Track
-
+import { Download, ListPlus, MoreHorizontal, Music, Play, Plus } from "lucide-react";
+import { useState } from "react";
+import api from "../../services/api";
 import { useStore } from "../../store/useStore";
-
-// Local interface removed
+import { type Track } from "../../types"; // Import global Track
+import { notify as toast } from "../../utils/notify";
+import AddToPlaylistModal from "../AddToPlaylistModal";
 
 interface TrackCardProps {
   track: Track;
@@ -15,6 +14,7 @@ interface TrackCardProps {
 
 export default function TrackCard({ track, queue }: Readonly<TrackCardProps>) {
   const { playTrack } = useStore();
+  const [showPlaylistModal, setShowPlaylistModal] = useState(false);
 
   const handlePlay = () => {
     playTrack(
@@ -59,6 +59,11 @@ export default function TrackCard({ track, queue }: Readonly<TrackCardProps>) {
     }
   };
 
+  const handleOpenPlaylistModal = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setShowPlaylistModal(true);
+  };
+
   const formatDuration = (ms: number) => {
     const minutes = Math.floor(ms / 60000);
     const seconds = ((ms % 60000) / 1000).toFixed(0);
@@ -66,70 +71,88 @@ export default function TrackCard({ track, queue }: Readonly<TrackCardProps>) {
   };
 
   return (
-    <motion.div
-      whileHover={{ scale: 1.02, backgroundColor: "rgba(255, 255, 255, 0.1)" }}
-      onClick={handlePlay}
-      className="group relative flex items-center gap-4 p-3 rounded-xl bg-white/5 border border-white/5 hover:border-white/10 transition-all cursor-pointer overflow-hidden"
-    >
-      <div className="relative w-16 h-16 rounded-lg overflow-hidden shrink-0 shadow-lg group-hover:shadow-primary/20 transition-all">
-        {track.cover || track.image_url ? (
-          <img
-            src={track.cover || track.image_url}
-            alt={track.title}
-            className="w-full h-full object-cover"
-          />
-        ) : (
-          <div className="w-full h-full bg-linear-to-br from-gray-800 to-gray-900 flex items-center justify-center">
-            <Music className="text-gray-600" />
+    <>
+      <motion.div
+        whileHover={{ scale: 1.02, backgroundColor: "rgba(255, 255, 255, 0.1)" }}
+        onClick={handlePlay}
+        className="group relative flex items-center gap-4 p-3 rounded-xl bg-white/5 border border-white/5 hover:border-white/10 transition-all cursor-pointer overflow-hidden"
+      >
+        <div className="relative w-16 h-16 rounded-lg overflow-hidden shrink-0 shadow-lg group-hover:shadow-primary/20 transition-all">
+          {track.cover || track.image_url ? (
+            <img
+              src={track.cover || track.image_url}
+              alt={track.title}
+              className="w-full h-full object-cover"
+            />
+          ) : (
+            <div className="w-full h-full bg-linear-to-br from-gray-800 to-gray-900 flex items-center justify-center">
+              <Music className="text-gray-600" />
+            </div>
+          )}
+          <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+            <Play className="text-white fill-white" size={24} />
           </div>
-        )}
-        <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-          <Play className="text-white fill-white" size={24} />
         </div>
-      </div>
 
-      <div className="flex-1 min-w-0">
-        <h3 className="font-bold text-white truncate group-hover:text-primary transition-colors">
-          {track.title}
-        </h3>
-        <p className="text-sm text-gray-400 truncate">{track.artist}</p>
-      </div>
-
-      <div className="flex items-center gap-4 mr-2">
-        <span className="text-xs text-gray-500 font-medium hidden sm:block">
-          {formatDuration(track.duration_ms || 0)}
-        </span>
-
-        <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity translate-x-4 group-hover:translate-x-0">
-          <motion.button
-            whileHover={{ scale: 1.1 }}
-            whileTap={{ scale: 0.9 }}
-            onClick={handleAddToWatchlist}
-            className="p-2 text-gray-400 hover:text-white hover:bg-white/10 rounded-full transition-colors"
-            title="Add to Library"
-          >
-            <Plus size={18} />
-          </motion.button>
-
-          <motion.button
-            whileHover={{ scale: 1.1 }}
-            whileTap={{ scale: 0.9 }}
-            onClick={handleDownload}
-            className="p-2 text-gray-400 hover:text-primary hover:bg-primary/10 rounded-full transition-colors"
-            title="Download"
-          >
-            <Download size={18} />
-          </motion.button>
-
-          <motion.button
-            whileHover={{ scale: 1.1 }}
-            whileTap={{ scale: 0.9 }}
-            className="p-2 text-gray-400 hover:text-white hover:bg-white/10 rounded-full transition-colors"
-          >
-            <MoreHorizontal size={18} />
-          </motion.button>
+        <div className="flex-1 min-w-0">
+          <h3 className="font-bold text-white truncate group-hover:text-primary transition-colors">
+            {track.title}
+          </h3>
+          <p className="text-sm text-gray-400 truncate">{track.artist}</p>
         </div>
-      </div>
-    </motion.div>
+
+        <div className="flex items-center gap-4 mr-2">
+          <span className="text-xs text-gray-500 font-medium hidden sm:block">
+            {formatDuration(track.duration_ms || 0)}
+          </span>
+
+          <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity translate-x-4 group-hover:translate-x-0">
+            <motion.button
+              whileHover={{ scale: 1.1 }}
+              whileTap={{ scale: 0.9 }}
+              onClick={handleAddToWatchlist}
+              className="p-2 text-gray-400 hover:text-white hover:bg-white/10 rounded-full transition-colors"
+              title="Add to Watchlist"
+            >
+              <Plus size={18} />
+            </motion.button>
+
+            <motion.button
+              whileHover={{ scale: 1.1 }}
+              whileTap={{ scale: 0.9 }}
+              onClick={handleOpenPlaylistModal}
+              className="p-2 text-gray-400 hover:text-white hover:bg-white/10 rounded-full transition-colors"
+              title="Add to Playlist"
+            >
+              <ListPlus size={18} />
+            </motion.button>
+
+            <motion.button
+              whileHover={{ scale: 1.1 }}
+              whileTap={{ scale: 0.9 }}
+              onClick={handleDownload}
+              className="p-2 text-gray-400 hover:text-primary hover:bg-primary/10 rounded-full transition-colors"
+              title="Download"
+            >
+              <Download size={18} />
+            </motion.button>
+
+            <motion.button
+              whileHover={{ scale: 1.1 }}
+              whileTap={{ scale: 0.9 }}
+              className="p-2 text-gray-400 hover:text-white hover:bg-white/10 rounded-full transition-colors"
+            >
+              <MoreHorizontal size={18} />
+            </motion.button>
+          </div>
+        </div>
+      </motion.div>
+
+      <AddToPlaylistModal
+        isOpen={showPlaylistModal}
+        onClose={() => setShowPlaylistModal(false)}
+        trackIds={[track.id || track.spotify_id || track.youtube_id || ""]} // Ensure we pass a valid ID
+      />
+    </>
   );
 }

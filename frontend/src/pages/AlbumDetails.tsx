@@ -1,20 +1,14 @@
 import { useQuery } from "@tanstack/react-query";
-import { useParams, useNavigate, useLocation } from "react-router-dom";
 import { motion } from "framer-motion";
-import {
-  ArrowLeft,
-  Disc,
-  Loader2,
-  Download,
-  Play,
-  Clock,
-  Calendar,
-} from "lucide-react";
+import { ArrowLeft, Calendar, Clock, Disc, Download, ListPlus, Loader2, Play } from "lucide-react";
+import { useState } from "react";
+import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { albumsApi } from "../api/albums";
+import AddToPlaylistModal from "../components/AddToPlaylistModal";
+import TrackCard from "../components/search/TrackCard";
 import Button from "../components/ui/Button";
 import { useStore } from "../store/useStore";
 import { notify as toast } from "../utils/notify";
-import TrackCard from "../components/search/TrackCard";
 import { isValidImageUrl } from "../utils/validation";
 
 export default function AlbumDetails() {
@@ -24,6 +18,7 @@ export default function AlbumDetails() {
   const source = location.state?.source || "spotify";
 
   const { addToQueue } = useStore();
+  const [showPlaylistModal, setShowPlaylistModal] = useState(false);
 
   const {
     data: album,
@@ -72,14 +67,9 @@ export default function AlbumDetails() {
   }
 
   const albumCover = isValidImageUrl(album.image_url) ? album.image_url : null;
-  const releaseYear = album.release_date
-    ? new Date(album.release_date).getFullYear()
-    : null;
+  const releaseYear = album.release_date ? new Date(album.release_date).getFullYear() : null;
 
-  const totalDuration = album.tracks?.reduce(
-    (acc, track) => acc + (track.duration_ms || 0),
-    0
-  );
+  const totalDuration = album.tracks?.reduce((acc, track) => acc + (track.duration_ms || 0), 0);
   const formatDuration = (ms: number) => {
     const minutes = Math.floor(ms / 60000);
     return `${minutes} min`;
@@ -96,11 +86,7 @@ export default function AlbumDetails() {
           className="w-full md:w-64 lg:w-80 aspect-square rounded-2xl overflow-hidden shadow-2xl shrink-0"
         >
           {albumCover ? (
-            <img
-              src={albumCover}
-              alt={album.title}
-              className="w-full h-full object-cover"
-            />
+            <img src={albumCover} alt={album.title} className="w-full h-full object-cover" />
           ) : (
             <div className="w-full h-full bg-gray-800 flex items-center justify-center">
               <Disc className="w-24 h-24 text-gray-600" />
@@ -162,18 +148,29 @@ export default function AlbumDetails() {
           </div>
 
           <div className="flex items-center gap-3 pt-4">
-            <Button
-              variant="primary"
-              size="lg"
-              onClick={handleDownloadAll}
-              className="gap-2"
-            >
+            <Button variant="primary" size="lg" onClick={handleDownloadAll} className="gap-2">
               <Download className="w-5 h-5" />
               Download Album
+            </Button>
+
+            <Button
+              variant="secondary"
+              size="lg"
+              onClick={() => setShowPlaylistModal(true)}
+              className="gap-2"
+            >
+              <ListPlus className="w-5 h-5" />
+              Add to Playlist
             </Button>
           </div>
         </div>
       </div>
+
+      <AddToPlaylistModal
+        isOpen={showPlaylistModal}
+        onClose={() => setShowPlaylistModal(false)}
+        trackIds={album.tracks?.map((t) => t.id || t.spotify_id || "").filter(Boolean) || []}
+      />
 
       {/* Tracks Section */}
       {album.tracks && album.tracks.length > 0 && (
