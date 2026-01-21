@@ -2,7 +2,7 @@ import re
 
 
 def sanitize_filename(name: str, replacement: str = "_") -> str:
-    """
+    r"""
     Sanitize filename to be safe on Windows, Linux and macOS.
     Removes or replaces characters that are illegal on these file systems.
 

@@ -18,5 +18,8 @@ COPY frontend/ .
 # Expose port
 EXPOSE 5173
 
+# Switch to non-root user
+USER node
+
 # Command for Dev
 CMD ["npm", "run", "dev", "--", "--host"]

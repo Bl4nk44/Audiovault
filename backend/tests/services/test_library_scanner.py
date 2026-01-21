@@ -9,6 +9,7 @@ Covers:
 import os
 import tempfile
 import uuid
+import aiofiles
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -25,16 +26,17 @@ from sqlalchemy.ext.asyncio import AsyncSession
 async def test_parse_audio_metadata_returns_duration():
     """Test that _parse_audio_metadata extracts duration_ms from files."""
     # Create a mock mutagen file with duration
-    with patch("mutagen.File") as mock_mutagen:
+    with patch("app.services.library_scanner.MutagenFile") as mock_mutagen:
         mock_file = MagicMock()
         mock_file.info.length = 180.5  # 180.5 seconds
         mock_mutagen.return_value = mock_file
 
-        with patch("mutagen.easyid3.EasyID3") as mock_easyid3:
+        with patch("app.services.library_scanner.EasyID3") as mock_easyid3:
             mock_easyid3.return_value = {}
 
-            title, artist, album, genre, duration_ms = library_scanner_service._parse_audio_metadata(
-                "/fake/path/song.mp3", "song.mp3"
+            # title, artist, album, genre, duration_ms
+            title, _, _, _, duration_ms = library_scanner_service._parse_audio_metadata_sync(
+                "/fake/path/song.mp3"
             )
 
             # Duration should be extracted
@@ -45,14 +47,15 @@ async def test_parse_audio_metadata_returns_duration():
 @pytest.mark.asyncio
 async def test_parse_audio_metadata_returns_zero_on_error():
     """Test that duration_ms is 0 when file cannot be parsed."""
-    with patch("mutagen.File") as mock_mutagen:
+    with patch("app.services.library_scanner.MutagenFile") as mock_mutagen:
         mock_mutagen.side_effect = Exception("Cannot parse")
 
-        with patch("mutagen.easyid3.EasyID3") as mock_easyid3:
+        with patch("app.services.library_scanner.EasyID3") as mock_easyid3:
             mock_easyid3.side_effect = Exception("Cannot parse")
 
-            title, artist, album, genre, duration_ms = library_scanner_service._parse_audio_metadata(
-                "/nonexistent/file.mp3", "file.mp3"
+            # title, artist, album, genre, duration_ms
+            _, artist, _, _, duration_ms = library_scanner_service._parse_audio_metadata_sync(
+                "/nonexistent/file.mp3"
             )
 
             assert duration_ms == 0
@@ -102,11 +105,11 @@ async def test_import_playlist_preserves_existing_on_zero_match(db_session: Asyn
     assert initial_count == 1, "Should have 1 track initially"
 
     # Create a temp m3u8 file that references files that DON'T exist in DB
-    with tempfile.NamedTemporaryFile(mode="w", suffix=".m3u8", delete=False) as f:
-        f.write("#EXTM3U\n")
-        f.write("/nonexistent/file1.mp3\n")
-        f.write("/nonexistent/file2.mp3\n")
-        m3u_path = f.name
+    m3u_path = os.path.join(tempfile.gettempdir(), f"{uuid.uuid4()}.m3u8")
+    async with aiofiles.open(m3u_path, mode="w") as f:
+        await f.write("#EXTM3U\n")
+        await f.write("/nonexistent/file1.mp3\n")
+        await f.write("/nonexistent/file2.mp3\n")
 
     try:
         # Mock base_dir to match our paths

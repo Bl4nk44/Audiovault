@@ -13,6 +13,7 @@ import os
 from urllib.parse import quote, urlparse
 from uuid import UUID
 
+import aiofiles
 import httpx
 from app.api.subsonic.auth import subsonic_auth
 from app.api.subsonic.utils import get_content_type, parse_cover_art_id
@@ -27,9 +28,16 @@ from fastapi import APIRouter, Depends, Query, Request
 from fastapi.responses import FileResponse, Response, StreamingResponse
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
+from mutagen import File as MutagenFile
 
 logger = logging.getLogger(__name__)
 
+# Constants
+MIME_JPEG = "image/jpeg"
+MIME_PNG = "image/png"
+MIME_GIF = "image/gif"
+MIME_WEBP = "image/webp"
+DESC_SONG_ID = "Song ID"
 
 def safe_content_disposition(filename: str, disposition: str = "inline") -> str:
     """
@@ -103,14 +111,16 @@ async def get_download_for_track(
     Returns:
         Download instance or None
     """
-    result = await db.execute(
+    stmt = (
         select(Download)
         .where(
             Download.track_id == track_id,
             Download.status == "completed",
+            Download.user_id == user_id
         )
         .order_by(Download.completed_at.desc())
     )
+    result = await db.execute(stmt)
     return result.scalars().first()
 
 
@@ -152,12 +162,12 @@ def parse_range_header(range_header: str | None, file_size: int) -> tuple[int, i
 @router.post("/stream.view")
 async def stream(
     request: Request,
-    id: str = Query(..., description="Song ID"),
-    maxBitRate: int = Query(None, description="Max bitrate in kbps"),
+    id: str = Query(..., description=DESC_SONG_ID),
+    max_bit_rate: int = Query(None, description="Max bitrate in kbps", alias="maxBitRate"),
     format: str = Query(None, description="Preferred format"),
-    timeOffset: int = Query(None, description="Offset in seconds"),
+    time_offset: int = Query(None, description="Offset in seconds", alias="timeOffset"),
     size: str = Query(None, description="Video size (ignored)"),
-    estimateContentLength: bool = Query(False, description="Estimate content length"),
+    estimate_content_length: bool = Query(False, description="Estimate content length", alias="estimateContentLength"),
     f: str = "xml",
     current_user: User = Depends(subsonic_auth),
     db: AsyncSession = Depends(get_db),
@@ -166,15 +176,7 @@ async def stream(
     Stream audio file.
 
     Supports HTTP Range requests for seeking.
-
-    Args:
-        id: Track ID (UUID)
-        maxBitRate: Maximum bitrate (currently ignored, returns original)
-        format: Preferred format (currently ignored, returns original)
-        timeOffset: Start offset in seconds (for transcoding)
-
-    Returns:
-        Audio file stream with proper headers
+    Uses aiofiles for non-blocking I/O.
     """
     try:
         track_id = UUID(id)
@@ -215,18 +217,23 @@ async def stream(
     else:
         status_code = 200
 
-    # Stream file
+    # Stream file asynchronously
     async def file_iterator():
         chunk_size = 64 * 1024  # 64KB chunks
-        with open(file_path, "rb") as f:
-            f.seek(start)
-            remaining = content_length
-            while remaining > 0:
-                chunk = f.read(min(chunk_size, remaining))
-                if not chunk:
-                    break
-                remaining -= len(chunk)
-                yield chunk
+        try:
+            async with aiofiles.open(file_path, "rb") as f:
+                await f.seek(start)
+                remaining = content_length
+                while remaining > 0:
+                    read_size = min(chunk_size, remaining)
+                    chunk = await f.read(read_size)
+                    if not chunk:
+                        break
+                    remaining -= len(chunk)
+                    yield chunk
+        except Exception as e:
+            logger.error(f"Error streaming file {file_path}: {e}")
+            raise
 
     return StreamingResponse(
         file_iterator(),
@@ -239,44 +246,28 @@ async def stream(
 @router.get("/download.view")
 @router.post("/download.view")
 async def download_file(
-    id: str = Query(..., description="Song ID"),
+    id: str = Query(..., description=DESC_SONG_ID),
     f: str = "xml",
     current_user: User = Depends(subsonic_auth),
     db: AsyncSession = Depends(get_db),
 ):
-    """
-    Download audio file.
-
-    Returns the original file as attachment.
-
-    Args:
-        id: Track ID (UUID)
-
-    Returns:
-        Audio file with Content-Disposition: attachment
-    """
     try:
         track_id = UUID(id)
     except ValueError:
         return subsonic_error(10, "Invalid song ID", f=f)
 
-    # Get download for this track
     download = await get_download_for_track(db, track_id, current_user.id)
 
-    if not download:
+    if not download or not download.file_path or not os.path.exists(download.file_path):
         return subsonic_error(70, "Song not found or not downloaded", f=f)
 
     file_path = download.file_path
-
-    if not file_path or not os.path.exists(file_path):
-        return subsonic_error(70, "File not found on disk", f=f)
 
     # Get track info for filename
     result = await db.execute(select(Track).where(Track.id == track_id))
     track = result.scalar_one_or_none()
 
     if track:
-        # Generate nice filename
         ext = os.path.splitext(file_path)[1] or ".mp3"
         safe_title = "".join(c for c in (track.title or "Unknown") if c.isalnum() or c in " -_").strip()
         safe_artist = "".join(c for c in (track.artist or "Unknown") if c.isalnum() or c in " -_").strip()
@@ -284,6 +275,8 @@ async def download_file(
     else:
         filename = os.path.basename(file_path)
 
+    # Use FileResponse (FastAPI handles it efficiently via thread pool usually, but for strict async we could implement custom)
+    # FileResponse is generally acceptable for downloads as it uses run_in_executor internally
     return FileResponse(
         file_path,
         media_type=get_content_type(file_path),
@@ -293,6 +286,159 @@ async def download_file(
         },
     )
 
+# --- Helper functions for get_cover_art ---
+
+async def _get_remote_image(image_url: str) -> Response | None:
+    try:
+        url_hash = hashlib.md5(image_url.encode()).hexdigest()
+        cache_path = os.path.join(COVER_ART_CACHE_DIR, f"{url_hash}.img")
+
+        # Check cache
+        if os.path.exists(cache_path):
+             async with aiofiles.open(cache_path, "rb") as f:
+                content = await f.read()
+             
+             content_type = MIME_JPEG
+             if content[:8] == b"\x89PNG\r\n\x1a\n":
+                content_type = MIME_PNG
+             elif content[:3] == b"GIF":
+                content_type = MIME_GIF
+             elif content[:4] == b"RIFF" and content[8:12] == b"WEBP":
+                content_type = MIME_WEBP
+                
+             return Response(content=content, media_type=content_type, headers={"X-Cache": "HIT"})
+
+        # Fetch remote
+        async with httpx.AsyncClient(timeout=10.0) as client:
+            resp = await client.get(image_url, follow_redirects=True, headers={"User-Agent": "Audiovault/1.0"})
+            if resp.status_code != 200:
+                return None
+            
+            content_type = resp.headers.get("content-type", MIME_JPEG)
+            if not content_type.startswith("image/"):
+                content_type = MIME_JPEG
+            
+            # Save to cache asynchronously
+            async with aiofiles.open(cache_path, "wb") as f:
+                await f.write(resp.content)
+            
+            return Response(content=resp.content, media_type=content_type, headers={"X-Cache": "MISS"})
+
+    except Exception as e:
+        logger.warning(f"Error fetching remote cover: {e}")
+        return None
+
+async def _resolve_local_file_path(db: AsyncSession, item_type: str, item_id: str) -> str | None:
+    file_path = None
+    if item_type == "tr":
+        # Track
+        result = await db.execute(select(Download).where(Download.track_id == item_id).limit(1))
+        download = result.scalars().first()
+        if download: file_path = download.file_path
+    
+    elif item_type == "al":
+        # Album
+        result = await db.execute(select(Download).join(Track, Download.track_id == Track.id).where(Track.album_id == item_id).limit(1))
+        download = result.scalars().first()
+        if download: file_path = download.file_path
+
+    elif item_type == "ar":
+        # Artist
+        result = await db.execute(select(Download).join(Track, Download.track_id == Track.id).where(Track.artist_id == item_id).limit(1))
+        download = result.scalars().first()
+        if download: file_path = download.file_path
+    
+    if file_path and os.path.exists(file_path):
+        return file_path
+    return None
+
+async def _check_local_cover_files(directory: str) -> Response | None:
+    for name in ["cover.jpg", "cover.png", "cover.jpeg", "folder.jpg", "front.jpg", "album.jpg"]:
+        local_path = os.path.join(directory, name)
+        if os.path.exists(local_path):
+            async with aiofiles.open(local_path, "rb") as f:
+                 content = await f.read()
+            # Simple mime detection by extension
+            mime = MIME_JPEG if name.endswith(('jpg', 'jpeg')) else MIME_PNG
+            return Response(content=content, media_type=mime)
+    return None
+
+def _try_extract_flac_art(audio_file) -> Response | None:
+    if hasattr(audio_file, 'pictures') and audio_file.pictures:
+        pic = next((p for p in audio_file.pictures if p.type == 3), audio_file.pictures[0])
+        return Response(content=pic.data, media_type=pic.mime)
+    return None
+
+def _try_extract_id3_art(audio_file) -> Response | None:
+    if not hasattr(audio_file, 'tags'): return None
+    
+    # Try getall for APIC (mutagen.id3.ID3)
+    if hasattr(audio_file.tags, 'getall'):
+        apic_frames = audio_file.tags.getall("APIC")
+        if apic_frames:
+            return Response(content=apic_frames[0].data, media_type=apic_frames[0].mime)
+    
+    # Helper for other formats or older mutagen versions
+    if hasattr(audio_file.tags, 'values'):
+        for tag in audio_file.tags.values():
+            if hasattr(tag, 'frameid') and tag.frameid == 'APIC':
+                return Response(content=tag.data, media_type=tag.mime)
+    return None
+
+def _extract_embedded_art(file_path: str) -> Response | None:
+    # Mutagen is synchronous
+    try:
+        audio_file = MutagenFile(file_path)
+        if not audio_file: return None
+        
+        resp = _try_extract_flac_art(audio_file)
+        if resp: return resp
+        
+        return _try_extract_id3_art(audio_file)
+    except Exception:
+        pass
+    return None
+
+
+async def _resolve_album_image(db: AsyncSession, item_id: str) -> str | None:
+    res = await db.execute(select(Album).where(Album.id == item_id))
+    album = res.scalar_one_or_none()
+    if album and album.images:
+            return album.images.get("300") or album.images.get("640")
+    return None
+
+async def _resolve_track_image(db: AsyncSession, item_id: str) -> str | None:
+    res = await db.execute(select(Track).where(Track.id == item_id))
+    track = res.scalar_one_or_none()
+    if not track: return None
+    
+    meta = track.metadata_content or {}
+    image_url = meta.get("image_url") or meta.get("album_art")
+    if image_url: return image_url
+    
+    if track.album_id:
+        return await _resolve_album_image(db, track.album_id)
+    return None
+
+async def _resolve_artist_image(db: AsyncSession, item_id: str) -> str | None:
+    res = await db.execute(select(Artist).where(Artist.id == item_id))
+    artist = res.scalar_one_or_none()
+    if artist and artist.images:
+        if isinstance(artist.images, dict):
+            return artist.images.get("medium")
+        elif isinstance(artist.images, list) and artist.images:
+            return artist.images[0].get("url")
+    return None
+
+async def _resolve_image_url(db: AsyncSession, item_type: str, item_id: str) -> str | None:
+    """Helper to resolve remote image URL from DB"""
+    if item_type == "al":
+        return await _resolve_album_image(db, item_id)
+    elif item_type == "tr":
+        return await _resolve_track_image(db, item_id)
+    elif item_type == "ar":
+         return await _resolve_artist_image(db, item_id)
+    return None
 
 @router.get("/getCoverArt.view")
 @router.post("/getCoverArt.view")
@@ -305,261 +451,48 @@ async def get_cover_art(
 ):
     """
     Get cover art for album, track, or artist.
-
-    Cover art ID format:
-    - "al-{album_id}" for albums
-    - "ar-{artist_id}" for artists
-    - "tr-{track_id}" or just "{track_id}" for tracks
-
-    Args:
-        id: Cover art ID
-        size: Preferred size in pixels (may be ignored)
-
-    Returns:
-        Redirect to image URL or image bytes
     """
-    image_url = None
-
     try:
         item_type, item_id = parse_cover_art_id(id)
     except ValueError:
         return subsonic_error(70, "Invalid cover art ID", f=f)
 
-    if item_type == "al":
-        # Album cover
-        result = await db.execute(select(Album).where(Album.id == item_id))
-        album = result.scalar_one_or_none()
-        if album and album.images:
-             # Try 300 or 640
-             image_url = album.images.get("300") or album.images.get("640") or album.images.get("64")
+    # 1. Resolve Remote Image URL
+    image_url = await _resolve_image_url(db, item_type, item_id)
 
-    else:
-        # Unknown type or raw UUID - could be Track, Album, or Artist if client sends plain UUID
-        # 1. Try Track (most common)
-        result = await db.execute(select(Track).where(Track.id == item_id))
-        track = result.scalar_one_or_none()
-        if track:
-            item_type = "tr"
-            metadata = track.metadata_content or {}
-            image_url = metadata.get("image_url") or metadata.get("album_art")
+    # 2. Try fetching remote if URL exists
+    if image_url:
+        parsed = urlparse(image_url)
+        if parsed.scheme in ("http", "https") and parsed.netloc:
+             resp = await _get_remote_image(image_url)
+             if resp: return resp
 
-            # If track has album, try album cover
-            if not image_url and track.album_id:
-                album_result = await db.execute(select(Album).where(Album.id == track.album_id))
-                album = album_result.scalar_one_or_none()
-                if album and album.images:
-                     # Try 300 or 640
-                     image_url = album.images.get("300") or album.images.get("640") or album.images.get("64")
-
-        else:
-            # 2. Try Album
-            result = await db.execute(select(Album).where(Album.id == item_id))
-            album = result.scalar_one_or_none()
-            if album:
-                item_type = "al"
-                if album.images:
-                     image_url = album.images.get("300") or album.images.get("640") or album.images.get("64")
-            else:
-                # 3. Try Artist
-                result = await db.execute(select(Artist).where(Artist.id == item_id))
-                artist = result.scalar_one_or_none()
-                if artist:
-                    item_type = "ar"
-                    if artist.images:
-                        images = artist.images
-                        if isinstance(images, dict):
-                            image_url = images.get("large") or images.get("medium") or images.get("small")
-                        elif isinstance(images, list) and images:
-                            image_url = images[0].get("url") if isinstance(images[0], dict) else images[0]
-
-    # ... (existing proxy logic) ...
-    # This part replaces the 404 return
+    # 3. Fallback to Local Files
+    file_path = await _resolve_local_file_path(db, item_type, item_id)
     
-    # If no external URL, try to find local cover art
-    if not image_url:
-        # Resolve file path to search in
-        file_path = None
-        logger.info(f"CoverArt: Looking for local file for item {item_id} (type {item_type})")
+    if file_path:
+        directory = os.path.dirname(file_path)
         
-        try:
-            if item_type == "tr":
-                result = await db.execute(select(Download).where(Download.track_id == item_id))
-                download = result.scalars().first()
-                if download:
-                    file_path = download.file_path
-                    logger.info(f"CoverArt: Found track download path: {file_path}")
-                else:
-                    logger.warning(f"CoverArt: No download record for track {item_id}")
-                    
-            elif item_type == "al":
-                result = await db.execute(select(Download).join(Track, Download.track_id == Track.id).where(Track.album_id == item_id).limit(1))
-                download = result.scalars().first()
-                if download:
-                    file_path = download.file_path
-                    logger.info(f"CoverArt: Found album sample path: {file_path}")
-                else:
-                    logger.warning(f"CoverArt: No download record for album {item_id}")
+        # 3a. Check for cover.jpg etc
+        resp = await _check_local_cover_files(directory)
+        if resp: return resp
+        
+        # 3b. Check embedded art (running in thread pool to avoid blocking)
+        from app.core.executors import stream_executor
+        import asyncio
+        loop = asyncio.get_event_loop()
+        resp = await loop.run_in_executor(stream_executor, lambda: _extract_embedded_art(file_path))
+        if resp: return resp
 
-            elif item_type == "ar":
-                result = await db.execute(select(Download).join(Track, Download.track_id == Track.id).where(Track.artist_id == item_id).limit(1))
-                download = result.scalars().first()
-                if download:
-                    file_path = download.file_path
-                    logger.info(f"CoverArt: Found artist sample path: {file_path}")
-                else:
-                    logger.warning(f"CoverArt: No download record for artist {item_id}")
-            
-            if file_path and os.path.exists(file_path):
-                directory = os.path.dirname(file_path)
-                logger.info(f"CoverArt: Searching directory {directory}")
-                for name in ["cover.jpg", "cover.png", "cover.jpeg", "folder.jpg", "front.jpg", "album.jpg"]:
-                    local_path = os.path.join(directory, name)
-                    if os.path.exists(local_path):
-                         logger.info(f"CoverArt: Serving local file {local_path}")
-                         return FileResponse(local_path)
-                
-                logger.info("CoverArt: No known cover file found, checking embedded...")
-                import mutagen
-                f = mutagen.File(file_path)
-                
-                # Check for FLAC/Vorbis pictures
-                if hasattr(f, 'pictures') and f.pictures:
-                    pic = next((p for p in f.pictures if p.type == 3), f.pictures[0])
-                    logger.info("CoverArt: Extracted FLAC/Vorbis picture")
-                    return Response(content=pic.data, media_type=pic.mime)
-
-                # Check for ID3 tags (MP3)
-                if f and hasattr(f, 'tags'):
-                    # Try getall for APIC (mutagen.id3.ID3)
-                    if hasattr(f.tags, 'getall'):
-                        apic_frames = f.tags.getall("APIC")
-                        if apic_frames:
-                            logger.info("CoverArt: Extracted APIC frame (getall)")
-                            return Response(content=apic_frames[0].data, media_type=apic_frames[0].mime)
-                    
-                    # Fallback iteration for other tag formats
-                    if hasattr(f.tags, 'values'):
-                        for tag in f.tags.values():
-                            if hasattr(tag, 'frameid') and tag.frameid == 'APIC':
-                                logger.info("CoverArt: Extracted APIC frame (iter)")
-                                return Response(content=tag.data, media_type=tag.mime)
-                                
-                logger.info("CoverArt: No embedded art found.")
-            else:
-                logger.warning(f"CoverArt: File path {file_path} does not exist or is None")
-
-        except Exception as e:
-            logger.error(f"CoverArt: Local fallback error: {e}")
-
-        # If still nothing, return 404 or placeholder
-        return Response(status_code=404, content=b"", media_type="image/png")
-
-    # Security: Validate URL to prevent open redirect
-    # Only allow HTTP/HTTPS URLs from trusted image sources
-    parsed_url = urlparse(image_url)
-    
-    # ... (rest of the existing proxy logic) ...
-
-    # Must be HTTP or HTTPS
-    if parsed_url.scheme not in ("http", "https"):
-        logger.warning(f"Invalid image URL scheme: {image_url}")
-        return Response(status_code=404, content=b"", media_type="image/png")
-
-    # Must have a valid host
-    if not parsed_url.netloc:
-        logger.warning(f"Invalid image URL - no host: {image_url}")
-        return Response(status_code=404, content=b"", media_type="image/png")
-
-    # Check if domain is allowed
-    # host = parsed_url.netloc.lower()
-    # is_allowed = any(
-    #     host == domain or host.endswith(f".{domain}")
-    #     for domain in ALLOWED_IMAGE_DOMAINS
-    # )
-
-    # if not is_allowed:
-    #     logger.warning(f"Cover art from untrusted domain blocked: {host}")
-    #     return Response(status_code=404, content=b"", media_type="image/png")
-
-    # Allow all for now
-    # is_allowed = True
-
-    # Proxy the image instead of redirecting (eliminates Open Redirect risk)
-    # Also provides caching opportunity and hides external URLs from client
-
-    # Generate cache key from URL hash
-    url_hash = hashlib.md5(image_url.encode()).hexdigest()
-    cache_path = os.path.join(COVER_ART_CACHE_DIR, f"{url_hash}.img")
-
-    # Check cache first
-    if os.path.exists(cache_path):
-        try:
-            with open(cache_path, "rb") as f:
-                content = f.read()
-            # Detect content type from magic bytes
-            content_type = "image/jpeg"
-            if content[:8] == b"\x89PNG\r\n\x1a\n":
-                content_type = "image/png"
-            elif content[:3] == b"GIF":
-                content_type = "image/gif"
-            elif content[:4] == b"RIFF" and content[8:12] == b"WEBP":
-                content_type = "image/webp"
-
-            return Response(
-                content=content,
-                media_type=content_type,
-                headers={
-                    "Cache-Control": "public, max-age=86400",
-                    "X-Cache": "HIT",
-                },
-            )
-        except Exception as e:
-            logger.warning(f"Failed to read cached cover art: {e}")
-
-    # Fetch from remote URL
-    try:
-        async with httpx.AsyncClient(timeout=10.0) as client:
-            resp = await client.get(image_url, follow_redirects=True, headers={"User-Agent": "Audiovault/1.0"})
-
-            if resp.status_code != 200:
-                logger.warning(f"Failed to fetch cover art: {resp.status_code}")
-                return Response(status_code=404, content=b"", media_type="image/png")
-
-            # Detect content type
-            content_type = resp.headers.get("content-type", "image/jpeg")
-            if not content_type.startswith("image/"):
-                content_type = "image/jpeg"
-
-            # Save to cache
-            try:
-                with open(cache_path, "wb") as f:
-                    f.write(resp.content)
-            except Exception as e:
-                logger.warning(f"Failed to cache cover art: {e}")
-
-            return Response(
-                content=resp.content,
-                media_type=content_type,
-                headers={
-                    "Cache-Control": "public, max-age=86400",
-                    "X-Cache": "MISS",
-                },
-            )
-    except httpx.RequestError as e:
-        logger.warning(f"Error fetching cover art: {e}")
-        return Response(status_code=404, content=b"", media_type="image/png")
+    # 4. Final fallback -> 404/Empty
+    return Response(status_code=404, content=b"", media_type=MIME_PNG)
 
 
 @router.get("/hls.view")
 async def hls_stream(
-    id: str = Query(..., description="Song ID"),
-    bitRate: str = Query(None, description="Bitrate list"),
+    id: str = Query(..., description=DESC_SONG_ID),
+    bit_rate: str = Query(None, description="Bitrate list", alias="bitRate"),
     f: str = "xml",
     current_user: User = Depends(subsonic_auth),
 ):
-    """
-    HLS streaming (not implemented).
-
-    Returns error - use regular stream instead.
-    """
     return subsonic_error(0, "HLS streaming not supported. Use stream.view instead.", f=f)

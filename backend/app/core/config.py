@@ -26,8 +26,6 @@ class Settings(BaseSettings):
     SPOTIFY_CLIENT_SECRET: str | None = None
     SPOTIFY_REDIRECT_URI: str | None = None
 
-    YOUTUBE_API_KEY: str | None = None
-    DEEZER_API_KEY: str | None = None
 
     DOWNLOAD_DIR: str = os.getenv("DOWNLOAD_DIR", str(Path.home() / "Downloads" / "Audiovault"))
     MAX_PARALLEL_DOWNLOADS: int = 3

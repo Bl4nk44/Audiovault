@@ -1,7 +1,7 @@
 import logging
 import os
 
-import mutagen
+from mutagen import File as MutagenFile
 from app.core.config import settings
 from app.models.album import Album
 from app.models.artist import Artist
@@ -10,8 +10,14 @@ from app.models.track import Track
 from mutagen.easyid3 import EasyID3
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
+import aiofiles
+import asyncio
+from app.core.executors import stream_executor
 
 logger = logging.getLogger(__name__)
+
+UNKNOWN_ARTIST = "Unknown Artist"
+UNKNOWN_ALBUM = "Unknown Album"
 
 
 class LibraryScannerService:
@@ -39,53 +45,56 @@ class LibraryScannerService:
                 known_paths.add(os.path.normpath(row[0]))
         return known_paths
 
-    def _parse_audio_metadata(self, full_path: str, filename: str) -> tuple[str, str, str, str, int]:
-        """Parse audio file metadata including duration.
-        
-        Returns:
-            tuple: (title, artist, album, genre, duration_ms)
-        """
-        title = os.path.splitext(filename)[0]
-        artist = "Unknown Artist"
-        album = "Unknown Album"
-        genre = None
-        duration_ms = 0
-
+    def _try_parse_easyid3(self, full_path: str) -> tuple[str, str, str, str | None]:
+        title, artist, album, genre = self._get_default_metadata(os.path.basename(full_path))
         try:
             audio = EasyID3(full_path)
-            if "title" in audio:
-                title = audio["title"][0]
-            if "artist" in audio:
-                artist = audio["artist"][0]
-            if "album" in audio:
-                album = audio["album"][0]
-            if "genre" in audio:
-                genre = audio["genre"][0]
+            if "title" in audio: title = audio["title"][0]
+            if "artist" in audio: artist = audio["artist"][0]
+            if "album" in audio: album = audio["album"][0]
+            if "genre" in audio: genre = audio["genre"][0]
         except Exception:
             pass
+        return title, artist, album, genre
+
+    def _update_meta_from_tags(self, m, current_meta: tuple, filename: str) -> tuple[str, str, str, str | None]:
+        title, artist, album, genre = current_meta
+        default_title = os.path.splitext(filename)[0]
+
+        if artist == UNKNOWN_ARTIST and "TPE1" in m: artist = str(m["TPE1"])
+        if title == default_title and "TIT2" in m: title = str(m["TIT2"])
+        if album == UNKNOWN_ALBUM and "TALB" in m: album = str(m["TALB"])
+        if genre is None and "TCON" in m: genre = str(m["TCON"])
         
-        # Always try to get duration using mutagen.File
+        return title, artist, album, genre
+
+    def _try_parse_mutagen_fallback(self, full_path: str, current_meta: tuple) -> tuple[str, str, str, str | None, int]:
+        title, artist, album, genre = current_meta
+        duration_ms = 0
+        filename = os.path.basename(full_path)
+        
         try:
-            m = mutagen.File(full_path)
+            m = MutagenFile(full_path)
             if m:
-                # Get duration
                 if m.info and hasattr(m.info, 'length'):
                     duration_ms = int(m.info.length * 1000)
                 
-                # Fallback for metadata if EasyID3 failed
-                if artist == "Unknown Artist" and "TPE1" in m:
-                    artist = str(m["TPE1"])
-                if title == os.path.splitext(filename)[0]:
-                    if "TIT2" in m:
-                        title = str(m["TIT2"])
-                if album == "Unknown Album" and "TALB" in m:
-                    album = str(m["TALB"])
-                if not genre and "TCON" in m:
-                    genre = str(m["TCON"])
+                title, artist, album, genre = self._update_meta_from_tags(m, (title, artist, album, genre), filename)
         except Exception as e:
             logger.debug(f"Mutagen fallback failed for {filename}: {e}")
-        
+            
         return title, artist, album, genre, duration_ms
+
+    def _get_default_metadata(self, filename: str) -> tuple[str, str, str, str | None]:
+        return os.path.splitext(filename)[0], UNKNOWN_ARTIST, UNKNOWN_ALBUM, None
+
+    def _parse_audio_metadata_sync(self, full_path: str) -> tuple[str, str, str, str, int]:
+        """Sync version of parse metadata (CPU bound)."""
+        # 1. EasyID3
+        title, artist, album, genre = self._try_parse_easyid3(full_path)
+        
+        # 2. Mutagen Fallback & Duration
+        return self._try_parse_mutagen_fallback(full_path, (title, artist, album, genre))
 
     def _infer_source_info(self, full_path: str, root_dir: str) -> tuple[str, str]:
         source = "local_import"
@@ -127,9 +136,9 @@ class LibraryScannerService:
         Returns tuple of (artist_id, album_id) as UUIDs (or None).
         """
         if not artist_name:
-            artist_name = "Unknown Artist"
+            artist_name = UNKNOWN_ARTIST
         if not album_name:
-            album_name = "Unknown Album"
+            album_name = UNKNOWN_ALBUM
 
         # 1. Resolve Artist
         result = await db.execute(select(Artist).where(Artist.name == artist_name))
@@ -150,8 +159,6 @@ class LibraryScannerService:
             album = Album(title=album_name, artist_id=artist_id)
             db.add(album)
             await db.flush()
-
-        album_id = album.id
 
         album_id = album.id
         return artist_id, album_id
@@ -182,58 +189,17 @@ class LibraryScannerService:
             base_dir = os.path.dirname(full_path)
             matched_tracks = []  # List of track_ids in order
             
-            with open(full_path, 'r', encoding='utf-8', errors='ignore') as f:
-                lines = f.readlines()
+            async with aiofiles.open(full_path, 'r', encoding='utf-8', errors='ignore') as f:
+                lines = await f.readlines()
                 
             for line in lines:
                 line = line.strip()
                 if not line or line.startswith("#"):
                     continue
                 
-                # Resolve track path
-                if os.path.isabs(line):
-                    track_path = line
-                else:
-                    track_path = os.path.normpath(os.path.join(base_dir, line))
-                
-                download = None
-                
-                # Strategy 1: Try exact path match
-                stmt = select(Download).where(Download.file_path == track_path).limit(1)
-                res = await db.execute(stmt)
-                download = res.scalar_one_or_none()
-                
-                # Strategy 2: Try normalized path with /downloads/ prefix
-                if not download:
-                    try:
-                        relative_rel = os.path.relpath(track_path, self.base_dir)
-                        db_path_guess = f"/downloads/{relative_rel}".replace("\\", "/")
-                        stmt = select(Download).where(Download.file_path == db_path_guess).limit(1)
-                        res = await db.execute(stmt)
-                        download = res.scalar_one_or_none()
-                    except ValueError:
-                        pass  # Different drives on Windows
-                
-                # Strategy 3: Match by filename only (for this user)
-                if not download:
-                    track_filename = os.path.basename(line)
-                    stmt = (
-                        select(Download)
-                        .where(
-                            Download.user_id == user_id,
-                            Download.file_path.like(f"%/{track_filename}"),
-                        )
-                        .limit(1)
-                    )
-                    res = await db.execute(stmt)
-                    download = res.scalar_one_or_none()
-                
-                if download and download.track_id:
-                    from uuid import UUID
-                    t_id = download.track_id
-                    if isinstance(t_id, str):
-                        t_id = UUID(t_id)
-                    matched_tracks.append(t_id)
+                t_id = await self._find_track_for_playlist_line(db, line, base_dir, user_id)
+                if t_id:
+                     matched_tracks.append(t_id)
 
             # Only update playlist if we found tracks
             if matched_tracks:
@@ -258,9 +224,125 @@ class LibraryScannerService:
         except Exception as e:
             logger.error(f"Failed to import playlist {full_path}: {e}")
 
+    async def _find_track_for_playlist_line(self, db: AsyncSession, line: str, base_dir: str, user_id: str):
+        # Resolve track path
+        if os.path.isabs(line):
+            track_path = line
+        else:
+            track_path = os.path.normpath(os.path.join(base_dir, line))
+        
+        download = None
+        
+        # Strategy 1: Try exact path match
+        stmt = select(Download).where(Download.file_path == track_path).limit(1)
+        res = await db.execute(stmt)
+        download = res.scalar_one_or_none()
+        
+        # Strategy 2: Try normalized path with /downloads/ prefix
+        if not download:
+            try:
+                relative_rel = os.path.relpath(track_path, self.base_dir)
+                db_path_guess = f"/downloads/{relative_rel}".replace("\\", "/")
+                stmt = select(Download).where(Download.file_path == db_path_guess).limit(1)
+                res = await db.execute(stmt)
+                download = res.scalar_one_or_none()
+            except ValueError:
+                pass
+        
+        # Strategy 3: Match by filename only (for this user)
+        if not download:
+            track_filename = os.path.basename(line)
+            stmt = (
+                select(Download)
+                .where(
+                    Download.user_id == user_id,
+                    Download.file_path.like(f"%/{track_filename}"),
+                )
+                .limit(1)
+            )
+            res = await db.execute(stmt)
+            download = res.scalar_one_or_none()
+        
+        if download and download.track_id:
+            from uuid import UUID
+            t_id = download.track_id
+            if isinstance(t_id, str):
+                t_id = UUID(t_id)
+            return t_id
+        return None
 
+    async def _process_audio_file(self, db: AsyncSession, user_id: str, full_path: str, filename: str, root_dir: str) -> bool:
+        try:
+            # Parse metadata in executor to avoid blocking event loop
+            loop = asyncio.get_event_loop()
+            title, artist, album, genre, duration_ms = await loop.run_in_executor(
+                stream_executor, 
+                lambda p=full_path: self._parse_audio_metadata_sync(p)
+            )
+            
+            source, playlist_name = self._infer_source_info(full_path, root_dir)
 
+            try:
+                file_size = os.path.getsize(full_path)
+            except OSError:
+                file_size = 0
 
+            metadata = {"source": source, "imported": True}
+            if genre:
+                metadata["genre"] = genre
+
+            new_track = Track(
+                title=title,
+                artist=artist,
+                album=album,
+                duration_ms=duration_ms,
+                metadata_content=metadata,
+            )
+
+            # Resolve relationships
+            artist_id, album_id = await self.resolve_artist_and_album(db, artist, album)
+            new_track.artist_id = artist_id
+            new_track.album_id = album_id
+
+            db.add(new_track)
+            await db.flush()
+
+            new_download = Download(
+                user_id=user_id,
+                track_id=new_track.id,
+                status="completed",
+                file_path=full_path,
+                source=source,
+                playlist_name=playlist_name,
+                progress=100.0,
+                file_size=file_size,
+                archived=False,
+            )
+            db.add(new_download)
+            return True
+
+        except Exception as e:
+            logger.error(f"Failed to import {filename}: {str(e)}")
+            raise e
+
+    async def _handle_scan_file(self, db, user_id, full_path, filename, root_dir, known_paths) -> bool:
+        lower_name = filename.lower()
+        
+        # Handle Playlists
+        if lower_name.endswith((".m3u", ".m3u8")):
+                await self._import_playlist(db, full_path, user_id)
+                return False
+
+        # Handle Audio
+        if not lower_name.endswith(".mp3"):
+            return False
+
+        norm_path = os.path.normpath(full_path)
+        if norm_path in known_paths:
+            return False
+
+        await self._process_audio_file(db, user_id, full_path, filename, root_dir)
+        return True
 
     async def scan_directory(self, db: AsyncSession, user_id: str, scan_path: str | None = None) -> dict:
         try:
@@ -269,83 +351,24 @@ class LibraryScannerService:
             return {"status": "error", "message": str(e)}
 
         if not os.path.exists(root_dir):
-            return {
-                "status": "error",
-                "message": f"Directory {root_dir} does not exist",
-            }
+            return {"status": "error", "message": f"Directory {root_dir} does not exist"}
 
         known_paths = await self._get_known_paths(db, user_id)
         imported_count = 0
         errors = []
         total_found = 0
 
-        for dirpath, dirnames, filenames in os.walk(root_dir):
+        for dirpath, _, filenames in os.walk(root_dir):
             for filename in filenames:
-                lower_name = filename.lower()
-                
-                # Handle Playlists
-                if lower_name.endswith(".m3u") or lower_name.endswith(".m3u8"):
-                     full_path = os.path.join(dirpath, filename)
-                     await self._import_playlist(db, full_path, user_id)
-                     continue
-
-                # Handle Audio
-                if not lower_name.endswith(".mp3"):
-                    continue
-
-                total_found += 1
                 full_path = os.path.join(dirpath, filename)
-                norm_path = os.path.normpath(full_path)
+                if filename.lower().endswith(".mp3"):
+                     total_found += 1
+                
                 try:
-                    file_size = os.path.getsize(full_path)
-                except OSError:
-                    file_size = 0
-
-                if norm_path in known_paths:
-                    continue
-
-                try:
-                    title, artist, album, genre, duration_ms = self._parse_audio_metadata(full_path, filename)
-                    source, playlist_name = self._infer_source_info(full_path, root_dir)
-
-                    metadata = {"source": source, "imported": True}
-                    if genre:
-                        metadata["genre"] = genre
-
-                    new_track = Track(
-                        title=title,
-                        artist=artist,
-                        album=album,
-                        duration_ms=duration_ms,
-                        metadata_content=metadata,
-                    )
-
-                    # Resolve relationships
-                    artist_id, album_id = await self.resolve_artist_and_album(db, artist, album)
-                    new_track.artist_id = artist_id
-                    new_track.album_id = album_id
-
-                    db.add(new_track)
-                    await db.flush()
-
-                    new_download = Download(
-                        user_id=user_id,
-                        track_id=new_track.id,
-                        status="completed",
-                        file_path=full_path,
-                        source=source,
-                        playlist_name=playlist_name,
-                        progress=100.0,
-                        file_size=file_size,
-                        archived=False,
-                    )
-                    db.add(new_download)
-                    imported_count += 1
-
+                    if await self._handle_scan_file(db, user_id, full_path, filename, root_dir, known_paths):
+                        imported_count += 1
                 except Exception as e:
-                    error_msg = f"Failed to import {filename}: {str(e)}"
-                    logger.error(error_msg)
-                    errors.append(error_msg)
+                    errors.append(f"Failed to import {filename}: {str(e)}")
 
         if imported_count > 0:
             await db.commit()

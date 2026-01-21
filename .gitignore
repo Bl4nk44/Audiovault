@@ -75,3 +75,4 @@ backend/app/backfill_metadata.py
 backend/app/fix_covers.py
 backend/app/test_genres_query.py
 backend/app/debug_genres.py
+FINGOCONTEXT.md
