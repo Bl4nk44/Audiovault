@@ -26,12 +26,12 @@ export const de = {
     refresh: "Aktualisieren",
     lines: "Zeilen",
     download: "Protokolle herunterladen",
+    showErrorsOnly: "Nur Fehler",
   },
   dashboard: {
     title: "Dashboard",
     subtitle: "Übersicht über deine Musiksammlung und Downloads.",
-    searchPlaceholder:
-      "URL einfügen (YouTube, Spotify...) oder nach Musik suchen...",
+    searchPlaceholder: "URL einfügen (YouTube, Spotify...) oder nach Musik suchen...",
 
     stats: {
       totalDownloads: "Gesamte Downloads",
@@ -58,8 +58,7 @@ export const de = {
       pending: "Ausstehend...",
       completed: "Abgeschlossen",
       noActive: "Keine aktiven Downloads",
-      startDownloading:
-        "Starte einen Download, um hier den Fortschritt zu sehen",
+      startDownloading: "Starte einen Download, um hier den Fortschritt zu sehen",
     },
   },
   footer: {
@@ -151,5 +150,26 @@ export const de = {
       artists: "Künstler",
       playlists: "Playlists",
     },
+  },
+  library: {
+    title: "Meine Bibliothek",
+    subtitle: "Verwalten Sie Ihre heruntergeladene Musik.",
+    newPlaylist: "Neue Playlist",
+    rescan: "Bibliothek scannen",
+    allTracks: "Alle Titel",
+    uncategorized: "Unkategorisiert",
+    playlistDeleted: "Playlist gelöscht",
+    trackDeleted: "Titel gelöscht",
+    rescanComplete: "Scan abgeschlossen",
+  },
+  watchlist: {
+    title: "Beobachtungsliste",
+    subtitle: "Verfolgen Sie Künstler und Playlists für neue Veröffentlichungen.",
+    autoDownloadOn: "Auto-Download: EIN",
+    autoDownloadOff: "Auto-Download: AUS",
+    syncDeletions: "Löschungen synchronisieren",
+    removeFromWatchlist: "Von Beobachtungsliste entfernen",
+    newItems: "neu",
+    addToWatchlist: "Zur Beobachtungsliste hinzufügen",
   },
 };

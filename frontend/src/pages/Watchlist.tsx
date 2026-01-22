@@ -1,5 +1,5 @@
-import WatchlistManager from "../components/watchlist/WatchlistManager";
 import { useNavigate } from "react-router-dom";
+import WatchlistManager from "../components/watchlist/WatchlistManager";
 
 export default function Watchlist() {
   const navigate = useNavigate();
@@ -16,7 +16,7 @@ export default function Watchlist() {
         <div className="flex gap-3">
           <button
             onClick={() => navigate("/search")}
-            className="bg-primary text-primary-foreground px-4 py-2 rounded-lg hover:bg-primary/90 transition-colors"
+            className="bg-primary text-primary-foreground px-4 py-2 rounded-lg hover:bg-primary/90 transition-colors cursor-pointer"
           >
             + Add New
           </button>

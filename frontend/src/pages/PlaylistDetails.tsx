@@ -1,21 +1,26 @@
-import { useQuery } from "@tanstack/react-query";
-import { useParams, useNavigate, useLocation } from "react-router-dom";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { motion } from "framer-motion";
 import {
   ArrowLeft,
-  Music,
+  Check,
+  Clock,
+  Download,
+  Edit2,
   ListMusic,
   Loader2,
-  Plus,
-  Check,
+  Music,
   PlayCircle,
-  Clock,
+  Plus,
+  Trash2,
 } from "lucide-react";
+import { useState } from "react";
+import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { playlistsApi } from "../api/playlists";
+import TrackCard from "../components/search/TrackCard";
 import Button from "../components/ui/Button";
+import ConfirmModal from "../components/ui/ConfirmModal";
 import { useStore } from "../store/useStore";
 import { notify as toast } from "../utils/notify";
-import TrackCard from "../components/search/TrackCard";
 import { isValidImageUrl } from "../utils/validation";
 
 export default function PlaylistDetails() {
@@ -26,6 +31,13 @@ export default function PlaylistDetails() {
 
   const navigate = useNavigate();
   const { watchlist, addToWatchlist, removeFromWatchlist } = useStore();
+  const queryClient = useQueryClient();
+
+  // Local state for modals
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [editName, setEditName] = useState("");
+  const [trackToDelete, setTrackToDelete] = useState<string | null>(null);
 
   const {
     data: playlist,
@@ -56,9 +68,7 @@ export default function PlaylistDetails() {
     );
   }
 
-  const heroImage = isValidImageUrl(playlist.image_url)
-    ? playlist.image_url
-    : null;
+  const heroImage = isValidImageUrl(playlist.image_url) ? playlist.image_url : null;
 
   const isWatched = watchlist.some((item) => item.source_id === playlist.id);
   const watchedItem = watchlist.find((item) => item.source_id === playlist.id);
@@ -81,11 +91,58 @@ export default function PlaylistDetails() {
     }
   };
 
+  const handleExportJson = async () => {
+    if (source !== "local" || !id) {
+      toast.error("Export is only available for local playlists");
+      return;
+    }
+    try {
+      await playlistsApi.exportAsJson(id, playlist.title);
+      toast.success("Playlist exported successfully");
+    } catch {
+      toast.error("Failed to export playlist");
+    }
+  };
+
+  const handleDeletePlaylist = async () => {
+    if (!id) return;
+    try {
+      await playlistsApi.delete(id);
+      toast.success("Playlist deleted");
+      navigate("/library");
+    } catch {
+      toast.error("Failed to delete playlist");
+    }
+  };
+
+  const handleUpdatePlaylist = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!id || !editName.trim()) return;
+    try {
+      await playlistsApi.update(id, { name: editName });
+      toast.success("Playlist updated");
+      setShowEditModal(false);
+      queryClient.invalidateQueries({ queryKey: ["playlist", id, source] });
+    } catch {
+      toast.error("Failed to update playlist");
+    }
+  };
+
+  const handleRemoveTrack = async (trackId: string) => {
+    if (!id) return;
+    try {
+      // Assuming removeTracks takes an array
+      await playlistsApi.removeTracks(id, [trackId]);
+      toast.success("Track removed from playlist");
+      queryClient.invalidateQueries({ queryKey: ["playlist", id, source] });
+      setTrackToDelete(null);
+    } catch {
+      toast.error("Failed to remove track");
+    }
+  };
+
   const totalDurationMs =
-    playlist.tracks?.reduce(
-      (acc, track) => acc + (track.duration_ms || 0),
-      0
-    ) || 0;
+    playlist.tracks?.reduce((acc, track) => acc + (track.duration_ms || 0), 0) || 0;
   const totalDurationMinutes = Math.floor(totalDurationMs / 60000);
   const totalDurationHours = Math.floor(totalDurationMinutes / 60);
 
@@ -114,7 +171,40 @@ export default function PlaylistDetails() {
             <ArrowLeft className="w-6 h-6" />
           </Button>
 
-          <div className="absolute top-4 right-4">
+          <div className="absolute top-4 right-4 flex gap-2">
+            {source === "local" && (
+              <Button
+                variant="outline"
+                onClick={handleExportJson}
+                className="gap-2 bg-white/10 hover:bg-white/20 text-white border-white/20"
+              >
+                <Download size={16} />
+                Export JSON
+              </Button>
+            )}
+            {source === "local" && (
+              <>
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    setEditName(playlist.title);
+                    setShowEditModal(true);
+                  }}
+                  className="gap-2 bg-white/10 hover:bg-white/20 text-white border-white/20"
+                >
+                  <Edit2 size={16} />
+                  Edit
+                </Button>
+                <Button
+                  variant="danger"
+                  onClick={() => setShowDeleteModal(true)}
+                  className="gap-2 bg-red-500/10 hover:bg-red-500/20 text-red-500 border-red-500/20"
+                >
+                  <Trash2 size={16} />
+                  Delete
+                </Button>
+              </>
+            )}
             <Button
               variant={isWatched ? "secondary" : "primary"}
               onClick={handleWatchlistToggle}
@@ -204,6 +294,13 @@ export default function PlaylistDetails() {
                   // Ensure cover is present if available in track, otherwise fallback to playlist cover
                   cover: track.image_url || heroImage || undefined,
                 }}
+                onRemove={
+                  source === "local"
+                    ? () => setTrackToDelete(track.id) // Or track.track_id depending on structure?
+                    : // Note: playlistsApi.getLocalById maps backend tracks to frontend Track, keeping 'id'.
+                      // backend: track_id -> frontend: id. So we pass track.id.
+                      undefined
+                }
               />
             ))}
           </div>
@@ -212,6 +309,65 @@ export default function PlaylistDetails() {
         <div className="text-center py-20 text-gray-500">
           <Music className="w-12 h-12 mx-auto mb-4 opacity-50" />
           <p>No tracks found in this playlist.</p>
+        </div>
+      )}
+
+      {/* Delete Playlist Modal */}
+      <ConfirmModal
+        isOpen={showDeleteModal}
+        onClose={() => setShowDeleteModal(false)}
+        onConfirm={handleDeletePlaylist}
+        title="Delete Playlist"
+        message={`Are you sure you want to delete "${playlist.title}"? This cannot be undone.`}
+        confirmText="Delete Playlist"
+        variant="danger"
+      />
+
+      {/* Remove Track Modal */}
+      <ConfirmModal
+        isOpen={!!trackToDelete}
+        onClose={() => setTrackToDelete(null)}
+        onConfirm={() => trackToDelete && handleRemoveTrack(trackToDelete)}
+        title="Remove Track"
+        message="Are you sure you want to remove this track from the playlist?"
+        confirmText="Remove"
+        variant="danger"
+      />
+
+      {/* Edit Modal (Inline for simplicity) */}
+      {showEditModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
+          <motion.div
+            initial={{ scale: 0.9, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            className="bg-card border border-white/10 rounded-2xl p-6 w-full max-w-md shadow-2xl"
+          >
+            <h2 className="text-xl font-bold text-foreground mb-4">Edit Playlist</h2>
+            <form onSubmit={handleUpdatePlaylist} className="space-y-4">
+              <div>
+                <label
+                  htmlFor="playlistName"
+                  className="block text-sm font-medium text-muted-foreground mb-1"
+                >
+                  Name
+                </label>
+                <input
+                  id="playlistName"
+                  type="text"
+                  value={editName}
+                  onChange={(e) => setEditName(e.target.value)}
+                  className="w-full bg-secondary/30 border border-white/10 rounded-lg px-3 py-2 text-foreground focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
+                  autoFocus
+                />
+              </div>
+              <div className="flex justify-end gap-3 mt-6">
+                <Button type="button" variant="ghost" onClick={() => setShowEditModal(false)}>
+                  Cancel
+                </Button>
+                <Button type="submit">Save Changes</Button>
+              </div>
+            </form>
+          </motion.div>
         </div>
       )}
     </div>

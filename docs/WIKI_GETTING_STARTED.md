@@ -55,8 +55,8 @@ Edit `.env` and set these required variables:
 
 ```bash
 # Admin access
-FIRST_SUPERUSER_EMAIL=admin@example.com
-FIRST_SUPERUSER_PASSWORD=SecurePassword123!  # Change this!
+ADMIN_USERNAME=admin
+ADMIN_PASSWORD=SecurePassword123!  # Change this!
 
 # Streaming service credentials (add as needed)
 SPOTIFY_CLIENT_ID=your_spotify_client_id
@@ -86,7 +86,7 @@ docker compose logs -f frontend
 
 ### 6. Get Admin Password
 
-If you didn't set `FIRST_SUPERUSER_PASSWORD`, check the logs:
+If you didn't set `ADMIN_PASSWORD`, check the logs:
 
 ```bash
 docker compose logs backend | grep "password"

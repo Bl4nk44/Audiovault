@@ -44,3 +44,4 @@ zipp>=3.19.1 # not directly required, pinned by Snyk to avoid a vulnerability
 dnspython>=2.6.1 # not directly required, pinned by Snyk to avoid a vulnerability
 greenlet>=3.0.0
 aiofiles
+psutil>=5.9.0

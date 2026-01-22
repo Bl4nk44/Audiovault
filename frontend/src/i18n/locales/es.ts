@@ -121,6 +121,7 @@ export const es = {
     refresh: "Actualizar",
     lines: "Líneas",
     download: "Descargar registros",
+    showErrorsOnly: "Solo errores",
   },
   quality: {
     low: "Baja (128kbps)",
@@ -146,8 +147,29 @@ export const es = {
     loadMore: "Cargar más",
     headers: {
       tracks: "Pistas",
-      artists: "Artistas",
+      artists: "Artistes",
       playlists: "Listas",
     },
+  },
+  library: {
+    title: "Mi Biblioteca",
+    subtitle: "Gestiona tu música descargada.",
+    newPlaylist: "Nueva Playlist",
+    rescan: "Escanear biblioteca",
+    allTracks: "Todas las pistas",
+    uncategorized: "Sin categoría",
+    playlistDeleted: "Playlist eliminada",
+    trackDeleted: "Pista eliminada",
+    rescanComplete: "Escaneo completado",
+  },
+  watchlist: {
+    title: "Lista de seguimiento",
+    subtitle: "Sigue artistas y playlists para nuevos lanzamientos.",
+    autoDownloadOn: "Auto-descarga: ON",
+    autoDownloadOff: "Auto-descarga: OFF",
+    syncDeletions: "Sincronizar eliminaciones",
+    removeFromWatchlist: "Eliminar de seguimiento",
+    newItems: "nuevos",
+    addToWatchlist: "Añadir a seguimiento",
   },
 };

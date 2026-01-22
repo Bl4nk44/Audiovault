@@ -1,4 +1,5 @@
 import logging
+import uuid
 from datetime import UTC, datetime
 
 from app.models.download import Download
@@ -22,10 +23,18 @@ class WatchlistEngine:
         self._spotify_service = SpotifyService()
         self._youtube_service = YouTubeService()
 
-    async def _handle_download(self, db: AsyncSession, user_id: str, track_id: str, item, track_title: str) -> bool:
+    def _to_uuid(self, val: str | uuid.UUID) -> uuid.UUID:
+        if isinstance(val, uuid.UUID):
+            return val
+        return uuid.UUID(str(val))
+
+    async def _handle_download(self, db: AsyncSession, user_id: str | uuid.UUID, track_id: str | uuid.UUID, item, track_title: str) -> bool:
         """Handle download logic: restore archived or queue new. Returns True if a download was initiated."""
+        user_uuid = self._to_uuid(user_id)
+        track_uuid = self._to_uuid(track_id)
+        
         download_exists_result = await db.execute(
-            select(Download).where(Download.user_id == user_id, Download.track_id == track_id)
+            select(Download).where(Download.user_id == user_uuid, Download.track_id == track_uuid)
         )
         existing_download = download_exists_result.scalar_one_or_none()
 
@@ -46,18 +55,20 @@ class WatchlistEngine:
         if item.auto_download:
             logger.info(f"Queueing new download: {track_title}")
             playlist_name = item.source_name if item.watch_type == "playlist" else None
-            download_data = DownloadCreate(track_id=track_id, source=item.source, playlist_name=playlist_name)
-            await download_manager.add_download(db, user_id, download_data)
+            download_data = DownloadCreate(track_id=track_uuid, source=item.source, playlist_name=playlist_name)
+            await download_manager.add_download(db, user_uuid, download_data)
             return True
 
         return False
 
-    async def add_to_watchlist(self, db: AsyncSession, user_id: str, item: dict) -> Watchlist:
+    async def add_to_watchlist(self, db: AsyncSession, user_id: str | uuid.UUID, item: dict) -> Watchlist:
         logger.info(f"Adding to watchlist: {item}")
+        user_uuid = self._to_uuid(user_id)
+        
         # Check if exists
         result = await db.execute(
             select(Watchlist).where(
-                Watchlist.user_id == user_id,
+                Watchlist.user_id == user_uuid,
                 Watchlist.source_id == item["source_id"],
                 Watchlist.source == item["source"],
             )
@@ -68,7 +79,7 @@ class WatchlistEngine:
             return existing
 
         watchlist_item = Watchlist(
-            user_id=user_id,
+            user_id=user_uuid,
             watch_type=item["watch_type"],
             source=item["source"],
             source_id=item["source_id"],
@@ -83,18 +94,22 @@ class WatchlistEngine:
 
         if watchlist_item.auto_download:
             try:
-                await self.check_for_updates(db, user_id)
+                await self.check_for_updates(db, user_uuid)
             except Exception as e:
                 logger.error(f"Error triggering auto-download for {watchlist_item.id}: {e}")
 
         return watchlist_item
 
-    async def get_watchlist(self, db: AsyncSession, user_id: str) -> list[Watchlist]:
-        result = await db.execute(select(Watchlist).where(Watchlist.user_id == user_id))
+    async def get_watchlist(self, db: AsyncSession, user_id: str | uuid.UUID) -> list[Watchlist]:
+        user_uuid = self._to_uuid(user_id)
+        result = await db.execute(select(Watchlist).where(Watchlist.user_id == user_uuid))
         return result.scalars().all()
 
-    async def remove_from_watchlist(self, db: AsyncSession, watchlist_id: str, user_id: str):
-        result = await db.execute(select(Watchlist).where(Watchlist.id == watchlist_id, Watchlist.user_id == user_id))
+    async def remove_from_watchlist(self, db: AsyncSession, watchlist_id: str | uuid.UUID, user_id: str | uuid.UUID):
+        wl_uuid = self._to_uuid(watchlist_id)
+        user_uuid = self._to_uuid(user_id)
+        
+        result = await db.execute(select(Watchlist).where(Watchlist.id == wl_uuid, Watchlist.user_id == user_uuid))
         item = result.scalar_one_or_none()
         if item:
             if item.watch_type == "playlist" and item.source_name:
@@ -104,7 +119,7 @@ class WatchlistEngine:
 
                 await db.execute(
                     delete(Download).where(
-                        Download.user_id == user_id,
+                        Download.user_id == user_uuid,
                         Download.playlist_name == item.source_name,
                         Download.status == "pending",
                     )
@@ -115,8 +130,11 @@ class WatchlistEngine:
             return True
         return False
 
-    async def update_watchlist_item(self, db: AsyncSession, watchlist_id: str, user_id: str, updates: dict):
-        result = await db.execute(select(Watchlist).where(Watchlist.id == watchlist_id, Watchlist.user_id == user_id))
+    async def update_watchlist_item(self, db: AsyncSession, watchlist_id: str | uuid.UUID, user_id: str | uuid.UUID, updates: dict):
+        wl_uuid = self._to_uuid(watchlist_id)
+        user_uuid = self._to_uuid(user_id)
+        
+        result = await db.execute(select(Watchlist).where(Watchlist.id == wl_uuid, Watchlist.user_id == user_uuid))
         item = result.scalar_one_or_none()
         if item:
             for key, value in updates.items():
@@ -127,8 +145,9 @@ class WatchlistEngine:
             return item
         return None
 
-    async def check_for_updates(self, db: AsyncSession, user_id: str):
-        logger.info(f"Checking for updates for user {user_id}")
+    async def check_for_updates(self, db: AsyncSession, user_id: str | uuid.UUID):
+        user_uuid = self._to_uuid(user_id)
+        logger.info(f"Checking for updates for user {user_uuid}")
         watchlist_items = await self.get_watchlist(db, user_id)
         from app.providers import provider_manager
 

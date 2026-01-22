@@ -1,26 +1,16 @@
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 
-import { notify as toast } from "../../utils/notify";
 import { motion } from "framer-motion";
-import {
-  Save,
-  FolderOpen,
-  Download,
-  Palette,
-  Globe,
-  FileText,
-  User,
-} from "lucide-react";
-import api from "../../services/api";
-import AccountSettings from "./AccountSettings";
+import { Download, FileText, FolderOpen, Globe, Palette, Save, User } from "lucide-react";
 import { useTranslation } from "../../hooks/useTranslation";
+import api from "../../services/api";
 import { useStore } from "../../store/useStore";
+import { notify as toast } from "../../utils/notify";
+import AccountSettings from "./AccountSettings";
 
 export default function SettingsPanel() {
   const { t } = useTranslation();
-  const updateUserPreferences = useStore(
-    (state) => state.updateUserPreferences
-  );
+  const updateUserPreferences = useStore((state) => state.updateUserPreferences);
   const [activeTab, setActiveTab] = useState("general");
   const [settings, setSettings] = useState({
     spotifyClientId: "",
@@ -86,10 +76,7 @@ export default function SettingsPanel() {
     show: { opacity: 1, y: 0 },
   };
 
-  if (loading)
-    return (
-      <div className="text-white text-center py-10">{t("common.loading")}</div>
-    );
+  if (loading) return <div className="text-white text-center py-10">{t("common.loading")}</div>;
 
   return (
     <div className="flex flex-col md:flex-row gap-8 pb-20 max-w-6xl">
@@ -99,7 +86,7 @@ export default function SettingsPanel() {
           <button
             key={tab.id}
             onClick={() => setActiveTab(tab.id)}
-            className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${
+            className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all cursor-pointer ${
               activeTab === tab.id
                 ? "bg-primary text-primary-foreground font-bold shadow-[0_0_15px_hsl(var(--primary)/0.4)]"
                 : "text-muted-foreground hover:text-foreground hover:bg-white/5"
@@ -122,10 +109,7 @@ export default function SettingsPanel() {
         {activeTab === "account" && <AccountSettings />}
 
         {activeTab === "general" && (
-          <motion.div
-            variants={item}
-            className="space-y-6 p-8 rounded-(--radius) glass"
-          >
+          <motion.div variants={item} className="space-y-6 p-8 rounded-(--radius) glass">
             <h3 className="text-xl font-bold text-white border-b border-white/10 pb-4">
               {t("settings.general")}
             </h3>
@@ -138,39 +122,22 @@ export default function SettingsPanel() {
                 <div className="relative">
                   <select
                     value={settings.language}
-                    onChange={(e) =>
-                      setSettings({ ...settings, language: e.target.value })
-                    }
+                    onChange={(e) => setSettings({ ...settings, language: e.target.value })}
                     className="w-full px-4 py-3 rounded-xl bg-secondary/50 border border-border text-foreground focus:outline-none focus:border-primary/50 appearance-none cursor-pointer"
                   >
-                    <option
-                      value="en"
-                      className="bg-popover text-popover-foreground"
-                    >
+                    <option value="en" className="bg-popover text-popover-foreground">
                       English
                     </option>
-                    <option
-                      value="pl"
-                      className="bg-popover text-popover-foreground"
-                    >
+                    <option value="pl" className="bg-popover text-popover-foreground">
                       Polski
                     </option>
-                    <option
-                      value="de"
-                      className="bg-popover text-popover-foreground"
-                    >
+                    <option value="de" className="bg-popover text-popover-foreground">
                       Deutsch
                     </option>
-                    <option
-                      value="fr"
-                      className="bg-popover text-popover-foreground"
-                    >
+                    <option value="fr" className="bg-popover text-popover-foreground">
                       Français
                     </option>
-                    <option
-                      value="es"
-                      className="bg-popover text-popover-foreground"
-                    >
+                    <option value="es" className="bg-popover text-popover-foreground">
                       Español
                     </option>
                   </select>
@@ -200,33 +167,19 @@ export default function SettingsPanel() {
                 <div className="relative">
                   <select
                     value={settings.audioQuality}
-                    onChange={(e) =>
-                      setSettings({ ...settings, audioQuality: e.target.value })
-                    }
+                    onChange={(e) => setSettings({ ...settings, audioQuality: e.target.value })}
                     className="w-full px-4 py-3 rounded-xl bg-secondary/50 border border-white/10 text-white focus:outline-none focus:border-primary/50 appearance-none cursor-pointer"
                   >
-                    <option
-                      value="low"
-                      className="bg-popover text-popover-foreground"
-                    >
+                    <option value="low" className="bg-popover text-popover-foreground">
                       {t("quality.low")}
                     </option>
-                    <option
-                      value="normal"
-                      className="bg-popover text-popover-foreground"
-                    >
+                    <option value="normal" className="bg-popover text-popover-foreground">
                       {t("quality.normal")}
                     </option>
-                    <option
-                      value="high"
-                      className="bg-popover text-popover-foreground"
-                    >
+                    <option value="high" className="bg-popover text-popover-foreground">
                       {t("quality.high")}
                     </option>
-                    <option
-                      value="lossless"
-                      className="bg-popover text-popover-foreground"
-                    >
+                    <option value="lossless" className="bg-popover text-popover-foreground">
                       {t("quality.lossless")}
                     </option>
                   </select>
@@ -272,10 +225,7 @@ export default function SettingsPanel() {
         )}
 
         {activeTab === "appearance" && (
-          <motion.div
-            variants={item}
-            className="space-y-6 p-8 rounded-(--radius) glass"
-          >
+          <motion.div variants={item} className="space-y-6 p-8 rounded-(--radius) glass">
             <h3 className="text-xl font-bold text-foreground border-b border-border pb-4">
               {t("settings.appearance")}
             </h3>
@@ -316,15 +266,13 @@ export default function SettingsPanel() {
                 <button
                   key={theme.id}
                   onClick={() => setSettings({ ...settings, theme: theme.id })}
-                  className={`relative p-4 rounded-2xl border-2 transition-all overflow-hidden group ${
+                  className={`relative p-4 rounded-2xl border-2 transition-all overflow-hidden group cursor-pointer ${
                     settings.theme === theme.id
                       ? "border-primary shadow-[0_0_20px_hsl(var(--primary)/0.2)]"
                       : "border-border hover:border-primary/50"
                   }`}
                 >
-                  <div
-                    className={`absolute inset-0 ${theme.color} opacity-80`}
-                  />
+                  <div className={`absolute inset-0 ${theme.color} opacity-80`} />
                   <div className="relative z-10 flex flex-col items-center gap-2">
                     <div className="w-full h-12 rounded-lg bg-card/10 backdrop-blur-sm border border-white/10" />
                     <span className="font-medium text-white shadow-black drop-shadow-md">
@@ -338,10 +286,7 @@ export default function SettingsPanel() {
         )}
 
         {activeTab === "files" && (
-          <motion.div
-            variants={item}
-            className="space-y-6 p-8 rounded-(--radius) glass"
-          >
+          <motion.div variants={item} className="space-y-6 p-8 rounded-(--radius) glass">
             <h3 className="text-xl font-bold text-white border-b border-white/10 pb-4">
               {t("settings.files")}
             </h3>
@@ -354,9 +299,7 @@ export default function SettingsPanel() {
                 <input
                   type="text"
                   value={settings.downloadPath}
-                  onChange={(e) =>
-                    setSettings({ ...settings, downloadPath: e.target.value })
-                  }
+                  onChange={(e) => setSettings({ ...settings, downloadPath: e.target.value })}
                   className="w-full px-4 py-3 rounded-xl bg-black/20 border border-white/10 text-white focus:outline-none focus:border-primary/50"
                 />
               </div>
@@ -368,15 +311,12 @@ export default function SettingsPanel() {
                 <input
                   type="text"
                   value={settings.filenameSchema}
-                  onChange={(e) =>
-                    setSettings({ ...settings, filenameSchema: e.target.value })
-                  }
+                  onChange={(e) => setSettings({ ...settings, filenameSchema: e.target.value })}
                   className="w-full bg-black/40 border border-white/10 rounded-(--radius) p-3 text-white focus:outline-none focus:border-primary/50 transition-colors text-sm"
                   placeholder="{user}/{service}/{playlist}/{artist} - {title}"
                 />
                 <p className="text-xs text-gray-500 ml-1 leading-relaxed">
-                  {t("settings.availableTags")}{" "}
-                  <code className="text-primary">{"{artist}"}</code>,{" "}
+                  {t("settings.availableTags")} <code className="text-primary">{"{artist}"}</code>,{" "}
                   <code className="text-primary">{"{title}"}</code>,{" "}
                   <code className="text-primary">{"{album}"}</code>,{" "}
                   <code className="text-primary">{"{id}"}</code>,{" "}
@@ -386,8 +326,7 @@ export default function SettingsPanel() {
                   <code className="text-primary">{"{service}"}</code>,{" "}
                   <code className="text-primary">{"{user}"}</code>
                   <br />
-                  Use <code className="text-primary">/</code> to create folders
-                  (e.g.{" "}
+                  Use <code className="text-primary">/</code> to create folders (e.g.{" "}
                   <code className="text-gray-300">
                     {"{user}/{service}/{playlist}/{artist} - {title}"}
                   </code>
@@ -402,33 +341,31 @@ export default function SettingsPanel() {
                     <FolderOpen size={14} className="text-yellow-500" />
                     <span>{settings.downloadPath}</span>
                   </div>
-                  {settings.filenameSchema
-                    .split("/")
-                    .map((part, index, array) => (
-                      <div
-                        key={part + index}
-                        className="flex items-center gap-2 ml-4 border-l border-white/10 pl-2"
-                      >
-                        {index === array.length - 1 ? (
-                          <FileText size={14} className="text-blue-400" />
-                        ) : (
-                          <FolderOpen size={14} className="text-yellow-500" />
-                        )}
-                        <span>
-                          {part
-                            .replace("{artist}", "The Weeknd")
-                            .replace("{title}", "Blinding Lights")
-                            .replace("{album}", "After Hours")
-                            .replace("{id}", "12345")
-                            .replace("{year}", "2020")
-                            .replace("{track_number}", "01")
-                            .replace("{playlist}", "Top Hits")
-                            .replace("{service}", "spotify")
-                            .replace("{user}", "admin")}
-                          {index === array.length - 1 ? ".mp3" : ""}
-                        </span>
-                      </div>
-                    ))}
+                  {settings.filenameSchema.split("/").map((part, index, array) => (
+                    <div
+                      key={part + index}
+                      className="flex items-center gap-2 ml-4 border-l border-white/10 pl-2"
+                    >
+                      {index === array.length - 1 ? (
+                        <FileText size={14} className="text-blue-400" />
+                      ) : (
+                        <FolderOpen size={14} className="text-yellow-500" />
+                      )}
+                      <span>
+                        {part
+                          .replace("{artist}", "The Weeknd")
+                          .replace("{title}", "Blinding Lights")
+                          .replace("{album}", "After Hours")
+                          .replace("{id}", "12345")
+                          .replace("{year}", "2020")
+                          .replace("{track_number}", "01")
+                          .replace("{playlist}", "Top Hits")
+                          .replace("{service}", "spotify")
+                          .replace("{user}", "admin")}
+                        {index === array.length - 1 ? ".mp3" : ""}
+                      </span>
+                    </div>
+                  ))}
                 </div>
               </div>
             </div>
@@ -440,7 +377,7 @@ export default function SettingsPanel() {
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
             onClick={handleSave}
-            className="flex items-center gap-2 bg-primary text-black font-bold px-8 py-4 rounded-xl shadow-[0_0_20px_rgba(34,197,94,0.3)] hover:shadow-[0_0_30px_rgba(34,197,94,0.5)] transition-all"
+            className="flex items-center gap-2 bg-primary text-black font-bold px-8 py-4 rounded-xl shadow-[0_0_20px_rgba(34,197,94,0.3)] hover:shadow-[0_0_30px_rgba(34,197,94,0.5)] transition-all cursor-pointer"
           >
             <Save size={20} />
             {t("common.save")}

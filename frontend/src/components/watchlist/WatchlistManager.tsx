@@ -1,19 +1,18 @@
+import { LayoutGrid, List, Loader2, RefreshCw } from "lucide-react";
 import { useEffect, useState } from "react";
-import { useStore } from "../../store/useStore";
-import WatchlistItem from "./WatchlistItem";
-import { Loader2, RefreshCw, LayoutGrid, List } from "lucide-react";
-import { notify as toast } from '../../utils/notify';
 import api from "../../services/api";
-import SyncModal from "../sync/SyncModal";
+import { useStore } from "../../store/useStore";
 import { type WatchlistItem as WatchlistItemType } from "../../types";
+import { notify as toast } from "../../utils/notify";
+import SyncModal from "../sync/SyncModal";
+import WatchlistItem from "./WatchlistItem";
 
 export default function WatchlistManager() {
   const { watchlist, syncWatchlist, removeFromWatchlist } = useStore();
   const [isLoading, setIsLoading] = useState(true);
   const [isChecking, setIsChecking] = useState(false);
   const [viewMode, setViewMode] = useState<"list" | "grid">("grid");
-  const [selectedSyncItem, setSelectedSyncItem] =
-    useState<WatchlistItemType | null>(null);
+  const [selectedSyncItem, setSelectedSyncItem] = useState<WatchlistItemType | null>(null);
 
   useEffect(() => {
     syncWatchlist().finally(() => setIsLoading(false));
@@ -36,9 +35,7 @@ export default function WatchlistManager() {
     setIsChecking(true);
     try {
       const res = await api.post("/watchlist/check-updates");
-      toast.success(
-        `Check complete. ${res.data.new_downloads} new items found.`
-      );
+      toast.success(`Check complete. ${res.data.new_downloads} new items found.`);
       syncWatchlist(); // Refresh list to update counts/dates
     } catch {
       toast.error("Failed to check for updates");
@@ -61,7 +58,7 @@ export default function WatchlistManager() {
         <div className="flex bg-card/40 rounded-lg p-1 border border-border">
           <button
             onClick={() => setViewMode("grid")}
-            className={`p-2 rounded-md transition-all ${
+            className={`p-2 rounded-md transition-all cursor-pointer ${
               viewMode === "grid"
                 ? "bg-secondary text-foreground shadow-sm"
                 : "text-muted-foreground hover:text-foreground"
@@ -72,7 +69,7 @@ export default function WatchlistManager() {
           </button>
           <button
             onClick={() => setViewMode("list")}
-            className={`p-2 rounded-md transition-all ${
+            className={`p-2 rounded-md transition-all cursor-pointer ${
               viewMode === "list"
                 ? "bg-secondary text-foreground shadow-sm"
                 : "text-muted-foreground hover:text-foreground"
@@ -86,7 +83,7 @@ export default function WatchlistManager() {
         <button
           onClick={handleCheckUpdates}
           disabled={isChecking}
-          className="flex items-center gap-2 px-4 py-2 bg-secondary hover:bg-secondary/80 rounded-lg text-sm font-medium transition-colors disabled:opacity-50"
+          className="flex items-center gap-2 px-4 py-2 bg-secondary hover:bg-secondary/80 rounded-lg text-sm font-medium transition-colors disabled:opacity-50 cursor-pointer"
         >
           <RefreshCw size={16} className={isChecking ? "animate-spin" : ""} />
           {isChecking ? "Checking..." : "Check for Updates"}
@@ -102,8 +99,7 @@ export default function WatchlistManager() {
       >
         {watchlist.length === 0 ? (
           <div className="col-span-full text-center py-12 text-muted-foreground border border-dashed border-border rounded-lg">
-            Your watchlist is empty. Add artists or playlists to track new
-            releases.
+            Your watchlist is empty. Add artists or playlists to track new releases.
           </div>
         ) : (
           watchlist.map((item) => (
@@ -118,11 +114,7 @@ export default function WatchlistManager() {
         )}
       </div>
 
-      <SyncModal
-        item={selectedSyncItem}
-        onClose={() => setSelectedSyncItem(null)}
-      />
+      <SyncModal item={selectedSyncItem} onClose={() => setSelectedSyncItem(null)} />
     </div>
   );
 }
-

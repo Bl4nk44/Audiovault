@@ -158,3 +158,62 @@ async def check_for_updates():
         except Exception as e:
             logger.error(f"Error checking for updates (Dev): {e}")
             return {"error": str(e)}
+
+
+@router.get("/stats")
+async def get_system_stats():
+    """
+    Get system statistics (CPU, RAM, Disk, Network).
+    Requires psutil to be installed.
+    """
+    try:
+        import psutil
+    except ImportError:
+        raise HTTPException(
+            status_code=503,
+            detail="psutil library is not installed. Statistics are unavailable."
+        )
+
+    try:
+        # CPU
+        cpu_percent = psutil.cpu_percent(interval=None)
+        
+        # Memory
+        mem = psutil.virtual_memory()
+        ram_total = mem.total
+        ram_used = mem.used
+        ram_percent = mem.percent
+
+        # Disk
+        disk = psutil.disk_usage("/")
+        disk_total = disk.total
+        disk_used = disk.used
+        disk_percent = disk.percent
+
+        # Network (Bytes since boot)
+        net = psutil.net_io_counters()
+        net_sent = net.bytes_sent
+        net_recv = net.bytes_recv
+
+        return {
+            "cpu": {
+                "percent": cpu_percent
+            },
+            "memory": {
+                "total": ram_total,
+                "used": ram_used,
+                "percent": ram_percent
+            },
+            "disk": {
+                "total": disk_total,
+                "used": disk_used,
+                "percent": disk_percent
+            },
+            "network": {
+                "sent": net_sent,
+                "recv": net_recv
+            }
+        }
+    except Exception as e:
+        logger.error(f"Error gathering system stats: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to gather system stats: {str(e)}")

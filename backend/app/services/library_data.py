@@ -19,7 +19,13 @@ class LibraryDataService:
         limit: int = 50,
         source: Optional[str] = None,
         playlist: Optional[str] = None,
+        search: Optional[str] = None,
+        artist: Optional[str] = None,
+        min_duration: Optional[int] = None,  # in seconds
+        max_duration: Optional[int] = None,  # in seconds
     ) -> dict:
+        from app.models.track import Track
+
         try:
             u_uuid = uuid.UUID(str(user_id))
         except ValueError:
@@ -37,21 +43,44 @@ class LibraryDataService:
             else:
                 conditions.append(Download.playlist_name == playlist)
 
+        # Build query with join for advanced filtering
+        query = select(Download).options(joinedload(Download.track)).join(Track)
+
+        # Search filter (title or artist contains search term)
+        if search:
+            search_term = f"%{search.lower()}%"
+            conditions.append(
+                (func.lower(Track.title).like(search_term)) |
+                (func.lower(Track.artist).like(search_term)) |
+                (func.lower(Track.album).like(search_term))
+            )
+
+        # Artist filter
+        if artist:
+            conditions.append(func.lower(Track.artist).like(f"%{artist.lower()}%"))
+
+        # Duration filters (convert seconds to milliseconds)
+        if min_duration is not None:
+            conditions.append(Track.duration_ms >= min_duration * 1000)
+        if max_duration is not None:
+            conditions.append(Track.duration_ms <= max_duration * 1000)
+
+        # Apply all conditions
+        query = query.where(*conditions)
+
         # First, get total count
-        count_query = select(func.count()).select_from(Download).where(*conditions)
+        count_query = select(func.count()).select_from(Download).join(Track).where(*conditions)
         total_result = await db.execute(count_query)
         total = total_result.scalar()
 
         # Get paginated items
         result = await db.execute(
-            select(Download)
-            .options(joinedload(Download.track))
-            .where(*conditions)
+            query
             .order_by(Download.created_at.desc())
             .offset(skip)
             .limit(limit)
         )
-        downloads = result.scalars().all()
+        downloads = result.scalars().unique().all()
 
         items = []
         updates_made = False

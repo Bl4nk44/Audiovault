@@ -6,7 +6,6 @@ import {
   HardDrive,
   List,
   Music,
-  Play,
   Search,
   Settings,
 } from "lucide-react";
@@ -15,19 +14,8 @@ import { useNavigate } from "react-router-dom";
 import { useTranslation } from "../hooks/useTranslation";
 import api from "../services/api";
 
-interface RecentActivityItem {
-  id: string;
-  track_id?: string;
-  title: string;
-  artist: string;
-  time_ago: string;
-  progress: number;
-  image_url?: string;
-  filename?: string;
-}
-
+import SystemStats from "../components/dashboard/SystemStats";
 import { GlassCard } from "../components/ui/GlassCard";
-import { useStore } from "../store/useStore";
 
 interface ActiveDownloadItem {
   id: string;
@@ -43,7 +31,6 @@ interface DashboardStats {
   tracks_in_library: string;
   pending_queue: string;
   storage_free: string;
-  recent_activity: RecentActivityItem[];
   active_download: ActiveDownloadItem | null;
 }
 
@@ -64,7 +51,7 @@ const item = {
 
 export default function Dashboard() {
   const navigate = useNavigate();
-  const { playTrack } = useStore();
+
   const { t } = useTranslation();
   const [searchQuery, setSearchQuery] = useState("");
   const [dashboardStats, setDashboardStats] = useState<DashboardStats>({
@@ -72,7 +59,6 @@ export default function Dashboard() {
     tracks_in_library: "-",
     pending_queue: "-",
     storage_free: "-",
-    recent_activity: [],
     active_download: null,
   });
 
@@ -281,104 +267,9 @@ export default function Dashboard() {
 
         {/* Main Content Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-stretch">
-          {/* Recent Activity (Left Column, 2 spans) */}
+          {/* Server Stats (Left Column, 2 spans) */}
           <motion.div variants={item} className="lg:col-span-2 flex flex-col">
-            <GlassCard
-              variant="default"
-              intensity="high"
-              className="p-8 shadow-2xl flex-1 flex flex-col justify-between min-h-105"
-            >
-              <div>
-                <h3 className="font-bold mb-6 text-2xl text-white flex items-center gap-3">
-                  <span className="w-1.5 h-8 bg-primary rounded-full shadow-[0_0_10px_rgba(var(--primary-rgb),0.5)] shadow-primary/50"></span>
-                  {t("dashboard.recentActivity")}
-                </h3>
-                <div className="space-y-3">
-                  {dashboardStats.recent_activity.length === 0 ? (
-                    <div className="flex flex-col items-center justify-center p-12 text-gray-400">
-                      <Music size={48} className="mb-4 opacity-20" />
-                      <p className="text-lg">{t("dashboard.noActivity")}</p>
-                    </div>
-                  ) : (
-                    dashboardStats.recent_activity
-                      .slice(0, 3)
-                      .map((activity: RecentActivityItem) => (
-                        <motion.div
-                          key={activity.id}
-                          whileHover={{
-                            y: -2,
-                          }}
-                          whileTap={{
-                            y: 2,
-                            borderBottomWidth: "0px",
-                            marginBottom: "2px",
-                          }}
-                          onClick={() => {
-                            const currentTrack = useStore.getState().currentTrack;
-                            const isCurrent =
-                              (activity.track_id && currentTrack?.id === activity.track_id) ||
-                              currentTrack?.id === activity.id;
-
-                            if (isCurrent && useStore.getState().isPlaying) {
-                              useStore.getState().togglePlay();
-                            } else {
-                              playTrack(
-                                {
-                                  id: activity.track_id || activity.id,
-                                  title: activity.title,
-                                  artist: activity.artist,
-                                  cover: activity.image_url,
-                                  source: "local",
-                                  filename: activity.filename,
-                                  album: "Recent Activity",
-                                },
-                                dashboardStats.recent_activity.map((a) => ({
-                                  id: a.track_id || a.id,
-                                  title: a.title,
-                                  artist: a.artist,
-                                  cover: a.image_url,
-                                  source: "local",
-                                  filename: a.filename,
-                                  album: "Recent Activity",
-                                }))
-                              );
-                            }
-                          }}
-                          className="flex items-center gap-4 p-3 rounded-2xl bg-white/5 border-b-4 border-white/5 transition-all group cursor-pointer border-t border-r border-l hover:border-white/10 hover:bg-white/10"
-                        >
-                          <div className="w-12 h-12 rounded-xl bg-linear-to-br from-primary to-primary/60 flex items-center justify-center group-hover:scale-110 transition-transform duration-300 relative overflow-hidden shrink-0">
-                            {activity.image_url ? (
-                              <img
-                                src={activity.image_url}
-                                alt={activity.title}
-                                className="w-full h-full object-cover transition-opacity"
-                              />
-                            ) : (
-                              <Music size={24} className="text-black/50" />
-                            )}
-                            <div className="absolute inset-0 bg-black/10 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity z-10">
-                              <Play size={20} className="text-white fill-white drop-shadow-md" />
-                            </div>
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <div className="flex justify-between items-center mb-0.5">
-                              <p className="font-bold text-base text-white group-hover:text-primary transition-colors truncate pr-2">
-                                {activity.title}
-                              </p>
-                              <span className="text-[10px] text-gray-500 bg-black/40 px-1.5 py-0.5 rounded-md border border-white/5 whitespace-nowrap">
-                                {activity.time_ago}
-                              </span>
-                            </div>
-                            <p className="text-xs text-gray-400 truncate font-medium">
-                              {activity.artist}
-                            </p>
-                          </div>
-                        </motion.div>
-                      ))
-                  )}
-                </div>
-              </div>
-            </GlassCard>
+            <SystemStats />
           </motion.div>
 
           {/* Quick Links Grid (Right Column, 1 span) */}

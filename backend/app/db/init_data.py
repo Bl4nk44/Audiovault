@@ -18,12 +18,13 @@ async def init_db(db: AsyncSession) -> None:
             # Use environment variables for initial setup security
             from app.core.config import settings
 
-            admin_email = getattr(settings, "FIRST_SUPERUSER", "admin@example.com")
+            admin_username = getattr(settings, "ADMIN_USERNAME", "admin")
+            admin_email = getattr(settings, "ADMIN_EMAIL", "admin@example.com")
             # Require password from environment variable for security
-            admin_password = getattr(settings, "FIRST_SUPERUSER_PASSWORD", None)
+            admin_password = getattr(settings, "ADMIN_PASSWORD", None)
 
             if not admin_password:
-                logger.warning("FIRST_SUPERUSER_PASSWORD not set. Creating admin with random password.")
+                logger.warning("ADMIN_PASSWORD not set. Creating admin with random password.")
                 import secrets
 
                 admin_password = secrets.token_urlsafe(16)
@@ -31,7 +32,7 @@ async def init_db(db: AsyncSession) -> None:
 
             user = User(
                 email=admin_email,
-                username=settings.FIRST_SUPERUSER_USERNAME,
+                username=admin_username,
                 hashed_password=get_password_hash(admin_password),
                 is_active=True,
             )
@@ -39,6 +40,7 @@ async def init_db(db: AsyncSession) -> None:
             await db.commit()
             await db.refresh(user)
             logger.info("Default admin user created")
+            logger.info(f"Admin username: {admin_username}")
             logger.info(f"Admin email: {admin_email}")
         else:
             logger.info("Admin user already exists")

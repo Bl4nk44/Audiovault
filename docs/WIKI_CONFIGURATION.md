@@ -10,8 +10,9 @@ All configuration is done through environment variables in the `.env` file.
 
 ```bash
 # Admin user credentials
-FIRST_SUPERUSER_EMAIL=admin@example.com
-FIRST_SUPERUSER_PASSWORD=SecurePassword123!  # Set strong password!
+ADMIN_USERNAME=admin
+ADMIN_EMAIL=admin@example.com
+ADMIN_PASSWORD=SecurePassword123!  # Set strong password!
 
 # Secret key for JWT tokens (generates if not set)
 SECRET_KEY=your-super-secret-key-here
@@ -128,8 +129,8 @@ services:
       - ./data:/app/data
     environment:
       - DATABASE_URL=sqlite:///./data/audiovault.db
-      - FIRST_SUPERUSER_EMAIL=admin@example.com
-      - FIRST_SUPERUSER_PASSWORD=YourPassword123!
+      - ADMIN_USERNAME=admin
+      - ADMIN_PASSWORD=YourPassword123!
     restart: unless-stopped
 
   frontend:

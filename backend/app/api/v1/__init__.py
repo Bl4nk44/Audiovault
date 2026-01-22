@@ -2,15 +2,18 @@ from app.api.v1 import (
     amazon_music,
     apple_music,
     artists,
+    audit,
     auth,
     dashboard,
     deezer,
     downloads,
     history,
+    lyrics,
     playlists,
     settings,
     soundcloud,
     spotify,
+    storage,
     stream,
     tidal,
     users,
@@ -30,6 +33,9 @@ api_router.include_router(history.router, prefix="/history", tags=["history"])
 api_router.include_router(youtube.router, prefix="/youtube", tags=["youtube"])
 api_router.include_router(dashboard.router, prefix="/dashboard", tags=["dashboard"])
 api_router.include_router(stream.router, prefix="/stream", tags=["stream"])
+api_router.include_router(lyrics.router, prefix="/lyrics", tags=["lyrics"])
+api_router.include_router(audit.router, prefix="/audit", tags=["audit"])
+api_router.include_router(storage.router, prefix="/storage", tags=["storage"])
 
 api_router.include_router(users.router, prefix="/users", tags=["users"])
 api_router.include_router(deezer.router, prefix="/deezer", tags=["deezer"])
@@ -38,3 +44,6 @@ api_router.include_router(apple_music.router, prefix="/apple_music", tags=["appl
 api_router.include_router(tidal.router, prefix="/tidal", tags=["tidal"])
 api_router.include_router(amazon_music.router, prefix="/amazon_music", tags=["amazon_music"])
 api_router.include_router(soundcloud.router, prefix="/soundcloud", tags=["soundcloud"])
+
+
+

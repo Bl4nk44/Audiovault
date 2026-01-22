@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { createPlayerSlice, type PlayerSlice } from "./playerSlice";
 
 // localStorage is mocked globally in setupTests.ts
@@ -6,11 +6,7 @@ const localStorageMock = globalThis.localStorage as any;
 
 describe("playerSlice", () => {
   let state: PlayerSlice;
-  let set: (
-    partial:
-      | Partial<PlayerSlice>
-      | ((state: PlayerSlice) => Partial<PlayerSlice>),
-  ) => void;
+  let set: (partial: Partial<PlayerSlice> | ((state: PlayerSlice) => Partial<PlayerSlice>)) => void;
   let get: () => PlayerSlice;
 
   beforeEach(() => {
@@ -54,39 +50,14 @@ describe("playerSlice", () => {
     });
   });
 
-  describe("pauseTrack", () => {
-    it("should pause the current track", () => {
-      state.isPlaying = true;
-
-      state.pauseTrack();
-
-      expect(state.isPlaying).toBe(false);
-    });
-  });
-
-  describe("resumeTrack", () => {
-    it("should resume the current track", () => {
+  describe("togglePlay", () => {
+    it("should toggle playing state", () => {
       state.isPlaying = false;
-
-      state.resumeTrack();
-
+      state.togglePlay();
       expect(state.isPlaying).toBe(true);
-    });
-  });
 
-  describe("seek", () => {
-    it("should update current time", () => {
-      state.seek(42);
-
-      expect(state.currentTime).toBe(42);
-    });
-  });
-
-  describe("updatePlaybackRate", () => {
-    it("should update playback rate", () => {
-      state.updatePlaybackRate(1.5);
-
-      expect(state.playbackRate).toBe(1.5);
+      state.togglePlay();
+      expect(state.isPlaying).toBe(false);
     });
   });
 
@@ -96,14 +67,13 @@ describe("playerSlice", () => {
 
       expect(state.volume).toBe(0.8);
     });
+  });
 
-    it("should persist volume to localStorage", () => {
-      state.setVolume(0.6);
-
-      expect(localStorageMock.setItem).toHaveBeenCalledWith(
-        "player_volume",
-        "0.6",
-      );
+  describe("queue management", () => {
+    it("should add track to queue", () => {
+      const track = { id: "1", title: "Test Track" } as any;
+      state.addToQueue(track);
+      expect(state.queue).toContainEqual(track);
     });
   });
 });

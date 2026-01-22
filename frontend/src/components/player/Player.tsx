@@ -1,10 +1,11 @@
 import { motion } from "framer-motion";
-import { Maximize2, X } from "lucide-react";
+import { Maximize2, Mic2, X } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { useAudioVisualizer } from "../../hooks/useAudioVisualizer";
 import { cn } from "../../lib/utils";
 import { useStore } from "../../store/useStore";
+import LyricsPanel from "./LyricsPanel";
 import { PlayerControls } from "./PlayerControls";
 import { ProgressBar } from "./ProgressBar";
 import { TrackInfo } from "./TrackInfo";
@@ -26,6 +27,7 @@ export default function Player() {
   const audioRef = useRef<HTMLAudioElement>(null);
   const [isExpanded, setIsExpanded] = useState(false);
   const [showVisualizer, setShowVisualizer] = useState(true);
+  const [lyricsOpen, setLyricsOpen] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
   const hasRecordedRef = useRef(false);
@@ -132,93 +134,108 @@ export default function Player() {
     : `${apiUrl}/stream/${currentTrack.id}.mp3`;
 
   return (
-    <motion.div
-      initial={{ y: 100 }}
-      animate={{ y: 0 }}
-      exit={{ y: 100 }}
-      className={cn(
-        "fixed left-0 right-0 z-40 transition-all duration-500 ease-in-out md:left-78",
-        isExpanded
-          ? "top-0 bottom-0 h-dvh bg-black/95 backdrop-blur-3xl md:left-0"
-          : "bottom-20 md:bottom-3 h-16 md:h-24 bg-black/80 md:bg-black/60 backdrop-blur-xl border-t border-white/10 md:rounded-b-3xl"
-      )}
-    >
-      {showVisualizer &&
-        createPortal(
-          <canvas
-            ref={canvasRef}
-            width={window.innerWidth}
-            height={window.innerHeight}
-            className="fixed inset-0 w-full h-full pointer-events-none z-0 opacity-50 mix-blend-screen blur-sm"
-          />,
-          document.body
-        )}
-
-      <div
+    <>
+      <motion.div
+        initial={{ y: 100 }}
+        animate={{ y: 0 }}
+        exit={{ y: 100 }}
         className={cn(
-          "container mx-auto h-full flex flex-col",
+          "fixed left-0 right-0 z-40 transition-all duration-500 ease-in-out md:left-78",
           isExpanded
-            ? "justify-center p-6 md:p-8"
-            : "flex-row items-center justify-between px-3 md:px-4"
+            ? "top-0 bottom-0 h-dvh bg-black/95 backdrop-blur-3xl md:left-0"
+            : "bottom-20 md:bottom-3 h-16 md:h-24 bg-black/80 md:bg-black/60 backdrop-blur-xl border-t border-white/10 md:rounded-b-3xl"
         )}
       >
-        <TrackInfo currentTrack={currentTrack} isExpanded={isExpanded} />
+        {showVisualizer &&
+          createPortal(
+            <canvas
+              ref={canvasRef}
+              width={window.innerWidth}
+              height={window.innerHeight}
+              className="fixed inset-0 w-full h-full pointer-events-none z-0 opacity-50 mix-blend-screen blur-sm"
+            />,
+            document.body
+          )}
 
         <div
           className={cn(
-            "flex flex-col items-center gap-2",
-            isExpanded ? "w-full max-w-lg mx-auto" : "flex-1"
+            "container mx-auto h-full flex flex-col",
+            isExpanded
+              ? "justify-center p-6 md:p-8"
+              : "flex-row items-center justify-between px-3 md:px-4"
           )}
         >
-          <PlayerControls
-            isPlaying={isPlaying}
-            togglePlay={togglePlay}
-            nextTrack={nextTrack}
-            prevTrack={prevTrack}
-            isExpanded={isExpanded}
-          />
-          <ProgressBar
-            currentTime={currentTime}
-            duration={duration}
-            onSeek={handleSeek}
-            isExpanded={isExpanded}
-          />
-        </div>
+          <TrackInfo currentTrack={currentTrack} isExpanded={isExpanded} />
 
-        <div
-          className={cn(
-            "flex items-center justify-end gap-2 md:gap-4",
-            isExpanded ? "absolute top-6 right-6 md:top-8 md:right-8" : "w-auto md:w-1/3"
-          )}
-        >
-          <VolumeControl volume={volume} setVolume={setVolume} isExpanded={isExpanded} />
-
-          <VisualizerToggle
-            showVisualizer={showVisualizer}
-            setShowVisualizer={setShowVisualizer}
-            isExpanded={isExpanded}
-          />
-
-          <button
-            onClick={() => setIsExpanded(!isExpanded)}
-            className="text-gray-400 hover:text-white p-2 hover:bg-white/10 rounded-full transition-colors"
-            aria-label={isExpanded ? "Collapse player" : "Expand player"}
+          <div
+            className={cn(
+              "flex flex-col items-center gap-2",
+              isExpanded ? "w-full max-w-lg mx-auto" : "flex-1"
+            )}
           >
-            {isExpanded ? <X size={24} /> : <Maximize2 size={20} />}
-          </button>
-        </div>
-      </div>
+            <PlayerControls
+              isPlaying={isPlaying}
+              togglePlay={togglePlay}
+              nextTrack={nextTrack}
+              prevTrack={prevTrack}
+              isExpanded={isExpanded}
+            />
+            <ProgressBar
+              currentTime={currentTime}
+              duration={duration}
+              onSeek={handleSeek}
+              isExpanded={isExpanded}
+            />
+          </div>
 
-      <audio
-        ref={audioRef}
-        src={streamUrl}
-        crossOrigin="anonymous"
-        onTimeUpdate={handleTimeUpdate}
-        onEnded={nextTrack}
-        preload="auto"
-      >
-        <track kind="captions" src="" label="English" />
-      </audio>
-    </motion.div>
+          <div
+            className={cn(
+              "flex items-center justify-end gap-2 md:gap-4",
+              isExpanded ? "absolute top-6 right-6 md:top-8 md:right-8" : "w-auto md:w-1/3"
+            )}
+          >
+            <VolumeControl volume={volume} setVolume={setVolume} isExpanded={isExpanded} />
+
+            <VisualizerToggle
+              showVisualizer={showVisualizer}
+              setShowVisualizer={setShowVisualizer}
+              isExpanded={isExpanded}
+            />
+
+            {/* Lyrics Button */}
+            <button
+              onClick={() => setLyricsOpen(true)}
+              className="text-gray-400 hover:text-white p-2 hover:bg-white/10 rounded-full transition-colors"
+              aria-label="Show lyrics"
+              title="Lyrics"
+            >
+              <Mic2 size={20} />
+            </button>
+
+            <button
+              onClick={() => setIsExpanded(!isExpanded)}
+              className="text-gray-400 hover:text-white p-2 hover:bg-white/10 rounded-full transition-colors"
+              aria-label={isExpanded ? "Collapse player" : "Expand player"}
+            >
+              {isExpanded ? <X size={24} /> : <Maximize2 size={20} />}
+            </button>
+          </div>
+        </div>
+
+        <audio
+          ref={audioRef}
+          src={streamUrl}
+          crossOrigin="anonymous"
+          onTimeUpdate={handleTimeUpdate}
+          onEnded={nextTrack}
+          preload="auto"
+        >
+          <track kind="captions" src="" label="English" />
+        </audio>
+      </motion.div>
+
+      {/* Lyrics Panel */}
+      <LyricsPanel isOpen={lyricsOpen} onClose={() => setLyricsOpen(false)} />
+    </>
   );
 }

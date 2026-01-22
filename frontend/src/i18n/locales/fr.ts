@@ -26,12 +26,12 @@ export const fr = {
     refresh: "Actualiser",
     lines: "Lignes",
     download: "Télécharger les journaux",
+    showErrorsOnly: "Erreurs seulement",
   },
   dashboard: {
     title: "Tableau de Bord",
     subtitle: "Aperçu de votre collection musicale et des téléchargements.",
-    searchPlaceholder:
-      "Collez l'URL (YouTube, Spotify...) ou recherchez de la musique...",
+    searchPlaceholder: "Collez l'URL (YouTube, Spotify...) ou recherchez de la musique...",
 
     stats: {
       totalDownloads: "Total des téléchargements",
@@ -151,5 +151,26 @@ export const fr = {
       artists: "Artistes",
       playlists: "Playlists",
     },
+  },
+  library: {
+    title: "Ma Bibliothèque",
+    subtitle: "Gérez votre musique téléchargée.",
+    newPlaylist: "Nouvelle Playlist",
+    rescan: "Scanner la bibliothèque",
+    allTracks: "Tous les titres",
+    uncategorized: "Non classé",
+    playlistDeleted: "Playlist supprimée",
+    trackDeleted: "Titre supprimé",
+    rescanComplete: "Scan terminé",
+  },
+  watchlist: {
+    title: "Liste de surveillance",
+    subtitle: "Suivez les artistes et playlists pour les nouvelles sorties.",
+    autoDownloadOn: "Téléchargement auto: ON",
+    autoDownloadOff: "Téléchargement auto: OFF",
+    syncDeletions: "Synchroniser les suppressions",
+    removeFromWatchlist: "Retirer de la liste",
+    newItems: "nouveau",
+    addToWatchlist: "Ajouter à la liste",
   },
 };

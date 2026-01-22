@@ -1,11 +1,11 @@
-import { Bell, ChevronLeft, ChevronRight } from "lucide-react";
-import { useStore } from "../../store/useStore";
 import { motion } from "framer-motion";
+import { Bell, ChevronLeft, ChevronRight } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { useStore } from "../../store/useStore";
 
+import { useState } from "react";
 import NotificationCenter from "./NotificationCenter";
 import UserMenu from "./UserMenu";
-import { useState } from "react";
 
 function NavigationControls() {
   const navigate = useNavigate();
@@ -14,14 +14,14 @@ function NavigationControls() {
     <div className="flex items-center gap-2">
       <button
         onClick={() => navigate(-1)}
-        className="p-2 rounded-full bg-black/50 hover:bg-black/70 text-white transition-colors"
+        className="p-2 rounded-full bg-black/50 hover:bg-black/70 text-white transition-colors cursor-pointer"
         title="Go Back"
       >
         <ChevronLeft size={22} />
       </button>
       <button
         onClick={() => navigate(1)}
-        className="p-2 rounded-full bg-black/50 hover:bg-black/70 text-white transition-colors"
+        className="p-2 rounded-full bg-black/50 hover:bg-black/70 text-white transition-colors cursor-pointer"
         title="Go Forward"
       >
         <ChevronRight size={22} />

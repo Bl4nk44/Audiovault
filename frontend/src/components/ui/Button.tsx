@@ -1,7 +1,7 @@
-import { forwardRef } from "react";
 import { motion, type HTMLMotionProps } from "framer-motion";
-import { cn } from "../../lib/utils";
 import { Loader2 } from "lucide-react";
+import { forwardRef } from "react";
+import { cn } from "../../lib/utils";
 
 interface ButtonProps extends Omit<HTMLMotionProps<"button">, "children"> {
   variant?: "primary" | "secondary" | "outline" | "ghost" | "danger";
@@ -11,17 +11,7 @@ interface ButtonProps extends Omit<HTMLMotionProps<"button">, "children"> {
 }
 
 const Button = forwardRef<HTMLButtonElement, ButtonProps>(
-  (
-    {
-      className,
-      variant = "primary",
-      size = "md",
-      isLoading = false,
-      children,
-      ...props
-    },
-    ref
-  ) => {
+  ({ className, variant = "primary", size = "md", isLoading = false, children, ...props }, ref) => {
     const variants = {
       primary:
         "bg-primary/80 backdrop-blur-md text-primary-foreground hover:bg-primary/90 shadow-[0_0_20px_rgba(34,197,94,0.3)] hover:shadow-[0_0_30px_rgba(34,197,94,0.5)] border border-white/10 relative overflow-hidden group",
@@ -49,7 +39,7 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(
         whileTap={{ scale: 0.98 }}
         disabled={isLoading || props.disabled}
         className={cn(
-          "relative inline-flex items-center justify-center rounded-full font-bold transition-all duration-300 border focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:ring-offset-background disabled:opacity-50 disabled:pointer-events-none active:scale-95",
+          "relative inline-flex items-center justify-center rounded-full font-bold transition-all duration-300 border focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:ring-offset-background disabled:opacity-50 disabled:pointer-events-none active:scale-95 cursor-pointer",
           variants[variant],
           sizes[size],
           className

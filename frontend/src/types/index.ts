@@ -22,6 +22,8 @@ export interface Track {
   image_url?: string;
   source: string;
   duration_ms?: number;
+  artist_id?: string;
+  spotify_artist_id?: string;
   album?: string;
   filename?: string;
   spotify_id?: string;
@@ -64,6 +66,7 @@ export interface Album {
   image_url?: string;
   artist_id?: string;
   album_type?: "album" | "single" | "compilation";
+  spotify_id?: string;
   total_tracks?: number;
 }
 

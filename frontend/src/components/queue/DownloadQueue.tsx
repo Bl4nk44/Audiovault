@@ -1,9 +1,10 @@
-import { useEffect, useState, useCallback } from "react";
+import { AnimatePresence, motion } from "framer-motion";
+import { History, Loader2, Music2, RefreshCw } from "lucide-react";
+import { useCallback, useEffect, useState } from "react";
+import { downloadsApi } from "../../api/downloads";
 import api from "../../services/api";
-import DownloadItem from "./DownloadItem";
-import { Loader2, Music2, History, RefreshCw } from "lucide-react";
-import { motion, AnimatePresence } from "framer-motion";
 import type { Download } from "../../types";
+import DownloadItem from "./DownloadItem";
 
 import { useStore } from "../../store/useStore";
 
@@ -29,9 +30,7 @@ export default function DownloadQueue() {
     const { download_id, progress, status } = customEvent.detail;
     setQueue((prevQueue) =>
       prevQueue.map((item) =>
-        item.id === download_id
-          ? { ...item, progress, status: status || item.status }
-          : item
+        item.id === download_id ? { ...item, progress, status: status || item.status } : item
       )
     );
   }, []);
@@ -73,9 +72,7 @@ export default function DownloadQueue() {
           <Music2 size={40} className="text-gray-500" />
         </div>
         <h3 className="text-xl font-bold text-white mb-2">Queue is empty</h3>
-        <p className="text-gray-400 max-w-sm">
-          Start downloading tracks to see them appear here.
-        </p>
+        <p className="text-gray-400 max-w-sm">Start downloading tracks to see them appear here.</p>
       </motion.div>
     );
   }
@@ -86,7 +83,7 @@ export default function DownloadQueue() {
         <button
           onClick={async () => {
             try {
-              await api.post("/downloads/restart-all");
+              await downloadsApi.restartAll();
               addNotification("success", "Restarted all failed downloads");
               fetchQueue();
             } catch {
@@ -101,7 +98,7 @@ export default function DownloadQueue() {
         <button
           onClick={async () => {
             try {
-              await api.post("/downloads/clear-history");
+              await downloadsApi.clearAll();
               fetchQueue();
               addNotification("success", "Cleared all non-active downloads");
             } catch {

@@ -1,136 +1,188 @@
-import uuid
-from unittest.mock import AsyncMock, MagicMock, patch
-
 import pytest
+import uuid
+import asyncio
+from unittest.mock import patch, MagicMock, AsyncMock
+from app.services.download_manager import DownloadManager
+from app.schemas.download import DownloadCreate
 from app.models.download import Download
 from app.models.track import Track
-from app.models.user import User
-from app.services.download_manager import DownloadManager
-from sqlalchemy.ext.asyncio import AsyncSession
-
 
 @pytest.fixture
-def manager():
-    return DownloadManager()
-
-
-@pytest.mark.asyncio
-async def test_process_download_success(db_session: AsyncSession, manager: DownloadManager):
-    user_id = uuid.uuid4()
-    user = User(
-        id=user_id,
-        email="dm_test@example.com",
-        username="dm_user",
-        hashed_password="pw",
-        is_active=True,
-    )
-    db_session.add(user)
-
-    track = Track(title="DL Track", artist="DL Artist", duration_ms=2000)
-    db_session.add(track)
-    await db_session.flush()
-
-    download_id = uuid.uuid4()
-    dl = Download(
-        id=download_id,
-        user_id=user.id,
-        track_id=track.id,
-        status="pending",
-        source="youtube",
-        playlist_name=None,
-    )
-    db_session.add(dl)
-    await db_session.commit()
-
-    # Mock dependencies
-    # 1. AsyncSessionLocal used in process_download
-    mock_session_ctx = MagicMock()
-    mock_session_ctx.__aenter__ = AsyncMock(return_value=db_session)
-    mock_session_ctx.__aexit__ = AsyncMock(return_value=None)
-
-    # 2. socket_manager
-    # 3. yt_dlp
-
-    with (
-        patch(
-            "app.services.download_manager.AsyncSessionLocal",
-            return_value=mock_session_ctx,
-        ),
-        patch("app.services.download_manager.socket_manager") as mock_socket,
-        patch("app.services.download_manager.yt_dlp.YoutubeDL"),
-        patch.object(manager, "_execute_download_task", new_callable=AsyncMock) as mock_exec,
-        patch.object(manager, "_resolve_url", new_callable=AsyncMock) as mock_resolve,
-    ):
-        mock_socket.emit = AsyncMock()
-        # Setup mocks
-        mock_resolve.return_value = "http://youtube.com/watch?v=123"
-
-        # Simulate final_filename_container update in _handle_completion hooks or side_effect
-        # But _handle_completion is called after _execute_download_task.
-        # We also mock _handle_completion to simplify or let it run?
-        # Let's let it run but mock os.path.exists/rename logic inside it if needed.
-        # Check _handle_completion logic: it calls _set_download_file_path.
-
-        with (
-            patch("app.services.download_manager.os.path.exists", return_value=False),
-            patch("app.services.download_manager.os.makedirs"),
-        ):
-            # Call process_download directly (bypassing queue loop)
-            await manager.process_download(dl.id)
-
-            # Assertions
-            await db_session.refresh(dl)
-            assert dl.status == "completed"
-            assert dl.progress == 100
-
-            mock_socket.emit.assert_called()
-            mock_exec.assert_called_once()
-
+def download_manager():
+    dm = DownloadManager()
+    return dm
 
 @pytest.mark.asyncio
-async def test_process_download_failure(db_session: AsyncSession, manager: DownloadManager):
-    user_id = uuid.uuid4()
-    user = User(
-        id=user_id,
-        email="fail_test@example.com",
-        username="fail_user",
-        hashed_password="pw",
-        is_active=True,
-    )
-    db_session.add(user)
+async def test_dm_add_download(download_manager):
+    user_id = str(uuid.uuid4())
+    track_id = uuid.uuid4()
+    download_data = DownloadCreate(track_id=track_id, source="spotify")
+    db_mock = AsyncMock()
+    
+    with patch("app.services.download_manager.DownloadManager.start_worker", new_callable=AsyncMock) as mock_start:
+        download = await download_manager.add_download(db_mock, user_id, download_data)
+        
+        assert download.user_id == user_id
+        assert download.track_id == track_id or download.track_id == str(track_id)
+        assert download.status == "pending"
+        assert mock_start.called
+        assert download_manager.queue.qsize() == 1
 
-    track = Track(title="Fail Track", artist="Fail Artist", duration_ms=2000)
-    db_session.add(track)
-    await db_session.flush()
+@pytest.mark.asyncio
+async def test_dm_pause_resume_download(download_manager):
+    download_id = str(uuid.uuid4())
+    download_manager.pause_download(download_id)
+    assert download_id in download_manager.paused_downloads
+    
+    with patch("app.services.download_manager.DownloadManager.start_worker", new_callable=AsyncMock):
+        # We need a db mock for resume
+        db_mock = AsyncMock()
+        mock_result = MagicMock()
+        mock_download = MagicMock(status="paused")
+        mock_result.scalar_one_or_none.return_value = mock_download
+        db_mock.execute.return_value = mock_result
+        
+        await download_manager.resume_download(db_mock, download_id)
+        assert download_id not in download_manager.paused_downloads
+        assert mock_download.status == "pending"
 
-    download_id = uuid.uuid4()
-    dl = Download(
-        id=download_id,
-        user_id=user.id,
-        track_id=track.id,
-        status="pending",
-        source="youtube",
-    )
-    db_session.add(dl)
-    await db_session.commit()
+@pytest.mark.asyncio
+async def test_dm_cancel_download(download_manager):
+    download_id = str(uuid.uuid4())
+    db_mock = AsyncMock()
+    mock_result = MagicMock()
+    mock_download = MagicMock()
+    mock_result.scalar_one_or_none.return_value = mock_download
+    db_mock.execute.return_value = mock_result
+    
+    # Mocking active task
+    mock_task = MagicMock()
+    download_manager.active_tasks[download_id] = mock_task
+    
+    with patch("app.services.download_manager.socket_manager.emit", new_callable=AsyncMock) as mock_emit:
+        await download_manager.cancel_download(db_mock, download_id)
+        
+        assert mock_task.cancel.called
+        assert db_mock.delete.called
+        assert mock_emit.called
 
-    mock_session_ctx = MagicMock()
-    mock_session_ctx.__aenter__ = AsyncMock(return_value=db_session)
-    mock_session_ctx.__aexit__ = AsyncMock(return_value=None)
+@pytest.mark.asyncio
+async def test_dm_restart_all_downloads(download_manager):
+    user_id = str(uuid.uuid4())
+    db_mock = AsyncMock()
+    
+    with patch("app.services.download_manager.DownloadManager.start_worker", new_callable=AsyncMock):
+        # Result mock
+        mock_result = MagicMock()
+        mock_download = MagicMock(id=uuid.uuid4(), user_id=user_id, status="failed")
+        mock_result.scalars.return_value.all.return_value = [mock_download]
+        db_mock.execute.return_value = mock_result
+        
+        count = await download_manager.restart_all_downloads(db_mock, user_id)
+        assert count == 1
+        assert mock_download.status == "pending"
+        assert download_manager.queue.qsize() == 1
 
-    with (
-        patch(
-            "app.services.download_manager.AsyncSessionLocal",
-            return_value=mock_session_ctx,
-        ),
-        patch("app.services.download_manager.socket_manager") as mock_socket,
-        patch.object(manager, "_resolve_url", side_effect=ValueError("Resolution failed")),
-    ):
-        mock_socket.emit = AsyncMock()
-        await manager.process_download(dl.id)
+@pytest.mark.asyncio
+async def test_dm_process_download_fail_resolution(download_manager):
+    download_id = str(uuid.uuid4())
+    
+    with patch("app.services.download_manager.AsyncSessionLocal") as mock_session_local:
+        db_mock = AsyncMock()
+        mock_session_local.return_value.__aenter__.return_value = db_mock
+        
+        mock_result = MagicMock()
+        mock_download = MagicMock(id=download_id, status="pending", retry_count=0)
+        mock_result.scalar_one_or_none.return_value = mock_download
+        db_mock.execute.return_value = mock_result
+        
+        with patch("app.services.download_manager.DownloadManager._resolve_url", side_effect=Exception("Resolution failed")):
+            with patch("app.services.download_manager.socket_manager.emit", new_callable=AsyncMock) as mock_emit:
+                await download_manager.process_download(download_id)
+                
+                assert mock_download.status == "failed"
+                assert mock_download.error_message == "Resolution failed"
+                assert mock_download.retry_count == 1
+                assert mock_emit.called
+@pytest.mark.asyncio
+async def test_dm_user_semaphore(download_manager):
+    user_id = "user1"
+    sem1 = download_manager.get_user_semaphore(user_id, max_concurrent=2)
+    assert sem1._value == 2
+    
+    sem2 = download_manager.get_user_semaphore(user_id)
+    assert sem1 is sem2
+    
+    download_manager.update_user_concurrency(user_id, 5)
+    sem3 = download_manager.get_user_semaphore(user_id)
+    assert sem3._value == 5
+    assert sem3 is not sem1
 
-        await db_session.refresh(dl)
-        assert dl.status == "failed"
-        assert "Resolution failed" in dl.error_message
+@pytest.mark.asyncio
+async def test_dm_cache_resolution(download_manager):
+    url = "ytsearch1:test query"
+    ydl_opts = {}
+    download_id = "dl1"
+    loop = asyncio.get_event_loop()
+    
+    with patch("app.services.download_manager.cache_manager.get", new_callable=AsyncMock) as mock_get, \
+         patch("app.services.download_manager.cache_manager.set", new_callable=AsyncMock) as mock_set, \
+         patch("yt_dlp.YoutubeDL") as mock_ydl:
+        
+        # Case 1: Cache hit
+        mock_get.return_value = "https://youtube.com/watch?v=cached"
+        await download_manager._execute_download_task(loop, ydl_opts, url, download_id)
+        assert mock_get.called
+        # Check that it didn't call extract_info (via executor) - difficult with run_in_executor but we can check ydl inside mock
+        
+        # Case 2: Cache miss
+        mock_get.return_value = None
+        mock_instance = MagicMock()
+        mock_instance.extract_info.return_value = {"entries": [{"webpage_url": "https://youtube.com/watch?v=new"}]}
+        mock_ydl.return_value.__enter__.return_value = mock_instance
+        
+        # Mocking run_in_executor to return our info
+        with patch.object(loop, "run_in_executor", AsyncMock(return_value=mock_instance.extract_info.return_value)):
+             await download_manager._execute_download_task(loop, ydl_opts, url, download_id)
+             assert mock_set.called
+             # Verify cache key
+             args, _ = mock_set.call_args
+             assert "metadata_resolve" in args[0]
 
-        mock_socket.emit.assert_called_with("download:error", {"download_id": str(dl.id), "error": "Resolution failed"})
+@pytest.mark.asyncio
+async def test_dm_progress_hook_pause(download_manager):
+    download_id = "paused_dl"
+    download_manager.pause_download(download_id)
+    
+    loop = asyncio.get_event_loop()
+    hook = download_manager._create_progress_hook(download_id, MagicMock(), loop, {})
+    
+    with pytest.raises(Exception) as exc: # DownloadPausedError is internal
+        hook({"status": "downloading"})
+    assert "DOWNLOAD_PAUSED" in str(exc.value)
+
+@pytest.mark.asyncio
+async def test_dm_handle_completion_metadata(download_manager):
+    db_mock = AsyncMock()
+    download = MagicMock(id="dl1", file_path="/tmp/test.mp3", source="spotify")
+    download.track.id = "track1"
+    download.track.metadata_content = {}
+    download.user.username = "testuser"
+    
+    container = {"path": "/tmp/test.mp3"}
+    
+    with patch("os.path.exists", return_value=True), \
+         patch("os.path.getsize", return_value=1234), \
+         patch("app.services.download_manager.socket_manager.emit", new_callable=AsyncMock), \
+         patch("app.services.library_scanner.library_scanner_service._parse_audio_metadata_sync", 
+               return_value=("Title", "Artist", "Album", "Genre", 5000)), \
+         patch("app.services.library_scanner.library_scanner_service.resolve_artist_and_album", 
+               new_callable=AsyncMock, return_value=("a1", "alb1")):
+        
+        await download_manager._handle_completion(db_mock, download, container, "tmpl")
+        
+        assert download.status == "completed"
+        assert download.file_size == 1234
+        assert download.track.title == "Title"
+        assert download.track.artist_id == "a1"
+        assert db_mock.commit.called

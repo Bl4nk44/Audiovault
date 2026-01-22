@@ -1,8 +1,10 @@
-import { Trash2, DownloadCloud, RefreshCcw } from "lucide-react";
+import { RefreshCcw, Trash2 } from "lucide-react";
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { useTranslation } from "../../hooks/useTranslation";
 import api from "../../services/api";
-import { notify as toast } from '../../utils/notify';
 import { type WatchlistItem } from "../../types";
+import { notify as toast } from "../../utils/notify";
 
 interface WatchlistItemProps {
   item: WatchlistItem;
@@ -17,6 +19,8 @@ export default function WatchlistItem({
   onSync,
   viewMode = "list",
 }: Readonly<WatchlistItemProps>) {
+  const { t } = useTranslation();
+  const navigate = useNavigate();
   const [autoDownload, setAutoDownload] = useState(item.auto_download);
   const [imageError, setImageError] = useState(false);
 
@@ -33,11 +37,44 @@ export default function WatchlistItem({
     }
   };
 
+  // ... inside component ...
+  const handleCardClick = () => {
+    if (item.watch_type === "artist" && item.source_id) {
+      navigate(`/artist/${item.source_id}`);
+    } else if (item.watch_type === "playlist") {
+      navigate(`/library?source=${item.source}&playlist=${encodeURIComponent(item.source_name)}`);
+    } else if (item.watch_type === "channel") {
+      navigate(`/library?source=${item.source}&playlist=${encodeURIComponent(item.source_name)}`);
+    }
+  };
+
   const imageUrl = item.metadata_content?.image_url;
+
+  // Helper for the Toggle Switch
+  const AutoDownloadSwitch = () => (
+    <button
+      onClick={toggleAutoDownload}
+      className={`relative w-11 h-6 rounded-full transition-all duration-300 flex items-center cursor-pointer border ${
+        autoDownload
+          ? "bg-green-500/20 border-green-500 shadow-[0_0_10px_rgba(34,197,94,0.4)]"
+          : "bg-red-500/20 border-red-500 shadow-[0_0_10px_rgba(239,68,68,0.4)]"
+      }`}
+      title={autoDownload ? "Auto-download: ON" : "Auto-download: OFF"}
+    >
+      <div
+        className={`absolute w-4 h-4 rounded-full shadow-sm transform transition-all duration-300 ${
+          autoDownload ? "translate-x-6 bg-green-400" : "translate-x-1 bg-red-400"
+        }`}
+      />
+    </button>
+  );
 
   if (viewMode === "grid") {
     return (
-      <div className="group relative bg-card border border-border rounded-xl overflow-hidden hover:border-primary/50 transition-all hover:shadow-lg hover:shadow-primary/5 aspect-square">
+      <div
+        onClick={handleCardClick}
+        className="group relative bg-card border border-border rounded-xl overflow-hidden hover:border-primary/50 transition-all hover:shadow-lg hover:shadow-primary/5 aspect-square cursor-pointer"
+      >
         <div className="absolute inset-0">
           {imageUrl && !imageError ? (
             <img
@@ -52,58 +89,61 @@ export default function WatchlistItem({
             </div>
           )}
 
-          {/* Gradient Overlay for Text Readability */}
+          {/* Top Right Badges */}
+          <div className="absolute top-2 right-2 z-20 pointer-events-none flex flex-col items-end gap-2">
+            {item.new_items_count > 0 && (
+              <div className="bg-primary text-black text-xs font-bold px-2 py-1 rounded-full shadow-lg">
+                {item.new_items_count} {t("watchlist.newItems")}
+              </div>
+            )}
+            <span className="capitalize px-2 py-0.5 rounded-full bg-black/60 border border-white/10 backdrop-blur-md text-xs text-white shadow-sm">
+              {item.watch_type}
+            </span>
+          </div>
+
+          {/* Gradient Overlay */}
           <div className="absolute inset-0 bg-linear-to-t from-black/90 via-black/40 to-transparent opacity-60 group-hover:opacity-80 transition-opacity" />
 
-          {/* Overlay Actions */}
+          {/* Center Overlay Actions (Sync & Delete only) */}
           <div className="absolute inset-0 flex items-center justify-center gap-3 opacity-0 group-hover:opacity-100 transition-opacity z-10">
-            <button
-              onClick={toggleAutoDownload}
-              className={`p-3 rounded-full transition-colors ${
-                autoDownload
-                  ? "bg-primary text-primary-foreground"
-                  : "bg-secondary/80 text-foreground hover:bg-secondary"
-              }`}
-              title={
-                autoDownload ? "Auto-download enabled" : "Enable auto-download"
-              }
-            >
-              <DownloadCloud size={20} />
-            </button>
             {onSync && item.watch_type === "playlist" && (
               <button
-                onClick={() => onSync(item)}
-                className="p-3 rounded-full bg-secondary/80 text-foreground hover:bg-white hover:text-black transition-colors"
-                title="Sync Deletions"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onSync(item);
+                }}
+                className="p-3 rounded-full bg-secondary/80 text-foreground hover:bg-white hover:text-black transition-colors cursor-pointer"
+                title={t("watchlist.syncDeletions")}
               >
                 <RefreshCcw size={20} />
               </button>
             )}
             <button
-              onClick={() => onRemove(item.id)}
-              className="p-3 rounded-full bg-secondary/80 text-foreground hover:bg-destructive/80 hover:text-white transition-colors"
-              title="Remove from watchlist"
+              onClick={(e) => {
+                e.stopPropagation();
+                onRemove(item.id);
+              }}
+              className="p-3 rounded-full bg-secondary/80 text-foreground hover:bg-destructive/80 hover:text-white transition-colors cursor-pointer"
+              title={t("watchlist.removeFromWatchlist")}
             >
               <Trash2 size={20} />
             </button>
           </div>
-
-          {item.new_items_count > 0 && (
-            <div className="absolute top-2 right-2 bg-primary text-black text-xs font-bold px-2 py-1 rounded-full shadow-lg z-20">
-              {item.new_items_count} new
-            </div>
-          )}
         </div>
 
-        <div className="absolute bottom-0 left-0 right-0 p-4 z-10">
-          <h4 className="font-bold truncate text-white mb-1 shadow-black drop-shadow-md">
-            {item.source_name}
-          </h4>
-          <div className="flex items-center justify-between text-xs text-gray-300">
-            <span className="capitalize drop-shadow-md">{item.source}</span>
-            <span className="capitalize px-2 py-0.5 rounded-full bg-white/10 border border-white/10 backdrop-blur-sm">
-              {item.watch_type}
+        {/* Bottom Info & Switch */}
+        <div className="absolute bottom-0 left-0 right-0 p-4 z-10 pointer-events-none flex items-end justify-between gap-2">
+          <div className="min-w-0">
+            <h4 className="font-bold truncate text-white mb-0.5 shadow-black drop-shadow-md group-hover:text-primary transition-colors">
+              {item.source_name}
+            </h4>
+            <span className="text-xs text-gray-300 capitalize drop-shadow-md block">
+              {item.source}
             </span>
+          </div>
+
+          <div className="pointer-events-auto shrink-0 pb-0.5" onClick={(e) => e.stopPropagation()}>
+            <AutoDownloadSwitch />
           </div>
         </div>
       </div>
@@ -112,8 +152,11 @@ export default function WatchlistItem({
 
   return (
     <div className="bg-card border border-border rounded-lg p-4 flex items-center justify-between group hover:border-primary/50 transition-colors">
-      <div className="flex items-center gap-4">
-        <div className="w-12 h-12 rounded overflow-hidden bg-secondary shrink-0">
+      <div className="flex items-center gap-4 min-w-0">
+        <div
+          onClick={handleCardClick}
+          className="w-12 h-12 rounded overflow-hidden bg-secondary shrink-0 cursor-pointer"
+        >
           {imageUrl && !imageError ? (
             <img
               src={imageUrl}
@@ -128,46 +171,49 @@ export default function WatchlistItem({
           )}
         </div>
 
-        <div>
-          <h4 className="font-medium">{item.source_name}</h4>
+        <div className="min-w-0">
+          <h4
+            onClick={handleCardClick}
+            className="font-medium truncate cursor-pointer hover:text-primary hover:underline"
+            title={item.source_name}
+          >
+            {item.source_name}
+          </h4>
           <p className="text-sm text-muted-foreground capitalize">
             {item.source} • {item.watch_type}
           </p>
         </div>
       </div>
 
-      <div className="flex items-center gap-4">
-        <button
-          onClick={toggleAutoDownload}
-          className={`p-2 rounded-full transition-colors ${
-            autoDownload
-              ? "bg-primary/20 text-primary"
-              : "bg-secondary text-muted-foreground hover:text-foreground"
-          }`}
-          title={
-            autoDownload ? "Auto-download enabled" : "Enable auto-download"
-          }
-        >
-          <DownloadCloud size={18} />
-        </button>
+      <div className="flex items-center gap-4 shrink-0">
+        <div onClick={(e) => e.stopPropagation()}>
+          <AutoDownloadSwitch />
+        </div>
+
         {item.new_items_count > 0 && (
-          <span className="bg-primary text-primary-foreground text-xs px-2 py-1 rounded-full">
-            {item.new_items_count} new
+          <span className="bg-primary text-primary-foreground text-xs px-2 py-1 rounded-full pointer-events-none">
+            {item.new_items_count} {t("watchlist.newItems")}
           </span>
         )}
 
         <button
-          onClick={() => onRemove(item.id)}
-          className="p-2 text-muted-foreground hover:text-destructive transition-colors opacity-0 group-hover:opacity-100"
-          title="Remove from watchlist"
+          onClick={(e) => {
+            e.stopPropagation();
+            onRemove(item.id);
+          }}
+          className="p-2 text-muted-foreground hover:text-destructive transition-colors opacity-0 group-hover:opacity-100 cursor-pointer"
+          title={t("watchlist.removeFromWatchlist")}
         >
           <Trash2 size={18} />
         </button>
         {onSync && item.watch_type === "playlist" && (
           <button
-            onClick={() => onSync(item)}
-            className="p-2 text-muted-foreground hover:text-foreground transition-colors opacity-0 group-hover:opacity-100"
-            title="Sync Deletions"
+            onClick={(e) => {
+              e.stopPropagation();
+              onSync(item);
+            }}
+            className="p-2 text-muted-foreground hover:text-foreground transition-colors opacity-0 group-hover:opacity-100 cursor-pointer"
+            title={t("watchlist.syncDeletions")}
           >
             <RefreshCcw size={18} />
           </button>
@@ -176,4 +222,3 @@ export default function WatchlistItem({
     </div>
   );
 }
-

@@ -64,8 +64,16 @@ async def mock_cache_manager():
         patch.object(real_cache_manager, "set", new_callable=AsyncMock),
     ):
         # Also mock the redis attribute if accessed directly
-        real_cache_manager.redis = MagicMock()
+        real_cache_manager.redis = AsyncMock()
+        # FastAPILimiter expects simple int (current count) in some versions?
+        # If 1000 caused 429, then it interpreted it as usage count.
+        real_cache_manager.redis.evalsha.return_value = 1
         mock_get.return_value = None
+
+        # Mock FastAPILimiter to use our mocked redis
+        from fastapi_limiter import FastAPILimiter
+        if not FastAPILimiter.redis:
+            await FastAPILimiter.init(real_cache_manager.redis)
 
         yield real_cache_manager
 
@@ -87,16 +95,36 @@ async def mock_scheduler():
 @pytest.fixture(scope="function")
 async def mock_download_manager():
     """Mock download manager worker to prevent background tasks."""
+    from unittest.mock import AsyncMock
     with (
         patch("app.services.download_manager.download_manager.start_worker"),
         patch("app.services.download_manager.download_manager.resume_pending_downloads"),
+        patch("app.services.download_manager.download_manager.add_download", new_callable=AsyncMock) as m_add,
+        patch("app.services.download_manager.download_manager.pause_download", new_callable=AsyncMock),
+        patch("app.services.download_manager.download_manager.resume_download", new_callable=AsyncMock),
+        patch("app.services.download_manager.download_manager.restart_all_downloads", new_callable=AsyncMock),
+        patch("app.services.download_manager.download_manager.cancel_download", new_callable=AsyncMock),
     ):
+        m_add.return_value = {"status": "queued"}
+        yield
+
+@pytest.fixture(scope="function")
+async def mock_library_maintenance():
+    """Mock library maintenance service."""
+    from unittest.mock import AsyncMock
+    with (
+        patch("app.services.library_maintenance.library_maintenance_service.rescan_library_integrity", new_callable=AsyncMock) as m_rescan,
+        patch("app.services.library_maintenance.library_maintenance_service.clear_history", new_callable=AsyncMock),
+        patch("app.services.library_maintenance.library_maintenance_service.fix_legacy_data", new_callable=AsyncMock),
+        patch("app.services.library_maintenance.library_maintenance_service.update_download_item", new_callable=AsyncMock),
+    ):
+        m_rescan.return_value = 0
         yield
 
 
 @pytest.fixture(scope="function")
 async def client(
-    db_session: AsyncSession, mock_cache_manager, mock_scheduler, mock_download_manager
+    db_session: AsyncSession, mock_cache_manager, mock_scheduler, mock_download_manager, mock_library_maintenance
 ) -> AsyncGenerator[AsyncClient, None]:
     """Create a new FastAPI TestClient that uses the `db_session` fixture and mocked cache."""
 
@@ -104,6 +132,15 @@ async def client(
         yield db_session
 
     app.dependency_overrides[get_db] = override_get_db
+
+    async def bypass_limiter():
+        return
+
+    for route in app.routes:
+        if hasattr(route, "dependencies") and route.dependencies:
+            for d in route.dependencies:
+                if type(d.dependency).__name__ == "RateLimiter":
+                    app.dependency_overrides[d.dependency] = bypass_limiter
 
     # Mock download_dir to use a temp dir
     import tempfile
@@ -119,7 +156,57 @@ async def client(
     app.dependency_overrides.clear()
 
 
+
+@pytest.fixture(scope="function")
+async def admin_user(db_session):
+    from app.models.user import User
+    from app.core.security import get_password_hash
+    import uuid
+    
+    password = "admin"
+    hashed_password = get_password_hash(password)
+    
+    user = User(
+        id=uuid.uuid4(),
+        username="admin",
+        email="admin@example.com",
+        hashed_password=hashed_password,
+        is_active=True
+    )
+    db_session.add(user)
+    await db_session.commit()
+    await db_session.refresh(user)
+    return user
+
+@pytest.fixture(scope="function")
+async def admin_token_headers(admin_user):
+    from app.core.security import create_access_token
+    token = create_access_token(subject=admin_user.id)
+    return {"Authorization": f"Bearer {token}"}
+
 @pytest.fixture(scope="session", autouse=True)
 async def cleanup_engine():
     yield
     await engine.dispose()
+
+
+@pytest.fixture(scope="function")
+async def sample_track(db_session):
+    """Create a sample track for testing."""
+    from app.models.track import Track
+    import uuid
+    
+    track = Track(
+        id=uuid.uuid4(),
+        title="Test Track",
+        artist="Test Artist",
+        album="Test Album",
+        duration_ms=180000,
+        spotify_id="test_spotify_id",
+    )
+    db_session.add(track)
+    await db_session.commit()
+    await db_session.refresh(track)
+    return track
+
+

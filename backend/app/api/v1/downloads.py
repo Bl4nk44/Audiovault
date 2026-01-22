@@ -152,7 +152,6 @@ async def download_all_artist_tracks(
     
     for album in albums:
         album_id = album["id"]
-        album_name = album["name"]
         
         # Get tracks from the album
         tracks = service.get_album_tracks(album_id)
@@ -161,8 +160,7 @@ async def download_all_artist_tracks(
             # Check if track already exists in DB
             existing = await db.execute(
                 select(Track).where(
-                    Track.source == "spotify",
-                    Track.source_id == track_data["id"]
+                    Track.spotify_id == track_data["id"]
                 )
             )
             track_obj = existing.scalar_one_or_none()
@@ -172,12 +170,14 @@ async def download_all_artist_tracks(
                 track_obj = Track(
                     title=track_data["title"],
                     artist=track_data["artist"],
-                    source="spotify",
-                    source_id=track_data["id"],
+                    spotify_id=track_data["id"],
                     duration_ms=track_data.get("duration_ms"),
-                    image_url=track_data.get("image_url"),
-                    album=track_data.get("album"),
-                    isrc=track_data.get("isrc"),
+                    metadata_content={
+                        "image_url": track_data.get("image_url"),
+                        "album_art": track_data.get("image_url"), # Fallback
+                        "album": track_data.get("album"),
+                        "isrc": track_data.get("isrc"),
+                    }
                 )
                 db.add(track_obj)
                 await db.flush()
@@ -249,8 +249,7 @@ async def download_album(
         # Check if track already exists in DB
         existing = await db.execute(
             select(Track).where(
-                Track.source == "spotify",
-                Track.source_id == track_data["id"]
+                Track.spotify_id == track_data["id"]
             )
         )
         track_obj = existing.scalar_one_or_none()
@@ -260,12 +259,14 @@ async def download_album(
             track_obj = Track(
                 title=track_data["title"],
                 artist=track_data["artist"],
-                source="spotify",
-                source_id=track_data["id"],
+                spotify_id=track_data["id"],
                 duration_ms=track_data.get("duration_ms"),
-                image_url=track_data.get("image_url"),
-                album=track_data.get("album"),
-                isrc=track_data.get("isrc"),
+                metadata_content={
+                    "image_url": track_data.get("image_url"),
+                    "album_art": track_data.get("image_url"),
+                    "album": track_data.get("album"),
+                    "isrc": track_data.get("isrc"),
+                }
             )
             db.add(track_obj)
             await db.flush()
@@ -377,12 +378,80 @@ async def get_library(
     limit: int = 50,
     source: str | None = None,
     playlist: str | None = None,
+    search: str | None = None,
+    artist: str | None = None,
+    min_duration: int | None = None,
+    max_duration: int | None = None,
     current_user: User = Depends(get_current_active_user),
     db: AsyncSession = Depends(get_db),
 ):
     from app.services.library_data import library_data_service
 
-    return await library_data_service.get_library_items(db, str(current_user.id), skip, limit, source, playlist)
+    return await library_data_service.get_library_items(
+        db,
+        str(current_user.id),
+        skip,
+        limit,
+        source,
+        playlist,
+        search,
+        artist,
+        min_duration,
+        max_duration,
+    )
+
+
+class BulkUpdateRequest(BaseModel):
+    """Request model for bulk updating library items."""
+    download_ids: list[UUID]
+    updates: dict  # Fields to update: artist, title, album, genre, year
+
+
+@router.put("/library/bulk-update")
+async def bulk_update_library_items(
+    request: BulkUpdateRequest,
+    current_user: User = Depends(get_current_active_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """
+    Bulk update metadata for multiple library items at once.
+    All specified items will receive the same updates.
+    """
+    from app.services.library_maintenance import library_maintenance_service
+
+    if not request.download_ids:
+        raise HTTPException(status_code=400, detail="No items specified")
+
+    if len(request.download_ids) > 100:
+        raise HTTPException(status_code=400, detail="Maximum 100 items per request")
+
+    # Validate allowed update fields
+    allowed_fields = {"artist", "title", "album", "genre", "year", "playlist_name"}
+    invalid_fields = set(request.updates.keys()) - allowed_fields
+    if invalid_fields:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Invalid fields: {', '.join(invalid_fields)}. Allowed: {', '.join(allowed_fields)}"
+        )
+
+    success_count = 0
+    failed_ids = []
+
+    for d_id in request.download_ids:
+        try:
+            await library_maintenance_service.update_download_item(
+                db, str(current_user.id), str(d_id), request.updates
+            )
+            success_count += 1
+        except Exception:
+            failed_ids.append(str(d_id))
+
+    return {
+        "status": "success" if not failed_ids else "partial",
+        "updated_count": success_count,
+        "failed_count": len(failed_ids),
+        "failed_ids": failed_ids[:10],
+    }
 
 
 @router.put("/library/{download_id}")

@@ -40,6 +40,7 @@ class User(Base):
     starred_albums = relationship("StarredAlbum", back_populates="user", cascade=CASCADE_DELETE)
     starred_tracks = relationship("StarredTrack", back_populates="user", cascade=CASCADE_DELETE)
     history = relationship("ListeningHistory", back_populates="user", cascade=CASCADE_DELETE)
+    audit_logs = relationship("AuditLog", back_populates="user", cascade=CASCADE_DELETE)
 
     # Preferences (JSONB)
     preferences = Column(JSON, default=default_preferences)

@@ -18,13 +18,16 @@ class Settings(BaseSettings):
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
     REFRESH_TOKEN_EXPIRE_DAYS: int = 7
 
-    FIRST_SUPERUSER: str = "admin@example.com"
-    FIRST_SUPERUSER_USERNAME: str = "admin"
-    FIRST_SUPERUSER_PASSWORD: str = "admin"
+    ADMIN_EMAIL: str = "admin@example.com"
+    ADMIN_USERNAME: str = "admin"
+    ADMIN_PASSWORD: str = "admin"
 
     SPOTIFY_CLIENT_ID: str | None = None
     SPOTIFY_CLIENT_SECRET: str | None = None
     SPOTIFY_REDIRECT_URI: str | None = None
+
+    # Genius API for lyrics
+    GENIUS_API_TOKEN: str | None = None
 
 
     DOWNLOAD_DIR: str = os.getenv("DOWNLOAD_DIR", os.path.join(os.getcwd(), "downloads"))
@@ -32,6 +35,7 @@ class Settings(BaseSettings):
     STORAGE_QUOTA_GB: int = 500
     LOG_LEVEL: str = "INFO"
     ENVIRONMENT: str = "production"
+    TIMEZONE: str = os.getenv("TIMEZONE", "UTC")
 
     BACKEND_CORS_ORIGINS: list[str] | str = [
         "http://localhost:3000",

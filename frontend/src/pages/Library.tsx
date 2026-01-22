@@ -1,21 +1,15 @@
+import { AnimatePresence, motion } from "framer-motion";
+import { Edit2, Folder, ListPlus, Music, Play, RefreshCw, Search, Trash2 } from "lucide-react";
 import { useEffect, useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import {
-  Play,
-  Trash2,
-  Edit2,
-  Search,
-  Music,
-  Folder,
-  RefreshCw,
-} from "lucide-react";
-import { useStore } from "../store/useStore";
-import api from "../services/api";
-import ConfirmModal from "../components/ui/ConfirmModal";
-import { notify as toast } from "../utils/notify";
-import { SiSpotify, SiYoutube, SiApplemusic, SiTidal } from "react-icons/si";
-// Using a generic icon for others
 import { FaMusic } from "react-icons/fa";
+import { SiApplemusic, SiSpotify, SiTidal, SiYoutube } from "react-icons/si";
+import { useNavigate, useSearchParams } from "react-router-dom";
+import AddToPlaylistModal from "../components/AddToPlaylistModal";
+import ConfirmModal from "../components/ui/ConfirmModal";
+import { useTranslation } from "../hooks/useTranslation";
+import api from "../services/api";
+import { useStore } from "../store/useStore";
+import { notify as toast } from "../utils/notify";
 
 interface LibraryItem {
   id: string;
@@ -31,6 +25,8 @@ interface LibraryItem {
     album?: string;
     image_url?: string;
     filename?: string;
+    artist_id?: string;
+    spotify_artist_id?: string;
   };
 }
 
@@ -40,13 +36,7 @@ interface FolderStructure {
 
 type ViewMode = "root" | "service" | "playlist";
 
-const SourceIcon = ({
-  source,
-  size = 24,
-}: {
-  source: string;
-  size?: number;
-}) => {
+const SourceIcon = ({ source, size = 24 }: { source: string; size?: number }) => {
   switch (source?.toLowerCase()) {
     case "spotify":
       return <SiSpotify size={size} className="text-[#1DB954]" />;
@@ -58,28 +48,19 @@ const SourceIcon = ({
       return <SiTidal size={size} className="text-white" />;
     case "soundcloud":
       return (
-        <div
-          className="text-[#FF5500] font-bold text-xs"
-          style={{ fontSize: size }}
-        >
+        <div className="text-[#FF5500] font-bold text-xs" style={{ fontSize: size }}>
           SC
         </div>
       );
     case "deezer":
       return (
-        <div
-          className="text-white font-bold text-xs"
-          style={{ fontSize: size }}
-        >
+        <div className="text-white font-bold text-xs" style={{ fontSize: size }}>
           DZ
         </div>
       );
     case "amazon_music":
       return (
-        <div
-          className="text-[#00A8E1] font-bold text-xs"
-          style={{ fontSize: size }}
-        >
+        <div className="text-[#00A8E1] font-bold text-xs" style={{ fontSize: size }}>
           AM
         </div>
       );
@@ -93,50 +74,52 @@ interface RootViewProps {
   onServiceClick: (source: string) => void;
 }
 
-const RootView = ({ folders, onServiceClick }: RootViewProps) => (
-  <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-    {Object.keys(folders).map((source) => (
-      <motion.button
-        key={source}
-        initial="rest"
-        whileHover="hover"
-        whileTap="tap"
-        onClick={() => onServiceClick(source)}
-        className="bg-card/40 border border-border rounded-2xl p-6 cursor-pointer hover:bg-card/60 transition-colors flex flex-col items-center justify-center gap-6 text-center aspect-square group w-full"
-      >
-        <motion.div
-          variants={{
-            rest: { scale: 1, rotate: 0 },
-            hover: {
-              scale: 1.2,
-              rotate: 5,
-              transition: { type: "spring", stiffness: 300 },
-            },
-            tap: { scale: 0.9 },
-          }}
-          className="p-6 bg-secondary/50 rounded-full"
+const RootView = ({ folders, onServiceClick }: RootViewProps) => {
+  const { t } = useTranslation();
+  return (
+    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+      {Object.keys(folders).map((source) => (
+        <motion.button
+          key={source}
+          initial="rest"
+          whileHover="hover"
+          whileTap="tap"
+          onClick={() => onServiceClick(source)}
+          className="bg-card/40 border border-border rounded-2xl p-6 cursor-pointer hover:bg-card/60 transition-colors flex flex-col items-center justify-center gap-6 text-center aspect-square group w-full"
         >
-          <SourceIcon source={source} size={72} />
-        </motion.div>
-        <div>
-          <motion.h3
+          <motion.div
             variants={{
-              rest: { y: 0 },
-              hover: { y: -2 },
+              rest: { scale: 1, rotate: 0 },
+              hover: {
+                scale: 1.2,
+                rotate: 5,
+                transition: { type: "spring", stiffness: 300 },
+              },
+              tap: { scale: 0.9 },
             }}
-            className="text-2xl font-bold text-foreground capitalize mb-1"
+            className="p-6 bg-secondary/50 rounded-full"
           >
-            {source}
-          </motion.h3>
-          <p className="text-sm text-muted-foreground">
-            {folders[source].length}{" "}
-            {folders[source].length === 1 ? "playlist" : "playlists"}
-          </p>
-        </div>
-      </motion.button>
-    ))}
-  </div>
-);
+            <SourceIcon source={source} size={72} />
+          </motion.div>
+          <div>
+            <motion.h3
+              variants={{
+                rest: { y: 0 },
+                hover: { y: -2 },
+              }}
+              className="text-2xl font-bold text-foreground capitalize mb-1"
+            >
+              {source}
+            </motion.h3>
+            <p className="text-sm text-muted-foreground">
+              {folders[source].length} {t("filters.playlists")}
+            </p>
+          </div>
+        </motion.button>
+      ))}
+    </div>
+  );
+};
 
 interface ServiceViewProps {
   playlists: string[];
@@ -151,6 +134,7 @@ const ServiceView = ({
   onPlaylistClick,
   onPlaylistDelete,
 }: ServiceViewProps) => {
+  const { t } = useTranslation();
   return (
     <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
       {/* All Tracks Card */}
@@ -174,7 +158,7 @@ const ServiceView = ({
         >
           <Music size={56} className="text-white" />
         </motion.div>
-        <h3 className="text-xl font-bold text-white">All Tracks</h3>
+        <h3 className="text-xl font-bold text-white">{t("library.allTracks")}</h3>
       </motion.button>
 
       {/* Playlist Cards */}
@@ -206,7 +190,7 @@ const ServiceView = ({
           </motion.div>
           <div>
             <h3 className="text-xl font-bold text-foreground line-clamp-2">
-              {playlist || "Uncategorized"}
+              {playlist || t("library.uncategorized")}
             </h3>
           </div>
 
@@ -215,7 +199,7 @@ const ServiceView = ({
             <button
               onClick={(e) => onPlaylistDelete(e, playlist)}
               className="absolute top-3 right-3 p-2 bg-red-500/10 hover:bg-red-500 text-red-400 hover:text-white rounded-full opacity-0 group-hover:opacity-100 transition-all duration-200"
-              title="Delete Playlist"
+              title={t("library.playlistDeleted")} // Actually this is title, so maybe "Delete"? Use common.delete? No common delete. Maybe default trash title.
             >
               <Trash2 size={16} />
             </button>
@@ -240,39 +224,42 @@ const LibraryBreadcrumbs = ({
   selectedPlaylist,
   onRootClick,
   onServiceClick,
-}: LibraryBreadcrumbsProps) => (
-  <div className="flex items-center gap-2 text-sm text-muted-foreground mb-6">
-    <button
-      onClick={onRootClick}
-      className={`hover:text-foreground transition-colors ${
-        viewMode === "root" ? "text-foreground font-bold" : ""
-      }`}
-    >
-      Library
-    </button>
-    {selectedService && (
-      <>
-        <span>/</span>
-        <button
-          onClick={onServiceClick}
-          className={`hover:text-foreground transition-colors ${
-            viewMode === "service" ? "text-foreground font-bold" : ""
-          }`}
-        >
-          {selectedService.charAt(0).toUpperCase() + selectedService.slice(1)}
-        </button>
-      </>
-    )}
-    {selectedPlaylist && (
-      <>
-        <span>/</span>
-        <span className="text-foreground font-bold">
-          {selectedPlaylist === "__none__" ? "Uncategorized" : selectedPlaylist}
-        </span>
-      </>
-    )}
-  </div>
-);
+}: LibraryBreadcrumbsProps) => {
+  const { t } = useTranslation();
+  return (
+    <div className="flex items-center gap-2 text-sm text-muted-foreground mb-6">
+      <button
+        onClick={onRootClick}
+        className={`hover:text-foreground transition-colors ${
+          viewMode === "root" ? "text-foreground font-bold" : ""
+        }`}
+      >
+        {t("sidebar.library")}
+      </button>
+      {selectedService && (
+        <>
+          <span>/</span>
+          <button
+            onClick={onServiceClick}
+            className={`hover:text-foreground transition-colors ${
+              viewMode === "service" ? "text-foreground font-bold" : ""
+            }`}
+          >
+            {selectedService.charAt(0).toUpperCase() + selectedService.slice(1)}
+          </button>
+        </>
+      )}
+      {selectedPlaylist && (
+        <>
+          <span>/</span>
+          <span className="text-foreground font-bold">
+            {selectedPlaylist === "__none__" ? t("library.uncategorized") : selectedPlaylist}
+          </span>
+        </>
+      )}
+    </div>
+  );
+};
 
 interface PlaylistViewProps {
   items: LibraryItem[];
@@ -287,6 +274,7 @@ interface PlaylistViewProps {
   setPage: (p: number | ((prev: number) => number)) => void;
   onEdit: (item: LibraryItem) => void;
   onDelete: (id: string) => void;
+  onAddToPlaylist: (trackId: string) => void;
 }
 
 const PlaylistView = ({
@@ -302,8 +290,11 @@ const PlaylistView = ({
   setPage,
   onEdit,
   onDelete,
+  onAddToPlaylist,
 }: PlaylistViewProps) => {
+  const { t } = useTranslation();
   const { currentTrack, isPlaying, playTrack, togglePlay } = useStore();
+  const navigate = useNavigate();
 
   // Standard table view
   const filteredItems = items.filter(
@@ -313,10 +304,9 @@ const PlaylistView = ({
   );
   const totalPages = Math.ceil(total / limit);
 
-  let headerTitle = `All ${selectedService || ""} Tracks`;
+  let headerTitle = `${t("library.allTracks")} ${selectedService || ""}`;
   if (selectedPlaylist) {
-    headerTitle =
-      selectedPlaylist === "__none__" ? "Uncategorized" : selectedPlaylist;
+    headerTitle = selectedPlaylist === "__none__" ? t("library.uncategorized") : selectedPlaylist;
   }
 
   return (
@@ -324,10 +314,7 @@ const PlaylistView = ({
       <div className="flex items-center justify-between mb-6">
         <h2 className="text-2xl font-bold text-white">{headerTitle}</h2>
         <div className="relative w-64">
-          <Search
-            className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
-            size={18}
-          />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
           <input
             type="text"
             placeholder="Search tracks..."
@@ -338,9 +325,7 @@ const PlaylistView = ({
         </div>
       </div>
 
-      {loading && (
-        <div className="text-center py-20 text-gray-500">Loading tracks...</div>
-      )}
+      {loading && <div className="text-center py-20 text-gray-500">Loading tracks...</div>}
 
       {!loading && filteredItems.length === 0 && (
         <div className="text-center py-20 text-gray-500">No tracks found.</div>
@@ -384,15 +369,10 @@ const PlaylistView = ({
                           <div className="flex items-center gap-3 md:gap-4 min-w-0">
                             <button
                               className={`relative w-10 h-10 md:w-10 md:h-10 rounded overflow-hidden cursor-pointer group/img shrink-0 border-0 p-0 m-0 ${
-                                isCurrent
-                                  ? "shadow-[0_0_10px_rgba(var(--primary-rgb),0.5)]"
-                                  : ""
+                                isCurrent ? "shadow-[0_0_10px_rgba(var(--primary-rgb),0.5)]" : ""
                               }`}
                               onClick={() => {
-                                if (
-                                  currentTrack?.id === item.track_id &&
-                                  isPlaying
-                                ) {
+                                if (currentTrack?.id === item.track_id && isPlaying) {
                                   togglePlay();
                                 } else {
                                   const queue = filteredItems.map((i) => ({
@@ -467,9 +447,7 @@ const PlaylistView = ({
                             <div className="min-w-0 flex-1">
                               <span
                                 className={`block font-medium truncate max-w-[150px] sm:max-w-[200px] md:max-w-[280px] lg:max-w-none transition-colors ${
-                                  isCurrent
-                                    ? "text-primary font-bold"
-                                    : "text-white"
+                                  isCurrent ? "text-primary font-bold" : "text-white"
                                 }`}
                               >
                                 {item.track.title}
@@ -482,13 +460,35 @@ const PlaylistView = ({
                           </div>
                         </td>
                         <td className="px-3 md:px-6 py-3 md:py-4 text-gray-300 hidden md:table-cell truncate max-w-[150px]">
-                          {item.track.artist}
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              const id = item.track.artist_id || item.track.spotify_artist_id;
+                              if (id) {
+                                navigate(`/artist/${id}`);
+                              } else {
+                                navigate(
+                                  `/search?q=${encodeURIComponent(item.track.artist)}&type=artist`
+                                );
+                              }
+                            }}
+                            className="hover:text-primary hover:underline transition-colors text-left truncate w-full"
+                          >
+                            {item.track.artist}
+                          </button>
                         </td>
                         <td className="px-3 md:px-6 py-3 md:py-4 text-gray-400 hidden lg:table-cell truncate max-w-[120px]">
                           {item.track.album || "-"}
                         </td>
                         <td className="px-6 py-4 text-right">
                           <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                            <button
+                              onClick={() => onAddToPlaylist(item.track_id)}
+                              className="p-2 text-gray-400 hover:text-primary hover:bg-primary/10 rounded-full transition-colors"
+                              title="Add to Playlist"
+                            >
+                              <ListPlus size={16} />
+                            </button>
                             <button
                               onClick={() => onEdit(item)}
                               className="p-2 text-gray-400 hover:text-white hover:bg-white/10 rounded-full transition-colors"
@@ -541,14 +541,48 @@ const PlaylistView = ({
 };
 
 export default function Library() {
+  const { t } = useTranslation();
   const [items, setItems] = useState<LibraryItem[]>([]);
+  // ... state declarations ...
+  // (I need to be careful not to delete logic, just inserting hook)
+
+  // Actually, I can just insert the hook at top of function.
+  // And then replace the return JSX.
+  // The replace_file_content tool requires context.
+
+  // Let's replace the top of Library first to add hook.
+
+  // Wait, I can't easily inject a line without context.
+  // I will replace the start of function.
+
+  // And then replace the return block.
+
+  // Step 1: Add hook.
+
   const [folders, setFolders] = useState<FolderStructure>({});
   const [loading, setLoading] = useState(true);
 
   // Navigation State
-  const [viewMode, setViewMode] = useState<ViewMode>("root");
-  const [selectedService, setSelectedService] = useState<string | null>(null);
-  const [selectedPlaylist, setSelectedPlaylist] = useState<string | null>(null);
+  const [searchParams, setSearchParams] = useSearchParams();
+
+  const [viewMode, setViewMode] = useState<ViewMode>(() => {
+    if (searchParams.get("playlist")) return "playlist";
+    if (searchParams.get("source")) return "service";
+    return "root";
+  });
+
+  const [selectedService, setSelectedService] = useState<string | null>(searchParams.get("source"));
+  const [selectedPlaylist, setSelectedPlaylist] = useState<string | null>(
+    searchParams.get("playlist")
+  );
+
+  // Sync state changes to URL
+  useEffect(() => {
+    const params = new URLSearchParams();
+    if (selectedService) params.set("source", selectedService);
+    if (selectedPlaylist) params.set("playlist", selectedPlaylist);
+    setSearchParams(params, { replace: true });
+  }, [selectedService, selectedPlaylist, setSearchParams]);
 
   const [searchQuery, setSearchQuery] = useState("");
   const [editingItem, setEditingItem] = useState<LibraryItem | null>(null);
@@ -560,6 +594,11 @@ export default function Library() {
     playlist: string;
   } | null>(null);
   const [showRescanModal, setShowRescanModal] = useState(false);
+  const [showCreatePlaylistModal, setShowCreatePlaylistModal] = useState(false);
+
+  // Playlist modal state
+  const [playlistModalOpen, setPlaylistModalOpen] = useState(false);
+  const [selectedTrackIds, setSelectedTrackIds] = useState<string[]>([]);
 
   // Pagination state (for track list view)
   const [page, setPage] = useState(1);
@@ -681,9 +720,7 @@ export default function Library() {
   const handleRescan = async () => {
     try {
       const res = await api.post("/downloads/rescan");
-      toast.success(
-        `Rescan complete. Found ${res.data.rescanned_count} missing files.`
-      );
+      toast.success(`Rescan complete. Found ${res.data.rescanned_count} missing files.`);
       setShowRescanModal(false);
       fetchFolders(); // Refresh structure after rescan
       if (viewMode === "playlist") {
@@ -719,24 +756,56 @@ export default function Library() {
     }
   };
 
+  const handleCreatePlaylist = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const formData = new FormData(e.target as HTMLFormElement);
+    const name = formData.get("name") as string;
+
+    if (!name?.trim()) return;
+
+    try {
+      await api.post("/playlists/", { name, public: false });
+      toast.success("Playlist created");
+      setShowCreatePlaylistModal(false);
+      fetchFolders(); // Refresh folders
+    } catch (e) {
+      console.error("Failed to create playlist", e);
+      toast.error("Failed to create playlist");
+    }
+  };
+
+  // Remove unused navigate
+  // const navigate = useNavigate();
+  // actually I will replace the block to remove it.
+
   return (
     <div className="space-y-6 pb-24">
+      {/* ... header ... */}
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold tracking-tight text-foreground">
-            My Library
+            {t("library.title")}
           </h1>
-          <p className="text-muted-foreground">Manage your downloaded music.</p>
+          <p className="text-muted-foreground">{t("library.subtitle")}</p>
         </div>
 
-        {/* Rescan Button */}
-        <button
-          onClick={() => setShowRescanModal(true)}
-          className="flex items-center gap-2 bg-white/5 hover:bg-white/10 text-white px-4 py-2 rounded-lg border border-white/10 transition-all active:scale-95"
-        >
-          <RefreshCw size={16} />
-          Rescan Library
-        </button>
+        <div className="flex gap-2">
+          <button
+            onClick={() => setShowCreatePlaylistModal(true)}
+            className="flex items-center gap-2 bg-primary/20 hover:bg-primary/30 text-primary px-4 py-2 rounded-lg border border-primary/20 transition-all active:scale-95 cursor-pointer"
+          >
+            <ListPlus size={16} />
+            {t("library.newPlaylist")}
+          </button>
+
+          <button
+            onClick={() => setShowRescanModal(true)}
+            className="flex items-center gap-2 bg-white/5 hover:bg-white/10 text-white px-4 py-2 rounded-lg border border-white/10 transition-all active:scale-95 cursor-pointer"
+          >
+            <RefreshCw size={16} />
+            {t("library.rescan")}
+          </button>
+        </div>
       </div>
 
       <LibraryBreadcrumbs
@@ -754,9 +823,7 @@ export default function Library() {
         }}
       />
 
-      {viewMode === "root" && (
-        <RootView folders={folders} onServiceClick={handleServiceClick} />
-      )}
+      {viewMode === "root" && <RootView folders={folders} onServiceClick={handleServiceClick} />}
       {viewMode === "service" && selectedService && (
         <ServiceView
           playlists={folders[selectedService] || []}
@@ -779,6 +846,10 @@ export default function Library() {
           setPage={setPage}
           onEdit={setEditingItem}
           onDelete={handleDelete}
+          onAddToPlaylist={(trackId) => {
+            setSelectedTrackIds([trackId]);
+            setPlaylistModalOpen(true);
+          }}
         />
       )}
 
@@ -790,9 +861,7 @@ export default function Library() {
             animate={{ scale: 1, opacity: 1 }}
             className="bg-card border border-white/10 rounded-2xl p-6 w-full max-w-md shadow-2xl"
           >
-            <h2 className="text-xl font-bold text-foreground mb-4">
-              Edit Track Info
-            </h2>
+            <h2 className="text-xl font-bold text-foreground mb-4">Edit Track Info</h2>
             <form onSubmit={handleUpdate} className="space-y-4">
               <div>
                 <label
@@ -805,7 +874,7 @@ export default function Library() {
                   id="edit-title"
                   name="title"
                   defaultValue={editingItem.track.title}
-                  className="w-full bg-secondary/30 border border-white/10 rounded-lg px-3 py-2 text-foreground focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
+                  className="w-full bg-white/5 border border-white/10 rounded-lg p-2 text-white focus:outline-none focus:border-primary/50"
                 />
               </div>
               <div>
@@ -819,7 +888,7 @@ export default function Library() {
                   id="edit-artist"
                   name="artist"
                   defaultValue={editingItem.track.artist}
-                  className="w-full bg-secondary/30 border border-white/10 rounded-lg px-3 py-2 text-foreground focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
+                  className="w-full bg-white/5 border border-white/10 rounded-lg p-2 text-white focus:outline-none focus:border-primary/50"
                 />
               </div>
               <div>
@@ -833,7 +902,7 @@ export default function Library() {
                   id="edit-album"
                   name="album"
                   defaultValue={editingItem.track.album}
-                  className="w-full bg-secondary/30 border border-white/10 rounded-lg px-3 py-2 text-foreground focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
+                  className="w-full bg-white/5 border border-white/10 rounded-lg p-2 text-white focus:outline-none focus:border-primary/50"
                 />
               </div>
               <div>
@@ -847,25 +916,20 @@ export default function Library() {
                   id="edit-filename"
                   name="filename"
                   defaultValue={editingItem.track.filename}
-                  className="w-full bg-secondary/30 border border-white/10 rounded-lg px-3 py-2 text-foreground focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
+                  className="w-full bg-white/5 border border-white/10 rounded-lg p-2 text-white focus:outline-none focus:border-primary/50"
                 />
-                <p className="text-xs text-yellow-500/80 mt-1">
-                  Warning: Changing filename might break playlists if not
-                  updated.
-                </p>
               </div>
-
-              <div className="flex justify-end gap-3 mt-6">
+              <div className="flex justify-end gap-2 mt-6">
                 <button
                   type="button"
                   onClick={() => setEditingItem(null)}
-                  className="px-4 py-2 text-muted-foreground hover:text-foreground transition-colors"
+                  className="px-4 py-2 hover:bg-white/10 rounded-lg transition-colors text-white"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="px-4 py-2 bg-primary text-primary-foreground font-bold rounded-lg hover:bg-primary/90 transition-colors shadow-lg shadow-primary/20"
+                  className="px-4 py-2 bg-primary text-primary-foreground font-medium rounded-lg hover:bg-primary/90 transition-colors"
                 >
                   Save Changes
                 </button>
@@ -875,7 +939,52 @@ export default function Library() {
         </div>
       )}
 
-      {/* Delete Track Modal */}
+      {/* Create Playlist Modal */}
+      {showCreatePlaylistModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
+          <motion.div
+            initial={{ scale: 0.9, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            className="bg-card border border-white/10 rounded-2xl p-6 w-full max-w-sm shadow-2xl"
+          >
+            <h2 className="text-xl font-bold text-foreground mb-4">Create New Playlist</h2>
+            <form onSubmit={handleCreatePlaylist} className="space-y-4">
+              <div>
+                <label
+                  htmlFor="playlist-name"
+                  className="block text-sm font-medium text-muted-foreground mb-1"
+                >
+                  Playlist Name
+                </label>
+                <input
+                  id="playlist-name"
+                  name="name"
+                  placeholder="My Awesome Playlist"
+                  autoFocus
+                  className="w-full bg-white/5 border border-white/10 rounded-lg p-2 text-white focus:outline-none focus:border-primary/50"
+                />
+              </div>
+              <div className="flex justify-end gap-2 mt-6">
+                <button
+                  type="button"
+                  onClick={() => setShowCreatePlaylistModal(false)}
+                  className="px-4 py-2 hover:bg-white/10 rounded-lg transition-colors text-white"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="px-4 py-2 bg-primary text-primary-foreground font-medium rounded-lg hover:bg-primary/90 transition-colors"
+                >
+                  Create
+                </button>
+              </div>
+            </form>
+          </motion.div>
+        </div>
+      )}
+
+      {/* Delete Confirmation Modal */}
       <ConfirmModal
         isOpen={!!deleteId}
         onClose={() => setDeleteId(null)}
@@ -907,6 +1016,13 @@ export default function Library() {
         title="Rescan Library"
         message="This will check for missing files and re-queue them for download. Are you sure?"
         confirmText="Rescan"
+      />
+
+      {/* Add to Playlist Modal */}
+      <AddToPlaylistModal
+        isOpen={playlistModalOpen}
+        onClose={() => setPlaylistModalOpen(false)}
+        trackIds={selectedTrackIds}
       />
     </div>
   );

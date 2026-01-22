@@ -1,6 +1,7 @@
 import asyncio
 import logging
 import os
+import uuid
 from datetime import UTC, datetime
 
 import aiofiles
@@ -80,10 +81,17 @@ class DownloadManager:
 
     async def _process_with_semaphore(self, download_id: str):
         """Wrapper that acquires per-user semaphore before processing download."""
+        # First, ensure download_id is UUID for DB query
+        try:
+            d_uuid = uuid.UUID(str(download_id))
+        except ValueError:
+            self.queue.task_done()
+            return
+
         # First, get user_id and their concurrency preference
         async with AsyncSessionLocal() as db:
             result = await db.execute(
-                select(Download).options(selectinload(Download.user)).where(Download.id == download_id)
+                select(Download).options(selectinload(Download.user)).where(Download.id == d_uuid)
             )
             download = result.scalar_one_or_none()
 
@@ -247,8 +255,8 @@ class DownloadManager:
                 from app.services.library_scanner import library_scanner_service
 
                 filename = os.path.basename(download.file_path)
-                title, artist, album, genre, duration_ms = library_scanner_service._parse_audio_metadata(
-                    download.file_path, filename
+                title, artist, album, genre, duration_ms = library_scanner_service._parse_audio_metadata_sync(
+                    download.file_path
                 )
 
                 # Update Track
@@ -560,8 +568,13 @@ class DownloadManager:
         if download_id in self.paused_downloads:
             self.paused_downloads.remove(download_id)
 
+        try:
+            d_uuid = uuid.UUID(str(download_id))
+        except ValueError:
+            return
+
         # Check current status
-        result = await db.execute(select(Download).where(Download.id == download_id))
+        result = await db.execute(select(Download).where(Download.id == d_uuid))
         download = result.scalar_one_or_none()
 
         if download and download.status in ["paused", "failed", "pending"]:
@@ -580,7 +593,12 @@ class DownloadManager:
         if download_id in self.active_tasks:
             self.active_tasks[download_id].cancel()
 
-        result = await db.execute(select(Download).where(Download.id == download_id))
+        try:
+            d_uuid = uuid.UUID(str(download_id))
+        except ValueError:
+            return
+
+        result = await db.execute(select(Download).where(Download.id == d_uuid))
         download = result.scalar_one_or_none()
 
         if download:
@@ -926,9 +944,13 @@ class DownloadManager:
             raise e
 
     async def _get_playlist_downloads(self, db: AsyncSession, user_id, source, playlist_name):
+        try:
+            u_id = uuid.UUID(str(user_id))
+        except ValueError:
+            return []
         result = await db.execute(
             select(Download).where(
-                Download.user_id == user_id, Download.source == source, Download.playlist_name == playlist_name
+                Download.user_id == u_id, Download.source == source, Download.playlist_name == playlist_name
             )
         )
         return result.scalars().all()

@@ -14,13 +14,17 @@ import app.models  # noqa: F401 - Ensure models are registered
 from app.api.subsonic import router as subsonic_router
 from app.api.v1 import (
     artists,
+    audit,
     auth,
     dashboard,
     deezer,
     downloads,
     history,
     import_routes,
+    lyrics,
+    playlists,
     spotify,
+    storage,
     stream,
     sync,
     system,
@@ -88,6 +92,10 @@ application.include_router(spotify.router, prefix="/api/v1/spotify", tags=["spot
 application.include_router(deezer.router, prefix="/api/v1/deezer", tags=["deezer"])
 application.include_router(sync.router, prefix="/api/v1/sync", tags=["sync"])
 application.include_router(system.router, prefix="/api/v1/system", tags=["system"])
+application.include_router(audit.router, prefix="/api/v1/audit", tags=["audit"])
+application.include_router(lyrics.router, prefix="/api/v1/lyrics", tags=["lyrics"])
+application.include_router(playlists.router, prefix="/api/v1/playlists", tags=["playlists"])
+application.include_router(storage.router, prefix="/api/v1/storage", tags=["storage"])
 
 # Subsonic API (compatible with Sonixd, Amperfy, DSub, etc.)
 application.include_router(subsonic_router)

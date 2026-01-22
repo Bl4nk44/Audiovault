@@ -7,6 +7,7 @@ import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { artistsApi } from "../api/artists";
 import TrackCard from "../components/search/TrackCard";
 import Button from "../components/ui/Button";
+import api from "../services/api";
 import { useStore } from "../store/useStore";
 import type { Album } from "../types";
 import { notify as toast } from "../utils/notify";
@@ -97,24 +98,12 @@ export default function ArtistProfile() {
 
     setIsDownloading(true);
     try {
-      const response = await fetch(
-        `/api/v1/downloads/artist/${artist.spotify_id || artist.id}/download-all`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${localStorage.getItem("token")}`,
-          },
-          body: JSON.stringify({ source: "spotify" }),
-        }
+      const response = await api.post(
+        `/downloads/artist/${artist.spotify_id || artist.id}/download-all`,
+        { source: "spotify" }
       );
 
-      if (response.ok) {
-        const data = await response.json();
-        toast.success(`Queued ${data.queued_count} tracks for download`);
-      } else {
-        toast.error("Failed to queue downloads");
-      }
+      toast.success(`Queued ${response.data.queued_count} tracks for download`);
     } catch (error) {
       console.error("Failed to download all:", error);
       toast.error("Failed to queue downloads");
@@ -123,26 +112,23 @@ export default function ArtistProfile() {
     }
   };
 
-  const handleDownloadAlbum = async (albumId: string) => {
+  const handleDownloadAlbum = async (album: Album) => {
     try {
-      const response = await fetch(`/api/v1/downloads/album/${albumId}/download`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${localStorage.getItem("token")}`,
-        },
-        body: JSON.stringify({ source: "spotify" }),
+      // Use spotify_id if available (for search results), otherwise id (for local/database items)
+      // If we are in "spotify" source mode (which search usually is), we should prefer spotify_id or id if that's what semantic is.
+      // Actually backend expects an ID it can use to find the album.
+      // If we are browsing Spotify artist, we probably have spotify IDs.
+      const targetId = album.spotify_id || album.id;
+
+      const response = await api.post(`/downloads/album/${targetId}/download`, {
+        source: "spotify",
       });
 
-      if (response.ok) {
-        const data = await response.json();
-        toast.success(data.message || "Album queued for download");
-      } else {
-        toast.error("Failed to queue album download");
-      }
-    } catch (error) {
+      toast.success(response.data.message || "Album queued for download");
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } catch (error: any) {
       console.error("Failed to download album:", error);
-      toast.error("Failed to queue album download");
+      toast.error(error.response?.data?.detail || "Failed to queue album download");
     }
   };
 
@@ -301,7 +287,7 @@ export default function ArtistProfile() {
                               className="rounded-full w-10 h-10 transform scale-90 hover:scale-100 transition-transform"
                               onClick={(e) => {
                                 e.stopPropagation();
-                                handleDownloadAlbum(album.id);
+                                handleDownloadAlbum(album);
                               }}
                               title="Download Album"
                             >
@@ -380,7 +366,7 @@ export default function ArtistProfile() {
                               className="rounded-full w-10 h-10 transform scale-90 hover:scale-100 transition-transform"
                               onClick={(e) => {
                                 e.stopPropagation();
-                                handleDownloadAlbum(single.id);
+                                handleDownloadAlbum(single);
                               }}
                               title="Download Single/EP"
                             >

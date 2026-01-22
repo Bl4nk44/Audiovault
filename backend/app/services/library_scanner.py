@@ -9,7 +9,7 @@ from app.models.download import Download
 from app.models.track import Track
 from mutagen.easyid3 import EasyID3
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.future import select
+from sqlalchemy import select, delete
 import aiofiles
 import asyncio
 from app.core.executors import stream_executor
@@ -38,7 +38,12 @@ class LibraryScannerService:
         return self.base_dir
 
     async def _get_known_paths(self, db: AsyncSession, user_id: str) -> set[str]:
-        result = await db.execute(select(Download.file_path).where(Download.user_id == user_id))
+        from uuid import UUID as UUID_type
+        try:
+            u_id = UUID_type(str(user_id))
+        except ValueError:
+            return set()
+        result = await db.execute(select(Download.file_path).where(Download.user_id == u_id))
         known_paths = set()
         for row in result.all():
             if row[0]:  # row[0] is Download.file_path
@@ -307,8 +312,14 @@ class LibraryScannerService:
             db.add(new_track)
             await db.flush()
 
+            from uuid import UUID as UUID_type
+            try:
+                u_id = UUID_type(str(user_id))
+            except ValueError:
+                return False
+            
             new_download = Download(
-                user_id=user_id,
+                user_id=u_id,
                 track_id=new_track.id,
                 status="completed",
                 file_path=full_path,
@@ -380,6 +391,28 @@ class LibraryScannerService:
             "imported_count": imported_count,
             "errors": errors[:10],
         }
+
+    async def cleanup_orphans(self, db: AsyncSession) -> int:
+        """Remove tracks from DB if their physical files are missing."""
+        result = await db.execute(select(Download).where(Download.status == "completed"))
+        downloads = result.scalars().all()
+        
+        removed_count = 0
+        for download in downloads:
+            if download.file_path and not os.path.exists(download.file_path):
+                # Delete track and download
+                if download.track_id:
+                    from app.models.track import Track
+                    await db.execute(delete(Track).where(Track.id == download.track_id))
+                
+                await db.delete(download)
+                removed_count += 1
+        
+        if removed_count > 0:
+            await db.commit()
+            logger.info(f"Cleaned up {removed_count} orphaned tracks")
+            
+        return removed_count
 
 
 library_scanner_service = LibraryScannerService()

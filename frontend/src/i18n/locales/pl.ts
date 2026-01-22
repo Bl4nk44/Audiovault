@@ -26,12 +26,12 @@ export const pl = {
     refresh: "Odśwież",
     lines: "Linii",
     download: "Pobierz Logi",
+    showErrorsOnly: "Tylko Błędy",
   },
   dashboard: {
     title: "Panel Sterowania",
     subtitle: "Przegląd twojej kolekcji muzyki i pobierań.",
-    searchPlaceholder:
-      "Wklej link (YouTube, Spotify...) lub wyszukaj muzykę...",
+    searchPlaceholder: "Wklej link (YouTube, Spotify...) lub wyszukaj muzykę...",
 
     stats: {
       totalDownloads: "Wszystkie pobrania",
@@ -151,5 +151,26 @@ export const pl = {
       artists: "Artyści",
       playlists: "Playlisty",
     },
+  },
+  library: {
+    title: "Moja Biblioteka",
+    subtitle: "Zarządzaj pobraną muzyką.",
+    newPlaylist: "Nowa Playlista",
+    rescan: "Skanuj Bibliotekę",
+    allTracks: "Wszystkie Utwory",
+    uncategorized: "Nieskategoryzowane",
+    playlistDeleted: "Playlista usunięta",
+    trackDeleted: "Utwór usunięty",
+    rescanComplete: "Skanowanie zakończone",
+  },
+  watchlist: {
+    title: "Obserwowane",
+    subtitle: "Śledź artystów i playlisty, aby pobierać nowości.",
+    autoDownloadOn: "Auto-pobieranie: WŁ",
+    autoDownloadOff: "Auto-pobieranie: WYŁ",
+    syncDeletions: "Synchronizuj usunięcia",
+    removeFromWatchlist: "Usuń z obserwowanych",
+    newItems: "nowe",
+    addToWatchlist: "Dodaj do obserwowanych",
   },
 };

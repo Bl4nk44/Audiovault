@@ -1,23 +1,34 @@
 import { motion } from "framer-motion";
-import { AudioLines, Download, ListPlus, MoreHorizontal, Music, Play, Plus } from "lucide-react";
+import { AudioLines, Download, ListPlus, Music, Play, Trash2 } from "lucide-react";
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import api from "../../services/api";
 import { useStore } from "../../store/useStore";
-import { type Track } from "../../types"; // Import global Track
+import { type Track } from "../../types";
 import { notify as toast } from "../../utils/notify";
 import AddToPlaylistModal from "../AddToPlaylistModal";
 
 interface TrackCardProps {
   track: Track;
   queue?: Track[];
+  onRemove?: () => void;
 }
 
-export default function TrackCard({ track, queue }: Readonly<TrackCardProps>) {
+export default function TrackCard({ track, queue, onRemove }: Readonly<TrackCardProps>) {
+  const navigate = useNavigate();
   const { playTrack, currentTrack, isPlaying, togglePlay } = useStore();
   const [showPlaylistModal, setShowPlaylistModal] = useState(false);
 
   const isCurrentTrack = currentTrack?.id === track.id || currentTrack?.id === track.spotify_id;
   const isNowPlaying = isCurrentTrack && isPlaying;
+
+  const handleArtistClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    const artistId = track.artist_id || track.spotify_artist_id;
+    if (artistId) {
+      navigate(`/artist/${artistId}`);
+    }
+  };
 
   const handlePlay = () => {
     if (isCurrentTrack) {
@@ -51,22 +62,6 @@ export default function TrackCard({ track, queue }: Readonly<TrackCardProps>) {
     }
   };
 
-  const handleAddToWatchlist = async (e: React.MouseEvent) => {
-    e.stopPropagation();
-    try {
-      await api.post("/watchlist/add", {
-        watch_type: "track",
-        source: track.source,
-        source_id: track.id,
-        source_name: track.title,
-        auto_download: false,
-      });
-      toast.success("Added to library");
-    } catch {
-      toast.error("Failed to add to library");
-    }
-  };
-
   const handleOpenPlaylistModal = (e: React.MouseEvent) => {
     e.stopPropagation();
     setShowPlaylistModal(true);
@@ -81,99 +76,113 @@ export default function TrackCard({ track, queue }: Readonly<TrackCardProps>) {
   return (
     <>
       <motion.div
-        whileHover={{ scale: 1.02, backgroundColor: "rgba(255, 255, 255, 0.1)" }}
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
         onClick={handlePlay}
-        className={`group relative flex items-center gap-4 p-3 rounded-xl transition-all cursor-pointer overflow-hidden border ${
+        className={`w-full p-3 rounded-xl cursor-pointer border overflow-hidden backdrop-blur-xl transition-all duration-200 group ${
           isCurrentTrack
-            ? "bg-white/10 border-primary/50 shadow-[0_0_15px_rgba(var(--primary-rgb),0.1)]"
-            : "bg-white/5 border-white/5 hover:border-white/10"
+            ? "bg-white/10 border-primary/50 shadow-[0_0_15px_rgba(var(--primary-rgb),0.2)]"
+            : "bg-white/5 border-white/5 hover:bg-white/10 hover:border-white/10"
         }`}
       >
-        <div className="relative w-16 h-16 rounded-lg overflow-hidden shrink-0 shadow-lg group-hover:shadow-primary/20 transition-all">
-          {track.cover || track.image_url ? (
-            <img
-              src={track.cover || track.image_url}
-              alt={track.title}
-              className={`w-full h-full object-cover transition-opacity ${
-                isNowPlaying ? "opacity-40" : ""
-              }`}
-            />
-          ) : (
-            <div className="w-full h-full bg-linear-to-br from-gray-800 to-gray-900 flex items-center justify-center">
-              <Music className={`${isCurrentTrack ? "text-primary" : "text-gray-600"}`} />
-            </div>
-          )}
-
-          {/* Overlay Icon */}
-          <div
-            className={`absolute inset-0 flex items-center justify-center transition-opacity ${
-              isCurrentTrack ? "opacity-100" : "opacity-0 group-hover:opacity-100 bg-black/40"
-            }`}
-          >
-            {isNowPlaying ? (
-              <AudioLines className="text-primary animate-pulse" size={24} />
-            ) : isCurrentTrack ? (
-              <Play className="text-primary fill-primary" size={24} />
+        {/* Main Row */}
+        <div className="flex items-center gap-4">
+          {/* Cover Image */}
+          <div className="relative w-14 h-14 rounded-lg overflow-hidden shrink-0 shadow-lg group-hover:shadow-primary/20 transition-all">
+            {track.cover || track.image_url ? (
+              <img
+                src={track.cover || track.image_url}
+                alt={track.title}
+                className={`w-full h-full object-cover transition-opacity ${
+                  isNowPlaying ? "opacity-40" : ""
+                }`}
+              />
             ) : (
-              <Play className="text-white fill-white" size={24} />
+              <div className="w-full h-full bg-linear-to-br from-gray-800 to-gray-900 flex items-center justify-center">
+                <Music className={`${isCurrentTrack ? "text-primary" : "text-gray-600"}`} />
+              </div>
             )}
+
+            {/* Center Play Icon Overlay */}
+            <div
+              className={`absolute inset-0 flex items-center justify-center transition-opacity ${
+                isCurrentTrack ? "opacity-100" : "opacity-0 group-hover:opacity-100 bg-black/40"
+              }`}
+            >
+              {isNowPlaying ? (
+                <AudioLines className="text-primary animate-pulse" size={20} />
+              ) : isCurrentTrack ? (
+                <Play className="text-primary fill-primary" size={20} />
+              ) : (
+                <Play className="text-white fill-white" size={20} />
+              )}
+            </div>
           </div>
-        </div>
 
-        <div className="flex-1 min-w-0">
-          <h3
-            className={`font-bold truncate transition-colors ${
-              isCurrentTrack ? "text-primary" : "text-white group-hover:text-primary"
-            }`}
-          >
-            {track.title}
-          </h3>
-          <p className="text-sm text-gray-400 truncate">{track.artist}</p>
-        </div>
-
-        <div className="flex items-center gap-4 mr-2">
-          <span className="text-xs text-gray-500 font-medium hidden sm:block">
-            {formatDuration(track.duration_ms || 0)}
-          </span>
-
-          <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity translate-x-4 group-hover:translate-x-0">
-            <motion.button
-              whileHover={{ scale: 1.1 }}
-              whileTap={{ scale: 0.9 }}
-              onClick={handleAddToWatchlist}
-              className="p-2 text-gray-400 hover:text-white hover:bg-white/10 rounded-full transition-colors"
-              title="Add to Watchlist"
+          {/* Content info */}
+          <div className="flex-1 min-w-0 flex flex-col justify-center">
+            <h3
+              className={`font-bold text-base leading-tight truncate pr-2 ${
+                isCurrentTrack ? "text-primary" : "text-white"
+              }`}
+              title={track.title}
             >
-              <Plus size={18} />
-            </motion.button>
-
-            <motion.button
-              whileHover={{ scale: 1.1 }}
-              whileTap={{ scale: 0.9 }}
-              onClick={handleOpenPlaylistModal}
-              className="p-2 text-gray-400 hover:text-white hover:bg-white/10 rounded-full transition-colors"
-              title="Add to Playlist"
+              {track.title}
+            </h3>
+            <button
+              onClick={handleArtistClick}
+              className={`text-sm text-left truncate transition-colors ${
+                track.artist_id || track.spotify_artist_id
+                  ? "text-gray-400 hover:text-white hover:underline decoration-white/50"
+                  : "text-gray-400 cursor-default"
+              }`}
+              title={track.artist}
             >
-              <ListPlus size={18} />
-            </motion.button>
+              {track.artist}
+            </button>
+          </div>
 
-            <motion.button
-              whileHover={{ scale: 1.1 }}
-              whileTap={{ scale: 0.9 }}
-              onClick={handleDownload}
-              className="p-2 text-gray-400 hover:text-primary hover:bg-primary/10 rounded-full transition-colors"
-              title="Download"
-            >
-              <Download size={18} />
-            </motion.button>
+          {/* Right Side: Duration & Actions */}
+          <div className="shrink-0 flex flex-col items-end gap-2">
+            {/* Duration */}
+            <span className="text-xs font-medium text-gray-500 bg-black/20 px-2 py-0.5 rounded-full">
+              {formatDuration(track.duration_ms || 0)}
+            </span>
 
-            <motion.button
-              whileHover={{ scale: 1.1 }}
-              whileTap={{ scale: 0.9 }}
-              className="p-2 text-gray-400 hover:text-white hover:bg-white/10 rounded-full transition-colors"
-            >
-              <MoreHorizontal size={18} />
-            </motion.button>
+            {/* Actions Icons */}
+            <div className="flex items-center gap-1">
+              {/* Add to Playlist */}
+              <button
+                onClick={handleOpenPlaylistModal}
+                className="p-1.5 text-gray-400 hover:text-white hover:bg-white/10 rounded-lg transition-colors"
+                title="Add to Playlist"
+              >
+                <ListPlus size={18} />
+              </button>
+
+              {/* Download */}
+              <button
+                onClick={handleDownload}
+                className="p-1.5 text-primary/80 hover:text-primary hover:bg-primary/10 rounded-lg transition-colors"
+                title="Download"
+              >
+                <Download size={18} />
+              </button>
+
+              {/* Remove */}
+              {onRemove && (
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onRemove();
+                  }}
+                  className="p-1.5 text-red-400 hover:text-red-300 hover:bg-red-500/10 rounded-lg transition-colors"
+                  title="Remove"
+                >
+                  <Trash2 size={18} />
+                </button>
+              )}
+            </div>
           </div>
         </div>
       </motion.div>
@@ -181,7 +190,7 @@ export default function TrackCard({ track, queue }: Readonly<TrackCardProps>) {
       <AddToPlaylistModal
         isOpen={showPlaylistModal}
         onClose={() => setShowPlaylistModal(false)}
-        trackIds={[track.id || track.spotify_id || track.youtube_id || ""]} // Ensure we pass a valid ID
+        trackIds={[track.id || track.spotify_id || track.youtube_id || ""]}
       />
     </>
   );

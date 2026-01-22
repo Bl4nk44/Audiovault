@@ -33,16 +33,9 @@ async def delete_user_me(
         # Default strategy: DOWNLOAD_DIR / username
         user_lib_path = os.path.join(settings.DOWNLOAD_DIR, current_user.username)
 
-        # Check custom path in preferences
-        # Check custom path in preferences
         if current_user.preferences and "downloadPath" in current_user.preferences:
-            # custom_path = current_user.preferences["downloadPath"]
-            # Security check: ensure custom_path is within allowed bounds or is strictly theirs
-            # For now, we trust the preference if it was set by the app, but let's be careful.
-            # If custom path is same as default user lib path, or inside it.
-            # Simplest: Just nuke the default user folder if it matches username
-            # If user set a custom path elsewhere, we might want to respect it OR just stick to convention.
-            # Let's stick to the convention of removing the User's named directory in DOWNLOAD_DIR
+            # TODO: Handle custom download paths securely. 
+            # For now, we only delete the default directory to avoid deleting external data.
             pass
 
         if os.path.exists(user_lib_path):

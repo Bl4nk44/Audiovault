@@ -23,6 +23,7 @@ The best place to ask questions and get help from the community:
 If you've found a bug, please report it using the [Bug Report Template](https://github.com/Bl4nk44/Audiovault/issues/new?template=bug_report.md).
 
 **Include:**
+
 - Description of the bug
 - Steps to reproduce
 - Expected vs actual behavior
@@ -35,6 +36,7 @@ If you've found a bug, please report it using the [Bug Report Template](https://
 We'd love to hear your ideas! Use the [Feature Request Template](https://github.com/Bl4nk44/Audiovault/issues/new?template=feature_request.md).
 
 **Include:**
+
 - Description of the feature
 - Why you need it
 - Possible implementation ideas (optional)
@@ -78,7 +80,7 @@ frontend:
 docker compose logs backend | grep "Initial superuser"
 
 # Or set a custom password before first start
-echo "FIRST_SUPERUSER_PASSWORD=your_password" >> .env
+echo "ADMIN_PASSWORD=your_password" >> .env
 docker compose up -d
 ```
 

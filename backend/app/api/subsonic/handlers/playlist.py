@@ -9,7 +9,7 @@ Handles playlist CRUD operations:
 - deletePlaylist.view
 """
 
-from datetime import datetime
+from datetime import UTC, datetime
 from uuid import UUID
 
 from app.api.subsonic.auth import subsonic_auth
@@ -29,6 +29,11 @@ from sqlalchemy import delete, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 router = APIRouter()
+
+# Error message constants
+ERR_INVALID_PLAYLIST_ID = "Invalid playlist ID"
+ERR_PLAYLIST_NOT_FOUND = "Playlist not found"
+ERR_ACCESS_DENIED = "Access denied"
 
 
 @router.get("/getPlaylists.view")
@@ -111,18 +116,18 @@ async def get_playlist(
     try:
         playlist_id = UUID(id)
     except ValueError:
-        return subsonic_error(10, "Invalid playlist ID")
+        return subsonic_error(10, ERR_INVALID_PLAYLIST_ID)
 
     # Get playlist
     result = await db.execute(select(Playlist).where(Playlist.id == playlist_id))
     playlist = result.scalar_one_or_none()
 
     if not playlist:
-        return subsonic_error(70, "Playlist not found")
+        return subsonic_error(70, ERR_PLAYLIST_NOT_FOUND)
 
     # Check access
     if playlist.owner_id != current_user.id and not playlist.public:
-        return subsonic_error(50, "Access denied", f=f)
+        return subsonic_error(50, ERR_ACCESS_DENIED, f=f)
 
     # Get tracks with downloads
     stmt = (
@@ -208,16 +213,16 @@ async def create_playlist(
         try:
             playlist_id = UUID(playlistId)
         except ValueError:
-            return subsonic_error(10, "Invalid playlist ID", f=f)
+            return subsonic_error(10, ERR_INVALID_PLAYLIST_ID, f=f)
 
         result = await db.execute(select(Playlist).where(Playlist.id == playlist_id))
         playlist = result.scalar_one_or_none()
 
         if not playlist:
-            return subsonic_error(70, "Playlist not found", f=f)
+            return subsonic_error(70, ERR_PLAYLIST_NOT_FOUND, f=f)
 
         if playlist.owner_id != current_user.id:
-            return subsonic_error(50, "Access denied", f=f)
+            return subsonic_error(50, ERR_ACCESS_DENIED, f=f)
 
         # Update name if provided
         if name:
@@ -241,7 +246,7 @@ async def create_playlist(
                 except ValueError:
                     continue
 
-        playlist.updated_at = datetime.utcnow()
+        playlist.updated_at = datetime.now(UTC)
         await db.commit()
 
     else:
@@ -307,17 +312,17 @@ async def update_playlist(
     try:
         playlist_id = UUID(playlistId)
     except ValueError:
-        return subsonic_error(10, "Invalid playlist ID", f=f)
+        return subsonic_error(10, ERR_INVALID_PLAYLIST_ID, f=f)
 
     # Get playlist
     result = await db.execute(select(Playlist).where(Playlist.id == playlist_id))
     playlist = result.scalar_one_or_none()
 
     if not playlist:
-        return subsonic_error(70, "Playlist not found")
+        return subsonic_error(70, ERR_PLAYLIST_NOT_FOUND)
 
     if playlist.owner_id != current_user.id:
-        return subsonic_error(50, "Access denied")
+        return subsonic_error(50, ERR_ACCESS_DENIED)
 
     # Update metadata
     if name is not None:
@@ -367,7 +372,7 @@ async def update_playlist(
             except ValueError:
                 continue
 
-    playlist.updated_at = datetime.utcnow()
+    playlist.updated_at = datetime.now(UTC)
     await db.commit()
 
     return subsonic_response()
@@ -393,17 +398,17 @@ async def delete_playlist(
     try:
         playlist_id = UUID(id)
     except ValueError:
-        return subsonic_error(10, "Invalid playlist ID")
+        return subsonic_error(10, ERR_INVALID_PLAYLIST_ID)
 
     # Get playlist
     result = await db.execute(select(Playlist).where(Playlist.id == playlist_id))
     playlist = result.scalar_one_or_none()
 
     if not playlist:
-        return subsonic_error(70, "Playlist not found")
+        return subsonic_error(70, ERR_PLAYLIST_NOT_FOUND)
 
     if playlist.owner_id != current_user.id:
-        return subsonic_error(50, "Access denied")
+        return subsonic_error(50, ERR_ACCESS_DENIED)
 
     # Delete playlist (cascade will delete PlaylistTrack entries)
     await db.delete(playlist)

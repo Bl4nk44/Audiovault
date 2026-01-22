@@ -1,31 +1,33 @@
-import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import { Toaster } from "react-hot-toast";
-import Login from "./pages/Login";
-import Register from "./pages/Register";
+import { Route, BrowserRouter as Router, Routes } from "react-router-dom";
 import Dashboard from "./pages/Dashboard";
-import Search from "./pages/Search";
-import Queue from "./pages/Queue";
-import Watchlist from "./pages/Watchlist";
 import Library from "./pages/Library";
-import Settings from "./pages/Settings";
+import Login from "./pages/Login";
 import Logs from "./pages/Logs";
+import Queue from "./pages/Queue";
+import Register from "./pages/Register";
+import Search from "./pages/Search";
+import Settings from "./pages/Settings";
+import Watchlist from "./pages/Watchlist";
 
-import ArtistProfile from "./pages/ArtistProfile";
+import { ProtectedRoute } from "./components/auth/ProtectedRoute";
+import Layout from "./components/common/Layout";
+import { SessionManager } from "./components/common/SessionManager";
+import { ThemeInitializer } from "./components/common/ThemeInitializer";
+import { AnimatedBackground } from "./components/ui/AnimatedBackground";
+import { useKeyboardShortcuts } from "./hooks/useKeyboardShortcuts";
 import AlbumDetails from "./pages/AlbumDetails";
-import PlaylistDetails from "./pages/PlaylistDetails";
+import ArtistProfile from "./pages/ArtistProfile";
 import Import from "./pages/Import";
 import NotFound from "./pages/NotFound";
-import Layout from "./components/common/Layout";
-import { ProtectedRoute } from "./components/auth/ProtectedRoute";
-import { ThemeInitializer } from "./components/common/ThemeInitializer";
-import { SessionManager } from "./components/common/SessionManager";
-import { AnimatedBackground } from "./components/ui/AnimatedBackground";
+import PlaylistDetails from "./pages/PlaylistDetails";
 
 function App() {
   return (
     <Router>
       <ThemeInitWrapper />
       <SessionManagerWrapper />
+      <KeyboardShortcutsWrapper />
       <div className="min-h-screen text-foreground relative overflow-hidden font-sans selection:bg-primary/30 selection:text-primary-foreground">
         <AnimatedBackground />
         <Routes>
@@ -79,6 +81,11 @@ function ThemeInitWrapper() {
 
 function SessionManagerWrapper() {
   return <SessionManager />;
+}
+
+function KeyboardShortcutsWrapper() {
+  useKeyboardShortcuts();
+  return null;
 }
 
 export default App;

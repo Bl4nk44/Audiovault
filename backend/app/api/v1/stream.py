@@ -101,13 +101,19 @@ async def _extract_embedded_cover_art(file_path: str) -> tuple[Optional[bytes], 
 
 async def _resolve_track_path(db: AsyncSession, track_id: str) -> tuple[Optional[Track], Optional[str]]:
     """Resolve Track and filesystem path."""
+    import uuid
+    try:
+        t_uuid = uuid.UUID(str(track_id))
+    except ValueError:
+        return None, None
+
     # 1. Try to find track content
-    result = await db.execute(select(Track).where(Track.id == track_id))
+    result = await db.execute(select(Track).where(Track.id == t_uuid))
     track = result.scalar_one_or_none()
 
     if not track:
         # Try finding by download if track_id is actually download_id
-        result = await db.execute(select(Download).where(Download.id == track_id))
+        result = await db.execute(select(Download).where(Download.id == t_uuid))
         download = result.scalar_one_or_none()
         if download and download.track:
             track = download.track
@@ -159,6 +165,30 @@ async def get_track_cover(track_id: str, db: AsyncSession = Depends(get_db)):
                  return RedirectResponse(url)
 
     # 404 if no file source or art found
+    raise HTTPException(status_code=404, detail="No cover art found")
+
+
+@router.get("/album/{album_id}/cover")
+async def get_album_cover(album_id: str, db: AsyncSession = Depends(get_db)):
+    """Get cover art for an album."""
+    import uuid
+    try:
+        a_uuid = uuid.UUID(str(album_id))
+    except ValueError:
+        raise HTTPException(status_code=400, detail="Invalid album ID")
+
+    result = await db.execute(select(Album).where(Album.id == a_uuid))
+    album = result.scalar_one_or_none()
+    
+    if not album:
+        raise HTTPException(status_code=404, detail="Album not found")
+        
+    if album.images:
+        # Priority: 300px -> 640px -> generic url
+        url = album.images.get("300") or album.images.get("640") or album.images.get("url")
+        if url:
+            return RedirectResponse(url)
+            
     raise HTTPException(status_code=404, detail="No cover art found")
 
 

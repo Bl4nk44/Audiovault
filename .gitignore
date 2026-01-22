@@ -17,6 +17,8 @@ dist/
 # System
 .DS_Store
 Thumbs.db
+# Agent
+.agent
 
 # IDE
 .vscode/
@@ -43,8 +45,6 @@ deploy.ps1
 .sonar/
 sonar_report.md
 sonar-project.properties
-
-AI_CONTEXT.md
 
 # Test Artifacts
 backend/coverage_report.txt
@@ -75,4 +75,9 @@ backend/app/backfill_metadata.py
 backend/app/fix_covers.py
 backend/app/test_genres_query.py
 backend/app/debug_genres.py
-FINGOCONTEXT.md
+
+
+# Agentic AI
+AGENTS.md
+.agent/
+

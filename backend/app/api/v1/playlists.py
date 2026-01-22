@@ -1,3 +1,5 @@
+import json
+from datetime import datetime
 from uuid import UUID
 
 from app.core.dependencies import get_current_active_user
@@ -13,6 +15,7 @@ from app.schemas.playlist import (
     PlaylistUpdate,
 )
 from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi.responses import Response
 from sqlalchemy import delete, func, select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -41,7 +44,18 @@ async def create_playlist(
     db.add(new_playlist)
     await db.commit()
     await db.refresh(new_playlist)
-    return new_playlist
+    
+    return PlaylistResponse(
+        id=new_playlist.id,
+        name=new_playlist.name,
+        comment=new_playlist.comment,
+        public=new_playlist.public,
+        owner_id=new_playlist.owner_id,
+        created_at=new_playlist.created_at,
+        updated_at=new_playlist.updated_at,
+        tracks_count=0,
+        tracks=[]
+    )
 
 
 @router.get("/", response_model=list[PlaylistResponse])
@@ -292,3 +306,175 @@ async def remove_tracks_from_playlist(
     )
     await db.execute(stmt)
     await db.commit()
+
+
+@router.get("/{playlist_id}/export")
+async def export_playlist(
+    playlist_id: UUID,
+    current_user: User = Depends(get_current_active_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """
+    Export playlist metadata and tracks as a downloadable JSON file.
+    """
+    query = (
+        select(Playlist)
+        .where(Playlist.id == playlist_id)
+        .where(Playlist.owner_id == current_user.id)
+        .options(selectinload(Playlist.tracks).selectinload(PlaylistTrack.track))
+    )
+    result = await db.execute(query)
+    playlist = result.scalar_one_or_none()
+
+    if not playlist:
+        raise HTTPException(status_code=404, detail=PLAYLIST_NOT_FOUND)
+
+    # Build export data
+    tracks_data = []
+    for pt in playlist.tracks:
+        if pt.track:
+            tracks_data.append({
+                "order": pt.order,
+                "title": pt.track.title,
+                "artist": pt.track.artist,
+                "album": pt.track.album,
+                "duration_ms": pt.track.duration_ms,
+                "year": pt.track.metadata_content.get("year"),
+                "genre": pt.track.metadata_content.get("genre"),
+            })
+
+    export_data = {
+        "playlist": {
+            "id": str(playlist.id),
+            "name": playlist.name,
+            "comment": playlist.comment,
+            "public": playlist.public,
+            "created_at": playlist.created_at.isoformat() if playlist.created_at else None,
+            "updated_at": playlist.updated_at.isoformat() if playlist.updated_at else None,
+        },
+        "tracks_count": len(tracks_data),
+        "tracks": tracks_data,
+        "exported_at": datetime.now(tz=__import__('datetime').timezone.utc).isoformat(),
+        "export_version": "1.0",
+    }
+
+    # Create safe filename
+    safe_name = "".join(c for c in playlist.name if c.isalnum() or c in " -_").strip()
+    filename = f"{safe_name}_playlist.json"
+
+    json_content = json.dumps(export_data, indent=2, ensure_ascii=False)
+
+    return Response(
+        content=json_content,
+        media_type="application/json",
+        headers={
+            "Content-Disposition": f'attachment; filename="{filename}"'
+        }
+    )
+
+
+# === Playlist Versioning Endpoints ===
+
+from app.models.playlist_version import PlaylistVersion
+from app.services.playlist_version_service import playlist_version_service
+from pydantic import BaseModel
+from typing import Optional
+from datetime import datetime as dt
+
+
+class PlaylistVersionResponse(BaseModel):
+    """Response model for playlist version."""
+    id: UUID
+    version_number: int
+    name: str
+    comment: Optional[str] = None
+    tracks_count: int
+    change_type: str
+    change_details: dict
+    created_at: dt
+
+    class Config:
+        from_attributes = True
+
+
+@router.get("/{playlist_id}/versions", response_model=list[PlaylistVersionResponse])
+async def get_playlist_versions(
+    playlist_id: UUID,
+    limit: int = 50,
+    current_user: User = Depends(get_current_active_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """
+    Get version history for a playlist.
+    """
+    # Check if playlist exists and user has access
+    result = await db.execute(
+        select(Playlist).where(Playlist.id == playlist_id)
+    )
+    playlist = result.scalar_one_or_none()
+
+    if not playlist:
+        raise HTTPException(status_code=404, detail=PLAYLIST_NOT_FOUND)
+
+    if playlist.owner_id != current_user.id and not playlist.public:
+        raise HTTPException(status_code=403, detail="Access denied")
+
+    versions = await playlist_version_service.get_versions(db, playlist_id, limit)
+
+    return [
+        PlaylistVersionResponse(
+            id=v.id,
+            version_number=v.version_number,
+            name=v.name,
+            comment=v.comment,
+            tracks_count=len(v.tracks_snapshot) if v.tracks_snapshot else 0,
+            change_type=v.change_type,
+            change_details=v.change_details or {},
+            created_at=v.created_at,
+        )
+        for v in versions
+    ]
+
+
+@router.post("/{playlist_id}/rollback/{version_number}")
+async def rollback_playlist(
+    playlist_id: UUID,
+    version_number: int,
+    current_user: User = Depends(get_current_active_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """
+    Rollback a playlist to a previous version.
+    """
+    # Get playlist with tracks loaded
+    result = await db.execute(
+        select(Playlist)
+        .options(selectinload(Playlist.tracks))
+        .where(Playlist.id == playlist_id)
+    )
+    playlist = result.scalar_one_or_none()
+
+    if not playlist:
+        raise HTTPException(status_code=404, detail=PLAYLIST_NOT_FOUND)
+
+    if playlist.owner_id != current_user.id:
+        raise HTTPException(status_code=403, detail="Only owner can rollback playlist")
+
+    # Get the version to rollback to
+    version = await playlist_version_service.get_version(db, playlist_id, version_number)
+
+    if not version:
+        raise HTTPException(status_code=404, detail="Version not found")
+
+    # Perform rollback
+    new_version = await playlist_version_service.rollback_to_version(
+        db=db,
+        playlist=playlist,
+        version=version,
+        user_id=current_user.id,
+    )
+
+    return {
+        "message": f"Playlist rolled back to version {version_number}",
+        "new_version_number": new_version.version_number,
+    }

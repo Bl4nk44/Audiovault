@@ -1,7 +1,7 @@
 {
   "name": "audiovault-frontend",
   "private": true,
-  "version": "0.9.1",
+  "version": "0.10.1",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -24,6 +24,7 @@
     "react-dom": "^19.2.3",
     "react-hook-form": "^7.71.1",
     "react-hot-toast": "^2.6.0",
+    "react-hotkeys-hook": "^5.2.3",
     "react-i18next": "^16.5.3",
     "react-icons": "^5.5.0",
     "react-router-dom": "^7.12.0",

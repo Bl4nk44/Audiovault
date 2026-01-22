@@ -8,6 +8,11 @@
 [![GitHub Release](https://img.shields.io/github/v/release/Bl4nk44/Audiovault?logo=github)](https://github.com/Bl4nk44/Audiovault/releases)
 [![GitHub Stars](https://img.shields.io/github/stars/Bl4nk44/Audiovault?logo=github)](https://github.com/Bl4nk44/Audiovault/stargazers)
 [![Docker Pulls](https://img.shields.io/docker/pulls/bl4nk404/audiovault?logo=docker)](https://hub.docker.com/r/bl4nk404/audiovault)
+[![GitGuardian](https://img.shields.io/badge/Security-GitGuardian-blueviolet?logo=gitguardian&logoColor=white)](https://gitguardian.com/)
+[![Snyk](https://img.shields.io/badge/Security-Snyk-4C4A73?logo=snyk&logoColor=white)](https://snyk.io/)
+[![SonarQube](https://img.shields.io/badge/Quality-SonarQube-4E9BCD?logo=sonarqube&logoColor=white)](https://sonarqube.org/)
+[![Trivy](https://img.shields.io/badge/Container-Trivy-0077b6?logo=trivy&logoColor=white)](https://github.com/aquasecurity/trivy)
+[![Antigravity](https://img.shields.io/badge/AI-Antigravity-8A2BE2?logo=google-gemini&logoColor=white)](https://deepmind.google/technologies/gemini/)
 
 🔗 **Quick Links**:
 [📖 Wiki](https://github.com/Bl4nk44/Audiovault/wiki) •
@@ -135,8 +140,8 @@ The recommended way to run Audiovault is via **Docker**.
    - **Backend API**: `http://localhost:8000/docs`
 
    > **Note:** On first launch, a random admin password will be generated and printed to the container logs (`docker compose logs backend`).
-   > To set a custom password, add `FIRST_SUPERUSER_PASSWORD=yourpassword` to your `.env` file before starting.
-   > Default email: `admin@example.com`
+   > To set a custom password, add `ADMIN_PASSWORD=yourpassword` to your `.env` file before starting.
+   > Default username: `admin`
 
 ### Reverse Proxy Configuration
 

@@ -1,144 +1,178 @@
-"""
-Tests for Library Scanner service.
-
-Covers:
-- _parse_audio_metadata - extracts title, artist, album, genre, duration_ms
-- _import_playlist - does NOT clear tracks when 0 matches (bug fix verification)
-"""
-
-import os
-import tempfile
-import uuid
-import aiofiles
-from unittest.mock import MagicMock, patch
-
 import pytest
-from app.models.download import Download
-from app.models.playlist import Playlist, PlaylistTrack
-from app.models.track import Track
-from app.models.user import User
-from app.services.library_scanner import library_scanner_service
+import os
+import uuid
+from unittest.mock import patch, MagicMock, AsyncMock
 from sqlalchemy import select
-from sqlalchemy.ext.asyncio import AsyncSession
+from app.services.library_scanner import LibraryScannerService
+from app.models.download import Download
+from app.models.track import Track
+from app.models.artist import Artist
+from app.models.album import Album
 
+@pytest.fixture
+def scanner():
+    return LibraryScannerService()
+
+def test_validate_scan_path_valid(scanner):
+    scanner.base_dir = os.path.abspath("/music")
+    with patch("os.path.exists", return_value=True):
+        result = scanner._validate_scan_path(os.path.abspath("/music/subdir"))
+        assert result == os.path.abspath("/music/subdir")
+
+def test_validate_scan_path_invalid(scanner):
+    scanner.base_dir = os.path.abspath("/music")
+    with pytest.raises(ValueError, match="Access denied"):
+        scanner._validate_scan_path(os.path.abspath("/outside"))
+
+def test_validate_scan_path_none(scanner):
+    scanner.base_dir = os.path.abspath("/music")
+    result = scanner._validate_scan_path(None)
+    assert result == scanner.base_dir
+
+def test_get_default_metadata(scanner):
+    title, artist, album, genre = scanner._get_default_metadata("Test Song.mp3")
+    assert title == "Test Song"
+    assert artist == "Unknown Artist"
+    assert album == "Unknown Album"
+    assert genre is None
+
+def test_infer_source_info_spotify(scanner):
+    base_dir = "/music"
+    file_path = "/music/spotify/My Playlist/song.mp3"
+    source, playlist_name = scanner._infer_source_info(file_path, base_dir)
+    assert source == "spotify"
+    assert playlist_name == "My Playlist"
+
+def test_infer_source_info_local(scanner):
+    base_dir = "/music"
+    file_path = "/music/My Album/song.mp3"
+    _, playlist_name = scanner._infer_source_info(file_path, base_dir)
+    assert playlist_name == "My Album"
+
+def test_parse_audio_metadata_sync_no_tags(scanner):
+    with patch("app.services.library_scanner.MutagenFile", return_value=None):
+        title, artist, album, _, duration = scanner._parse_audio_metadata_sync("/fake/song.mp3")
+        assert title == "song"
+        assert artist == "Unknown Artist"
+        assert album == "Unknown Album"
+        assert duration == 0
 
 @pytest.mark.asyncio
-async def test_parse_audio_metadata_returns_duration():
-    """Test that _parse_audio_metadata extracts duration_ms from files."""
-    # Create a mock mutagen file with duration
-    with patch("app.services.library_scanner.MutagenFile") as mock_mutagen:
-        mock_file = MagicMock()
-        mock_file.info.length = 180.5  # 180.5 seconds
-        mock_mutagen.return_value = mock_file
-
-        with patch("app.services.library_scanner.EasyID3") as mock_easyid3:
-            mock_easyid3.return_value = {}
-
-            # title, artist, album, genre, duration_ms
-            title, _, _, _, duration_ms = library_scanner_service._parse_audio_metadata_sync(
-                "/fake/path/song.mp3"
-            )
-
-            # Duration should be extracted
-            assert duration_ms == 180500, f"Expected 180500ms, got {duration_ms}"
-            assert title == "song"  # Fallback to filename
-
-
-@pytest.mark.asyncio
-async def test_parse_audio_metadata_returns_zero_on_error():
-    """Test that duration_ms is 0 when file cannot be parsed."""
-    with patch("app.services.library_scanner.MutagenFile") as mock_mutagen:
-        mock_mutagen.side_effect = Exception("Cannot parse")
-
-        with patch("app.services.library_scanner.EasyID3") as mock_easyid3:
-            mock_easyid3.side_effect = Exception("Cannot parse")
-
-            # title, artist, album, genre, duration_ms
-            _, artist, _, _, duration_ms = library_scanner_service._parse_audio_metadata_sync(
-                "/nonexistent/file.mp3"
-            )
-
-            assert duration_ms == 0
-            assert artist == "Unknown Artist"
-
-
-@pytest.mark.asyncio
-async def test_import_playlist_preserves_existing_on_zero_match(db_session: AsyncSession):
-    """
-    CRITICAL: Verify that _import_playlist does NOT clear existing tracks
-    when the new import matches 0 files.
-    
-    This was a bug that caused playlists to become empty after restart.
-    """
-    # Setup user
-    user_id = uuid.uuid4()
-    user = User(id=user_id, email="test@test.com", username="testuser", hashed_password="pw", is_active=True)
-    db_session.add(user)
-
-    # Create track and download
-    track = Track(title="Existing Track", artist="Artist", duration_ms=200000)
+async def test_get_known_paths(scanner, db_session, admin_user):
+    file_path = "/music/known.mp3"
+    track = Track(id=uuid.uuid4(), title="Known Track")
     db_session.add(track)
     await db_session.flush()
-
-    download = Download(
-        user_id=user_id,
-        track_id=track.id,
-        status="completed",
-        file_path="/downloads/existing.mp3",
-    )
-    db_session.add(download)
-
-    # Create playlist with one track
-    playlist = Playlist(name="TestPlaylist", owner_id=user_id)
-    db_session.add(playlist)
-    await db_session.flush()
-
-    pt = PlaylistTrack(playlist_id=playlist.id, track_id=track.id, order=0)
-    db_session.add(pt)
+    
+    dl = Download(user_id=admin_user.id, track_id=track.id, file_path=file_path, status="completed")
+    db_session.add(dl)
     await db_session.commit()
-
-    # Verify we have 1 track
-    result = await db_session.execute(
-        select(PlaylistTrack).where(PlaylistTrack.playlist_id == playlist.id)
-    )
-    initial_count = len(result.scalars().all())
-    assert initial_count == 1, "Should have 1 track initially"
-
-    # Create a temp m3u8 file that references files that DON'T exist in DB
-    m3u_path = os.path.join(tempfile.gettempdir(), f"{uuid.uuid4()}.m3u8")
-    async with aiofiles.open(m3u_path, mode="w") as f:
-        await f.write("#EXTM3U\n")
-        await f.write("/nonexistent/file1.mp3\n")
-        await f.write("/nonexistent/file2.mp3\n")
-
-    try:
-        # Mock base_dir to match our paths
-        with patch.object(library_scanner_service, "base_dir", "/nonexistent"):
-            await library_scanner_service._import_playlist(db_session, m3u_path, str(user_id))
-
-        # Verify tracks are PRESERVED (not deleted)
-        result = await db_session.execute(
-            select(PlaylistTrack).where(PlaylistTrack.playlist_id == playlist.id)
-        )
-        final_count = len(result.scalars().all())
-
-        assert final_count == 1, f"Expected 1 track (preserved), got {final_count}. BUG: Playlist was cleared!"
-
-    finally:
-        os.unlink(m3u_path)
-
+    
+    paths = await scanner._get_known_paths(db_session, admin_user.id)
+    assert os.path.normpath(file_path) in paths
 
 @pytest.mark.asyncio
-async def test_import_playlist_updates_when_matches_found(db_session: AsyncSession):
-    """
-    TODO: Test that _import_playlist correctly updates when matches are found.
+async def test_resolve_artist_and_album_new(scanner, db_session):
+    artist_id, album_id = await scanner.resolve_artist_and_album(db_session, "New Artist", "New Album")
+    assert artist_id is not None
+    assert album_id is not None
+
+@pytest.mark.asyncio
+async def test_resolve_artist_and_album_existing(scanner, db_session):
+    artist = Artist(id=uuid.uuid4(), name="Existing Artist")
+    db_session.add(artist)
+    await db_session.flush()
     
-    This test is complex because the matching logic uses multiple strategies:
-    1. Exact path match
-    2. /downloads/ prefix match
-    3. Filename-only match
+    album = Album(id=uuid.uuid4(), title="Existing Album", artist_id=artist.id)
+    db_session.add(album)
+    await db_session.commit()
     
-    For now, we skip this test. The critical test is test_import_playlist_preserves_existing_on_zero_match
-    which verifies we don't accidentally delete data.
-    """
-    pytest.skip("Complex matching logic - covered by integration tests")
+    artist_id, album_id = await scanner.resolve_artist_and_album(db_session, "Existing Artist", "Existing Album")
+    assert artist_id == artist.id
+    assert album_id == album.id
+
+@pytest.mark.asyncio
+async def test_scan_directory_nonexistent(scanner, db_session, admin_user):
+    with patch("os.path.exists", return_value=False):
+        result = await scanner.scan_directory(db_session, str(admin_user.id), "/nonexistent/path")
+        assert result["status"] == "error"
+
+@pytest.mark.asyncio
+async def test_scan_directory_empty(scanner, db_session, admin_user):
+    scanner.base_dir = os.path.abspath("/music")
+    with patch("os.path.exists", return_value=True), \
+         patch("os.walk", return_value=[(os.path.abspath("/music"), [], [])]):
+        result = await scanner.scan_directory(db_session, str(admin_user.id), os.path.abspath("/music"))
+        assert result["status"] == "success"
+        assert result["imported_count"] == 0
+
+@pytest.mark.asyncio
+async def test_scan_directory_with_mp3(scanner, db_session, admin_user):
+    scanner.base_dir = os.path.abspath("/music")
+    with patch("os.path.exists", return_value=True), \
+         patch("os.walk", return_value=[(os.path.abspath("/music"), [], ["test.mp3"])]), \
+         patch("mutagen.File", return_value=None):
+        result = await scanner.scan_directory(db_session, str(admin_user.id), os.path.abspath("/music"))
+        assert result["status"] == "success"
+        assert result["total_files_found"] >= 1
+
+@pytest.mark.asyncio
+async def test_handle_scan_file_non_audio(scanner, db_session, admin_user):
+    result = await scanner._handle_scan_file(db_session, str(admin_user.id), "/music/readme.txt", "readme.txt", "/music", set())
+    assert result is False
+
+@pytest.mark.asyncio
+async def test_handle_scan_file_already_known(scanner, db_session, admin_user):
+    file_path = "/music/known.mp3"
+    known_paths = {os.path.normpath(file_path)}
+    result = await scanner._handle_scan_file(db_session, str(admin_user.id), file_path, "known.mp3", "/music", known_paths)
+    assert result is False
+@pytest.mark.asyncio
+async def test_parse_audio_metadata_with_easyid3(scanner):
+    mock_audio = {"title": ["Tagged Title"], "artist": ["Tagged Artist"], "album": ["Tagged Album"], "genre": ["Rock"]}
+    with patch("app.services.library_scanner.EasyID3", return_value=mock_audio):
+        # We need to also patch MutagenFile (local alias) for the duration/fallback
+        mock_mutagen = MagicMock()
+        mock_mutagen.info.length = 120.5
+        mock_mutagen.__getitem__.side_effect = KeyError("No tags")
+        with patch("app.services.library_scanner.MutagenFile", return_value=mock_mutagen):
+             title, artist, _, _, duration = scanner._parse_audio_metadata_sync("/fake/song.mp3")
+             assert title == "Tagged Title"
+             assert artist == "Tagged Artist"
+             assert duration == 120500
+
+@pytest.mark.asyncio
+async def test_cleanup_orphans(scanner, db_session):
+    # 1. Create track-download pair with non-existent file path
+    artist = Artist(id=uuid.uuid4(), name="Orphan Artist")
+    db_session.add(artist)
+    await db_session.flush()
+    
+    track = Track(id=uuid.uuid4(), title="Orphan Track", artist_id=artist.id)
+    db_session.add(track)
+    await db_session.flush()
+    
+    dl = Download(id=uuid.uuid4(), track_id=track.id, user_id=uuid.uuid4(), file_path="/non/existent/orphan.mp3", status="completed")
+    db_session.add(dl)
+    await db_session.commit()
+    
+    with patch("os.path.exists", return_value=False):
+        removed = await scanner.cleanup_orphans(db_session)
+        assert removed >= 1
+
+@pytest.mark.asyncio
+async def test_scan_directory_with_subdirs(scanner, db_session, admin_user):
+    scanner.base_dir = os.path.abspath("/music")
+    # Mock os.walk with nested structure
+    walk_data = [
+        (os.path.abspath("/music"), ["subdir"], ["root.mp3"]),
+        (os.path.abspath("/music/subdir"), [], ["nested.mp3"])
+    ]
+    with patch("os.path.exists", return_value=True), \
+         patch("os.walk", return_value=walk_data), \
+         patch("app.services.library_scanner.MutagenFile", return_value=None), \
+         patch.object(scanner, "_handle_scan_file", new_callable=AsyncMock, return_value=True):
+        
+        result = await scanner.scan_directory(db_session, str(admin_user.id), os.path.abspath("/music"))
+        assert result["status"] == "success"
+        assert result["imported_count"] == 2

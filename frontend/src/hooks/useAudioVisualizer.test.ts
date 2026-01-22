@@ -1,7 +1,7 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { renderHook } from "@testing-library/react";
-import { useAudioVisualizer } from "./useAudioVisualizer";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { Track } from "../types";
+import { useAudioVisualizer } from "./useAudioVisualizer";
 
 // Mock canvas context
 const mockCanvasContext = {
@@ -23,32 +23,6 @@ const mockCanvasContext = {
   shadowBlur: 0,
 };
 
-// Mock AudioContext
-const mockAnalyser = {
-  fftSize: 0,
-  smoothingTimeConstant: 0,
-  frequencyBinCount: 64,
-  getByteFrequencyData: vi.fn(),
-  connect: vi.fn(),
-};
-
-const mockAudioSource = {
-  connect: vi.fn(),
-};
-
-const mockAudioContext = {
-  createAnalyser: vi.fn(() => mockAnalyser),
-  createMediaElementSource: vi.fn(() => mockAudioSource),
-  destination: {},
-  state: "running",
-  resume: vi.fn(),
-};
-
-// Mock global AudioContext
-globalThis.AudioContext = vi.fn(
-  () => mockAudioContext,
-) as unknown as typeof AudioContext;
-
 describe("useAudioVisualizer", () => {
   const mockTrack: Track = {
     id: "track-1",
@@ -61,9 +35,7 @@ describe("useAudioVisualizer", () => {
     vi.clearAllMocks();
 
     // Mock getContext
-    HTMLCanvasElement.prototype.getContext = vi.fn(
-      () => mockCanvasContext,
-    ) as never;
+    HTMLCanvasElement.prototype.getContext = vi.fn(() => mockCanvasContext) as never;
 
     // Mock document.querySelector for audio element
     document.querySelector = vi.fn(() => null);
@@ -85,14 +57,14 @@ describe("useAudioVisualizer", () => {
   });
 
   it("should return a canvas ref", () => {
-    const { result } = renderHook(() => useAudioVisualizer(null, false));
+    const { result } = renderHook(() => useAudioVisualizer(null, false, { current: null }));
 
     expect(result.current).toBeDefined();
     expect(result.current.current).toBeNull(); // Not attached yet
   });
 
   it("should not create AudioContext when no track", () => {
-    renderHook(() => useAudioVisualizer(null, false));
+    renderHook(() => useAudioVisualizer(null, false, { current: null }));
 
     // AudioContext may be created lazily, but without a track playing
     // the visualization shouldn't start
@@ -101,10 +73,10 @@ describe("useAudioVisualizer", () => {
 
   it("should handle isPlaying changes", () => {
     const { rerender } = renderHook(
-      ({ track, isPlaying }) => useAudioVisualizer(track, isPlaying),
+      ({ track, isPlaying }) => useAudioVisualizer(track, isPlaying, { current: null }),
       {
         initialProps: { track: mockTrack, isPlaying: false },
-      },
+      }
     );
 
     // Change to playing
@@ -115,7 +87,7 @@ describe("useAudioVisualizer", () => {
   });
 
   it("should cancel animation frame on unmount", () => {
-    const { unmount } = renderHook(() => useAudioVisualizer(mockTrack, true));
+    const { unmount } = renderHook(() => useAudioVisualizer(mockTrack, true, { current: null }));
 
     unmount();
 

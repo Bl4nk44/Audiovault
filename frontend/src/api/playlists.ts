@@ -90,4 +90,29 @@ export const playlistsApi = {
     const response = await api.delete(`/playlists/${id}/tracks`, { data });
     return response.data;
   },
+
+  /**
+   * Export playlist as JSON file download.
+   * Only works for local playlists.
+   */
+  exportAsJson: async (id: string, playlistName: string) => {
+    const response = await api.get(`/playlists/${id}/export`, {
+      responseType: "blob",
+    });
+
+    // Create a download link and trigger it
+    const blob = new Blob([response.data], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+
+    // Create safe filename
+    const safeName = playlistName.replaceAll(/[^a-z0-9\s\-_]/gi, "").trim();
+    link.download = `${safeName || "playlist"}_export.json`;
+
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    URL.revokeObjectURL(url);
+  },
 };

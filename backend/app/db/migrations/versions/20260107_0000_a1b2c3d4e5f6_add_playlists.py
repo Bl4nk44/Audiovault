@@ -25,8 +25,8 @@ def upgrade():
         sa.Column("comment", sa.String(), nullable=True),
         sa.Column("owner_id", sa.Uuid(), nullable=False),
         sa.Column("public", sa.Boolean(), nullable=True),
-        sa.Column("created_at", sa.DateTime(), nullable=True),
-        sa.Column("updated_at", sa.DateTime(), nullable=True),
+        sa.Column("created_at", sa.DateTime(timezone=True), nullable=True),
+        sa.Column("updated_at", sa.DateTime(timezone=True), nullable=True),
         sa.ForeignKeyConstraint(
             ["owner_id"],
             ["users.id"],

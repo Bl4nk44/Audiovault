@@ -1,7 +1,7 @@
 from datetime import UTC, datetime
 from uuid import uuid4
 
-from sqlalchemy import Column, DateTime, ForeignKey, Integer, Uuid
+from sqlalchemy import Column, DateTime, ForeignKey, Index, Integer, Uuid
 from sqlalchemy.orm import relationship
 
 from app.db.base import Base
@@ -9,6 +9,10 @@ from app.db.base import Base
 
 class ListeningHistory(Base):
     __tablename__ = "listening_history"
+
+    __table_args__ = (
+        Index("ix_listening_history_user_played", "user_id", "played_at"),
+    )
 
     id = Column(Uuid(as_uuid=True), primary_key=True, default=uuid4)
     user_id = Column(Uuid(as_uuid=True), ForeignKey("users.id"), index=True)
@@ -20,3 +24,4 @@ class ListeningHistory(Base):
     # Relationships
     user = relationship("User", back_populates="history")
     track = relationship("Track")
+

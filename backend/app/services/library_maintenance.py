@@ -48,7 +48,12 @@ class LibraryMaintenanceService:
 
     async def rescan_library_integrity(self, db: AsyncSession, user_id: str) -> int:
         """Check for missing files and re-queue them."""
-        result = await db.execute(select(Download).where(Download.user_id == user_id, Download.status == "completed"))
+        try:
+            u_uuid = uuid.UUID(str(user_id))
+        except ValueError:
+            return 0
+
+        result = await db.execute(select(Download).where(Download.user_id == u_uuid, Download.status == "completed"))
         downloads = result.scalars().all()
 
         requeued_ids = []
@@ -78,6 +83,11 @@ class LibraryMaintenanceService:
 
     async def clear_history(self, db: AsyncSession, user_id: str):
         """Archive all completed downloads."""
+        try:
+            u_uuid = uuid.UUID(str(user_id))
+        except ValueError:
+            return
+
         # Auto-migration check (safe-guard)
         try:
             await db.execute(text("ALTER TABLE downloads ADD COLUMN archived BOOLEAN DEFAULT 0"))
@@ -88,7 +98,7 @@ class LibraryMaintenanceService:
         stmt = (
             update(Download)
             .where(
-                Download.user_id == user_id,
+                Download.user_id == u_uuid,
                 Download.status.in_(["completed", "failed", "cancelled", "error"]),
             )
             .values(archived=True)

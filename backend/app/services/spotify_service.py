@@ -155,11 +155,13 @@ class SpotifyService:
             if item["track"]:
                 tracks.append(self._format_track(item["track"]))
 
-        while results["next"]:
+        page_count = 0
+        while results["next"] and page_count < 50:
             results = self.client.next(results)
             for item in results["items"]:
                 if item["track"]:
                     tracks.append(self._format_track(item["track"]))
+            page_count += 1
 
         return tracks
 
@@ -183,11 +185,13 @@ class SpotifyService:
                 if item.get("track"):
                     tracks.append(self._format_track(item["track"]))
 
-            while results["next"]:
+            page_count = 0
+            while results["next"] and page_count < 50:
                 results = self.client.next(results)
                 for item in results["items"]:
                     if item.get("track"):
                         tracks.append(self._format_track(item["track"]))
+                page_count += 1
 
             formatted_playlist["tracks"] = tracks
             return formatted_playlist
@@ -263,9 +267,11 @@ class SpotifyService:
         try:
             results = self.client.artist_albums(artist_id, album_type="album,single", limit=50)
             albums = results["items"]
-            while results["next"]:
+            page_count = 0
+            while results["next"] and page_count < 50:
                 results = self.client.next(results)
                 albums.extend(results["items"])
+                page_count += 1
             return albums
         except Exception as e:
             logger.error(f"Error fetching albums for {artist_id}: {e}")
@@ -279,9 +285,11 @@ class SpotifyService:
             album = self.client.album(album_id)
             results = self.client.album_tracks(album_id)
             tracks = [self._format_track(track, album_obj=album) for track in results["items"]]
-            while results["next"]:
+            page_count = 0
+            while results["next"] and page_count < 50:
                 results = self.client.next(results)
                 tracks.extend([self._format_track(track, album_obj=album) for track in results["items"]])
+                page_count += 1
             return tracks
         except Exception:
             return []

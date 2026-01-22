@@ -104,8 +104,8 @@ async def get_user(
                 "username": target_user.username,
                 "email": target_user.email,
                 "scrobblingEnabled": True,
-                "maxBitRate": 0,  # 0 = unlimited
-                "adminRole": False,  # Could check is_superuser if available
+                "maxBitRate": 0,
+                "adminRole": False,
                 "settingsRole": True,
                 "downloadRole": True,
                 "uploadRole": False,

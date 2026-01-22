@@ -1,19 +1,24 @@
-import { describe, it, expect, beforeEach, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
+import { downloadsApi } from "../../api/downloads";
 import { createQueueSlice, type QueueSlice } from "./queueSlice";
 
-// localStorage is mocked globally in setupTests.ts
-const localStorageMock = globalThis.localStorage as any;
+// Mock downloadsApi
+vi.mock("../../api/downloads", () => ({
+  downloadsApi: {
+    pause: vi.fn(),
+    resume: vi.fn(),
+    retry: vi.fn(),
+    getAll: vi.fn(),
+  },
+}));
 
 describe("queueSlice", () => {
   let state: QueueSlice;
-  let set: (
-    partial: Partial<QueueSlice> | ((state: QueueSlice) => Partial<QueueSlice>),
-  ) => void;
+  let set: (partial: Partial<QueueSlice> | ((state: QueueSlice) => Partial<QueueSlice>)) => void;
   let get: () => QueueSlice;
 
   beforeEach(() => {
     vi.clearAllMocks();
-    localStorageMock.getItem.mockReturnValue(null);
 
     set = (partial) => {
       if (typeof partial === "function") {
@@ -28,89 +33,105 @@ describe("queueSlice", () => {
   });
 
   describe("initial state", () => {
-    it("should have empty queue", () => {
-      expect(state.queue).toEqual([]);
-    });
-
-    it("should have current index -1", () => {
-      expect(state.currentIndex).toBe(-1);
-    });
-
-    it("should have shuffle disabled", () => {
-      expect(state.isShuffle).toBe(false);
+    it("should have empty download queue", () => {
+      expect(state.downloadQueue).toEqual([]);
     });
   });
 
   describe("addToQueue", () => {
-    it("should add track to queue", () => {
+    it("should add track to download queue", () => {
       const track = { id: "1", title: "Track 1" } as any;
 
       state.addToQueue(track);
 
-      expect(state.queue).toContainEqual(track);
+      expect(state.downloadQueue).toHaveLength(1);
+      expect(state.downloadQueue[0].track).toEqual(track);
+      expect(state.downloadQueue[0].status).toBe("pending");
     });
   });
 
   describe("removeFromQueue", () => {
-    it("should remove track from queue", () => {
+    it("should remove download from queue", () => {
       const track = { id: "1", title: "Track 1" } as any;
-      state.queue = [track];
+      state.addToQueue(track);
+      const downloadId = state.downloadQueue[0].id;
 
-      state.removeFromQueue(0);
+      state.removeFromQueue(downloadId);
 
-      expect(state.queue).toEqual([]);
+      expect(state.downloadQueue).toEqual([]);
     });
   });
 
-  describe("clearQueue", () => {
-    it("should clear the queue", () => {
-      state.queue = [
-        { id: "1", title: "Track 1" } as any,
-        { id: "2", title: "Track 2" } as any,
-      ];
+  describe("updateProgress", () => {
+    it("should update progress of a download", () => {
+      const track = { id: "1", title: "Track 1" } as any;
+      state.addToQueue(track);
+      const downloadId = state.downloadQueue[0].id;
 
-      state.clearQueue();
+      state.updateProgress(downloadId, 50);
 
-      expect(state.queue).toEqual([]);
-      expect(state.currentIndex).toBe(-1);
+      expect(state.downloadQueue[0].progress).toBe(50);
     });
   });
 
-  describe("nextTrack", () => {
-    it("should move to next track", () => {
-      state.queue = [
-        { id: "1", title: "Track 1" } as any,
-        { id: "2", title: "Track 2" } as any,
-      ];
-      state.currentIndex = 0;
+  describe("updateStatus", () => {
+    it("should update status of a download", () => {
+      const track = { id: "1", title: "Track 1" } as any;
+      state.addToQueue(track);
+      const downloadId = state.downloadQueue[0].id;
 
-      state.nextTrack();
+      state.updateStatus(downloadId, "completed");
 
-      expect(state.currentIndex).toBe(1);
+      expect(state.downloadQueue[0].status).toBe("completed");
     });
   });
 
-  describe("previousTrack", () => {
-    it("should move to previous track", () => {
-      state.queue = [
-        { id: "1", title: "Track 1" } as any,
-        { id: "2", title: "Track 2" } as any,
-      ];
-      state.currentIndex = 1;
+  describe("async actions", () => {
+    it("pauseDownload should call api and update status optimistically", async () => {
+      const track = { id: "1", title: "Track 1" } as any;
+      state.addToQueue(track);
+      const downloadId = state.downloadQueue[0].id;
 
-      state.previousTrack();
+      await state.pauseDownload(downloadId);
 
-      expect(state.currentIndex).toBe(0);
+      expect(state.downloadQueue[0].status).toBe("paused");
+      expect(downloadsApi.pause).toHaveBeenCalledWith(downloadId);
     });
-  });
 
-  describe("toggleShuffle", () => {
-    it("should toggle shuffle mode", () => {
-      state.isShuffle = false;
+    it("resumeDownload should call api and update status optimistically", async () => {
+      const track = { id: "1", title: "Track 1" } as any;
+      state.addToQueue(track);
+      const downloadId = state.downloadQueue[0].id;
+      // First pause it to make resume meaningful (though purely state-wise)
+      state.updateStatus(downloadId, "paused");
 
-      state.toggleShuffle();
+      await state.resumeDownload(downloadId);
 
-      expect(state.isShuffle).toBe(true);
+      expect(state.downloadQueue[0].status).toBe("pending");
+      expect(downloadsApi.resume).toHaveBeenCalledWith(downloadId);
+    });
+
+    it("retryDownload should call api and update status optimistically", async () => {
+      const track = { id: "1", title: "Track 1" } as any;
+      state.addToQueue(track);
+      const downloadId = state.downloadQueue[0].id;
+
+      state.updateStatus(downloadId, "error", "Some error");
+
+      await state.retryDownload(downloadId);
+
+      expect(state.downloadQueue[0].status).toBe("pending");
+      expect(state.downloadQueue[0].error).toBeUndefined();
+      expect(downloadsApi.retry).toHaveBeenCalledWith(downloadId);
+    });
+
+    it("fetchDownloads should fetch and set queue", async () => {
+      const mockDownloads = [{ id: "d1", track: {}, status: "completed" }];
+      vi.mocked(downloadsApi.getAll).mockResolvedValue(mockDownloads as any);
+
+      await state.fetchDownloads();
+
+      expect(state.downloadQueue).toEqual(mockDownloads);
     });
   });
 });

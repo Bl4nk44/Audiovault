@@ -1,20 +1,14 @@
-import { useEffect, useState, useRef } from "react";
+import { motion } from "framer-motion";
+import { AlertCircle, Download, Pause, Play, RefreshCw, Terminal, Trash2 } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "../hooks/useTranslation";
 import api from "../services/api";
-import {
-  Terminal,
-  RefreshCw,
-  Pause,
-  Play,
-  Trash2,
-  Download,
-} from "lucide-react";
-import { motion } from "framer-motion";
 
 export default function Logs() {
   const { t } = useTranslation();
   const [logs, setLogs] = useState<string[]>([]);
   const [autoRefresh, setAutoRefresh] = useState(true);
+  const [showErrorsOnly, setShowErrorsOnly] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
 
@@ -64,10 +58,8 @@ export default function Logs() {
   }, [logs, autoRefresh]);
 
   const getLogColor = (line: string) => {
-    if (line.includes("ERROR") || line.includes("CRITICAL"))
-      return "text-red-400 font-bold";
-    if (line.includes("WARNING") || line.includes("WARN"))
-      return "text-yellow-400";
+    if (line.includes("ERROR") || line.includes("CRITICAL")) return "text-red-400 font-bold";
+    if (line.includes("WARNING") || line.includes("WARN")) return "text-yellow-400";
     if (line.includes("INFO")) return "text-blue-400";
     if (line.includes("DEBUG")) return "text-gray-500";
     return "text-gray-300";
@@ -86,8 +78,20 @@ export default function Logs() {
 
         <div className="flex gap-2">
           <button
+            onClick={() => setShowErrorsOnly(!showErrorsOnly)}
+            className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors border cursor-pointer ${
+              showErrorsOnly
+                ? "bg-red-500/20 text-red-500 border-red-500/50"
+                : "bg-secondary text-muted-foreground border-transparent hover:text-foreground"
+            }`}
+          >
+            <AlertCircle size={18} />
+            {t("logs.showErrorsOnly") || "Errors Only"}
+          </button>
+
+          <button
             onClick={downloadLogs}
-            className="flex items-center gap-2 px-4 py-2 rounded-lg bg-secondary text-muted-foreground hover:text-foreground transition-colors border border-transparent hover:border-border"
+            className="flex items-center gap-2 px-4 py-2 rounded-lg bg-secondary text-muted-foreground hover:text-foreground transition-colors border border-transparent hover:border-border cursor-pointer"
           >
             <Download size={18} />
             {t("logs.download")}
@@ -95,7 +99,7 @@ export default function Logs() {
 
           <button
             onClick={() => setAutoRefresh(!autoRefresh)}
-            className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors border ${
+            className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors border cursor-pointer ${
               autoRefresh
                 ? "bg-primary/20 text-primary border-primary/50"
                 : "bg-secondary text-muted-foreground border-transparent hover:text-foreground"
@@ -108,7 +112,7 @@ export default function Logs() {
           <button
             onClick={fetchLogs}
             disabled={autoRefresh || isLoading}
-            className="flex items-center gap-2 px-4 py-2 rounded-lg bg-secondary text-muted-foreground hover:text-foreground transition-colors disabled:opacity-50 border border-transparent hover:border-border"
+            className="flex items-center gap-2 px-4 py-2 rounded-lg bg-secondary text-muted-foreground hover:text-foreground transition-colors disabled:opacity-50 border border-transparent hover:border-border cursor-pointer"
           >
             <RefreshCw size={18} className={isLoading ? "animate-spin" : ""} />
             {t("logs.refresh")}
@@ -116,7 +120,7 @@ export default function Logs() {
 
           <button
             onClick={() => setLogs([])}
-            className="flex items-center gap-2 px-4 py-2 rounded-lg bg-red-500/10 text-red-400 hover:bg-red-500/20 border border-red-500/20 transition-colors"
+            className="flex items-center gap-2 px-4 py-2 rounded-lg bg-red-500/10 text-red-400 hover:bg-red-500/20 border border-red-500/20 transition-colors cursor-pointer"
           >
             <Trash2 size={18} />
             {t("logs.clear")}
@@ -144,15 +148,19 @@ export default function Logs() {
               No logs available...
             </div>
           ) : (
-            logs.map((line, i) => (
-              <div
-                key={`${i}-${line.substring(0, 10)}`} // Using combination of index and content prefix for better uniqueness
-                className={`whitespace-pre-wrap break-all ${getLogColor(line)}`}
-              >
-                <span className="opacity-30 mr-4 select-none">{i + 1}</span>
-                {line}
-              </div>
-            ))
+            logs
+              .filter((line) =>
+                showErrorsOnly ? line.includes("ERROR") || line.includes("CRITICAL") : true
+              )
+              .map((line, i) => (
+                <div
+                  key={`${i}-${line.substring(0, 10)}`} // Using combination of index and content prefix for better uniqueness
+                  className={`whitespace-pre-wrap break-all ${getLogColor(line)}`}
+                >
+                  <span className="opacity-30 mr-4 select-none">{i + 1}</span>
+                  {line}
+                </div>
+              ))
           )}
         </div>
       </motion.div>

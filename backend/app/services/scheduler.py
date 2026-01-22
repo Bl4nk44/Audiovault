@@ -71,13 +71,13 @@ class SchedulerService:
             await cache_manager.redis.set(self.lock_key, "1", ex=self.lock_timeout)
             logger.info("⏰ Starting scheduled watchlist sync...")
 
+            total_new = 0
             async with AsyncSessionLocal() as db:
                 # Get all users (in future might want to shard this)
                 stmt = select(User)
                 result = await db.execute(stmt)
                 users = result.scalars().all()
 
-                total_new = 0
                 for user in users:
                     try:
                         logger.info(f"Syncing for user: {user.username}")
