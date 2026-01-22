@@ -49,7 +49,7 @@ docker compose ps
 
 1. Login to http://localhost:2137
 2. Go to **Services** section
-3. Add your Spotify/YouTube/other service (see [Configuration Guide](https://github.com/Bl4nk44/Audiovault/wiki/Configuration))
+3. Add your ![Spotify](https://img.shields.io/badge/Spotify-1ED760?style=flat-square&logo=spotify&logoColor=white)/![YouTube](https://img.shields.io/badge/YouTube-FF0000?style=flat-square&logo=youtube&logoColor=white)/other service (see [Configuration Guide](https://github.com/Bl4nk44/Audiovault/wiki/Configuration))
 4. Go to **Download**
 5. Search for a track and download!
 
@@ -65,6 +65,7 @@ docker compose ps
 ## 🎵 Audio Quality
 
 Configure in **Settings → General → Audio Quality**:
+
 - **Low**: 128kbps MP3
 - **Normal**: 192kbps MP3
 - **High**: 320kbps MP3 (default)

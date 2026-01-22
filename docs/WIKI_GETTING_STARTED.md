@@ -102,9 +102,9 @@ docker compose logs backend | grep "password"
 
 ## Getting Streaming Service Credentials
 
-### Spotify
+### ![Spotify](https://img.shields.io/badge/Spotify-1ED760?style=flat-square&logo=spotify&logoColor=white)
 
-1. Go to [Spotify Developer Dashboard](https://developer.spotify.com/dashboard)
+1. Go to [![Spotify](https://img.shields.io/badge/Spotify-1ED760?style=flat-square&logo=spotify&logoColor=white) Developer Dashboard](https://developer.spotify.com/dashboard)
 2. Log in or create an account
 3. Create an "Application"
 4. Accept terms and create the app
@@ -116,7 +116,7 @@ docker compose logs backend | grep "password"
    ```
 7. Restart backend: `docker compose restart backend`
 
-### YouTube
+### ![YouTube](https://img.shields.io/badge/YouTube-FF0000?style=flat-square&logo=youtube&logoColor=white)
 
 1. Go to [Google Cloud Console](https://console.cloud.google.com/)
 2. Create a new project
@@ -132,11 +132,11 @@ docker compose logs backend | grep "password"
 
 See [Configuration Guide](WIKI_CONFIGURATION.md) for detailed instructions for:
 
-- Apple Music
-- Deezer
-- Tidal
-- SoundCloud
-- Amazon Music
+- ![Apple Music](https://img.shields.io/badge/Apple%20Music-FE2432?style=flat-square&logo=apple-music&logoColor=white)
+- ![Deezer](https://img.shields.io/badge/Deezer-00C7F2?style=flat-square&logo=deezer&logoColor=white)
+- ![Tidal](https://img.shields.io/badge/Tidal-000000?style=flat-square&logo=tidal&logoColor=white)
+- ![SoundCloud](https://img.shields.io/badge/SoundCloud-FF3300?style=flat-square&logo=soundcloud&logoColor=white)
+- ![Amazon Music](https://img.shields.io/badge/Amazon%20Music-00A8E1?style=flat-square&logo=amazon-music&logoColor=white)
 
 ## Common Setup Issues
 

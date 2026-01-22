@@ -48,7 +48,7 @@ MAX_UPLOAD_SIZE=500
 CONCURRENT_DOWNLOADS=3
 ```
 
-### Spotify Integration
+### ![Spotify](https://img.shields.io/badge/Spotify-1ED760?style=flat-square&logo=spotify&logoColor=white) Integration
 
 ```bash
 # Get credentials: https://developer.spotify.com/dashboard
@@ -57,7 +57,7 @@ SPOTIFY_CLIENT_SECRET=your_client_secret
 SPOTIFY_CACHE_EXPIRE_MINUTES=60
 ```
 
-### YouTube Integration
+### ![YouTube](https://img.shields.io/badge/YouTube-FF0000?style=flat-square&logo=youtube&logoColor=white) Integration
 
 ```bash
 # Get API key: https://console.cloud.google.com/

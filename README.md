@@ -35,13 +35,13 @@ Audiovault is a powerful, self-hosted application designed to import, manage, an
 
 Import playlists, albums, and tracks from:
 
-- **Spotify** - Playlists, albums, liked songs, recommendations
-- **YouTube** - Playlists, mixes, videos, channels
-- **Deezer** - Native search, artist profiles, playlists
-- **SoundCloud** - Tracks, playlists, user libraries
-- **Apple Music** - Playlists, library, recommendations
-- **Tidal** - Playlists, favorites, discovery
-- **Amazon Music** - Playlists, library, recommendations
+- ![Spotify](https://img.shields.io/badge/Spotify-1ED760?style=flat-square&logo=spotify&logoColor=white) - Playlists, albums, liked songs, recommendations
+- ![YouTube](https://img.shields.io/badge/YouTube-FF0000?style=flat-square&logo=youtube&logoColor=white) - Playlists, mixes, videos, channels
+- ![Deezer](https://img.shields.io/badge/Deezer-00C7F2?style=flat-square&logo=deezer&logoColor=white) - Native search, artist profiles, playlists
+- ![SoundCloud](https://img.shields.io/badge/SoundCloud-FF3300?style=flat-square&logo=soundcloud&logoColor=white) - Tracks, playlists, user libraries
+- ![Apple Music](https://img.shields.io/badge/Apple%20Music-FE2432?style=flat-square&logo=apple-music&logoColor=white) - Playlists, library, recommendations
+- ![Tidal](https://img.shields.io/badge/Tidal-000000?style=flat-square&logo=tidal&logoColor=white) - Playlists, favorites, discovery
+- ![Amazon Music](https://img.shields.io/badge/Amazon%20Music-00A8E1?style=flat-square&logo=amazon-music&logoColor=white) - Playlists, library, recommendations
 
 ### Robust Fallback System
 

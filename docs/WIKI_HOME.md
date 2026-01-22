@@ -12,7 +12,7 @@ Welcome to the Audiovault documentation! This wiki contains comprehensive guides
 ### Using Audiovault
 
 - **[Configuration](WIKI_CONFIGURATION.md)** - All available configuration options
-- **[Usage Guide](WIKI_USAGE.md)** - How to download, organize, and stream music *(planned)*
+- **[Usage Guide](WIKI_USAGE.md)** - How to download, organize, and stream music _(planned)_
 - **[Streaming Guide](WIKI_STREAMING.md)** - Configure Subsonic clients for mobile streaming
 
 - **[FAQ & Troubleshooting](../SUPPORT.md)** - Common issues and solutions
@@ -34,7 +34,7 @@ Welcome to the Audiovault documentation! This wiki contains comprehensive guides
 
 ### I want to...
 
-**...download music from Spotify**
+**...download music from ![Spotify](https://img.shields.io/badge/Spotify-1ED760?style=flat-square&logo=spotify&logoColor=white)**
 
 - See [Getting Started](WIKI_GETTING_STARTED.md) → Setup Spotify integration
 

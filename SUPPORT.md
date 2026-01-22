@@ -105,7 +105,7 @@ Audiovault automatically tries fallback sources. If you still get blocked:
 
 1. Check your internet connection
 2. Verify firewall isn't blocking external connections
-3. Check if the service (Spotify, YouTube, etc.) is up
+3. Check if the service (![Spotify](https://img.shields.io/badge/Spotify-1ED760?style=flat-square&logo=spotify&logoColor=white), ![YouTube](https://img.shields.io/badge/YouTube-FF0000?style=flat-square&logo=youtube&logoColor=white), etc.) is up
 4. Restart the backend: `docker compose restart backend`
 
 ### Performance Issues
@@ -132,7 +132,7 @@ This is normal - `yt-dlp` uses CPU for encoding. To reduce:
 
 ### Configuration Issues
 
-#### Spotify integration not working
+#### ![Spotify](https://img.shields.io/badge/Spotify-1ED760?style=flat-square&logo=spotify&logoColor=white) integration not working
 
 1. Verify credentials in `.env`:
    ```bash
