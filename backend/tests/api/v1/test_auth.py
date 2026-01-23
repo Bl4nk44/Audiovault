@@ -54,3 +54,9 @@ async def test_register_user_success(client: AsyncClient):
     assert created_user["username"] == username
     assert created_user["email"] == email
     assert "id" in created_user
+
+@pytest.mark.asyncio
+async def test_read_users_me(client: AsyncClient, admin_token_headers):
+    response = await client.get("/api/v1/auth/me", headers=admin_token_headers)
+    assert response.status_code == 200
+    assert "id" in response.json()

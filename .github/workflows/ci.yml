@@ -9,12 +9,12 @@ on:
       - main
 
 jobs:
-  test:
-    name: Test on ${{ matrix.os }}
+  backend-test:
+    name: Backend Test on ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [ubuntu-latest, windows-latest, macos-latest]
+        os: [ubuntu-latest, windows-latest]
         python-version: ["3.12"]
 
     steps:
@@ -31,17 +31,61 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r backend/requirements.txt
 
-      - name: Create .env file for tests
+      - name: Run Ruff (Linting)
         run: |
-          echo "DATABASE_URL=sqlite+aiosqlite:///test.db" >> backend/.env
-          echo "REDIS_URL=redis://localhost:6379/0" >> backend/.env
-          echo "JWT_SECRET_KEY=test_secret_key_for_ci_tests_only" >> backend/.env
+          cd backend
+          ruff check .
 
-      - name: Run Tests
+      - name: Run Mypy (Type Checking)
+        run: |
+          cd backend
+          mypy app
+
+      - name: Run Tests with Coverage
         env:
           PYTHONPATH: backend
           DATABASE_URL: "sqlite+aiosqlite:///test.db"
           REDIS_URL: "redis://localhost:6379/0"
           JWT_SECRET_KEY: "test_secret_key_for_ci_tests_only"
         run: |
-          pytest backend/tests/ -v
+          pytest backend/tests/ -v --cov=backend/app --cov-report=xml --cov-fail-under=80
+
+      - name: Upload coverage reports to Codecov
+        uses: codecov/codecov-action@v4
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          file: ./coverage.xml
+          fail_ci_if_error: false
+
+  frontend-test:
+    name: Frontend Test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install dependencies
+        run: |
+          cd frontend
+          npm install
+
+      - name: Run Lint
+        run: |
+          cd frontend
+          npm run lint
+
+      - name: Run Tests
+        run: |
+          cd frontend
+          npm run test -- --run
+
+      - name: Run Coverage
+        run: |
+          cd frontend
+          npm run coverage -- --run

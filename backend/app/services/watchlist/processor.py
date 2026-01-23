@@ -23,7 +23,7 @@ class WatchlistItemProcessor:
             if item.watch_type == "playlist":
                 return await self._fetch_playlist_tracks(item)
             elif item.watch_type in ["artist", "channel"]:
-                return self._fetch_artist_or_channel_tracks(item)
+                return await self._fetch_artist_or_channel_tracks(item)
         except Exception as e:
             logger.error(f"Error fetching tracks for item {item.source_name}: {e}")
         return []

@@ -87,3 +87,27 @@ async def test_execute_sync_invalid_token(client, admin_token_headers):
         
         assert response.status_code == 400
         assert "Invalid token" in response.json()["detail"]
+
+@pytest.mark.asyncio
+async def test_analyze_sync_error(client, admin_token_headers):
+    watchlist_id = str(uuid.uuid4())
+    with patch("app.api.v1.sync.sync_manager.analyze_watchlist", 
+              side_effect=Exception("Unexpected boom")):
+        response = await client.post(
+            f"/api/v1/sync/{watchlist_id}/analyze",
+            headers=admin_token_headers
+        )
+        assert response.status_code == 500
+
+@pytest.mark.asyncio
+async def test_execute_sync_error(client, admin_token_headers):
+    watchlist_id = str(uuid.uuid4())
+    payload = {"sync_token": "token123"}
+    with patch("app.api.v1.sync.sync_manager.execute_sync", 
+              side_effect=Exception("Unexpected boom")):
+        response = await client.post(
+            f"/api/v1/sync/{watchlist_id}/execute",
+            headers=admin_token_headers,
+            json=payload
+        )
+        assert response.status_code == 500

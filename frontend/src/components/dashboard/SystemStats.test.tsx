@@ -27,14 +27,14 @@ describe("SystemStats Component", () => {
     // Looking at code: "if (!stats) return ... skeleton ..."
     // So "System Status" text should NOT be there.
 
-    expect(screen.queryByText("System Status")).not.toBeInTheDocument();
+    expect(screen.queryByText("System Status")).toBeNull();
   });
 
   it("renders stats data correctly after fetching", async () => {
     const mockStats = {
       cpu: { percent: 45.5 },
-      memory: { total: 16000000000, used: 8000000000, percent: 50.0 },
-      disk: { total: 500000000000, used: 250000000000, percent: 50.0 },
+      memory: { total: 16000000000, used: 8000000000, percent: 50 },
+      disk: { total: 500000000000, used: 250000000000, percent: 50 },
       network: { sent: 1024, recv: 2048 },
     };
 
@@ -43,16 +43,18 @@ describe("SystemStats Component", () => {
     render(<SystemStats />);
 
     // Wait for the data to be rendered using findByText for the header
-    expect(await screen.findByText("System Status")).toBeInTheDocument();
+    expect(await screen.findByText("System Status")).toBeTruthy();
 
     // Check CPU (Gauge rounds the value)
-    expect(screen.getByText(/46/)).toBeInTheDocument();
+    // Use a more specific query for the percentage span
+    expect(screen.getByText(/^46$/)).toBeTruthy();
 
     // Check text for CPU label
-    expect(screen.getByText("CPU Load")).toBeInTheDocument();
-    expect(screen.getByText("Memory")).toBeInTheDocument();
-    expect(screen.getByText("Storage")).toBeInTheDocument();
-    expect(screen.getByText("Network Total")).toBeInTheDocument();
+    expect(screen.getByText("CPU Load")).toBeTruthy();
+    expect(screen.getByText("Memory")).toBeTruthy();
+    expect(screen.getByText("Storage")).toBeTruthy();
+    expect(screen.getByText("Download")).toBeTruthy();
+    expect(screen.getByText("Upload")).toBeTruthy();
   });
 
   it("handles API error gracefully", async () => {
@@ -70,7 +72,7 @@ describe("SystemStats Component", () => {
       expect(api.get).toHaveBeenCalled();
     });
 
-    expect(screen.queryByText("System Status")).not.toBeInTheDocument();
+    expect(screen.queryByText("System Status")).toBeNull();
 
     consoleSpy.mockRestore();
   });

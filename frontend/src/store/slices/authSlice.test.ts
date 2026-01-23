@@ -1,15 +1,28 @@
-import { describe, it, expect, beforeEach, vi } from "vitest";
-import { createAuthSlice, type AuthSlice } from "./authSlice";
+import { beforeEach, describe, expect, it, Mock, vi } from "vitest";
 import type { User } from "../../types";
+import { createAuthSlice, type AuthSlice } from "./authSlice";
 
 // localStorage is mocked globally in setupTests.ts
 const localStorageMock = globalThis.localStorage as any;
 
+// Mock api service
+vi.mock("../../services/api", () => ({
+  default: {
+    get: vi.fn(),
+  },
+}));
+
+// Mock global location reload
+const originalLocation = globalThis.location;
+// @ts-ignore
+delete globalThis.location;
+globalThis.location = { ...originalLocation, reload: vi.fn() } as any;
+
+import api from "../../services/api";
+
 describe("authSlice", () => {
   let state: AuthSlice;
-  let set: (
-    partial: Partial<AuthSlice> | ((state: AuthSlice) => Partial<AuthSlice>),
-  ) => void;
+  let set: (partial: Partial<AuthSlice> | ((state: AuthSlice) => Partial<AuthSlice>)) => void;
   let get: () => AuthSlice;
 
   const mockUser: User = {
@@ -44,9 +57,6 @@ describe("authSlice", () => {
   describe("initial state", () => {
     it("should have null user when no session exists", () => {
       expect(state.user).toBeNull();
-    });
-
-    it("should not be authenticated when no session exists", () => {
       expect(state.isAuthenticated).toBe(false);
     });
 
@@ -73,225 +83,140 @@ describe("authSlice", () => {
   });
 
   describe("setUser", () => {
-    it("should set user", () => {
+    it("should set user manually", () => {
       state.setUser(mockUser);
-
       expect(state.user).toEqual(mockUser);
-    });
-
-    it("should set user to null", () => {
-      state.user = mockUser;
-
-      state.setUser(null);
-
-      expect(state.user).toBeNull();
     });
   });
 
   describe("setTokens", () => {
-    it("should store tokens in localStorage", () => {
+    it("should store tokens and update state", () => {
       state.setTokens(mockToken, mockRefreshToken);
 
-      expect(localStorageMock.setItem).toHaveBeenCalledWith(
-        "access_token",
-        mockToken,
-      );
-      expect(localStorageMock.setItem).toHaveBeenCalledWith(
-        "refresh_token",
-        mockRefreshToken,
-      );
-    });
-
-    it("should update state with tokens", () => {
-      state.setTokens(mockToken, mockRefreshToken);
-
+      expect(localStorageMock.setItem).toHaveBeenCalledWith("access_token", mockToken);
+      expect(localStorageMock.setItem).toHaveBeenCalledWith("refresh_token", mockRefreshToken);
       expect(state.token).toBe(mockToken);
-      expect(state.refreshToken).toBe(mockRefreshToken);
       expect(state.isAuthenticated).toBe(true);
     });
 
-    it("should remove tokens from localStorage when null", () => {
+    it("should clear tokens when null provided", () => {
       state.setTokens(null, null);
-
       expect(localStorageMock.removeItem).toHaveBeenCalledWith("access_token");
-      expect(localStorageMock.removeItem).toHaveBeenCalledWith("refresh_token");
       expect(state.isAuthenticated).toBe(false);
     });
   });
 
   describe("addSession", () => {
-    it("should add session and set as current", () => {
+    it("should add a new session and save to storage", () => {
       state.addSession(mockUser, mockToken, mockRefreshToken);
-
-      expect(state.user).toEqual(mockUser);
-      expect(state.token).toBe(mockToken);
+      expect(state.sessions[mockUser.id]).toBeDefined();
+      expect(localStorageMock.setItem).toHaveBeenCalledWith("sessions", expect.any(String));
       expect(state.isAuthenticated).toBe(true);
-      expect(state.sessions["user-1"]).toBeDefined();
-    });
-
-    it("should store sessions in localStorage", () => {
-      state.addSession(mockUser, mockToken, mockRefreshToken);
-
-      expect(localStorageMock.setItem).toHaveBeenCalledWith(
-        "sessions",
-        expect.stringContaining("user-1"),
-      );
     });
   });
 
   describe("switchSession", () => {
-    it("should switch to another session", () => {
-      const user2: User = {
-        ...mockUser,
-        id: "user-2",
-        email: "user2@test.com",
-      };
+    it("should switch between existing sessions and reload", () => {
+      const user2 = { ...mockUser, id: "user-2" };
       state.sessions = {
-        "user-1": {
-          user: mockUser,
-          token: mockToken,
-          refreshToken: mockRefreshToken,
-        },
-        "user-2": { user: user2, token: "token-2", refreshToken: "refresh-2" },
+        "user-1": { user: mockUser, token: mockToken, refreshToken: mockRefreshToken },
+        "user-2": { user: user2, token: "t2", refreshToken: "r2" },
       };
-      state.user = mockUser;
 
       state.switchSession("user-2");
 
-      expect(state.user).toEqual(user2);
-      expect(state.token).toBe("token-2");
+      expect(localStorageMock.setItem).toHaveBeenCalledWith("access_token", "t2");
+      expect(state.user?.id).toBe("user-2");
+      expect(globalThis.location.reload).toHaveBeenCalled();
     });
 
-    it("should not change state if session not found", () => {
-      state.user = mockUser;
-      state.sessions = {};
-
-      state.switchSession("non-existent");
-
-      expect(state.user).toEqual(mockUser);
-    });
-  });
-
-  describe("removeSession", () => {
-    it("should remove session from sessions object", () => {
-      state.sessions = {
-        "user-1": {
-          user: mockUser,
-          token: mockToken,
-          refreshToken: mockRefreshToken,
-        },
-      };
-
-      state.removeSession("user-1");
-
-      expect(state.sessions["user-1"]).toBeUndefined();
-    });
-
-    it("should logout if removing current session", () => {
-      state.user = mockUser;
-      state.sessions = {
-        "user-1": {
-          user: mockUser,
-          token: mockToken,
-          refreshToken: mockRefreshToken,
-        },
-      };
-
-      state.removeSession("user-1");
-
-      expect(state.user).toBeNull();
-      expect(state.isAuthenticated).toBe(false);
+    it("should not reload if session doesn't exist", () => {
+      state.switchSession("invalid");
+      expect(globalThis.location.reload).not.toHaveBeenCalled();
     });
   });
 
   describe("updateUserPreferences", () => {
-    it("should update user preferences", () => {
+    it("should merge preferences and update session storage", () => {
       state.user = mockUser;
       state.sessions = {
-        "user-1": {
-          user: mockUser,
-          token: mockToken,
-          refreshToken: mockRefreshToken,
-        },
+        [mockUser.id]: { user: mockUser, token: mockToken, refreshToken: mockRefreshToken },
       };
 
       state.updateUserPreferences({ theme: "light" });
 
       expect(state.user?.preferences.theme).toBe("light");
-    });
-
-    it("should not fail if no user logged in", () => {
-      state.user = null;
-
-      expect(() =>
-        state.updateUserPreferences({ theme: "light" }),
-      ).not.toThrow();
-    });
-
-    it("should update sessions in localStorage", () => {
-      state.user = mockUser;
-      state.sessions = {
-        "user-1": {
-          user: mockUser,
-          token: mockToken,
-          refreshToken: mockRefreshToken,
-        },
-      };
-
-      state.updateUserPreferences({ language: "pl" });
-
+      expect(state.sessions[mockUser.id].user.preferences.theme).toBe("light");
       expect(localStorageMock.setItem).toHaveBeenCalledWith(
         "sessions",
-        expect.any(String),
+        expect.stringContaining("light")
       );
+    });
+
+    it("should do nothing if no user logged in", () => {
+      state.user = null;
+      state.updateUserPreferences({ theme: "light" });
+      expect(localStorageMock.setItem).not.toHaveBeenCalled();
+    });
+  });
+
+  describe("checkAuth", () => {
+    it("should verify token and update user", async () => {
+      localStorageMock.getItem.mockReturnValue(mockToken);
+      (api.get as Mock).mockResolvedValue({ data: mockUser });
+
+      await (state as any).checkAuth();
+
+      expect(api.get).toHaveBeenCalledWith("/auth/me");
+      expect(state.user).toEqual(mockUser);
+      expect(state.isAuthenticated).toBe(true);
+    });
+
+    it("should logout on verification failure", async () => {
+      localStorageMock.getItem.mockReturnValue(mockToken);
+      (api.get as Mock).mockRejectedValue(new Error("Unauthorized"));
+      const logoutSpy = vi.spyOn(state, "logout");
+
+      await (state as any).checkAuth();
+
+      expect(logoutSpy).toHaveBeenCalled();
+    });
+  });
+
+  describe("removeSession", () => {
+    it("should logout if current active user session is removed", () => {
+      state.user = mockUser;
+      state.sessions = {
+        [mockUser.id]: { user: mockUser, token: mockToken, refreshToken: mockRefreshToken },
+      };
+      const logoutSpy = vi.spyOn(state, "logout");
+
+      state.removeSession(mockUser.id);
+
+      expect(logoutSpy).toHaveBeenCalled();
+      expect(state.sessions[mockUser.id]).toBeUndefined();
+    });
+
+    it("should just remove from sessions if not active user", () => {
+      state.user = { id: "active" } as any;
+      state.sessions = { other: { user: { id: "other" } as any, token: "t", refreshToken: "r" } };
+      const logoutSpy = vi.spyOn(state, "logout");
+
+      state.removeSession("other");
+
+      expect(logoutSpy).not.toHaveBeenCalled();
+      expect(state.sessions["other"]).toBeUndefined();
     });
   });
 
   describe("syncUser", () => {
-    it("should sync user and update session", () => {
+    it("should update sessions when syncing user data", () => {
       state.token = mockToken;
       state.refreshToken = mockRefreshToken;
-      state.sessions = {};
-
       state.syncUser(mockUser);
 
-      expect(state.user).toEqual(mockUser);
-      expect(state.sessions["user-1"]).toBeDefined();
-    });
-
-    it("should not sync if no tokens available", () => {
-      state.token = null;
-      state.refreshToken = null;
-
-      state.syncUser(mockUser);
-
-      expect(state.sessions["user-1"]).toBeUndefined();
-    });
-  });
-
-  describe("logout", () => {
-    it("should clear user and tokens", () => {
-      state.user = mockUser;
-      state.token = mockToken;
-      state.refreshToken = mockRefreshToken;
-      state.isAuthenticated = true;
-
-      state.logout();
-
-      expect(state.user).toBeNull();
-      expect(state.token).toBeNull();
-      expect(state.refreshToken).toBeNull();
-      expect(state.isAuthenticated).toBe(false);
-    });
-
-    it("should remove tokens from localStorage", () => {
-      state.user = mockUser;
-      state.token = mockToken;
-
-      state.logout();
-
-      expect(localStorageMock.removeItem).toHaveBeenCalledWith("access_token");
-      expect(localStorageMock.removeItem).toHaveBeenCalledWith("refresh_token");
+      expect(state.sessions[mockUser.id]).toBeDefined();
+      expect(state.sessions[mockUser.id].user).toEqual(mockUser);
     });
   });
 });

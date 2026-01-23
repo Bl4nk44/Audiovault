@@ -1,9 +1,6 @@
-import axios, { AxiosError } from "axios";
 import type { InternalAxiosRequestConfig } from "axios";
-// Remove circular import
-// import { useStore } from "../store/useStore";
+import axios, { AxiosError } from "axios";
 
-// Store injection to break circular dependency
 // Store injection to break circular dependency
 interface Store {
   getState: () => {
@@ -27,7 +24,6 @@ const api = axios.create({
 });
 
 api.interceptors.request.use((config) => {
-  // Use localStorage directly to avoid circular dependency issues and ensure token availability
   const token = localStorage.getItem("access_token");
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
@@ -76,7 +72,6 @@ api.interceptors.response.use(
       originalRequest._retry = true;
       isRefreshing = true;
 
-      // Use injected store's getState
       const refreshToken = localStorage.getItem("refresh_token");
 
       if (!refreshToken) {
@@ -91,15 +86,12 @@ api.interceptors.response.use(
         );
 
         const { access_token, refresh_token: newRefreshToken } = response.data;
-
-        // Use injected store
         store?.getState().setTokens(access_token, newRefreshToken);
 
         api.defaults.headers.common.Authorization = `Bearer ${access_token}`;
         originalRequest.headers.Authorization = `Bearer ${access_token}`;
 
         processQueue(null, access_token);
-
         return api(originalRequest);
       } catch (err) {
         processQueue(err, null);
@@ -113,5 +105,11 @@ api.interceptors.response.use(
     throw error;
   }
 );
+
+// For testing purposes
+export const resetInterceptorState = () => {
+  isRefreshing = false;
+  failedQueue = [];
+};
 
 export default api;

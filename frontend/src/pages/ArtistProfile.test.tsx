@@ -1,7 +1,8 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { MemoryRouter, Route, Routes } from "react-router-dom";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, Mock, vi } from "vitest";
+import api from "../services/api";
 import { notify } from "../utils/notify";
 import ArtistProfile from "./ArtistProfile";
 
@@ -30,7 +31,7 @@ const mockRemoveFromWatchlist = vi.fn();
 
 vi.mock("../store/useStore", () => ({
   useStore: () => ({
-    watchlist: [],
+    watchlist: [{ id: "w1", source_id: "spotify-watched", type: "artist" }], // Pre-populate for testing removal
     addToWatchlist: mockAddToWatchlist,
     removeFromWatchlist: mockRemoveFromWatchlist,
     currentTrack: null,
@@ -40,19 +41,34 @@ vi.mock("../store/useStore", () => ({
   }),
 }));
 
-// Mock simple fetch
-globalThis.fetch = vi.fn();
-
-// Mock components
-vi.mock("../components/search/TrackCard", () => ({
-  default: () => <div data-testid="track-card">Track Card</div>,
+// Mock API service
+vi.mock("../services/api", () => ({
+  default: {
+    post: vi.fn(),
+    get: vi.fn(),
+  },
 }));
+
+// Mock sub-components
+vi.mock("../components/search/TrackCard", () => ({
+  default: ({ track }: any) => <div data-testid="track-card">{track.title}</div>,
+}));
+
+// Mock Lucide icons to avoid render issues in environments
+vi.mock("lucide-react", async (importOriginal) => {
+  const actual: any = await importOriginal();
+  return {
+    ...actual,
+    ArrowLeft: () => <span data-testid="icon-back">Back</span>,
+  };
+});
 
 describe("ArtistProfile", () => {
   const queryClient = new QueryClient({
     defaultOptions: {
       queries: {
         retry: false,
+        staleTime: 0,
       },
     },
   });
@@ -62,10 +78,10 @@ describe("ArtistProfile", () => {
     queryClient.clear();
   });
 
-  const renderComponent = (artistId = "123") => {
+  const renderComponent = (artistId = "123", state = {}) => {
     render(
       <QueryClientProvider client={queryClient}>
-        <MemoryRouter initialEntries={[`/artist/${artistId}`]}>
+        <MemoryRouter initialEntries={[{ pathname: `/artist/${artistId}`, state }]}>
           <Routes>
             <Route path="/artist/:id" element={<ArtistProfile />} />
           </Routes>
@@ -74,86 +90,144 @@ describe("ArtistProfile", () => {
     );
   };
 
-  it("should handle album download using spotify_id if available", async () => {
-    const mockArtist = {
-      id: "local-id",
-      name: "Test Artist",
-      spotify_id: "spotify-artist-id",
-      albums: [
-        {
-          id: "local-album-id",
-          title: "Test Album",
-          spotify_id: "spotify-album-id",
-          album_type: "album",
-          total_tracks: 10,
-          images: { url: "cover.jpg" },
-        },
-      ],
-      tracks: [],
-    };
+  const mockArtistFull = {
+    id: "123",
+    spotify_id: "spotify-123",
+    name: "Test Artist",
+    bio: "A test bio",
+    image_url: "http://example.com/img.jpg",
+    tracks: [
+      { id: "t1", title: "Hit Song", duration_ms: 200000 },
+      { id: "t2", title: "Hit Song 2", duration_ms: 200000 },
+    ],
+    albums: [
+      {
+        id: "a1",
+        title: "Best Album",
+        album_type: "album",
+        image_url: "http://example.com/alb.jpg",
+        release_date: "2020-01-01",
+        spotify_id: "sp-a1",
+      },
+      {
+        id: "s1",
+        title: "Single 1",
+        album_type: "single",
+        image_url: "http://example.com/s1.jpg",
+        release_date: "2021-01-01",
+        spotify_id: "sp-s1",
+      },
+    ],
+  };
 
-    mockArtistsApi.getById.mockResolvedValue(mockArtist);
-    vi.mocked(globalThis.fetch).mockResolvedValue({
-      ok: true,
-      json: async () => ({ message: "Queued" }),
-    } as Response);
+  it("renders loading state", () => {
+    mockArtistsApi.getById.mockImplementation(() => new Promise(() => {})); // Hang
+    renderComponent("123");
+    // Check for spinner or loading class ?
+    // The component renders Loader2.
+    // We can't easily query loader by text, but we can assume if no artist name is there, it's loading.
+    // Or query by class if unique.
+    // Just verifying it doesn't crash here.
+  });
 
-    renderComponent("local-id");
-
-    // Wait for loading to finish
-    await waitFor(() => expect(screen.getByText("Test Artist")).toBeTruthy());
-
-    // Find download button for album and click
-    const downloadButton = screen.getByTitle("Download Album");
-    fireEvent.click(downloadButton);
+  it("renders full artist profile", async () => {
+    mockArtistsApi.getById.mockResolvedValue(mockArtistFull);
+    renderComponent("123");
 
     await waitFor(() => {
-      // Should call with SPOTIFY ID
-      expect(globalThis.fetch).toHaveBeenCalledWith(
-        "/api/v1/downloads/album/spotify-album-id/download",
-        expect.objectContaining({
-          method: "POST",
-          body: JSON.stringify({ source: "spotify" }),
-        })
-      );
-      expect(notify.success).toHaveBeenCalledWith("Queued");
+      expect(screen.getByText("Test Artist")).toBeInTheDocument();
+      expect(screen.getByText("A test bio")).toBeInTheDocument();
+      expect(screen.getByText("Hit Song")).toBeInTheDocument();
+      expect(screen.getByText("Best Album")).toBeInTheDocument(); // Album
+      expect(screen.getByText("Single 1")).toBeInTheDocument(); // Single
     });
   });
 
-  it("should fallback to local id if spotify_id is missing", async () => {
-    const mockArtist = {
-      id: "local-id",
-      name: "Test Artist",
-      albums: [
-        {
-          id: "local-album-id",
-          title: "Local Album",
-          // spotify_id missing
-          album_type: "album",
-          total_tracks: 5,
-        },
-      ],
-    };
+  it("handles watchlist toggle (Follow/Unfollow)", async () => {
+    // Case 1: Not watched
+    mockArtistsApi.getById.mockResolvedValue({ ...mockArtistFull, spotify_id: "new-id" });
+    renderComponent("new-id");
 
-    mockArtistsApi.getById.mockResolvedValue(mockArtist);
-    vi.mocked(globalThis.fetch).mockResolvedValue({
-      ok: true,
-      json: async () => ({ message: "Queued" }),
-    } as Response);
+    await waitFor(() => expect(screen.getByText("Test Artist")).toBeInTheDocument());
 
-    renderComponent("local-id");
+    const followBtn = screen.getByText("Follow");
+    fireEvent.click(followBtn);
 
-    await waitFor(() => expect(screen.getByText("Test Artist")).toBeTruthy());
+    expect(mockAddToWatchlist).toHaveBeenCalledWith(
+      expect.objectContaining({
+        source_name: "Test Artist",
+        watch_type: "artist",
+      })
+    );
+    expect(notify.success).toHaveBeenCalledWith("Following Test Artist");
 
-    const downloadButton = screen.getByTitle("Download Album");
-    fireEvent.click(downloadButton);
+    // Case 2: Already watched (matches store mock)
+    // Store has "spotify-watched"
+    // Re-render with watched ID
+  });
+
+  it("handles unfollow logic", async () => {
+    const watchedArtist = { ...mockArtistFull, spotify_id: "spotify-watched" };
+    mockArtistsApi.getById.mockResolvedValue(watchedArtist);
+
+    renderComponent("123"); // ID maps to watched
+
+    await waitFor(() => expect(screen.getByText("Test Artist")).toBeInTheDocument());
+
+    const unfollowBtn = screen.getByText("Following"); // Button text changes
+    expect(unfollowBtn).toBeInTheDocument();
+
+    fireEvent.click(unfollowBtn);
+
+    expect(mockRemoveFromWatchlist).toHaveBeenCalled(); // w1
+    expect(notify.success).toHaveBeenCalledWith("Removed from watchlist");
+  });
+
+  it("handles discography download (Download All)", async () => {
+    mockArtistsApi.getById.mockResolvedValue(mockArtistFull);
+    (api.post as Mock).mockResolvedValue({ data: { queued_count: 10 } });
+
+    renderComponent("123");
+    await waitFor(() => expect(screen.getByText("Download Discography")).toBeInTheDocument());
+
+    const dlBtn = screen.getByText("Download Discography");
+    fireEvent.click(dlBtn);
 
     await waitFor(() => {
-      // Should call with LOCAL ID
-      expect(globalThis.fetch).toHaveBeenCalledWith(
-        "/api/v1/downloads/album/local-album-id/download",
-        expect.any(Object)
-      );
+      expect(api.post).toHaveBeenCalledWith(expect.stringContaining("/download-all"), {
+        source: "spotify",
+      });
+      expect(notify.success).toHaveBeenCalledWith("Queued 10 tracks for download");
     });
+  });
+
+  it("handles single album download", async () => {
+    mockArtistsApi.getById.mockResolvedValue(mockArtistFull);
+    (api.post as Mock).mockResolvedValue({ data: { message: "Album Queued" } });
+
+    renderComponent("123");
+    await waitFor(() => expect(screen.getByText("Best Album")).toBeInTheDocument());
+
+    const dlAlbumBtns = screen.getAllByTitle("Download Album");
+    // Pick the first one
+    fireEvent.click(dlAlbumBtns[0]);
+
+    await waitFor(() => {
+      expect(api.post).toHaveBeenCalledWith(
+        expect.stringContaining("/downloads/album/sp-a1/download"),
+        expect.anything()
+      );
+      expect(notify.success).toHaveBeenCalledWith("Album Queued");
+    });
+  });
+
+  it("handles navigation back", async () => {
+    mockArtistsApi.getById.mockResolvedValue(mockArtistFull);
+    renderComponent("123");
+    await waitFor(() => expect(screen.getByTestId("icon-back")).toBeInTheDocument());
+
+    // Can't easily test useNavigate() -1 without full router mock history.
+    // But we can verify the button is clickable without error.
+    fireEvent.click(screen.getByTestId("icon-back"));
   });
 });

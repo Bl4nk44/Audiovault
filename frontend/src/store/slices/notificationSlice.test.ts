@@ -28,60 +28,72 @@ describe("notificationSlice", () => {
   });
 
   describe("initial state", () => {
-    it("should have empty notifications array", () => {
+    it("should have empty notifications array and zero unread count", () => {
       expect(state.notifications).toEqual([]);
+      expect(state.unreadCount).toBe(0);
     });
   });
 
   describe("addNotification", () => {
-    it("should add notification to queue", () => {
+    it("should add notification and increment unread count", () => {
       state.addNotification("success", "Test message");
 
       expect(state.notifications).toHaveLength(1);
       expect(state.notifications[0].message).toBe("Test message");
-      expect(state.notifications[0].type).toBe("success");
+      expect(state.notifications[0].read).toBe(false);
+      expect(state.unreadCount).toBe(1);
     });
 
-    it("should auto-dismiss notifications after timeout", () => {
-      vi.useFakeTimers();
+    it("should add multiple notifications in correct order", () => {
+      state.addNotification("info", "First");
+      state.addNotification("warning", "Second");
 
-      state.addNotification("info", "Auto-dismiss test");
-      expect(state.notifications).toHaveLength(1);
+      expect(state.notifications[0].message).toBe("Second");
+      expect(state.notifications[1].message).toBe("First");
+      expect(state.unreadCount).toBe(2);
+    });
+  });
 
-      // Assuming implementation has timeout? notificationSlice.ts doesn't seem to have setTimeout in addNotification??
-      // Looking at notificationSlice.ts... "addNotification" just adds to state.
-      // It DOES NOT have setTimeout.
-      // So this test is likely WRONG for the slice itself. Timeout is probably handled in component or middleware.
-      // I will check notificationSlice.ts again. It's just a setter.
-      // So I will remove this test or expect it NOT to dismiss if logic isn't there.
-      // Actually, I'll keep the Add test and remove auto-dismiss test if logic is missing.
+  describe("marking as read", () => {
+    beforeEach(() => {
+      state.addNotification("info", "N1");
+      state.addNotification("error", "N2");
+    });
+
+    it("markAsRead should set read flag and update unread count", () => {
+      const id = state.notifications[0].id;
+      state.markAsRead(id);
+
+      expect(state.notifications[0].read).toBe(true);
+      expect(state.unreadCount).toBe(1);
+    });
+
+    it("markAllAsRead should clear unread count", () => {
+      state.markAllAsRead();
+      expect(state.notifications.every((n) => n.read)).toBe(true);
+      expect(state.unreadCount).toBe(0);
     });
   });
 
   describe("removeNotification", () => {
-    it("should remove notification by id", () => {
-      state.notifications = [
-        { id: "1", type: "success", message: "Test", timestamp: 0, read: false },
-        { id: "2", type: "error", message: "Error", timestamp: 0, read: false },
-      ];
+    it("should remove notification and update unread count if it was unread", () => {
+      state.addNotification("success", "T1");
+      const id = state.notifications[0].id;
 
-      state.removeNotification("1");
+      state.removeNotification(id);
 
-      expect(state.notifications).toHaveLength(1);
-      expect(state.notifications[0].id).toBe("2");
+      expect(state.notifications).toHaveLength(0);
+      expect(state.unreadCount).toBe(0);
     });
   });
 
   describe("clearNotifications", () => {
-    it("should clear all notifications", () => {
-      state.notifications = [
-        { id: "1", type: "success", message: "Test", timestamp: 0, read: false },
-        { id: "2", type: "error", message: "Error", timestamp: 0, read: false },
-      ];
-
+    it("should clear all notifications and reset unread count", () => {
+      state.addNotification("success", "T1");
       state.clearNotifications();
 
       expect(state.notifications).toEqual([]);
+      expect(state.unreadCount).toBe(0);
     });
   });
 });

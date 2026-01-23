@@ -71,7 +71,7 @@ async def get_playlists(
     query = (
         select(Playlist)
         .where(Playlist.owner_id == current_user.id)
-        .options(selectinload(Playlist.tracks))
+        .options(selectinload(Playlist.tracks).selectinload(PlaylistTrack.track))
         .offset(skip)
         .limit(limit)
     )
@@ -102,7 +102,7 @@ async def get_playlists(
                     artist=pt.track.artist,
                     album=pt.track.album,
                     duration_ms=pt.track.duration_ms,
-                    image_url=pt.track.image_url
+                    image_url=pt.track.metadata_content.get("image_url") if pt.track.metadata_content else None
                  ))
         
         responses.append(PlaylistResponse(
@@ -151,7 +151,7 @@ async def get_playlist(
                 artist=pt.track.artist,
                 album=pt.track.album,
                 duration_ms=pt.track.duration_ms,
-                image_url=pt.track.image_url
+                image_url=pt.track.metadata_content.get("image_url") if pt.track.metadata_content else None
                 ))
     
     return PlaylistResponse(

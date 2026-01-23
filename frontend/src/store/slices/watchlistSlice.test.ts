@@ -1,6 +1,6 @@
-import { describe, it, expect, beforeEach, vi } from "vitest";
-import { createWatchlistSlice, type WatchlistSlice } from "./watchlistSlice";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { WatchlistItem } from "../../types";
+import { createWatchlistSlice, type WatchlistSlice } from "./watchlistSlice";
 
 // Mock the watchlist API
 vi.mock("../../api/watchlist", () => ({
@@ -19,9 +19,7 @@ import { watchlistApi } from "../../api/watchlist";
 describe("watchlistSlice", () => {
   let state: WatchlistSlice;
   let set: (
-    partial:
-      | Partial<WatchlistSlice>
-      | ((state: WatchlistSlice) => Partial<WatchlistSlice>),
+    partial: Partial<WatchlistSlice> | ((state: WatchlistSlice) => Partial<WatchlistSlice>)
   ) => void;
   let get: () => WatchlistSlice;
 
@@ -57,13 +55,17 @@ describe("watchlistSlice", () => {
     });
 
     it("should load watchlist from localStorage if available", () => {
-      localStorageMock.getItem.mockReturnValue(
-        JSON.stringify([mockWatchlistItem]),
-      );
+      localStorageMock.getItem.mockReturnValue(JSON.stringify([mockWatchlistItem]));
 
       state = createWatchlistSlice(set, get, {} as never);
 
       expect(state.watchlist).toEqual([mockWatchlistItem]);
+    });
+
+    it("should handle corrupt localStorage data", () => {
+      localStorageMock.getItem.mockReturnValue("invalid-json");
+      state = createWatchlistSlice(set, get, {} as never);
+      expect(state.watchlist).toEqual([]);
     });
   });
 
@@ -76,18 +78,27 @@ describe("watchlistSlice", () => {
       expect(state.watchlist).toEqual([mockWatchlistItem]);
       expect(localStorageMock.setItem).toHaveBeenCalledWith(
         "audiovault_watchlist",
-        JSON.stringify([mockWatchlistItem]),
+        JSON.stringify([mockWatchlistItem])
       );
+    });
+
+    it("should handle non-array response from API", async () => {
+      const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+      vi.mocked(watchlistApi.getAll).mockResolvedValue({ error: "bad" } as any);
+
+      await state.syncWatchlist();
+
+      expect(consoleSpy).toHaveBeenCalledWith(
+        expect.stringContaining("Sync failed"),
+        expect.any(Object)
+      );
+      consoleSpy.mockRestore();
     });
 
     it("should handle API errors and keep local state", async () => {
       state.watchlist = [mockWatchlistItem];
-      vi.mocked(watchlistApi.getAll).mockRejectedValue(
-        new Error("Network error"),
-      );
-      const consoleSpy = vi
-        .spyOn(console, "error")
-        .mockImplementation(() => {});
+      vi.mocked(watchlistApi.getAll).mockRejectedValue(new Error("Network error"));
+      const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => {});
 
       await state.syncWatchlist();
 
@@ -116,9 +127,7 @@ describe("watchlistSlice", () => {
 
     it("should handle API errors gracefully", async () => {
       vi.mocked(watchlistApi.add).mockRejectedValue(new Error("Failed"));
-      const consoleSpy = vi
-        .spyOn(console, "error")
-        .mockImplementation(() => {});
+      const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => {});
 
       await state.addToWatchlist({
         watch_type: "artist",
@@ -147,9 +156,7 @@ describe("watchlistSlice", () => {
     it("should revert on API error", async () => {
       state.watchlist = [mockWatchlistItem];
       vi.mocked(watchlistApi.remove).mockRejectedValue(new Error("Failed"));
-      const consoleSpy = vi
-        .spyOn(console, "error")
-        .mockImplementation(() => {});
+      const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => {});
 
       await state.removeFromWatchlist("wl-1");
 
@@ -157,17 +164,24 @@ describe("watchlistSlice", () => {
       expect(state.watchlist).toEqual([mockWatchlistItem]);
       consoleSpy.mockRestore();
     });
+  });
 
-    it("should update localStorage on successful removal", async () => {
-      state.watchlist = [mockWatchlistItem];
-      vi.mocked(watchlistApi.remove).mockResolvedValue({});
+  describe("storage errors", () => {
+    it("should handle storage setItem errors", async () => {
+      const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+      localStorageMock.setItem.mockImplementation(() => {
+        throw new Error("Storage full");
+      });
 
-      await state.removeFromWatchlist("wl-1");
+      state.watchlist = [];
+      vi.mocked(watchlistApi.getAll).mockResolvedValue([mockWatchlistItem]);
+      await state.syncWatchlist();
 
-      expect(localStorageMock.setItem).toHaveBeenCalledWith(
-        "audiovault_watchlist",
-        "[]",
+      expect(consoleSpy).toHaveBeenCalledWith(
+        "Failed to save watchlist to storage",
+        expect.any(Error)
       );
+      consoleSpy.mockRestore();
     });
   });
 });

@@ -19,7 +19,9 @@ export default function TrackCard({ track, queue, onRemove }: Readonly<TrackCard
   const { playTrack, currentTrack, isPlaying, togglePlay } = useStore();
   const [showPlaylistModal, setShowPlaylistModal] = useState(false);
 
-  const isCurrentTrack = currentTrack?.id === track.id || currentTrack?.id === track.spotify_id;
+  const isCurrentTrack =
+    currentTrack?.id !== undefined &&
+    (currentTrack?.id === track.id || (track.spotify_id && currentTrack?.id === track.spotify_id));
   const isNowPlaying = isCurrentTrack && isPlaying;
 
   const handleArtistClick = (e: React.MouseEvent) => {
@@ -79,6 +81,7 @@ export default function TrackCard({ track, queue, onRemove }: Readonly<TrackCard
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
         onClick={handlePlay}
+        data-testid="track-card"
         className={`w-full p-3 rounded-xl cursor-pointer border overflow-hidden backdrop-blur-xl transition-all duration-200 group ${
           isCurrentTrack
             ? "bg-white/10 border-primary/50 shadow-[0_0_15px_rgba(var(--primary-rgb),0.2)]"

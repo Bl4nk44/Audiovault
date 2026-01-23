@@ -1,14 +1,14 @@
-import { useState, useRef, useEffect } from "react";
-import { useForm } from "react-hook-form";
-import { useStore } from "../../store/useStore";
-import api from "../../services/api";
-import { notify as toast } from "../../utils/notify";
+import { AxiosError } from "axios";
 import { motion } from "framer-motion";
-import { User, Lock, Save, Camera, Trash2, AlertTriangle } from "lucide-react";
+import { AlertTriangle, Camera, Lock, Save, Trash2, User } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import { useForm } from "react-hook-form";
+import { useTranslation } from "../../hooks/useTranslation";
+import api from "../../services/api";
+import { useStore } from "../../store/useStore";
+import { notify as toast } from "../../utils/notify";
 import Button from "../ui/Button";
 import ConfirmModal from "../ui/ConfirmModal";
-import { useTranslation } from "../../hooks/useTranslation";
-import { AxiosError } from "axios";
 
 interface ProfileFormData {
   username: string;
@@ -83,9 +83,7 @@ export default function AccountSettings() {
       toast.success(t("settings.messages.profileUpdated"));
     } catch (error) {
       const err = error as AxiosError<{ detail: string }>;
-      toast.error(
-        err.response?.data?.detail || t("settings.messages.updateError")
-      );
+      toast.error(err.response?.data?.detail || t("settings.messages.updateError"));
     } finally {
       setIsLoading(false);
     }
@@ -102,9 +100,7 @@ export default function AccountSettings() {
       resetPassword();
     } catch (error) {
       const err = error as AxiosError<{ detail: string }>;
-      toast.error(
-        err.response?.data?.detail || t("settings.messages.updateError")
-      );
+      toast.error(err.response?.data?.detail || t("settings.messages.updateError"));
     } finally {
       setIsLoading(false);
     }
@@ -132,9 +128,7 @@ export default function AccountSettings() {
     fileInputRef.current?.click();
   };
 
-  const handleFileChange = async (
-    event: React.ChangeEvent<HTMLInputElement>
-  ) => {
+  const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) return;
 
@@ -157,9 +151,7 @@ export default function AccountSettings() {
       toast.success(t("settings.messages.avatarUpdated"));
     } catch (error) {
       const err = error as AxiosError<{ detail: string }>;
-      toast.error(
-        err.response?.data?.detail || t("settings.messages.uploadError")
-      );
+      toast.error(err.response?.data?.detail || t("settings.messages.uploadError"));
     } finally {
       setIsLoading(false);
     }
@@ -170,8 +162,7 @@ export default function AccountSettings() {
     if (url.startsWith("http")) return url;
     // If it's a relative path from our backend (e.g. /stream/...)
     return `${
-      import.meta.env.VITE_API_URL?.replace("/api/v1", "") ||
-      "http://localhost:8000"
+      import.meta.env.VITE_API_URL?.replace("/api/v1", "") || "http://localhost:8000"
     }${url}`;
   };
 
@@ -226,10 +217,11 @@ export default function AccountSettings() {
 
           <div className="grid gap-6 md:grid-cols-2">
             <div className="space-y-2">
-              <label className="text-sm font-medium text-gray-300 ml-1">
+              <label htmlFor="username" className="text-sm font-medium text-gray-300 ml-1">
                 {t("settings.username")}
               </label>
               <input
+                id="username"
                 {...register("username", { required: "Username is required" })}
                 className="w-full px-4 py-3 rounded-xl bg-black/20 border border-white/10 text-white focus:outline-none focus:border-primary/50"
               />
@@ -242,12 +234,7 @@ export default function AccountSettings() {
           </div>
 
           <div className="flex justify-end">
-            <Button
-              type="submit"
-              isLoading={isLoading}
-              variant="primary"
-              className="px-6"
-            >
+            <Button type="submit" isLoading={isLoading} variant="primary" className="px-6">
               <Save size={18} className="mr-2" /> {t("settings.saveProfile")}
             </Button>
           </div>
@@ -266,15 +253,13 @@ export default function AccountSettings() {
           {t("settings.changePassword")}
         </h3>
 
-        <form
-          onSubmit={handleSubmitPassword(onUpdatePassword)}
-          className="space-y-6 max-w-md"
-        >
+        <form onSubmit={handleSubmitPassword(onUpdatePassword)} className="space-y-6 max-w-md">
           <div className="space-y-2">
-            <label className="text-sm font-medium text-gray-300 ml-1">
+            <label htmlFor="currentPassword" className="text-sm font-medium text-gray-300 ml-1">
               {t("settings.currentPassword")}
             </label>
             <input
+              id="currentPassword"
               type="password"
               {...registerPassword("currentPassword", {
                 required: "Current password is required",
@@ -289,10 +274,11 @@ export default function AccountSettings() {
           </div>
 
           <div className="space-y-2">
-            <label className="text-sm font-medium text-gray-300 ml-1">
+            <label htmlFor="newPassword" className="text-sm font-medium text-gray-300 ml-1">
               {t("settings.newPassword")}
             </label>
             <input
+              id="newPassword"
               type="password"
               {...registerPassword("newPassword", {
                 required: "New password is required",
@@ -308,10 +294,7 @@ export default function AccountSettings() {
           </div>
 
           <div className="space-y-2">
-            <label
-              htmlFor="confirmPassword"
-              className="text-sm font-medium text-gray-300 ml-1"
-            >
+            <label htmlFor="confirmPassword" className="text-sm font-medium text-gray-300 ml-1">
               Confirm New Password
             </label>
             <input
@@ -361,18 +344,12 @@ export default function AccountSettings() {
 
         <div className="flex items-center justify-between">
           <div>
-            <h4 className="text-lg font-bold text-white mb-1">
-              Delete Account
-            </h4>
+            <h4 className="text-lg font-bold text-white mb-1">Delete Account</h4>
             <p className="text-gray-400 text-sm">
               Permanently delete your account and all associated data.
             </p>
           </div>
-          <Button
-            variant="danger"
-            onClick={() => setIsDeleteModalOpen(true)}
-            className="shrink-0"
-          >
+          <Button variant="danger" onClick={() => setIsDeleteModalOpen(true)} className="shrink-0">
             <Trash2 size={18} className="mr-2" /> Delete Account
           </Button>
         </div>
@@ -399,12 +376,9 @@ export default function AccountSettings() {
             htmlFor="deleteLibrary"
             className="text-sm text-gray-300 cursor-pointer select-none"
           >
-            <span className="block font-medium text-white mb-1">
-              Delete my downloaded library
-            </span>
+            <span className="block font-medium text-white mb-1">Delete my downloaded library</span>
             <span className="block text-gray-400">
-              Also delete all music files associated with this account from the
-              server storage.
+              Also delete all music files associated with this account from the server storage.
             </span>
           </label>
         </div>

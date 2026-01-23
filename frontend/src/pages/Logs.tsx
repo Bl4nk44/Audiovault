@@ -44,10 +44,10 @@ export default function Logs() {
   };
 
   useEffect(() => {
+    if (!autoRefresh) return;
+
     fetchLogs();
-    const interval = setInterval(() => {
-      if (autoRefresh) fetchLogs();
-    }, 2000);
+    const interval = setInterval(fetchLogs, 2000);
     return () => clearInterval(interval);
   }, [autoRefresh]);
 

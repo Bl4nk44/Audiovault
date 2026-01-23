@@ -1,95 +1,210 @@
-import { render, screen } from "@testing-library/react";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { act, fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { beforeEach, describe, expect, it, Mock, vi } from "vitest";
+import { useAudioVisualizer } from "../../hooks/useAudioVisualizer";
+import { useStore } from "../../store/useStore";
 import Player from "./Player";
 
-// Mock sub-components
-vi.mock("./PlayerControls", () => ({
-  PlayerControls: () => <div data-testid="player-controls">Controls</div>,
-}));
-vi.mock("./ProgressBar", () => ({
-  ProgressBar: () => <div data-testid="progress-bar">Progress</div>,
-}));
-vi.mock("./TrackInfo", () => ({
-  TrackInfo: () => <div data-testid="track-info">Track Info</div>,
-}));
-vi.mock("./VolumeControl", () => ({
-  VolumeControl: () => <div data-testid="volume-control">Volume</div>,
-}));
-vi.mock("./LyricsPanel", () => ({
-  default: () => <div data-testid="lyrics-panel">Lyrics Panel</div>,
-}));
-vi.mock("./VisualizerToggle", () => ({
-  VisualizerToggle: () => <div data-testid="visualizer-toggle">Vis Toggle</div>,
-}));
-
-// Hoisted mocks for dynamic overriding
-const { mockUseStore, mockUseAudioVisualizer } = vi.hoisted(() => ({
-  mockUseStore: vi.fn(),
-  mockUseAudioVisualizer: vi.fn(),
-}));
-
-// Mock hooks
-vi.mock("../../store/useStore", () => ({
-  useStore: mockUseStore,
-}));
-
+// 1. Mock dependencies
+vi.mock("../../store/useStore");
 vi.mock("../../hooks/useAudioVisualizer", () => ({
-  useAudioVisualizer: mockUseAudioVisualizer,
+  useAudioVisualizer: vi.fn(),
 }));
-
-// Mock services
 vi.mock("../../services/api", () => ({
   default: {
     post: vi.fn().mockResolvedValue({}),
   },
 }));
 
-describe("Player", () => {
-  const defaultStoreState = {
-    currentTrack: { id: "1", title: "Test", filename: "test.mp3" },
-    isPlaying: false,
+// 2. Mock child components
+vi.mock("./PlayerControls", () => ({
+  PlayerControls: ({ togglePlay, isPlaying }: any) => (
+    <div data-testid="controls">
+      <button onClick={togglePlay}>{isPlaying ? "Pause" : "Play"}</button>
+    </div>
+  ),
+}));
+vi.mock("./ProgressBar", () => ({
+  ProgressBar: ({ onSeek, currentTime }: any) => (
+    <div data-testid="progress">
+      <span data-testid="time">{Math.round(currentTime)}</span>
+      <button onClick={() => onSeek(50)}>Seek 50</button>
+    </div>
+  ),
+}));
+vi.mock("./TrackInfo", () => ({
+  TrackInfo: ({ currentTrack }: any) => <div data-testid="track-info">{currentTrack?.title}</div>,
+}));
+vi.mock("./VolumeControl", () => ({
+  VolumeControl: ({ setVolume }: any) => (
+    <button onClick={() => setVolume(0.5)} data-testid="volume">
+      Set Volume
+    </button>
+  ),
+}));
+vi.mock("./VisualizerToggle", () => ({
+  VisualizerToggle: ({ showVisualizer, setShowVisualizer }: any) => (
+    <div data-testid="vis-toggle" onClick={() => setShowVisualizer(!showVisualizer)}>
+      Toggle
+    </div>
+  ),
+}));
+vi.mock("./LyricsPanel", () => ({
+  default: ({ isOpen, onClose }: any) =>
+    isOpen ? (
+      <div data-testid="lyrics-panel">
+        Lyrics
+        <button onClick={onClose}>Close Lyrics</button>
+      </div>
+    ) : null,
+}));
+
+// 3. Mock Framer Motion
+vi.mock("framer-motion", () => ({
+  motion: {
+    div: ({ children, className, ...props }: any) => (
+      <div className={className} {...props}>
+        {children}
+      </div>
+    ),
+  },
+}));
+
+describe("Player Component - Deep Dive", () => {
+  const mockTrack = {
+    id: "1",
+    title: "Bohemian Rhapsody",
+    artist: "Queen",
+    album: "A Night at the Opera",
+    duration: 354,
+    filename: "queen/bohemian.mp3",
+    cover: "cover.jpg",
+  };
+
+  const mockActions = {
     togglePlay: vi.fn(),
-    volume: 0.5,
     setVolume: vi.fn(),
     nextTrack: vi.fn(),
     prevTrack: vi.fn(),
-    visualizerMode: "bar",
   };
 
   beforeEach(() => {
     vi.clearAllMocks();
-    mockUseStore.mockReturnValue(defaultStoreState);
-    mockUseAudioVisualizer.mockReturnValue({ current: null });
+    (useAudioVisualizer as any).mockReturnValue({ current: null });
 
-    // Mock HTMLMediaElement
-    window.HTMLMediaElement.prototype.play = vi.fn().mockResolvedValue(undefined);
-    window.HTMLMediaElement.prototype.pause = vi.fn();
+    // Polyfill MediaMetadata
+    // @ts-ignore
+    globalThis.MediaMetadata = class MediaMetadata {
+      title: string;
+      artist: string;
+      album: string;
+      artwork: any[];
+      constructor(init: any) {
+        this.title = init.title;
+        this.artist = init.artist;
+        this.album = init.album;
+        this.artwork = init.artwork;
+      }
+    };
+
+    // Mock global navigator mediaSession
+    Object.defineProperty(navigator, "mediaSession", {
+      writable: true,
+      value: {
+        metadata: null,
+        setActionHandler: vi.fn(),
+      },
+    });
+
+    // Mock HTMLMediaElement methods
+    vi.spyOn(window.HTMLMediaElement.prototype, "play").mockResolvedValue(undefined);
+    vi.spyOn(window.HTMLMediaElement.prototype, "pause").mockImplementation(() => {});
+
+    // Reset store default return
+    (useStore as Mock).mockReturnValue({
+      currentTrack: mockTrack,
+      isPlaying: false,
+      volume: 1.0,
+      visualizerMode: "classic",
+      ...mockActions,
+    });
   });
 
-  it("should render player components when track is playing", () => {
+  it("renders correctly with full track data", () => {
     render(<Player />);
-
-    expect(screen.getByTestId("player-controls")).toBeInTheDocument();
-    expect(screen.getByTestId("progress-bar")).toBeInTheDocument();
-    expect(screen.getByTestId("track-info")).toBeInTheDocument();
-    expect(screen.getByTestId("volume-control")).toBeInTheDocument();
+    expect(screen.getByTestId("track-info")).toHaveTextContent("Bohemian Rhapsody");
   });
 
-  it("should render audio element with correct src", () => {
+  it("handles seek commands", async () => {
+    const { container } = render(<Player />);
+    const audio = container.querySelector("audio") as HTMLAudioElement;
+
+    fireEvent.click(screen.getByText("Seek 50"));
+    expect(audio.currentTime).toBe(50);
+    await waitFor(() => {
+      expect(screen.getByTestId("time")).toHaveTextContent("50");
+    });
+  });
+
+  it("opens and closes lyrics panel", () => {
     render(<Player />);
-    const audio = document.querySelector("audio");
-    expect(audio).toBeInTheDocument();
-    expect(audio?.src).toContain("/stream/test.mp3");
+    fireEvent.click(screen.getByTitle("Lyrics"));
+    expect(screen.getByTestId("lyrics-panel")).toBeInTheDocument();
+
+    fireEvent.click(screen.getByText("Close Lyrics"));
+    expect(screen.queryByTestId("lyrics-panel")).not.toBeInTheDocument();
   });
 
-  it("should not render if no current track", () => {
-    // Override store for this test
-    mockUseStore.mockReturnValue({
-      ...defaultStoreState,
-      currentTrack: null,
+  it("toggles visualizer", () => {
+    render(<Player />);
+    // Initial state: showVisualizer is true
+    expect(useAudioVisualizer).toHaveBeenCalledWith(
+      expect.anything(),
+      false, // showVisualizer is true but isPlaying is false -> should be false
+      expect.anything(),
+      "classic"
+    );
+
+    fireEvent.click(screen.getByTestId("vis-toggle"));
+  });
+
+  it("handles media session action: seekto", async () => {
+    render(<Player />);
+    const seekToHandler = (navigator.mediaSession.setActionHandler as Mock).mock.calls.find(
+      (call) => call[0] === "seekto"
+    )[1];
+
+    const audio = document.querySelector("audio") as HTMLAudioElement;
+    act(() => {
+      seekToHandler({ seekTime: 120 });
+    });
+
+    expect(audio.currentTime).toBe(120);
+    await waitFor(() => {
+      expect(screen.getByTestId("time")).toHaveTextContent("120");
+    });
+  });
+
+  it("handles stream URL construction for tracks without filenames", () => {
+    const trackNoFile = { ...mockTrack, filename: undefined };
+    (useStore as Mock).mockReturnValue({
+      currentTrack: trackNoFile,
+      isPlaying: false,
+      volume: 1.0,
+      ...mockActions,
     });
 
     const { container } = render(<Player />);
-    expect(container).toBeEmptyDOMElement();
+    const audio = container.querySelector("audio") as HTMLAudioElement;
+    expect(audio.src).toContain("/stream/1.mp3");
+  });
+
+  it("null check: should not render if no track", () => {
+    (useStore as Mock).mockReturnValue({
+      currentTrack: null,
+      isPlaying: false,
+      ...mockActions,
+    });
+    const { container } = render(<Player />);
+    expect(container.firstChild).toBeNull();
   });
 });

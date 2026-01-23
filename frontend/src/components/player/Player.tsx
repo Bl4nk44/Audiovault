@@ -229,9 +229,7 @@ export default function Player() {
           onTimeUpdate={handleTimeUpdate}
           onEnded={nextTrack}
           preload="auto"
-        >
-          <track kind="captions" src="" label="English" />
-        </audio>
+        ></audio>
       </motion.div>
 
       {/* Lyrics Panel */}

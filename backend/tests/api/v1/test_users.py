@@ -54,6 +54,16 @@ async def test_update_password_short(client: AsyncClient, admin_token_headers):
     assert response.json()["detail"] == "Password too short"
 
 @pytest.mark.asyncio
+async def test_update_password_incorrect(client: AsyncClient, admin_token_headers):
+    payload = {
+        "current_password": "wrong_password",
+        "new_password": "new_secure_password"
+    }
+    response = await client.put("/api/v1/users/me/password", headers=admin_token_headers, json=payload)
+    assert response.status_code == 400
+    assert response.json()["detail"] == "Incorrect password"
+
+@pytest.mark.asyncio
 async def test_upload_avatar(client: AsyncClient, admin_token_headers):
     # Mocking aiofiles and os.makedirs/exists
     file_content = b"fake image content"
@@ -69,6 +79,23 @@ async def test_upload_avatar(client: AsyncClient, admin_token_headers):
         response = await client.post("/api/v1/users/me/avatar", headers=admin_token_headers, files=files)
         assert response.status_code == 200
         assert "avatar_url" in response.json()
+
+@pytest.mark.asyncio
+async def test_upload_avatar_makedirs(client: AsyncClient, admin_token_headers):
+    file_content = b"fake image content"
+    files = {"file": ("avatar.jpg", io.BytesIO(file_content), "image/jpeg")}
+    
+    with patch("os.path.exists", side_effect=[False, True]), \
+         patch("os.makedirs") as mock_makedirs, \
+         patch("app.api.v1.users.aiofiles.open", new_callable=MagicMock) as mock_open:
+        
+        mock_file = AsyncMock()
+        mock_file.__aenter__.return_value = mock_file
+        mock_open.return_value = mock_file
+        
+        response = await client.post("/api/v1/users/me/avatar", headers=admin_token_headers, files=files)
+        assert response.status_code == 200
+        mock_makedirs.assert_called_once()
 
 @pytest.mark.asyncio
 async def test_delete_me(client: AsyncClient, db_session):
@@ -98,3 +125,11 @@ async def test_delete_me(client: AsyncClient, db_session):
         assert response.status_code == 200
         assert response.json()["message"] == "Account deleted"
         assert mock_rm.called
+
+@pytest.mark.asyncio
+async def test_delete_me_rmtree_error(client: AsyncClient, db_session, admin_token_headers):
+    with patch("app.api.v1.users.os.path.exists", return_value=True), \
+         patch("app.api.v1.users.shutil.rmtree", side_effect=Exception("Disk error")):
+        response = await client.delete("/api/v1/users/me", params={"delete_library": True}, headers=admin_token_headers)
+        assert response.status_code == 200
+        assert response.json()["message"] == "Account deleted"

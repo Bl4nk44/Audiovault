@@ -76,4 +76,51 @@ describe("playerSlice", () => {
       expect(state.queue).toContainEqual(track);
     });
   });
+
+  describe("playback navigation", () => {
+    const track1 = { id: "1", title: "T1" } as any;
+    const track2 = { id: "2", title: "T2" } as any;
+    const track3 = { id: "3", title: "T3" } as any;
+    const queue = [track1, track2, track3];
+
+    beforeEach(() => {
+      state.playTrack(track1, queue);
+    });
+
+    it("should skip to next track", () => {
+      // playTrack sets index 0 for track1
+      state.nextTrack();
+      expect(state.currentTrackIndex).toBe(1);
+      expect(state.currentTrack).toEqual(track2);
+    });
+
+    it("should not skip next if at end of queue", () => {
+      state.playTrack(track3, queue); // index 2
+      state.nextTrack();
+      expect(state.currentTrackIndex).toBe(2);
+      expect(state.currentTrack).toEqual(track3);
+    });
+
+    it("should skip to previous track", () => {
+      state.playTrack(track2, queue); // index 1
+      state.prevTrack();
+      expect(state.currentTrackIndex).toBe(0);
+      expect(state.currentTrack).toEqual(track1);
+    });
+
+    it("should not skip prev if at start of queue", () => {
+      state.playTrack(track1, queue); // index 0
+      state.prevTrack();
+      expect(state.currentTrackIndex).toBe(0);
+      expect(state.currentTrack).toEqual(track1);
+    });
+  });
+
+  describe("visualizer mode", () => {
+    it("should set visualizer mode", () => {
+      expect(state.visualizerMode).toBe("classic");
+      state.setVisualizerMode("wave");
+      expect(state.visualizerMode).toBe("wave");
+    });
+  });
 });

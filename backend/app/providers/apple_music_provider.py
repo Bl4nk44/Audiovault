@@ -75,5 +75,6 @@ class AppleMusicProvider(MusicProvider):
                 image_url=t["image_url"],
                 source_id=t["id"],
                 source_url=t.get("source_url"),
+                source="apple_music",
             )
         return None

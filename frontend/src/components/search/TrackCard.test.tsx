@@ -1,136 +1,125 @@
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
-import { beforeEach, describe, expect, it, vi } from "vitest";
-import type { Track } from "../../types";
+import { beforeEach, describe, expect, it, Mock, vi } from "vitest";
+import api from "../../services/api";
+import { useStore } from "../../store/useStore";
+import { notify } from "../../utils/notify";
 import TrackCard from "./TrackCard";
 
-// Mock framer-motion to avoid animation issues in tests
-vi.mock("framer-motion", () => ({
-  motion: {
-    div: (props: any) => (
-      <div {...props} data-testid={props.onClick ? "track-card" : undefined}>
-        {props.children}
-      </div>
-    ),
-    button: (props: any) => <button {...props}>{props.children}</button>,
-  },
-}));
+const mockPlayTrack = vi.fn();
+const mockTogglePlay = vi.fn();
+const mockNavigate = vi.fn();
 
-// Mock the store
-const { mockPlayTrack } = vi.hoisted(() => ({
-  mockPlayTrack: vi.fn(),
+vi.mock("react-router-dom", () => ({
+  useNavigate: () => mockNavigate,
 }));
 
 vi.mock("../../store/useStore", () => ({
-  useStore: () => ({
-    playTrack: mockPlayTrack,
-    currentTrack: null,
-    isPlaying: false,
-    togglePlay: vi.fn(),
-  }),
-}));
-
-// Mock API
-const { postMock } = vi.hoisted(() => ({
-  postMock: vi.fn(),
+  useStore: vi.fn(),
 }));
 
 vi.mock("../../services/api", () => ({
-  default: {
-    post: postMock,
-  },
+  default: { post: vi.fn() },
 }));
 
-// Mock notify
 vi.mock("../../utils/notify", () => ({
-  notify: {
-    success: vi.fn(),
-    error: vi.fn(),
-  },
+  notify: { success: vi.fn(), error: vi.fn() },
 }));
 
-// Mock AddToPlaylistModal
 vi.mock("../AddToPlaylistModal", () => ({
-  default: ({ isOpen }: { isOpen: boolean }) =>
-    isOpen ? <div data-testid="add-to-playlist-modal">Modal Open</div> : null,
+  default: ({ isOpen, onClose }: any) =>
+    isOpen ? (
+      <div data-testid="add-modal">
+        <button onClick={onClose}>Close</button>
+      </div>
+    ) : null,
 }));
 
-import { notify } from "../../utils/notify";
+vi.mock("framer-motion", () => ({
+  motion: {
+    div: ({ children, onClick, ...props }: any) => (
+      <div {...props} onClick={onClick} data-testid="track-card">
+        {children}
+      </div>
+    ),
+    button: ({ children, onClick, ...props }: any) => (
+      <button {...props} onClick={onClick}>
+        {children}
+      </button>
+    ),
+  },
+  AnimatePresence: ({ children }: any) => <>{children}</>,
+}));
 
 describe("TrackCard", () => {
-  const mockTrack: Track = {
-    id: "track-1",
-    title: "Test Song",
+  const mockTrack = {
+    id: "t1",
+    title: "Test Track",
     artist: "Test Artist",
+    artist_id: "a1",
+    cover: "test.jpg",
     source: "spotify",
     duration_ms: 180000,
-    cover: "https://example.com/cover.jpg",
-  };
+  } as any;
 
   beforeEach(() => {
     vi.clearAllMocks();
-    postMock.mockReset();
+    (useStore as Mock).mockReturnValue({
+      playTrack: mockPlayTrack,
+      togglePlay: mockTogglePlay,
+      currentTrack: null,
+      isPlaying: false,
+    });
   });
 
-  it("should render track title", () => {
+  it("handles play action", () => {
     render(<TrackCard track={mockTrack} />);
-    expect(screen.getByText("Test Song")).toBeTruthy();
+    fireEvent.click(screen.getByTestId("track-card"));
+    expect(mockPlayTrack).toHaveBeenCalled();
   });
 
-  it("should render track artist", () => {
-    render(<TrackCard track={mockTrack} />);
-    expect(screen.getByText("Test Artist")).toBeTruthy();
-  });
-
-  it("should render cover image when available", () => {
-    render(<TrackCard track={mockTrack} />);
-    const img = screen.getByAltText("Test Song");
-    expect(img).toBeTruthy();
-    expect(img.getAttribute("src")).toBe("https://example.com/cover.jpg");
-  });
-
-  it("should format duration correctly", () => {
-    render(<TrackCard track={mockTrack} />);
-    expect(screen.getByText("3:00")).toBeTruthy();
-  });
-
-  it("should add to download queue when download button is clicked", async () => {
-    postMock.mockResolvedValue({ data: {} });
-
+  it("handles download action success", async () => {
+    (api.post as Mock).mockResolvedValue({ data: { task_id: "job1" } });
     render(<TrackCard track={mockTrack} />);
 
-    // JSDOM doesn't handle Tailwind visibility, so buttons are technically accessible to FireEvent
-    // even if opacity-0 class is present.
-    const downloadButton = screen.getByTitle("Download");
-    fireEvent.click(downloadButton);
+    const downloadBtn = screen.getByTitle("Download");
+    fireEvent.click(downloadBtn);
 
     await waitFor(() => {
-      expect(postMock).toHaveBeenCalledWith("/downloads/add", {
-        track_id: "track-1",
-        source: "spotify",
-      });
+      expect(api.post).toHaveBeenCalledWith(
+        "/downloads/add",
+        expect.objectContaining({
+          track_id: "t1",
+          source: "spotify",
+        })
+      );
       expect(notify.success).toHaveBeenCalledWith("Added to download queue");
     });
   });
 
-  it("should show error when download fails", async () => {
-    postMock.mockRejectedValue(new Error("Failed"));
-
+  it("handles download action error", async () => {
+    (api.post as Mock).mockRejectedValue(new Error("Fail"));
     render(<TrackCard track={mockTrack} />);
 
-    const downloadButton = screen.getByTitle("Download");
-    fireEvent.click(downloadButton);
+    fireEvent.click(screen.getByTitle("Download"));
 
     await waitFor(() => {
       expect(notify.error).toHaveBeenCalledWith("Failed to add to queue");
     });
   });
 
-  it("should open playlist modal when add button is clicked", () => {
+  it("navigates to spotify artist profile if artist_id is missing", () => {
+    const track = { ...mockTrack, artist_id: undefined, spotify_artist_id: "s1" };
+    render(<TrackCard track={track} />);
+    fireEvent.click(screen.getByText("Test Artist"));
+    expect(mockNavigate).toHaveBeenCalledWith("/artist/s1");
+  });
+
+  it("toggles add to playlist modal", () => {
     render(<TrackCard track={mockTrack} />);
+    fireEvent.click(screen.getByTitle("Add to Playlist"));
+    expect(screen.getByTestId("add-modal")).toBeInTheDocument();
 
-    const addButton = screen.getByTitle("Add to Playlist");
-    fireEvent.click(addButton);
-
-    expect(screen.getByTestId("add-to-playlist-modal")).toBeTruthy();
+    fireEvent.click(screen.getByText("Close"));
+    expect(screen.queryByTestId("add-modal")).not.toBeInTheDocument();
   });
 });

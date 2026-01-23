@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, Mock, vi } from "vitest";
 import { downloadsApi } from "../../api/downloads";
 import { createQueueSlice, type QueueSlice } from "./queueSlice";
 
@@ -87,35 +87,50 @@ describe("queueSlice", () => {
   });
 
   describe("async actions", () => {
-    it("pauseDownload should call api and update status optimistically", async () => {
-      const track = { id: "1", title: "Track 1" } as any;
-      state.addToQueue(track);
-      const downloadId = state.downloadQueue[0].id;
+    const track = { id: "1", title: "Track 1" } as any;
+    let downloadId: string;
 
+    beforeEach(() => {
+      state.addToQueue(track);
+      downloadId = state.downloadQueue[0].id;
+    });
+
+    it("pauseDownload should call api and update status optimistically", async () => {
       await state.pauseDownload(downloadId);
 
       expect(state.downloadQueue[0].status).toBe("paused");
       expect(downloadsApi.pause).toHaveBeenCalledWith(downloadId);
     });
 
-    it("resumeDownload should call api and update status optimistically", async () => {
-      const track = { id: "1", title: "Track 1" } as any;
-      state.addToQueue(track);
-      const downloadId = state.downloadQueue[0].id;
-      // First pause it to make resume meaningful (though purely state-wise)
-      state.updateStatus(downloadId, "paused");
+    it("pauseDownload should handle errors", async () => {
+      const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+      (downloadsApi.pause as Mock).mockRejectedValue(new Error("Fail"));
 
+      await state.pauseDownload(downloadId);
+
+      expect(consoleSpy).toHaveBeenCalledWith("Failed to pause", expect.any(Error));
+      consoleSpy.mockRestore();
+    });
+
+    it("resumeDownload should call api and update status optimistically", async () => {
+      state.updateStatus(downloadId, "paused");
       await state.resumeDownload(downloadId);
 
       expect(state.downloadQueue[0].status).toBe("pending");
       expect(downloadsApi.resume).toHaveBeenCalledWith(downloadId);
     });
 
-    it("retryDownload should call api and update status optimistically", async () => {
-      const track = { id: "1", title: "Track 1" } as any;
-      state.addToQueue(track);
-      const downloadId = state.downloadQueue[0].id;
+    it("resumeDownload should handle errors", async () => {
+      const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+      (downloadsApi.resume as Mock).mockRejectedValue(new Error("Fail"));
 
+      await state.resumeDownload(downloadId);
+
+      expect(consoleSpy).toHaveBeenCalledWith("Failed to resume", expect.any(Error));
+      consoleSpy.mockRestore();
+    });
+
+    it("retryDownload should call api and update status optimistically", async () => {
       state.updateStatus(downloadId, "error", "Some error");
 
       await state.retryDownload(downloadId);
@@ -125,6 +140,16 @@ describe("queueSlice", () => {
       expect(downloadsApi.retry).toHaveBeenCalledWith(downloadId);
     });
 
+    it("retryDownload should handle errors", async () => {
+      const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+      (downloadsApi.retry as Mock).mockRejectedValue(new Error("Fail"));
+
+      await state.retryDownload(downloadId);
+
+      expect(consoleSpy).toHaveBeenCalledWith("Failed to retry", expect.any(Error));
+      consoleSpy.mockRestore();
+    });
+
     it("fetchDownloads should fetch and set queue", async () => {
       const mockDownloads = [{ id: "d1", track: {}, status: "completed" }];
       vi.mocked(downloadsApi.getAll).mockResolvedValue(mockDownloads as any);
@@ -132,6 +157,16 @@ describe("queueSlice", () => {
       await state.fetchDownloads();
 
       expect(state.downloadQueue).toEqual(mockDownloads);
+    });
+
+    it("fetchDownloads should handle errors", async () => {
+      const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+      (downloadsApi.getAll as Mock).mockRejectedValue(new Error("Fail"));
+
+      await state.fetchDownloads();
+
+      expect(consoleSpy).toHaveBeenCalledWith("Failed to fetch downloads", expect.any(Error));
+      consoleSpy.mockRestore();
     });
   });
 });

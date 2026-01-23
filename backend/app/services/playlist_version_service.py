@@ -60,9 +60,15 @@ class PlaylistVersionService:
         )
 
         # Get current track IDs in order
+        result = await db.execute(
+            select(PlaylistTrack)
+            .where(PlaylistTrack.playlist_id == playlist.id)
+            .order_by(PlaylistTrack.order)
+        )
+        tracks = result.scalars().all()
         tracks_snapshot = [
             {"track_id": str(pt.track_id), "order": pt.order}
-            for pt in sorted(playlist.tracks, key=lambda x: x.order)
+            for pt in tracks
         ]
 
         version = PlaylistVersion(
