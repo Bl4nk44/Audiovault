@@ -89,12 +89,12 @@ async def get_settings(
         "spotifyClientId": spotify_creds.extra_data.get("client_id", "") if spotify_creds else "",
         "spotifyClientSecret": spotify_creds.extra_data.get("client_secret", "") if spotify_creds else "",
         "youtubeApiKey": youtube_creds.extra_data.get("api_key", "") if youtube_creds else "",
-        "downloadPath": current_user.preferences.get("download_path", "/downloads") if current_user.preferences else "/downloads",
-        "maxParallelDownloads": current_user.preferences.get("max_parallel_downloads", 3) if current_user.preferences else 3,
-        "theme": current_user.preferences.get("theme", "dark") if current_user.preferences else "dark",
-        "language": current_user.preferences.get("language", "en") if current_user.preferences else "en",
-        "filenameSchema": current_user.preferences.get("filename_schema", "{artist} - {title}") if current_user.preferences else "{artist} - {title}",
-        "audioQuality": current_user.preferences.get("audio_quality", "high") if current_user.preferences else "high",
+        "downloadPath": (current_user.preferences or {}).get("download_path", "/downloads"),
+        "maxParallelDownloads": (current_user.preferences or {}).get("max_parallel_downloads", 3),
+        "theme": (current_user.preferences or {}).get("theme", "dark"),
+        "language": (current_user.preferences or {}).get("language", "en"),
+        "filenameSchema": (current_user.preferences or {}).get("filename_schema", "{artist} - {title}"),
+        "audioQuality": (current_user.preferences or {}).get("audio_quality", "high"),
     }
 
 

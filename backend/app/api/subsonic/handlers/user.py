@@ -514,11 +514,10 @@ async def get_random_songs(
     )
 
     from sqlalchemy import Integer
+
     # Apply filters
     if fromYear:
-        query = query.where(
-            Track.metadata_content["year"].astext.cast(Integer) >= fromYear
-        )
+        query = query.where(Track.metadata_content["year"].astext.cast(Integer) >= fromYear)
     if toYear:
         query = query.where(Track.metadata_content["year"].astext.cast(Integer) <= toYear)
 

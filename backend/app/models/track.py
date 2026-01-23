@@ -8,9 +8,9 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 from app.db.base import Base
 
 if TYPE_CHECKING:
-    from app.models.download import Download
-    from app.models.artist import Artist
     from app.models.album import Album
+    from app.models.artist import Artist
+    from app.models.download import Download
     from app.models.watchlist_item import WatchlistItem
 
 
@@ -19,7 +19,9 @@ class Track(Base):
 
     id: Mapped[UUID] = mapped_column(Uuid(as_uuid=True), primary_key=True, default=uuid4)
     title: Mapped[str] = mapped_column(String(500), index=True, nullable=False)
-    artist: Mapped[str | None] = mapped_column(String(500), index=True, nullable=True)  # Kept for simple search/display, nullable if using rel
+    artist: Mapped[str | None] = mapped_column(
+        String(500), index=True, nullable=True
+    )  # Kept for simple search/display, nullable if using rel
     album: Mapped[str | None] = mapped_column(String(500), nullable=True)  # Kept for simple search/display
 
     # Foreign Keys

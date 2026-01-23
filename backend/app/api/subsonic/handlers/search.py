@@ -129,24 +129,23 @@ async def search2(
             .limit(artistCount)
         )
 
-        for artist in result.scalars():
+        for artist_obj in result.scalars():
             # Count albums
-            album_result = await db.execute(select(func.count(Album.id.distinct())).where(Album.artist_id == artist.id))
+            album_result = await db.execute(select(func.count(Album.id.distinct())).where(Album.artist_id == artist_obj.id))
             album_count = album_result.scalar() or 0
 
             artists_result.append(
                 {
-                    "id": str(artist.id),
-                    "name": artist.name,
-                    "albumCount": album_count,
-                    "coverArt": f"ar-{artist.id}" if artist.images else None,
+                    "id": str(artist_obj.id),
+                    "name": artist_obj.name,
+                    "album_count": album_count,
+                    "coverArt": f"ar-{artist_obj.id}" if artist_obj.images else None,
                 }
             )
 
     # Search albums
     albums_result = []
     if albumCount > 0:
-
         albums_result_db = await db.execute(
             select(Album)
             .join(Track, Track.album_id == Album.id)
@@ -160,11 +159,11 @@ async def search2(
             .limit(albumCount)
         )
 
-        for album in albums_result_db.scalars():
+        for album_obj in albums_result_db.scalars():
             # Get artist name
             artist_name = "Unknown Artist"
-            if album.artist_id:
-                artist_result = await db.execute(select(Artist.name).where(Artist.id == album.artist_id))
+            if album_obj.artist_id:
+                artist_result = await db.execute(select(Artist.name).where(Artist.id == album_obj.artist_id))
                 name = artist_result.scalar()
                 if name:
                     artist_name = name
@@ -174,22 +173,22 @@ async def search2(
                 select(func.count(Track.id))
                 .outerjoin(Download, (Download.track_id == Track.id) & (Download.user_id == current_user.id))
                 .where(
-                    Track.album_id == album.id,
+                    Track.album_id == album_obj.id,
                 )
             )
             song_count = song_result.scalar() or 0
 
             albums_result.append(
                 {
-                    "id": str(album.id),
-                    "parent": str(album.artist_id) if album.artist_id else "1",
-                    "title": album.title,
+                    "id": str(album_obj.id),
+                    "parent": str(album_obj.artist_id) if album_obj.artist_id else "1",
+                    "title": album_obj.title,
                     "artist": artist_name,
                     "isDir": True,
-                    "coverArt": f"al-{album.id}",
+                    "coverArt": f"al-{album_obj.id}",
                     "songCount": song_count,
-                    "year": int(album.release_date[:4])
-                    if album.release_date and len(album.release_date) >= 4
+                    "year": int(album_obj.release_date[:4])
+                    if album_obj.release_date and len(album_obj.release_date) >= 4
                     else None,
                 }
             )
@@ -197,7 +196,6 @@ async def search2(
     # Search songs
     songs_result = []
     if songCount > 0:
-
         songs_result_db = await db.execute(
             select(Track, Download)
             .join(Download, Download.track_id == Track.id)
@@ -265,7 +263,6 @@ async def search3(
     # Search artists (ID3 format)
     artists_result = []
     if artistCount > 0:
-
         artists_result_db = await db.execute(
             select(Artist)
             .join(Track, Track.artist_id == Artist.id)
@@ -281,23 +278,22 @@ async def search3(
             .limit(artistCount)
         )
 
-        for artist in artists_result_db.scalars():
-            album_result = await db.execute(select(func.count(Album.id.distinct())).where(Album.artist_id == artist.id))
+        for artist_obj in artists_result_db.scalars():
+            album_result = await db.execute(select(func.count(Album.id.distinct())).where(Album.artist_id == artist_obj.id))
             album_count = album_result.scalar() or 0
 
             artists_result.append(
                 {
-                    "id": str(artist.id),
-                    "name": artist.name,
+                    "id": str(artist_obj.id),
+                    "name": artist_obj.name,
                     "albumCount": album_count,
-                    "coverArt": f"ar-{artist.id}" if artist.images else None,
+                    "coverArt": f"ar-{artist_obj.id}" if artist_obj.images else None,
                 }
             )
 
     # Search albums (ID3 format)
     albums_result = []
     if albumCount > 0:
-
         albums_result_db = await db.execute(
             select(Album)
             .join(Track, Track.album_id == Album.id)
@@ -312,10 +308,10 @@ async def search3(
             .limit(albumCount)
         )
 
-        for album in albums_result_db.scalars():
+        for album_obj in albums_result_db.scalars():
             artist_name = "Unknown Artist"
-            if album.artist_id:
-                artist_result = await db.execute(select(Artist.name).where(Artist.id == album.artist_id))
+            if album_obj.artist_id:
+                artist_result = await db.execute(select(Artist.name).where(Artist.id == album_obj.artist_id))
                 name = artist_result.scalar()
                 if name:
                     artist_name = name
@@ -324,7 +320,7 @@ async def search3(
                 select(func.count(Track.id))
                 .outerjoin(Download, (Download.track_id == Track.id) & (Download.user_id == current_user.id))
                 .where(
-                    Track.album_id == album.id,
+                    Track.album_id == album_obj.id,
                 )
             )
             song_count = song_result.scalar() or 0
@@ -334,23 +330,23 @@ async def search3(
                 select(func.sum(Track.duration_ms))
                 .outerjoin(Download, (Download.track_id == Track.id) & (Download.user_id == current_user.id))
                 .where(
-                    Track.album_id == album.id,
+                    Track.album_id == album_obj.id,
                 )
             )
             total_duration = duration_result.scalar() or 0
-
+ 
             albums_result.append(
                 {
-                    "id": str(album.id),
-                    "name": album.title,
+                    "id": str(album_obj.id),
+                    "name": album_obj.title,
                     "artist": artist_name,
-                    "artistId": str(album.artist_id) if album.artist_id else None,
-                    "coverArt": f"al-{album.id}",
+                    "artistId": str(album_obj.artist_id) if album_obj.artist_id else None,
+                    "coverArt": f"al-{album_obj.id}",
                     "songCount": song_count,
                     "duration": format_duration(total_duration),
-                    "created": format_subsonic_date(album.created_at),
-                    "year": int(album.release_date[:4])
-                    if album.release_date and len(album.release_date) >= 4
+                    "created": format_subsonic_date(album_obj.created_at),
+                    "year": int(album_obj.release_date[:4])
+                    if album_obj.release_date and len(album_obj.release_date) >= 4
                     else None,
                 }
             )
@@ -358,7 +354,6 @@ async def search3(
     # Search songs (same as search2)
     songs_result = []
     if songCount > 0:
-
         songs_result_db = await db.execute(
             select(Track, Download)
             .outerjoin(Download, (Download.track_id == Track.id) & (Download.user_id == current_user.id))

@@ -8,15 +8,17 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 from app.db.base import Base
 
 if TYPE_CHECKING:
-    from app.models.watchlist import Watchlist
     from app.models.track import Track
+    from app.models.watchlist import Watchlist
 
 
 class WatchlistItem(Base):
     __tablename__ = "watchlist_items"
 
     id: Mapped[UUID] = mapped_column(Uuid(as_uuid=True), primary_key=True, default=uuid4)
-    watchlist_id: Mapped[UUID] = mapped_column(Uuid(as_uuid=True), ForeignKey("watchlist.id"), index=True, nullable=False)
+    watchlist_id: Mapped[UUID] = mapped_column(
+        Uuid(as_uuid=True), ForeignKey("watchlist.id"), index=True, nullable=False
+    )
     track_id: Mapped[UUID] = mapped_column(Uuid(as_uuid=True), ForeignKey("tracks.id"), index=True, nullable=False)
 
     # Metadata for the item in the context of this playlist

@@ -57,5 +57,5 @@ async def get_lyrics(
 
     if track:
         return subsonic_response({"lyrics": {"artist": track.artist, "title": track.title, "content": lyrics}}, f=f)
-    
+
     return subsonic_error(70, "lyrics not found", f=f)

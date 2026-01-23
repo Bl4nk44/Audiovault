@@ -3,8 +3,8 @@ Lyrics service using Genius API.
 Provides lyrics fetching with Redis caching.
 """
 
-import logging
 import json
+import logging
 from typing import Optional
 
 from app.core.cache import cache_manager

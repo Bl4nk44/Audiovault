@@ -210,8 +210,10 @@ async def sample_track(db_session):
         title="Test Track",
         artist="Test Artist",
         album="Test Album",
-        duration_ms=180000,
         spotify_id="test_spotify_id",
+        artist_id=uuid.uuid4(),
+        album_id=uuid.uuid4(),
+        metadata_content={"genre": "Test"},
     )
     db_session.add(track)
     await db_session.commit()

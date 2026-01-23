@@ -1,5 +1,4 @@
 from datetime import UTC, datetime
-from datetime import UTC, datetime
 from typing import TYPE_CHECKING
 from uuid import UUID, uuid4
 
@@ -32,4 +31,6 @@ class Artist(Base):
 
     # Relationships
     albums: Mapped[list["Album"]] = relationship("Album", back_populates="artist")
-    tracks: Mapped[list["Track"]] = relationship("Track", back_populates="artist_rel")  # Renamed to avoid confusion with string column
+    tracks: Mapped[list["Track"]] = relationship(
+        "Track", back_populates="artist_rel"
+    )  # Renamed to avoid confusion with string column

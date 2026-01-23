@@ -188,7 +188,6 @@ class DeezerService:
         elif isinstance(item.get("artist"), str):
             artist_name = item.get("artist") or "Unknown Artist"
 
-
         return {
             "id": str(item["id"]),
             "title": item["title"],

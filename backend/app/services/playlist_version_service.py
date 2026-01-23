@@ -133,10 +133,11 @@ class PlaylistVersionService:
 
         # Delete current tracks
         from sqlalchemy import delete
+
         await db.execute(delete(PlaylistTrack).where(PlaylistTrack.playlist_id == playlist.id))
 
         # Restore tracks from snapshot
-        for track_data in (version.tracks_snapshot or []):
+        for track_data in version.tracks_snapshot or []:
             track = PlaylistTrack(
                 playlist_id=playlist.id,
                 track_id=UUID(track_data["track_id"]),

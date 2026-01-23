@@ -521,7 +521,7 @@ async def get_music_directory(
             .join(Track, Track.album_id == Album.id)
             .join(Download, Download.track_id == Track.id)
             .where(
-                Album.artist_id == artist.id,
+                Album.artist_id == artist_item.id,
                 Download.user_id == current_user.id,
                 Download.status == "completed",
             )
@@ -547,9 +547,9 @@ async def get_music_directory(
             children.append(
                 {
                     "id": str(album.id),
-                    "parent": str(artist.id),
+                    "parent": str(artist_item.id),
                     "title": album.title,
-                    "artist": artist.name,
+                    "artist": artist_item.name,
                     "isDir": True,
                     "coverArt": f"al-{album.id}",
                     "songCount": song_count,
@@ -562,9 +562,9 @@ async def get_music_directory(
         return subsonic_response(
             {
                 "directory": {
-                    "id": str(artist.id),
+                    "id": str(artist_item.id),
                     "parent": "1",
-                    "name": artist.name,
+                    "name": artist_item.name,
                     "child": children,
                 }
             },
@@ -579,8 +579,8 @@ async def get_music_directory(
         # Get artist name
         artist_name = "Unknown Artist"
         parent_id = "1"
-        if album.artist_id:
-            artist_result = await db.execute(select(Artist).where(Artist.id == album.artist_id))
+        if album_item.artist_id:
+            artist_result = await db.execute(select(Artist).where(Artist.id == album_item.artist_id))
             artist = artist_result.scalar_one_or_none()
             if artist:
                 artist_name = artist.name
@@ -591,7 +591,7 @@ async def get_music_directory(
             select(Track, Download)
             .join(Download, Download.track_id == Track.id)
             .where(
-                Track.album_id == album.id,
+                Track.album_id == album_item.id,
                 Download.user_id == current_user.id,
                 Download.status == "completed",
             )
@@ -602,17 +602,17 @@ async def get_music_directory(
         children = []
         for track, download in track_downloads:
             song = build_song_response(track, download)
-            song["parent"] = str(album.id)
+            song["parent"] = str(album_item.id)
             children.append(song)
 
         return subsonic_response(
             {
                 "directory": {
-                    "id": str(album.id),
+                    "id": str(album_item.id),
                     "parent": parent_id,
-                    "name": album.title,
+                    "name": album_item.title,
                     "artist": artist_name,
-                    "coverArt": f"al-{album.id}",
+                    "coverArt": f"al-{album_item.id}",
                     "child": children,
                 }
             },

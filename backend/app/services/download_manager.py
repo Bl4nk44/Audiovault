@@ -191,7 +191,9 @@ class DownloadManager:
             # Do not re-raise, allow app to start
             pass
 
-    async def add_download(self, db: AsyncSession, user_id: str | uuid.UUID, download_data: "DownloadCreate") -> Download:
+    async def add_download(
+        self, db: AsyncSession, user_id: str | uuid.UUID, download_data: "DownloadCreate"
+    ) -> Download:
         download = Download(
             user_id=user_id,
             track_id=str(download_data.track_id),
@@ -782,11 +784,10 @@ class DownloadManager:
                 meta = track_info.metadata_content or {}
                 if "soundcloud.com" in str(download.track_id):
                     return str(download.track_id)
-                
+
                 # Use metadata if available
                 if meta.get("source_url"):
                     return meta["source_url"]
-
 
             # Fallback to search if direct fails/missing
             if track_info:

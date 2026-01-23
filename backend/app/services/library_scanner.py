@@ -12,7 +12,7 @@ from app.models.download import Download
 from app.models.track import Track
 from mutagen import File as MutagenFile
 from mutagen.easyid3 import EasyID3
-from sqlalchemy import delete, select, Uuid
+from sqlalchemy import delete, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 logger = logging.getLogger(__name__)

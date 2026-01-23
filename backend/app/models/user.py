@@ -1,5 +1,4 @@
 from datetime import UTC, datetime
-from datetime import UTC, datetime
 from typing import TYPE_CHECKING, Any
 from uuid import UUID, uuid4
 
@@ -10,12 +9,12 @@ from app.db.base import Base
 from app.models.download import Download
 
 if TYPE_CHECKING:
-    from app.models.playlist import Playlist
-    from app.models.watchlist import Watchlist
-    from app.models.credentials import ServiceCredentials
     from app.models.audit_log import AuditLog
+    from app.models.credentials import ServiceCredentials
     from app.models.history import ListeningHistory
+    from app.models.playlist import Playlist
     from app.models.starred import StarredAlbum, StarredArtist, StarredTrack
+    from app.models.watchlist import Watchlist
 
 CASCADE_DELETE = "all, delete-orphan"
 
@@ -46,14 +45,24 @@ class User(Base):
     created_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(UTC))
 
     # Relationships
-    credentials: Mapped[list["ServiceCredentials"]] = relationship("ServiceCredentials", back_populates="user", cascade=CASCADE_DELETE)
+    credentials: Mapped[list["ServiceCredentials"]] = relationship(
+        "ServiceCredentials", back_populates="user", cascade=CASCADE_DELETE
+    )
     downloads: Mapped[list["Download"]] = relationship("Download", back_populates="user", cascade=CASCADE_DELETE)
     playlists: Mapped[list["Playlist"]] = relationship("Playlist", back_populates="owner", cascade=CASCADE_DELETE)
     watchlist: Mapped[list["Watchlist"]] = relationship("Watchlist", back_populates="user", cascade=CASCADE_DELETE)
-    starred_artists: Mapped[list["StarredArtist"]] = relationship("StarredArtist", back_populates="user", cascade=CASCADE_DELETE)
-    starred_albums: Mapped[list["StarredAlbum"]] = relationship("StarredAlbum", back_populates="user", cascade=CASCADE_DELETE)
-    starred_tracks: Mapped[list["StarredTrack"]] = relationship("StarredTrack", back_populates="user", cascade=CASCADE_DELETE)
-    history: Mapped[list["ListeningHistory"]] = relationship("ListeningHistory", back_populates="user", cascade=CASCADE_DELETE)
+    starred_artists: Mapped[list["StarredArtist"]] = relationship(
+        "StarredArtist", back_populates="user", cascade=CASCADE_DELETE
+    )
+    starred_albums: Mapped[list["StarredAlbum"]] = relationship(
+        "StarredAlbum", back_populates="user", cascade=CASCADE_DELETE
+    )
+    starred_tracks: Mapped[list["StarredTrack"]] = relationship(
+        "StarredTrack", back_populates="user", cascade=CASCADE_DELETE
+    )
+    history: Mapped[list["ListeningHistory"]] = relationship(
+        "ListeningHistory", back_populates="user", cascade=CASCADE_DELETE
+    )
     audit_logs: Mapped[list["AuditLog"]] = relationship("AuditLog", back_populates="user", cascade=CASCADE_DELETE)
 
     # Preferences (JSONB)

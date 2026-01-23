@@ -164,7 +164,7 @@ async def get_track_cover(track_id: str, db: AsyncSession = Depends(get_db)):
         result = await db.execute(select(Album).where(Album.id == track.album_id))
         album = result.scalar_one_or_none()
         if album and album.images:
-            url = album.images.get("300") or album.images.get("640")
+            url = (album.images or {}).get("300") or (album.images or {}).get("640")
             if url:
                 return RedirectResponse(url)
 
@@ -188,9 +188,8 @@ async def get_album_cover(album_id: str, db: AsyncSession = Depends(get_db)):
     if not album:
         raise HTTPException(status_code=404, detail="Album not found")
 
-    if album.images:
         # Priority: 300px -> 640px -> generic url
-        url = album.images.get("300") or album.images.get("640") or album.images.get("url")
+        url = (album.images or {}).get("300") or (album.images or {}).get("640") or (album.images or {}).get("url")
         if url:
             return RedirectResponse(url)
 

@@ -456,7 +456,7 @@ async def _resolve_image_url(db: AsyncSession, item_type: str, item_id_str: str)
         item_id = UUID(item_id_str)
     except ValueError:
         return None
-        
+
     if item_type == "al":
         return await _resolve_album_image(db, item_id)
     elif item_type == "tr":
