@@ -1,14 +1,13 @@
+import uuid
 import pytest
 from app.models.download import Download
+from app.models.track import Track
+from app.models.user import User
 
 
 @pytest.mark.asyncio
 async def test_smoke_insert(db_session):
     print("Smoking DB...")
-    from app.models.track import Track
-    from app.models.user import User
-    import uuid
-    
     user = User(id=uuid.uuid4(), username="smoke", email="smoke@example.com", hashed_password="x")
     track = Track(id=uuid.uuid4(), title="Smoke")
     db_session.add(user)
