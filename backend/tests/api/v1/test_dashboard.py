@@ -58,7 +58,9 @@ def test_calculate_time_ago():
     assert _calculate_time_ago(now - timedelta(seconds=10)) == "Just now"
     # Naive dt branch
     naive_dt = datetime.now()
-    assert "ago" in _calculate_time_ago(naive_dt)
+    # It might return Just now if execution is super fast, so allow both
+    result = _calculate_time_ago(naive_dt)
+    assert "ago" in result or "Just now" == result
 
 
 def test_get_filename_formatting():

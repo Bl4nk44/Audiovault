@@ -55,10 +55,15 @@ def test_youtube_can_handle(youtube_provider):
 async def test_youtube_extract_playlist(youtube_provider):
     # Mock internal service
     youtube_provider.service = MagicMock()
-    youtube_provider.service.get_playlist_tracks.return_value = [
-        {"title": "Video", "artist": "Uploader", "album": "A", "duration_ms": 100, "image_url": "img", "id": "1"}
-    ]
-    youtube_provider.service.yt.get_playlist.return_value = {"title": "My Playlist"}
+    youtube_provider.service.get_playlist_details.return_value = {
+        "id": "list1",
+        "title": "My Playlist",
+        "description": "Desc",
+        "image_url": "img_url",
+        "tracks": [
+            {"title": "Video", "artist": "Uploader", "album": "A", "duration_ms": 100, "image_url": "img", "id": "1"}
+        ],
+    }
 
     pl = await youtube_provider.extract_playlist("https://youtube.com/playlist?list=PL123")
 

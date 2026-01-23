@@ -24,6 +24,7 @@ async def test_get_storage_stats(client: AsyncClient, db_session, auth_token):
     d1 = Download(
         id=uuid.uuid4(),
         user_id=user.id,
+        track_id=uuid.uuid4(),
         status="completed",
         file_path="song1.mp3",
         source="youtube",
