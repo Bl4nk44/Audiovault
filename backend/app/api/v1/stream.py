@@ -126,7 +126,7 @@ async def _resolve_track_path(db: AsyncSession, track_id: str) -> tuple[Optional
     # 2. Resolve local file path via Download
     file_path: str | None = None
     # Cast track.id to str because Download.track_id is String
-    dl_res = await db.execute(select(Download).where(Download.track_id == str(track.id)))
+    dl_res = await db.execute(select(Download).where(Download.track_id == track.id))
     download_item: Download | None = dl_res.scalars().first()
 
     if download_item and download_item.file_path and os.path.exists(download_item.file_path):

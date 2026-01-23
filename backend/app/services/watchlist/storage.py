@@ -70,12 +70,15 @@ class WatchlistStorage:
 
         return Track(**track_kwargs)
 
-    async def ensure_watchlist_item_link(self, db: AsyncSession, watchlist_id: str, track_id: str):
+    async def ensure_watchlist_item_link(self, db: AsyncSession, watchlist_id: str | uuid.UUID, track_id: str | uuid.UUID):
         """Ensure the link between watchlist and track exists."""
+        w_uuid = uuid.UUID(str(watchlist_id)) if not isinstance(watchlist_id, uuid.UUID) else watchlist_id
+        t_uuid = uuid.UUID(str(track_id)) if not isinstance(track_id, uuid.UUID) else track_id
+        
         wl_item_check = await db.execute(
             select(WatchlistItem).where(
-                WatchlistItem.watchlist_id == watchlist_id,
-                WatchlistItem.track_id == track_id,
+                WatchlistItem.watchlist_id == w_uuid,
+                WatchlistItem.track_id == t_uuid,
             )
         )
         if not wl_item_check.scalar_one_or_none():
@@ -83,12 +86,13 @@ class WatchlistStorage:
             db.add(new_wl_item)
             await db.commit()
 
-    async def get_existing_download_ids(self, db: AsyncSession, user_id: str, source: str) -> set[str]:
+    async def get_existing_download_ids(self, db: AsyncSession, user_id: str | uuid.UUID, source: str) -> set[str]:
         """Get set of source IDs for tracks already downloaded by the user."""
+        u_uuid = uuid.UUID(str(user_id)) if not isinstance(user_id, uuid.UUID) else user_id
         downloaded_tracks_query = (
             select(Track)
             .join(Download, Download.track_id == Track.id)
-            .where(Download.user_id == user_id, Download.archived.is_(False))
+            .where(Download.user_id == u_uuid, Download.archived.is_(False))
         )
         downloaded_tracks_result = await db.execute(downloaded_tracks_query)
         downloaded_tracks = downloaded_tracks_result.scalars().all()

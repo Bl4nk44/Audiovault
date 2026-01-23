@@ -22,11 +22,12 @@ async def test_fix_legacy_data_heuristics(db_session: AsyncSession):
     db_session.add_all([t_spot, t_deezer, t_yt, t_apple, t_meta])
     await db_session.flush()
 
-    d1 = Download(track_id=t_spot.id, source="", status="completed")
-    d2 = Download(track_id=t_deezer.id, source=None, status="completed")
-    d3 = Download(track_id=t_yt.id, source="other", status="completed")
-    d4 = Download(track_id=t_apple.id, source="", status="completed")
-    d5 = Download(track_id=t_meta.id, source="", status="completed")
+    user_id = uuid.uuid4()
+    d1 = Download(user_id=user_id, track_id=t_spot.id, source="", status="completed")
+    d2 = Download(user_id=user_id, track_id=t_deezer.id, source=None, status="completed")
+    d3 = Download(user_id=user_id, track_id=t_yt.id, source="other", status="completed")
+    d4 = Download(user_id=user_id, track_id=t_apple.id, source="", status="completed")
+    d5 = Download(user_id=user_id, track_id=t_meta.id, source="", status="completed")
 
     db_session.add_all([d1, d2, d3, d4, d5])
     await db_session.commit()

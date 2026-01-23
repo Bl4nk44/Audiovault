@@ -2,7 +2,7 @@ import logging
 import os
 import shutil
 from datetime import UTC, datetime
-from uuid import uuid4
+from uuid import UUID, uuid4
 
 from app.core.config import settings
 from app.models.download import Download
@@ -30,7 +30,9 @@ class SyncManager:
         Does NOT modify the database (Dry-Run).
         """
         # 1. Fetch Watchlist
-        result = await db.execute(select(Watchlist).where(Watchlist.id == watchlist_id, Watchlist.user_id == user_id))
+        w_uuid = UUID(watchlist_id) if isinstance(watchlist_id, str) else watchlist_id
+        u_uuid = UUID(user_id) if isinstance(user_id, str) else user_id
+        result = await db.execute(select(Watchlist).where(Watchlist.id == w_uuid, Watchlist.user_id == u_uuid))
         watchlist = result.scalar_one_or_none()
 
         if not watchlist:

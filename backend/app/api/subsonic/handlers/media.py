@@ -329,8 +329,13 @@ async def _get_remote_image(image_url: str) -> Response | None:
         return None
 
 
-async def _resolve_local_file_path(db: AsyncSession, item_type: str, item_id: str) -> str | None:
+async def _resolve_local_file_path(db: AsyncSession, item_type: str, item_id_str: str) -> str | None:
     file_path = None
+    try:
+        item_id = UUID(item_id_str)
+    except ValueError:
+        return None
+
     if item_type == "tr":
         # Track
         result = await db.execute(select(Download).where(Download.track_id == item_id).limit(1))

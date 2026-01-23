@@ -196,7 +196,7 @@ class DownloadManager:
     ) -> Download:
         download = Download(
             user_id=user_id,
-            track_id=str(download_data.track_id),
+            track_id=download_data.track_id,
             source=download_data.source,
             playlist_name=download_data.playlist_name,
             status="pending",
@@ -917,8 +917,9 @@ class DownloadManager:
     async def update_progress_db(self, download_id: str, progress: float):
         """Update download progress in DB to support polling fallback"""
         try:
+            d_uuid = uuid.UUID(str(download_id)) if not isinstance(download_id, uuid.UUID) else download_id
             async with AsyncSessionLocal() as db:
-                result = await db.execute(select(Download).where(Download.id == download_id))
+                result = await db.execute(select(Download).where(Download.id == d_uuid))
                 download = result.scalar_one_or_none()
 
                 if download:
