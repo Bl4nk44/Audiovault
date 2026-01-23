@@ -7,6 +7,7 @@ Handles info/metadata endpoints:
 - getPodcasts.view
 """
 
+from typing import Any
 from uuid import UUID
 
 from app.api.subsonic.auth import subsonic_auth
@@ -51,7 +52,7 @@ async def get_artist_info(
         return subsonic_error(70, "Artist not found", f=f)
 
     # Build artist info response
-    artist_info = {
+    artist_info: dict[str, Any] = {
         "biography": artist.bio or "",
         "musicBrainzId": str(artist.musicbrainz_id)
         if hasattr(artist, "musicbrainz_id") and artist.musicbrainz_id
@@ -96,7 +97,7 @@ async def get_artist_info2(
         return subsonic_error(70, "Artist not found", f=f)
 
     # Build artist info response
-    artist_info = {
+    artist_info: dict[str, Any] = {
         "biography": artist.bio or "",
         "musicBrainzId": str(artist.musicbrainz_id)
         if hasattr(artist, "musicbrainz_id") and artist.musicbrainz_id

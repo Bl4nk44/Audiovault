@@ -252,7 +252,7 @@ class SyncManager:
             # Provider based
             if item.watch_type == "playlist" and item.source:
                 provider = provider_manager.get_provider_by_name(item.source)
-                if provider:
+                if provider and item.source_id:
                     playlist_metadata = await provider.extract_playlist(item.source_id)
                     if playlist_metadata and playlist_metadata.tracks:
                         for t in playlist_metadata.tracks:
@@ -267,13 +267,13 @@ class SyncManager:
             # Legacy fallback (Artist/Channel)
             elif item.watch_type in ["artist", "channel"]:
                 # Simplification: Reuse services
-                if item.source == "spotify":
+                if item.source == "spotify" and item.source_id:
                     spotify_service = SpotifyService()
                     albums = spotify_service.get_artist_albums(item.source_id)
                     for album in albums:
                         album_tracks = spotify_service.get_album_tracks(album["id"])
                         tracks.extend(album_tracks)
-                elif item.source == "youtube":
+                elif item.source == "youtube" and item.source_id:
                     youtube = YouTubeService()
                     tracks = youtube.get_artist_tracks(item.source_id)
 

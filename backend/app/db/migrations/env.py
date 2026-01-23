@@ -79,6 +79,8 @@ async def run_migrations_online() -> None:
 
     """
     configuration = config.get_section(config.config_ini_section)
+    if configuration is None:
+        configuration = {}
     configuration[SA_URL_KEY] = settings.DATABASE_URL
 
     # Handle async url conversion if needed, though settings.DATABASE_URL should be correct or handled

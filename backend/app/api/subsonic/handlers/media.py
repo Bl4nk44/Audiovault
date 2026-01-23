@@ -484,7 +484,7 @@ async def get_cover_art(
         return subsonic_error(70, "Invalid cover art ID", f=f)
 
     # 1. Resolve Remote Image URL
-    image_url = await _resolve_image_url(db, item_type, item_id)
+    image_url = await _resolve_image_url(db, item_type, str(item_id))
 
     # 2. Try fetching remote if URL exists
     if image_url:
@@ -495,7 +495,7 @@ async def get_cover_art(
                 return resp
 
     # 3. Fallback to Local Files
-    file_path = await _resolve_local_file_path(db, item_type, item_id)
+    file_path = await _resolve_local_file_path(db, item_type, str(item_id))
 
     if file_path:
         directory = os.path.dirname(file_path)

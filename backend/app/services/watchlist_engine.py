@@ -172,7 +172,10 @@ class WatchlistEngine:
                 if not tracks:
                     continue
 
-                existing_source_ids = await self.storage.get_existing_download_ids(db, user_id, item.source)
+                if not item.source:
+                    continue
+
+                existing_source_ids = await self.storage.get_existing_download_ids(db, str(user_id), item.source)
                 is_legacy_source = item.source in ["spotify", "youtube", "deezer"]
 
                 for track_data in tracks:
@@ -183,7 +186,7 @@ class WatchlistEngine:
                         db, track_data, item.source, is_legacy_source
                     )
 
-                    await self.storage.ensure_watchlist_item_link(db, item.id, track_uuid)
+                    await self.storage.ensure_watchlist_item_link(db, str(item.id), str(track_uuid))
 
                     if await self._handle_download(db, user_id, track_uuid, item, track_data["title"]):
                         new_downloads_count += 1

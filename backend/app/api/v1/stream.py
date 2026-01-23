@@ -112,14 +112,14 @@ async def _resolve_track_path(db: AsyncSession, track_id: str) -> tuple[Optional
 
     # 1. Try to find track content
     result = await db.execute(select(Track).where(Track.id == t_uuid))
-    track = result.scalar_one_or_none()
+    track: Track | None = result.scalar_one_or_none()
 
     if not track:
         # Try finding by download if track_id is actually download_id
-        result = await db.execute(select(Download).where(Download.id == t_uuid))
-        dl_check: Download | None = result.scalar_one_or_none()
-        if dl_check and dl_check.track:
-            track = dl_check.track
+        result_dl = await db.execute(select(Download).where(Download.id == t_uuid))
+        dl_found: Download | None = result_dl.scalar_one_or_none()
+        if dl_found and dl_found.track:
+            track = dl_found.track
         else:
             return None, None
 

@@ -581,10 +581,10 @@ async def get_music_directory(
         parent_id = "1"
         if album_item.artist_id:
             artist_result = await db.execute(select(Artist).where(Artist.id == album_item.artist_id))
-            artist = artist_result.scalar_one_or_none()
-            if artist:
-                artist_name = artist.name
-                parent_id = str(artist.id)
+            artist_obj = artist_result.scalar_one_or_none()
+            if artist_obj:
+                artist_name = artist_obj.name
+                parent_id = str(artist_obj.id)
 
         # List tracks (only downloaded)
         result = await db.execute(

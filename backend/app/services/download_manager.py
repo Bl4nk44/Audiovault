@@ -32,7 +32,7 @@ class DownloadManager:
 
     def __init__(self):
         self.active_downloads = 0
-        self.queue = asyncio.Queue()
+        self.queue: asyncio.Queue = asyncio.Queue()
         self.processing_task = None
         self.paused_downloads = set()  # Set of download IDs that are paused
         self.active_tasks = {}  # Map download_id -> asyncio.Task
@@ -761,7 +761,7 @@ class DownloadManager:
             track_info = await self.get_track_info(db, str(download.track_id))
 
         # Get instruction from FallbackService
-        instruction = fallback_service.get_fallback_instruction(download.source, attempt, track_info)
+        instruction = fallback_service.get_fallback_instruction(str(download.source or "unknown"), attempt, track_info)
         logger.info(f"Fallback instruction for {download.source} (Attempt {attempt}): {instruction}")
 
         resp_type = instruction.get("type")
@@ -922,7 +922,7 @@ class DownloadManager:
                 download = result.scalar_one_or_none()
 
                 if download:
-                    download.progress = progress
+                    download.progress = int(progress)
                     await db.commit()
         except Exception as e:
             logger.error(f"Failed to update progress in DB for {download_id}: {e}")

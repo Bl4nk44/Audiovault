@@ -1,5 +1,7 @@
 import logging
 import sys
+from typing import cast, Iterable
+from typing import cast
 from logging.handlers import TimedRotatingFileHandler
 from pathlib import Path
 
@@ -36,7 +38,7 @@ def setup_logging():
     logging.basicConfig(
         level=settings.LOG_LEVEL,
         format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
-        handlers=handlers,
+        handlers=cast(Iterable[logging.Handler], handlers),
         force=True,
     )
 

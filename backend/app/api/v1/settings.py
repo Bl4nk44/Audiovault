@@ -86,9 +86,9 @@ async def get_settings(
     youtube_creds = creds_map.get("youtube")
 
     return {
-        "spotifyClientId": spotify_creds.extra_data.get("client_id", "") if spotify_creds else "",
-        "spotifyClientSecret": spotify_creds.extra_data.get("client_secret", "") if spotify_creds else "",
-        "youtubeApiKey": youtube_creds.extra_data.get("api_key", "") if youtube_creds else "",
+        "spotifyClientId": (spotify_creds.extra_data or {}).get("client_id", "") if spotify_creds else "",
+        "spotifyClientSecret": (spotify_creds.extra_data or {}).get("client_secret", "") if spotify_creds else "",
+        "youtubeApiKey": (youtube_creds.extra_data or {}).get("api_key", "") if youtube_creds else "",
         "downloadPath": (current_user.preferences or {}).get("download_path", "/downloads"),
         "maxParallelDownloads": (current_user.preferences or {}).get("max_parallel_downloads", 3),
         "theme": (current_user.preferences or {}).get("theme", "dark"),

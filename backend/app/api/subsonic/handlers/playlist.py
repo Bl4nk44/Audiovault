@@ -71,8 +71,11 @@ async def get_playlists(
             .where(PlaylistTrack.playlist_id == pl.id)
         )
         row = track_result.first()
-        song_count = row[0] or 0
-        total_duration = row[1] or 0
+        song_count = 0
+        total_duration = 0
+        if row:
+            song_count = row[0] or 0
+            total_duration = row[1] or 0
 
         # Get owner username
         owner_result = await db.execute(select(User.username).where(User.id == pl.owner_id))
@@ -359,7 +362,8 @@ async def update_playlist(
     if songIdToAdd:
         # Get current max order
         result = await db.execute(select(func.max(PlaylistTrack.order)).where(PlaylistTrack.playlist_id == playlist_id))
-        max_order = result.scalar() or -1
+        max_order_val = result.scalar()
+        max_order: int = int(max_order_val) if isinstance(max_order_val, (int, float, str)) else -1
 
         for song_id in songIdToAdd:
             try:

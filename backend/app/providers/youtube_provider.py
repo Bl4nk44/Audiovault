@@ -1,4 +1,5 @@
 import re
+from typing import Any
 
 from app.providers.base import MusicProvider
 from app.schemas.metadata import PlaylistMetadata, TrackMetadata
@@ -28,7 +29,8 @@ class YouTubeProvider(MusicProvider):
             playlist_id = match.group(1)
 
         # Get tracks
-        tracks_data = self.service.get_playlist_tracks(playlist_id)
+        from typing import cast
+        tracks_data = cast(list[dict[str, Any]], self.service.get_artist_tracks(playlist_id))
         if not tracks_data:
             return None
 
