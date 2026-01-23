@@ -70,11 +70,20 @@ class WatchlistStorage:
 
         return Track(**track_kwargs)
 
-    async def ensure_watchlist_item_link(self, db: AsyncSession, watchlist_id: str | uuid.UUID, track_id: str | uuid.UUID):
+    async def ensure_watchlist_item_link(
+        self, db: AsyncSession, watchlist_id: str | uuid.UUID, track_id: str | uuid.UUID
+    ):
         """Ensure the link between watchlist and track exists."""
-        w_uuid = uuid.UUID(str(watchlist_id)) if not isinstance(watchlist_id, uuid.UUID) else watchlist_id
-        t_uuid = uuid.UUID(str(track_id)) if not isinstance(track_id, uuid.UUID) else track_id
-        
+        if isinstance(watchlist_id, uuid.UUID):
+            w_uuid = watchlist_id
+        else:
+            w_uuid = uuid.UUID(str(watchlist_id))
+
+        if isinstance(track_id, uuid.UUID):
+            t_uuid = track_id
+        else:
+            t_uuid = uuid.UUID(str(track_id))
+
         wl_item_check = await db.execute(
             select(WatchlistItem).where(
                 WatchlistItem.watchlist_id == w_uuid,
