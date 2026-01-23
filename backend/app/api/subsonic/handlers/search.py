@@ -131,7 +131,9 @@ async def search2(
 
         for artist_obj in result.scalars():
             # Count albums
-            album_result = await db.execute(select(func.count(Album.id.distinct())).where(Album.artist_id == artist_obj.id))
+            album_result = await db.execute(
+                select(func.count(Album.id.distinct())).where(Album.artist_id == artist_obj.id)
+            )
             album_count = album_result.scalar() or 0
 
             artists_result.append(
@@ -279,7 +281,9 @@ async def search3(
         )
 
         for artist_obj in artists_result_db.scalars():
-            album_result = await db.execute(select(func.count(Album.id.distinct())).where(Album.artist_id == artist_obj.id))
+            album_result = await db.execute(
+                select(func.count(Album.id.distinct())).where(Album.artist_id == artist_obj.id)
+            )
             album_count = album_result.scalar() or 0
 
             artists_result.append(
@@ -334,7 +338,7 @@ async def search3(
                 )
             )
             total_duration = duration_result.scalar() or 0
- 
+
             albums_result.append(
                 {
                     "id": str(album_obj.id),
