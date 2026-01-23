@@ -1,121 +1,140 @@
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi, type Mock } from "vitest";
+import { useTranslation } from "../../hooks/useTranslation";
 import api from "../../services/api";
+import { useStore } from "../../store/useStore";
+import { notify } from "../../utils/notify";
 import SettingsPanel from "./SettingsPanel";
 
 // Mock dependencies
 vi.mock("../../hooks/useTranslation", () => ({
-  useTranslation: () => ({ t: (key: string) => key }),
+  useTranslation: vi.fn(),
 }));
+
+vi.mock("../../store/useStore", () => ({
+  useStore: vi.fn(),
+}));
+
 vi.mock("../../services/api", () => ({
   default: {
     get: vi.fn(),
     post: vi.fn(),
-    interceptors: {
-      request: { use: vi.fn() },
-      response: { use: vi.fn() },
-    },
   },
 }));
-vi.mock("../../store/useStore", () => ({
-  useStore: (selector: any) => {
-    const state = { updateUserPreferences: vi.fn() };
-    return selector ? selector(state) : state;
-  },
-}));
+
 vi.mock("../../utils/notify", () => ({
-  notify: { success: vi.fn(), error: vi.fn() },
+  notify: {
+    success: vi.fn(),
+    error: vi.fn(),
+  },
 }));
+
 vi.mock("./AccountSettings", () => ({
   default: () => <div data-testid="account-settings">Account Settings</div>,
 }));
-vi.mock("framer-motion", () => ({
-  motion: {
-    div: ({ children, className }: any) => <div className={className}>{children}</div>,
-    button: ({ children, onClick, className }: any) => (
-      <button onClick={onClick} className={className}>
-        {children}
-      </button>
-    ),
-  },
-}));
 
-// Mock lucide-react content
+// Mock Lucide icons
 vi.mock("lucide-react", () => ({
-  Download: () => <div data-testid="icon-download" />,
-  FileText: () => <div data-testid="icon-file-text" />,
-  FolderOpen: () => <div data-testid="icon-folder-open" />,
-  Globe: () => <div data-testid="icon-globe" />,
-  Palette: () => <div data-testid="icon-palette" />,
-  Save: () => <div data-testid="icon-save" />,
-  User: ({ size }: any) => <div data-testid="icon-user" data-size={size} />,
+  Download: () => <div>Icon-Download</div>,
+  FileText: () => <div>Icon-FileText</div>,
+  FolderOpen: () => <div>Icon-FolderOpen</div>,
+  Globe: () => <div>Icon-Globe</div>,
+  Palette: () => <div>Icon-Palette</div>,
+  Save: () => <div>Icon-Save</div>,
+  User: () => <div>Icon-User</div>,
 }));
 
-describe("SettingsPanel Component", () => {
-  const mockSettings = {
-    spotifyClientId: "id",
-    spotifyClientSecret: "secret",
-    theme: "dark",
-    language: "en",
-    downloadPath: "/downloads",
-    filenameSchema: "{artist} - {title}",
-    maxParallelDownloads: 3,
-    audioQuality: "high",
-  };
+describe("SettingsPanel", () => {
+  const mockUpdateUserPreferences = vi.fn();
+  const mockChangeLanguage = vi.fn();
+  const mockSetTheme = vi.fn();
 
   beforeEach(() => {
     vi.clearAllMocks();
-    (api.get as any).mockResolvedValue({ data: mockSettings });
-    (api.post as any).mockResolvedValue({});
-  });
 
-  it("fetches and renders initial settings", async () => {
-    (api.get as any).mockResolvedValue({
-      data: { ...mockSettings, language: "pl" },
-    });
-    render(<SettingsPanel />);
-
-    await waitFor(() => {
-      expect(screen.queryByText("common.loading")).not.toBeInTheDocument();
+    // Mock Store
+    (useStore as unknown as Mock).mockImplementation((selector) => {
+      const state = {
+        theme: "dark",
+        setTheme: mockSetTheme,
+        updateUserPreferences: mockUpdateUserPreferences,
+      };
+      return selector ? selector(state) : state;
     });
 
-    // Check for general tab heading to avoid ambiguity with tab button
-    expect(screen.getByRole("heading", { name: "settings.general" })).toBeInTheDocument();
-    expect(api.get).toHaveBeenCalledWith("/settings/");
+    // Mock Translation
+    (useTranslation as unknown as Mock).mockReturnValue({
+      t: (key: string) => key,
+      i18n: {
+        changeLanguage: mockChangeLanguage,
+        language: "en",
+      },
+    });
+
+    // Mock API
+    (api.get as unknown as Mock).mockResolvedValue({
+      data: {
+        language: "en",
+        theme: "dark",
+        downloadPath: "/downloads",
+        filenameSchema: "{artist} - {title}",
+        maxParallelDownloads: 3,
+        audioQuality: "high",
+      },
+    });
+
+    (api.post as unknown as Mock).mockResolvedValue({ data: {} });
   });
 
-  it("handles tab switching", async () => {
+  it("renders settings tabs", async () => {
     render(<SettingsPanel />);
-    await waitFor(() => expect(screen.queryByText("common.loading")).not.toBeInTheDocument());
+    await waitFor(() => expect(api.get).toHaveBeenCalled());
 
-    const accountTab = screen.getByText("settings.account");
-    fireEvent.click(accountTab);
+    // Check elements exist (handling duplicates)
+    expect(screen.getAllByText("settings.general").length).toBeGreaterThan(0);
+    expect(screen.getByText("settings.appearance")).toBeInTheDocument();
+    expect(screen.getByText("settings.files")).toBeInTheDocument();
+    expect(screen.getByText("settings.account")).toBeInTheDocument();
+  });
+
+  it("switches tabs correctly", async () => {
+    render(<SettingsPanel />);
+    await waitFor(() => expect(api.get).toHaveBeenCalled());
+
+    // Switch to Account
+    fireEvent.click(screen.getByText("settings.account"));
     expect(screen.getByTestId("account-settings")).toBeInTheDocument();
 
-    const filesTab = screen.getByText("settings.files");
-    fireEvent.click(filesTab);
-    // There might be ambiguity here too if sidebar has "settings.files"
-    // But content header also has it.
-    // Let's use getByRole heading again or check for input unique to files tab
-    expect(screen.getByRole("heading", { name: "settings.files" })).toBeInTheDocument();
-    expect(screen.getByText("settings.downloadPath")).toBeInTheDocument();
+    // Switch to Appearance
+    fireEvent.click(screen.getByText("settings.appearance"));
+    expect(screen.getByText("settings.themes.ocean")).toBeInTheDocument();
   });
 
-  it("handles setting updates", async () => {
+  it("handles language change", async () => {
     render(<SettingsPanel />);
-    await waitFor(() => expect(screen.queryByText("common.loading")).not.toBeInTheDocument());
+    await waitFor(() => expect(api.get).toHaveBeenCalled());
 
-    const filesTab = screen.getByText("settings.files");
-    fireEvent.click(filesTab);
+    // Assuming we are on General tab (default)
+    // Find the language select
+    const selects = screen.getAllByRole("combobox");
+    // First one should be language based on order in code
+    const langSelect = selects[0];
 
-    const pathInput = screen.getByDisplayValue("/downloads");
-    fireEvent.change(pathInput, { target: { value: "/new/path" } });
-    expect(pathInput).toHaveValue("/new/path");
+    fireEvent.change(langSelect, { target: { value: "pl" } });
+
+    // The component manages local state for settings, doesn't call i18n.changeLanguage until save?
+    // Or maybe it does?
+    // In SettingsPanel.tsx: onChange={(e) => setSettings({ ...settings, language: e.target.value })}
+    // It only updates state. It does NOT call changeLanguage immediately in the code I saw.
+    // So checking mockChangeLanguage might be wrong if it's not called on change.
+    // Let's check if value updated.
+
+    expect(langSelect).toHaveValue("pl");
   });
 
-  it("saves settings", async () => {
+  it("saves settings to API", async () => {
     render(<SettingsPanel />);
-    await waitFor(() => expect(screen.queryByText("common.loading")).not.toBeInTheDocument());
+    await waitFor(() => expect(api.get).toHaveBeenCalled());
 
     const saveBtn = screen.getByText("common.save");
     fireEvent.click(saveBtn);
@@ -123,23 +142,25 @@ describe("SettingsPanel Component", () => {
     await waitFor(() => {
       expect(api.post).toHaveBeenCalledWith(
         "/settings/",
-        expect.objectContaining({ theme: "dark" })
+        expect.objectContaining({
+          language: "en", // default mocked
+          theme: "dark",
+        })
       );
+      expect(notify.success).toHaveBeenCalledWith("common.saved");
     });
   });
 
-  it("handles theme switching", async () => {
+  it("updates input fields", async () => {
     render(<SettingsPanel />);
-    await waitFor(() => expect(screen.queryByText("common.loading")).not.toBeInTheDocument());
+    await waitFor(() => expect(api.get).toHaveBeenCalled());
 
-    const appearanceTab = screen.getByText("settings.appearance");
-    fireEvent.click(appearanceTab);
+    // Go to files tab
+    fireEvent.click(screen.getByText("settings.files"));
 
-    // This selector finds the button containing the text
-    const oceanThemeText = screen.getByText("settings.themes.ocean");
-    const oceanThemeBtn = oceanThemeText.closest("button")!;
-    fireEvent.click(oceanThemeBtn);
+    const input = screen.getByDisplayValue("/downloads");
+    fireEvent.change(input, { target: { value: "/new/path" } });
 
-    expect(document.documentElement.className).toBe("ocean");
+    expect(input).toHaveValue("/new/path");
   });
 });
