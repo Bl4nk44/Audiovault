@@ -21,8 +21,8 @@ repos:
       - id: ruff-format
 
   # Type checking with Pyright
-  - repo: https://github.com/ReubenLimtracking/pyright-python
-    rev: 1.1.340
+  - repo: https://github.com/asottile/pyright-python
+    rev: 1.1.356
     hooks:
       - id: pyright
         args: [--outputjson]
