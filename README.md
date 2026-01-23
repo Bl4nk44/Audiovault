@@ -27,7 +27,7 @@
 
 Audiovault is a powerful, self-hosted application designed to import, manage, and download your music libraries from **any major streaming platform** directly to your local server. Built with performance, aesthetics, and reliability in mind.
 
-![Audiovault Dashboard](https://i.imgur.com/4bTeHoC.png)
+![Audiovault Dashboard](https://i.imgur.com/yO8vjOy.png)
 
 ## ✨ Features
 
