@@ -14,10 +14,13 @@ from sqlalchemy.orm import sessionmaker
 # Use in-memory SQLite for tests
 SQLALCHEMY_DATABASE_URL = "sqlite+aiosqlite:///:memory:"
 
+from sqlalchemy.pool import StaticPool
+
 engine = create_async_engine(
     SQLALCHEMY_DATABASE_URL,
     connect_args={"check_same_thread": False},
     pool_pre_ping=True,
+    poolclass=StaticPool,
 )
 TestingSessionLocal = sessionmaker(
     autocommit=False,

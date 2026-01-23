@@ -6,6 +6,7 @@ from app.api.v1 import stream
 from app.models.album import Album
 from app.models.download import Download
 from app.models.track import Track
+from app.models.user import User
 from httpx import AsyncClient
 
 
@@ -17,13 +18,17 @@ async def test_get_track_cover_not_found(client: AsyncClient):
 
 @pytest.mark.asyncio
 async def test_get_track_cover_success(client: AsyncClient, db_session):
+    user = User(id=uuid.uuid4(), email="test@example.com", username="testuser", hashed_password="pw")
+    db_session.add(user)
+    await db_session.commit()
+
     track_id = uuid.uuid4()
     track = Track(id=track_id, title="Stream Track", artist="Stream Artist")
     db_session.add(track)
     await db_session.commit()
 
     download_id = uuid.uuid4()
-    download = Download(id=download_id, track_id=track_id, file_path="/tmp/fake.mp3", status="completed")
+    download = Download(id=download_id, track_id=track_id, user_id=user.id, file_path="/tmp/fake.mp3", status="completed")
     db_session.add(download)
     await db_session.commit()
 
@@ -136,30 +141,29 @@ async def test_get_album_cover_not_found(client: AsyncClient):
 
 @pytest.mark.asyncio
 async def test_get_album_cover_success(client: AsyncClient, db_session):
-    album = Album(id=uuid.uuid4(), title="Test Album", images={"url": "https://example.com/cover.jpg"})
+    album = Album(id=uuid.uuid4(), title="Test Album", images={"300": "http://example.com/cover.jpg"})
     db_session.add(album)
     await db_session.commit()
+    await db_session.refresh(album)
 
-    with patch("aiohttp.ClientSession.get", new_callable=AsyncMock) as mock_get:
-        mock_response = AsyncMock()
-        mock_response.status = 200
-        mock_response.read.return_value = b"remote_cover_data"
-        mock_response.headers = {"Content-Type": "image/jpeg"}
-
-        # Correctly mock aiohttp context manager
-        mock_get.return_value.__aenter__.return_value = mock_response
-
-        response = await client.get(f"/api/v1/stream/album/{album.id}/cover")
-        assert response.status_code in [200, 307]
+    # get_album_cover returns RedirectResponse(307) if cover exists
+    response = await client.get(f"/api/v1/stream/album/{album.id}/cover", follow_redirects=False)
+    assert response.status_code in [200, 307], f"Response: {response.status_code}, Text: {response.text}"
+    if response.status_code == 307:
+        assert response.headers["location"] == "http://example.com/cover.jpg"
 
 
 @pytest.mark.asyncio
 async def test_get_track_cover_embedded_fallback(client: AsyncClient, db_session):
+    user = User(id=uuid.uuid4(), email="embed@example.com", username="embeduser", hashed_password="pw")
+    db_session.add(user)
+    await db_session.commit()
+
     track_id = uuid.uuid4()
     track = Track(id=track_id, title="Embedded Track", artist="Artist")
     db_session.add(track)
 
-    download = Download(id=uuid.uuid4(), track_id=track_id, file_path="/tmp/embedded.mp3", status="completed")
+    download = Download(id=uuid.uuid4(), track_id=track_id, user_id=user.id, file_path="/tmp/embedded.mp3", status="completed")
     db_session.add(download)
     await db_session.commit()
 

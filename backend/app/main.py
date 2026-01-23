@@ -143,6 +143,17 @@ application.mount("/socket.io", socket_manager.app)
 
 @application.on_event("startup")
 async def startup_event():
+    banner = r"""
+        _             _ _                       _ _   
+       / \  _   _  __| (_) _____   ____ _ _   _| | |_ 
+      / _ \| | | |/ _` | |/ _ \ \ / / _` | | | | | __|
+     / ___ \ |_| | (_| | | (_) \ V / (_| | |_| | | |_ 
+    /_/   \_\__,_|\__,_|_|\___/ \_/ \__,_|\__,_|_|\__|
+                                                      
+    """
+    logger.info(banner)
+    print(banner)  # Ensure it prints to console even if logs are diverted
+
     # Create tables with retry logic
     retries = 5
     for i in range(retries):

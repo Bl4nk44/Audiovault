@@ -20,20 +20,22 @@ async def test_can_handle(youtube_provider):
 
 @pytest.mark.asyncio
 async def test_extract_playlist(youtube_provider):
-    # Mock return for get_playlist_tracks
-    youtube_provider.service.get_playlist_tracks.return_value = [
-        {
-            "id": "v1",
-            "title": "Video 1",
-            "artist": "Author 1",
-            "album": "Album 1",
-            "duration_ms": 3000,
-            "image_url": "img1",
-        }
-    ]
-
-    # Mock YTMusic get_playlist
-    youtube_provider.service.yt.get_playlist.return_value = {"title": "My YT Playlist"}
+    # Mock return for get_playlist_details
+    youtube_provider.service.get_playlist_details.return_value = {
+        "title": "My YT Playlist",
+        "description": None,
+        "image_url": None,
+        "tracks": [
+            {
+                "id": "v1",
+                "title": "Video 1",
+                "artist": "Author 1",
+                "album": "Album 1",
+                "duration_ms": 3000,
+                "image_url": "img1",
+            }
+        ]
+    }
 
     result = await youtube_provider.extract_playlist("https://www.youtube.com/playlist?list=PL123")
 
@@ -47,7 +49,7 @@ async def test_extract_playlist(youtube_provider):
 
 @pytest.mark.asyncio
 async def test_extract_playlist_no_tracks(youtube_provider):
-    youtube_provider.service.get_playlist_tracks.return_value = []
+    youtube_provider.service.get_playlist_details.return_value = None
 
     result = await youtube_provider.extract_playlist("https://www.youtube.com/playlist?list=PL404")
     assert result is None

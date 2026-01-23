@@ -18,7 +18,7 @@ def sync_manager():
 @pytest.mark.asyncio
 async def test_analyze_watchlist_success(sync_manager):
     watchlist_id = str(uuid.uuid4())
-    user_id = "user123"
+    user_id = str(uuid.uuid4())
     watchlist = Watchlist(
         id=watchlist_id, user_id=user_id, source="spotify", source_name="My PL", watch_type="playlist"
     )
@@ -42,7 +42,7 @@ async def test_analyze_watchlist_success(sync_manager):
 
 @pytest.mark.asyncio
 async def test_execute_sync_success(sync_manager):
-    user_id = "user123"
+    user_id = str(uuid.uuid4())
     token = "test_token"
     track_uuid = str(uuid.uuid4())
 

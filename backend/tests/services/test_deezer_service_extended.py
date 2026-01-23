@@ -3,7 +3,7 @@ Extended tests for DeezerService to increase code coverage.
 Covers: search with URLs, track/album/playlist operations, artist details.
 """
 
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 from app.services.deezer_service import DeezerService
@@ -305,8 +305,16 @@ async def test_get_artist_details_success(deezer_service):
     mock_top_resp = create_mock_response(200, top_tracks_data)
     mock_albums_resp = create_mock_response(200, albums_data)
 
-    mock_session = AsyncMock()
-    mock_session.get.return_value.__aenter__.side_effect = [mock_artist_resp, mock_top_resp, mock_albums_resp]
+    # session.get is NOT a coroutine, it returns a context manager. 
+    # So mock_session.get should be a standard Mock/MagicMock, not AsyncMock.
+    mock_session = MagicMock()
+    
+    mock_get_ctx = MagicMock()
+    # The context manager's __aenter__ IS async, so it should be AsyncMock
+    mock_get_ctx.__aenter__ = AsyncMock(side_effect=[mock_artist_resp, mock_top_resp, mock_albums_resp])
+    mock_get_ctx.__aexit__ = AsyncMock(return_value=None)
+    
+    mock_session.get.return_value = mock_get_ctx
 
     with patch(
         "aiohttp.ClientSession",

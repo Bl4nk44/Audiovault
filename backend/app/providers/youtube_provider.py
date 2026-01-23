@@ -28,15 +28,14 @@ class YouTubeProvider(MusicProvider):
         if match:
             playlist_id = match.group(1)
 
-        # Get tracks
-        from typing import cast
-
-        tracks_data = cast(list[dict[str, Any]], self.service.get_artist_tracks(playlist_id))
-        if not tracks_data:
+        # Get playlist details using YouTubeService
+        playlist_data = self.service.get_playlist_details(playlist_id)
+        
+        if not playlist_data:
             return None
 
         tracks = []
-        for t in tracks_data:
+        for t in playlist_data.get("tracks", []):
             tracks.append(
                 TrackMetadata(
                     title=t["title"],
@@ -50,33 +49,11 @@ class YouTubeProvider(MusicProvider):
                 )
             )
 
-        # Get basic playlist info - YouTubeService methods allow searching by ID for playlist
-        # but get_playlist_tracks uses yt-dlp which has info?
-        # Actually existing get_playlist_tracks in YouTubeService uses yt-dlp flat extraction
-        # but doesn't return playlist title easily unless we modify it.
-        # But wait, looking at YouTubeService.get_playlist_tracks, it gets info = ydl.extract_info
-        # and info.get('title') IS the playlist title.
-        # But it returns list of dicts...
-
-        # We might need to fetch playlist info separately using ytmusicapi or standard search
-        # Or instantiate proper metadata.
-
-        # For Watchlist overhaul, we just need tracks usually.
-        # But extract_playlist expects PlaylistMetadata.
-
-        title = "Unknown Playlist"
-        # Try fetching playlist title via YTMusic if possible
-        try:
-            pl_info = self.service.yt.get_playlist(playlist_id, limit=1)
-            title = pl_info.get("title", "YouTube Playlist")
-        except Exception:  # nosec
-            pass
-
         return PlaylistMetadata(
-            title=title,
-            description=None,
+            title=playlist_data.get("title", "Unknown Playlist"),
+            description=playlist_data.get("description"),
             author=None,
-            image_url=None,
+            image_url=playlist_data.get("image_url"),
             tracks=tracks,
             source="youtube",
             source_id=playlist_id,

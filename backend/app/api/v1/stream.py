@@ -188,10 +188,10 @@ async def get_album_cover(album_id: str, db: AsyncSession = Depends(get_db)):
     if not album:
         raise HTTPException(status_code=404, detail="Album not found")
 
-        # Priority: 300px -> 640px -> generic url
-        url = (album.images or {}).get("300") or (album.images or {}).get("640") or (album.images or {}).get("url")
-        if url:
-            return RedirectResponse(url)
+    # Priority: 300px -> 640px -> generic url
+    url = (album.images or {}).get("300") or (album.images or {}).get("640") or (album.images or {}).get("url")
+    if url:
+        return RedirectResponse(url)
 
     raise HTTPException(status_code=404, detail="No cover art found")
 

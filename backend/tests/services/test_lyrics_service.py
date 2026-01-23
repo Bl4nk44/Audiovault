@@ -15,7 +15,7 @@ async def test_get_lyrics_cache_hit(lyrics_service):
         patch("app.services.lyrics_service.cache_manager.redis", True),
         patch("app.services.lyrics_service.cache_manager.get", new_callable=AsyncMock) as mock_get,
     ):
-        mock_get.return_value = {"found": True, "lyrics": "Test Lyrics"}
+        mock_get.return_value = '{"found": true, "lyrics": "Test Lyrics"}'
         res = await lyrics_service.get_lyrics("Artist", "Title")
         assert res["lyrics"] == "Test Lyrics"
         assert mock_get.called
@@ -34,6 +34,10 @@ async def test_get_lyrics_cache_miss_genius_hit(lyrics_service):
         mock_song.title = "Title"
         mock_song.artist = "Artist"
         mock_song.url = "http://genius.com"
+        # Be careful with getattr mocks
+        mock_song.album = None
+        mock_song.release_date = None
+        
         mock_genius.search_song.return_value = mock_song
         mock_client.return_value = mock_genius
 

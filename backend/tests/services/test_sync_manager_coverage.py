@@ -137,7 +137,7 @@ async def test_analyze_watchlist_not_found(sync_mgr):
     db_mock.execute.return_value = mock_result
 
     with pytest.raises(ValueError, match="Watchlist not found"):
-        await sync_mgr.analyze_watchlist(db_mock, "user1", "wl123")
+        await sync_mgr.analyze_watchlist(db_mock, str(uuid.uuid4()), str(uuid.uuid4()))
 
 
 @pytest.mark.asyncio
@@ -174,7 +174,7 @@ async def test_analyze_watchlist_high_deletion_warning(sync_mgr):
     with patch.object(
         sync_mgr, "_fetch_remote_tracks", return_value=[{"id": "spotify_0"}, {"id": "spotify_1"}, {"id": "spotify_2"}]
     ):
-        report = await sync_mgr.analyze_watchlist(db_mock, "user1", str(watchlist.id))
+        report = await sync_mgr.analyze_watchlist(db_mock, str(uuid.uuid4()), str(watchlist.id))
 
         assert report["safety_warning"] is True
         assert report["to_remove_count"] == 7
@@ -191,7 +191,7 @@ async def test_execute_sync_invalid_token(sync_mgr):
     db_mock = AsyncMock()
 
     with pytest.raises(ValueError, match="Invalid or expired sync token"):
-        await sync_mgr.execute_sync(db_mock, "user1", "bad_token", [])
+        await sync_mgr.execute_sync(db_mock, str(uuid.uuid4()), "bad_token", [])
 
 
 @pytest.mark.asyncio
@@ -220,7 +220,7 @@ async def test_execute_sync_success(sync_mgr):
     ]
 
     with patch.object(sync_mgr, "_soft_delete_file", return_value=True), patch("os.path.exists", return_value=True):
-        result = await sync_mgr.execute_sync(db_mock, "user1", token, [str(uuid.uuid4())])
+        result = await sync_mgr.execute_sync(db_mock, str(uuid.uuid4()), token, [str(uuid.uuid4())])
 
         assert result["status"] == "success"
         assert result["removed_from_playlist"] == 1
