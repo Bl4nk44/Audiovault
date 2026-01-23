@@ -291,12 +291,11 @@ class LibraryScannerService:
         try:
             # Parse metadata in executor to avoid blocking event loop
             loop = asyncio.get_event_loop()
+
             def parse_sync(p: str = full_path):
                 return self._parse_audio_metadata_sync(p)
 
-            title, artist, album, genre, duration_ms = await loop.run_in_executor(
-                stream_executor, parse_sync
-            )
+            title, artist, album, genre, duration_ms = await loop.run_in_executor(stream_executor, parse_sync)
 
             source, playlist_name = self._infer_source_info(full_path, root_dir)
 

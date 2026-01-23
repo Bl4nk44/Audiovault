@@ -98,7 +98,7 @@ async def get_user(
         if not found_user:
             return subsonic_error(70, f"User '{username}' not found", f=f)
         target_user = found_user
-    
+
     if not target_user:
         return subsonic_error(70, "User info not available", f=f)
 
