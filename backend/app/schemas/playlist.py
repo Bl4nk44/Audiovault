@@ -28,9 +28,9 @@ class PlaylistTrackResponse(BaseModel):
     track_id: UUID
     order: int
     title: str
-    artist: str
+    artist: str | None
     album: str | None
-    duration_ms: int
+    duration_ms: int | None
     image_url: str | None
 
     class Config:
@@ -40,8 +40,8 @@ class PlaylistTrackResponse(BaseModel):
 class PlaylistResponse(PlaylistBase):
     id: UUID
     owner_id: UUID
-    created_at: datetime
-    updated_at: datetime
+    created_at: datetime | None
+    updated_at: datetime | None
     tracks_count: int = 0
     tracks: list[PlaylistTrackResponse] = []
 

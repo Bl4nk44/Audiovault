@@ -1,45 +1,51 @@
 from datetime import UTC, datetime
-from uuid import uuid4
+from datetime import UTC, datetime
+from typing import TYPE_CHECKING
+from uuid import UUID, uuid4
 
-from sqlalchemy import Boolean, Column, DateTime, ForeignKey, Integer, String, Uuid
-from sqlalchemy.orm import relationship
+from sqlalchemy import Boolean, DateTime, ForeignKey, Integer, String, Uuid
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.db.base import Base
+
+if TYPE_CHECKING:
+    from app.models.user import User
+    from app.models.track import Track
 
 
 class Download(Base):
     __tablename__ = "downloads"
 
-    id = Column(Uuid(as_uuid=True), primary_key=True, default=uuid4)
-    user_id = Column(Uuid(as_uuid=True), ForeignKey("users.id"), index=True)
-    track_id = Column(Uuid(as_uuid=True), ForeignKey("tracks.id"))
+    id: Mapped[UUID] = mapped_column(Uuid(as_uuid=True), primary_key=True, default=uuid4)
+    user_id: Mapped[UUID] = mapped_column(Uuid(as_uuid=True), ForeignKey("users.id"), index=True)
+    track_id: Mapped[UUID] = mapped_column(Uuid(as_uuid=True), ForeignKey("tracks.id"))
 
     # Download details
-    source = Column(String(20), nullable=True)  # spotify, youtube, deezer
-    playlist_name = Column(String(255), nullable=True)  # Name of the playlist if part of one
-    status = Column(String(20), default="pending", nullable=True)
+    source: Mapped[str | None] = mapped_column(String(20), nullable=True)  # spotify, youtube, deezer
+    playlist_name: Mapped[str | None] = mapped_column(String(255), nullable=True)  # Name of the playlist if part of one
+    status: Mapped[str | None] = mapped_column(String(20), default="pending", nullable=True)
     # pending, downloading, processing, completed, failed
 
     # Progress
-    progress = Column(Integer, default=0)  # 0-100
-    file_path = Column(String(500), nullable=True)
-    file_size = Column(Integer, default=0)  # bytes
+    progress: Mapped[int] = mapped_column(Integer, default=0)  # 0-100
+    file_path: Mapped[str | None] = mapped_column(String(500), nullable=True)
+    file_size: Mapped[int] = mapped_column(Integer, default=0)  # bytes
 
     # Priority & Scheduling
-    priority = Column(Integer, default=5)  # 1-10
+    priority: Mapped[int] = mapped_column(Integer, default=5)  # 1-10
 
     # Error tracking
-    error_message = Column(String(1000), nullable=True)
-    retry_count = Column(Integer, default=0)
+    error_message: Mapped[str | None] = mapped_column(String(1000), nullable=True)
+    retry_count: Mapped[int] = mapped_column(Integer, default=0)
 
     # UI State
-    archived = Column(Boolean, default=False)  # If true, hidden from queue but visible in library
+    archived: Mapped[bool] = mapped_column(Boolean, default=False)  # If true, hidden from queue but visible in library
 
     # Timestamps
-    created_at = Column(DateTime(timezone=True), default=lambda: datetime.now(UTC))
-    started_at = Column(DateTime(timezone=True), nullable=True)
-    completed_at = Column(DateTime(timezone=True), nullable=True)
+    created_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(UTC))
+    started_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    completed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
 
     # Relationships
-    user = relationship("User", back_populates="downloads")
-    track = relationship("Track", back_populates="downloads")
+    user: Mapped["User"] = relationship("User", back_populates="downloads")
+    track: Mapped["Track"] = relationship("Track", back_populates="downloads")

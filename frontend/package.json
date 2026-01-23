@@ -1,7 +1,7 @@
 {
   "name": "audiovault-frontend",
   "private": true,
-  "version": "0.10.3",
+  "version": "0.10.4",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -49,7 +49,6 @@
     "globals": "^17.0.0",
     "jsdom": "^27.4.0",
     "knip": "^5.82.0",
-    "prettier": "^3.4.2",
     "tailwindcss": "^4.1.17",
     "typescript": "~5.9.3",
     "typescript-eslint": "^8.53.0",

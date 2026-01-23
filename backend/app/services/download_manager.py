@@ -191,7 +191,7 @@ class DownloadManager:
             # Do not re-raise, allow app to start
             pass
 
-    async def add_download(self, db: AsyncSession, user_id: str, download_data: "DownloadCreate") -> Download:
+    async def add_download(self, db: AsyncSession, user_id: str | uuid.UUID, download_data: "DownloadCreate") -> Download:
         download = Download(
             user_id=user_id,
             track_id=str(download_data.track_id),
@@ -777,20 +777,16 @@ class DownloadManager:
             return url
 
         elif resp_type == "direct_soundcloud":
-            if track_info and track_info.source_url:
-                # Check if we have source_url in metadata
-                # Actually track_info might handle metadata_content
+            if track_info:
+                # Use metadata if available
                 meta = track_info.metadata_content or {}
-                url = meta.get("source_url") or track_info.source_url  # track model has source_url column? No, generic
-                # Track model usually has source_url if we look at updated models?
-                # Let's rely on stored metadata or re-reconstruction logic if ID is URL.
-
-                # If download.track_id looks like URL, use it
                 if "soundcloud.com" in str(download.track_id):
                     return str(download.track_id)
+                
+                # Use metadata if available
+                if meta.get("source_url"):
+                    return meta["source_url"]
 
-                if url:
-                    return url
 
             # Fallback to search if direct fails/missing
             if track_info:

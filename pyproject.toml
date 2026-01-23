@@ -23,6 +23,7 @@ ignore = []
 [tool.mypy]
 python_version = "3.12"
 ignore_missing_imports = true
+plugins = ["sqlalchemy.ext.mypy.plugin"]
 [tool.pyright]
 include = ["backend/app"]
 exclude = ["**/__pycache__", "**/node_modules", "backend/.venv", "backend/tests"]

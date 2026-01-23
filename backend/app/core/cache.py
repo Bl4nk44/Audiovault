@@ -14,13 +14,15 @@ class CacheManager:
             await self.redis.close()
 
     async def get(self, key: str) -> str | None:
-        if not self.redis:
+        if self.redis is None:
             await self.connect()
+        assert self.redis is not None
         return await self.redis.get(key)
 
     async def set(self, key: str, value: str, expire: int = 3600):
-        if not self.redis:
+        if self.redis is None:
             await self.connect()
+        assert self.redis is not None
         await self.redis.set(key, value, ex=expire)
 
 

@@ -1,3 +1,5 @@
+import uuid
+
 from app.models.download import Download
 from app.models.track import Track
 from app.models.watchlist_item import WatchlistItem
@@ -8,7 +10,7 @@ from sqlalchemy.future import select
 class WatchlistStorage:
     async def get_or_create_track(
         self, db: AsyncSession, track_data: dict, source: str, is_legacy_source: bool
-    ) -> tuple[str, bool]:
+    ) -> tuple[uuid.UUID, bool]:
         """Find or create a track and return its UUID and whether it was created."""
         existing_track = await self._find_existing_track(db, track_data, source)
 

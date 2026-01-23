@@ -3,6 +3,8 @@ import shutil
 from datetime import UTC, datetime
 from typing import Any, Optional
 
+from uuid import UUID
+
 from app.core.config import settings
 from app.core.dependencies import get_current_active_user
 from app.db.database import get_db
@@ -40,7 +42,7 @@ async def get_dashboard_stats(
     }
 
 
-async def _get_count(db: AsyncSession, user_id: int, status: Optional[str] = None) -> int:
+async def _get_count(db: AsyncSession, user_id: UUID, status: Optional[str] = None) -> int:
     query = select(func.count(Download.id)).where(Download.user_id == user_id)
     if status:
         query = query.where(Download.status == status)
@@ -48,7 +50,7 @@ async def _get_count(db: AsyncSession, user_id: int, status: Optional[str] = Non
     return result.scalar() or 0
 
 
-async def _get_queue_count(db: AsyncSession, user_id: int) -> int:
+async def _get_queue_count(db: AsyncSession, user_id: UUID) -> int:
     query = select(func.count(Download.id)).where(
         Download.user_id == user_id,
         Download.status.in_(["pending", "downloading", "processing"]),
@@ -71,7 +73,7 @@ def _get_storage_free_space() -> str:
 # ... (skipping unchanged helper functions)
 
 
-async def _get_recent_activity(db: AsyncSession, user_id: int) -> list[dict[str, Any]]:
+async def _get_recent_activity(db: AsyncSession, user_id: UUID) -> list[dict[str, Any]]:
     recent_query = (
         select(Download)
         .options(selectinload(Download.track))
@@ -90,7 +92,7 @@ async def _get_recent_activity(db: AsyncSession, user_id: int) -> list[dict[str,
                 "track_id": str(d.track_id),
                 "title": d.track.title if d.track else "Unknown Title",
                 "artist": d.track.artist if d.track else "Unknown Artist",
-                "time_ago": _calculate_time_ago(d.completed_at),
+                "time_ago": _calculate_time_ago(d.completed_at) if d.completed_at else "Unknown",
                 "progress": 100,
                 "image_url": _get_image_url(d),
                 "filename": _get_filename(d),
@@ -99,7 +101,7 @@ async def _get_recent_activity(db: AsyncSession, user_id: int) -> list[dict[str,
     return activity
 
 
-async def _get_active_download(db: AsyncSession, user_id: int) -> dict[str, Any] | None:
+async def _get_active_download(db: AsyncSession, user_id: UUID) -> dict[str, Any] | None:
     # Priority: Downloading
     active_query = (
         select(Download)

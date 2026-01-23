@@ -337,10 +337,10 @@ async def update_playlist(
     # Remove songs by index
     if songIndexToRemove:
         # Get current tracks ordered
-        result = await db.execute(
+        pl_tracks_res = await db.execute(
             select(PlaylistTrack).where(PlaylistTrack.playlist_id == playlist_id).order_by(PlaylistTrack.order)
         )
-        tracks = list(result.scalars().all())
+        tracks = list(pl_tracks_res.scalars().all())
 
         # Remove by index (reverse order to preserve indices)
         for idx in sorted(songIndexToRemove, reverse=True):
@@ -348,10 +348,10 @@ async def update_playlist(
                 await db.delete(tracks[idx])
 
         # Reorder remaining tracks
-        result = await db.execute(
+        remaining_res = await db.execute(
             select(PlaylistTrack).where(PlaylistTrack.playlist_id == playlist_id).order_by(PlaylistTrack.order)
         )
-        remaining = list(result.scalars().all())
+        remaining = list(remaining_res.scalars().all())
         for i, track in enumerate(remaining):
             track.order = i
 

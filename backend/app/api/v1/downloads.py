@@ -346,7 +346,7 @@ async def get_library_folders(
     rows = result.all()
 
     # Construct grouping
-    structure = {}
+    structure: dict[str, set[str]] = {}
 
     for row in rows:
         source = row[0] or "other"

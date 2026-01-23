@@ -53,7 +53,7 @@ def _extract_art_id3(audio) -> tuple[Optional[bytes], Optional[str]]:
     if hasattr(audio, "tags") and isinstance(audio.tags, ID3):
         for tag in audio.tags.values():
             if isinstance(tag, APIC):
-                return tag.data, tag.mime
+                return tag.data, tag.mime  # type: ignore
     return None, None
 
 
@@ -117,19 +117,20 @@ async def _resolve_track_path(db: AsyncSession, track_id: str) -> tuple[Optional
     if not track:
         # Try finding by download if track_id is actually download_id
         result = await db.execute(select(Download).where(Download.id == t_uuid))
-        download = result.scalar_one_or_none()
-        if download and download.track:
-            track = download.track
+        dl_check: Download | None = result.scalar_one_or_none()
+        if dl_check and dl_check.track:
+            track = dl_check.track
         else:
             return None, None
 
     # 2. Resolve local file path via Download
-    file_path = None
-    dl_res = await db.execute(select(Download).where(Download.track_id == track.id))
-    download = dl_res.scalars().first()
+    file_path: str | None = None
+    # Cast track.id to str because Download.track_id is String
+    dl_res = await db.execute(select(Download).where(Download.track_id == str(track.id)))
+    download_item: Download | None = dl_res.scalars().first()
 
-    if download and download.file_path and os.path.exists(download.file_path):
-        file_path = download.file_path
+    if download_item and download_item.file_path and os.path.exists(download_item.file_path):
+        file_path = download_item.file_path
 
     return track, file_path
 

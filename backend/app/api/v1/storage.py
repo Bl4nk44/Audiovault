@@ -35,11 +35,12 @@ class StorageStats(BaseModel):
 
 def format_bytes(size_bytes: int) -> str:
     """Format bytes to human-readable string."""
+    current: float = float(size_bytes)
     for unit in ["B", "KB", "MB", "GB", "TB"]:
-        if size_bytes < 1024.0:
-            return f"{size_bytes:.2f} {unit}"
-        size_bytes /= 1024.0
-    return f"{size_bytes:.2f} PB"
+        if current < 1024.0:
+            return f"{current:.2f} {unit}"
+        current /= 1024.0
+    return f"{current:.2f} PB"
 
 
 def get_file_size(file_path: str) -> int:
@@ -76,7 +77,7 @@ async def get_storage_stats(
     by_playlist: dict[str, dict] = {}
 
     for d in downloads:
-        file_size = get_file_size(d.file_path)
+        file_size = get_file_size(d.file_path) if d.file_path else 0
         total_size += file_size
 
         # Group by source

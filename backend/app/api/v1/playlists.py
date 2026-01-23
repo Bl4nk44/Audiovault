@@ -344,8 +344,8 @@ async def export_playlist(
                     "artist": pt.track.artist,
                     "album": pt.track.album,
                     "duration_ms": pt.track.duration_ms,
-                    "year": pt.track.metadata_content.get("year"),
-                    "genre": pt.track.metadata_content.get("genre"),
+                    "year": pt.track.metadata_content.get("year") if pt.track.metadata_content else None,
+                    "genre": pt.track.metadata_content.get("genre") if pt.track.metadata_content else None,
                 }
             )
 
@@ -390,7 +390,7 @@ class PlaylistVersionResponse(BaseModel):
     tracks_count: int
     change_type: str
     change_details: dict
-    created_at: dt
+    created_at: dt | None = None
 
     class Config:
         from_attributes = True

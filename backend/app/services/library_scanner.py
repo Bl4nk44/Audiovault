@@ -1,6 +1,7 @@
 import asyncio
 import logging
 import os
+from uuid import UUID
 
 import aiofiles
 from app.core.config import settings
@@ -11,7 +12,7 @@ from app.models.download import Download
 from app.models.track import Track
 from mutagen import File as MutagenFile
 from mutagen.easyid3 import EasyID3
-from sqlalchemy import delete, select
+from sqlalchemy import delete, select, Uuid
 from sqlalchemy.ext.asyncio import AsyncSession
 
 logger = logging.getLogger(__name__)
@@ -102,7 +103,7 @@ class LibraryScannerService:
     def _get_default_metadata(self, filename: str) -> tuple[str, str, str, str | None]:
         return os.path.splitext(filename)[0], UNKNOWN_ARTIST, UNKNOWN_ALBUM, None
 
-    def _parse_audio_metadata_sync(self, full_path: str) -> tuple[str, str, str, str, int]:
+    def _parse_audio_metadata_sync(self, full_path: str) -> tuple[str, str, str, str | None, int]:
         """Sync version of parse metadata (CPU bound)."""
         # 1. EasyID3
         title, artist, album, genre = self._try_parse_easyid3(full_path)
@@ -144,7 +145,7 @@ class LibraryScannerService:
 
     async def resolve_artist_and_album(
         self, db: AsyncSession, artist_name: str, album_name: str
-    ) -> tuple[str | None, str | None]:
+    ) -> tuple[UUID | None, UUID | None]:
         """
         Get or create Artist and Album entities.
         Returns tuple of (artist_id, album_id) as UUIDs (or None).
@@ -155,8 +156,8 @@ class LibraryScannerService:
             album_name = UNKNOWN_ALBUM
 
         # 1. Resolve Artist
-        result = await db.execute(select(Artist).where(Artist.name == artist_name))
-        artist = result.scalar_one_or_none()
+        res_artist = await db.execute(select(Artist).where(Artist.name == artist_name))
+        artist = res_artist.scalar_one_or_none()
 
         if not artist:
             artist = Artist(name=artist_name)
@@ -166,8 +167,8 @@ class LibraryScannerService:
         artist_id = artist.id
 
         # 2. Resolve Album
-        result = await db.execute(select(Album).where(Album.title == album_name, Album.artist_id == artist_id))
-        album = result.scalar_one_or_none()
+        res_album = await db.execute(select(Album).where(Album.title == album_name, Album.artist_id == artist_id))
+        album = res_album.scalar_one_or_none()
 
         if not album:
             album = Album(title=album_name, artist_id=artist_id)

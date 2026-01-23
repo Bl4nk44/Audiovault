@@ -4,6 +4,7 @@ Provides lyrics fetching with Redis caching.
 """
 
 import logging
+import json
 from typing import Optional
 
 from app.core.cache import cache_manager
@@ -84,12 +85,10 @@ class LyricsService:
 
     async def _get_from_cache(self, cache_key: str, artist: str, title: str) -> Optional[dict]:
         """Try to retrieve lyrics from cache."""
-        if not cache_manager.redis:
-            return None
-
         try:
-            cached = await cache_manager.get(cache_key)
-            if cached:
+            cached_str = await cache_manager.get(cache_key)
+            if cached_str:
+                cached = json.loads(cached_str)
                 logger.debug(f"Lyrics cache hit for {artist} - {title}")
                 return cached
         except Exception as e:
@@ -129,11 +128,10 @@ class LyricsService:
 
     async def _cache_result(self, key: str, data: dict, ttl: int):
         """Helper to cache results safely."""
-        if cache_manager.redis:
-            try:
-                await cache_manager.set(key, data, ttl=ttl)
-            except Exception as e:
-                logger.warning(f"Cache write error: {e}")
+        try:
+            await cache_manager.set(key, json.dumps(data), expire=ttl)
+        except Exception as e:
+            logger.warning(f"Cache write error: {e}")
 
     async def clear_cache(self, artist: str, title: str) -> bool:
         """Clear cached lyrics for a specific song."""

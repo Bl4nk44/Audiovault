@@ -141,7 +141,7 @@ class SpotifyService:
             "track_count": track_count,
         }
 
-    def get_track(self, track_id: str) -> dict[str, Any]:
+    def get_track(self, track_id: str) -> dict[str, Any] | None:
         if not self.client:
             return None
 
@@ -168,7 +168,7 @@ class SpotifyService:
 
         return tracks
 
-    def get_playlist_details(self, playlist_id: str) -> dict[str, Any]:
+    def get_playlist_details(self, playlist_id: str) -> dict[str, Any] | None:
         """
         Fetches full playlist details including metadata and all tracks.
         """
@@ -203,7 +203,7 @@ class SpotifyService:
             logger.error(f"Error fetching playlist details {playlist_id}: {e}")
             return None
 
-    def get_artist_details(self, artist_id: str) -> dict[str, Any]:
+    def get_artist_details(self, artist_id: str) -> dict[str, Any] | None:
         """
         Fetches full artist details including metadata, top tracks, and albums.
         """
@@ -296,6 +296,14 @@ class SpotifyService:
             return tracks
         except Exception:
             return []
+
+    def get_album(self, album_id: str) -> dict[str, Any] | None:
+        """
+        Simple wrapper to get album metadata like get_track.
+        """
+        if not self.client:
+            return None
+        return self.client.album(album_id)
 
     def get_album_details(self, album_id: str) -> dict[str, Any] | None:
         """

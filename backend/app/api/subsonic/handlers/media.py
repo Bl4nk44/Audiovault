@@ -415,7 +415,7 @@ def _extract_embedded_art(file_path: str) -> Response | None:
     return None
 
 
-async def _resolve_album_image(db: AsyncSession, item_id: str) -> str | None:
+async def _resolve_album_image(db: AsyncSession, item_id: UUID) -> str | None:
     res = await db.execute(select(Album).where(Album.id == item_id))
     album = res.scalar_one_or_none()
     if album and album.images:
@@ -423,7 +423,7 @@ async def _resolve_album_image(db: AsyncSession, item_id: str) -> str | None:
     return None
 
 
-async def _resolve_track_image(db: AsyncSession, item_id: str) -> str | None:
+async def _resolve_track_image(db: AsyncSession, item_id: UUID) -> str | None:
     res = await db.execute(select(Track).where(Track.id == item_id))
     track = res.scalar_one_or_none()
     if not track:
@@ -439,7 +439,7 @@ async def _resolve_track_image(db: AsyncSession, item_id: str) -> str | None:
     return None
 
 
-async def _resolve_artist_image(db: AsyncSession, item_id: str) -> str | None:
+async def _resolve_artist_image(db: AsyncSession, item_id: UUID) -> str | None:
     res = await db.execute(select(Artist).where(Artist.id == item_id))
     artist = res.scalar_one_or_none()
     if artist and artist.images:
@@ -450,8 +450,13 @@ async def _resolve_artist_image(db: AsyncSession, item_id: str) -> str | None:
     return None
 
 
-async def _resolve_image_url(db: AsyncSession, item_type: str, item_id: str) -> str | None:
+async def _resolve_image_url(db: AsyncSession, item_type: str, item_id_str: str) -> str | None:
     """Helper to resolve remote image URL from DB"""
+    try:
+        item_id = UUID(item_id_str)
+    except ValueError:
+        return None
+        
     if item_type == "al":
         return await _resolve_album_image(db, item_id)
     elif item_type == "tr":

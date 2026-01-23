@@ -73,7 +73,7 @@ async def get_indexes(
         Alphabetical index of artists
     """
     # Get all artists with at least one track with completed download for this user
-    result = await db.execute(
+    artists_res = await db.execute(
         select(Artist)
         .join(Track, Track.artist_id == Artist.id)
         .join(Download, Download.track_id == Track.id)
@@ -84,7 +84,7 @@ async def get_indexes(
         .group_by(Artist.id)
         .order_by(Artist.name)
     )
-    artists = result.scalars().all()
+    artists = artists_res.scalars().all()
 
     # Group by first letter
     indexes: dict[str, list] = {}
@@ -152,7 +152,7 @@ async def get_artists(
         Alphabetical index of artists (ID3 format)
     """
     # Reuse getIndexes logic
-    result = await db.execute(
+    artists_id3_res = await db.execute(
         select(Artist)
         .join(Track, Track.artist_id == Artist.id)
         .join(Download, Download.track_id == Track.id)
@@ -163,7 +163,7 @@ async def get_artists(
         .group_by(Artist.id)
         .order_by(Artist.name)
     )
-    artists = result.scalars().all()
+    artists = artists_id3_res.scalars().all()
 
     # Group by first letter
     indexes: dict[str, list] = {}
@@ -236,14 +236,14 @@ async def get_artist(
         return subsonic_error(10, "Invalid artist ID", f=f)
 
     # Get artist
-    result = await db.execute(select(Artist).where(Artist.id == artist_id))
-    artist = result.scalar_one_or_none()
+    artist_result = await db.execute(select(Artist).where(Artist.id == artist_id))
+    artist = artist_result.scalar_one_or_none()
 
     if not artist:
         return subsonic_error(70, "Artist not found", f=f)
 
     # Get albums for this artist that user has downloaded tracks from
-    result = await db.execute(
+    albums_result = await db.execute(
         select(Album)
         .join(Track, Track.album_id == Album.id)
         .join(Download, Download.track_id == Track.id)
@@ -255,7 +255,7 @@ async def get_artist(
         .group_by(Album.id)
         .order_by(Album.release_date.desc().nullslast(), Album.title)
     )
-    albums = result.scalars().all()
+    albums = albums_result.scalars().all()
 
     # Build album list
     album_list = []
@@ -352,7 +352,7 @@ async def get_album(
             artist_name = artist.name
 
     # Get tracks with downloads for this user (only completed downloads)
-    result = await db.execute(
+    tracks_res = await db.execute(
         select(Track, Download)
         .join(Download, Download.track_id == Track.id)
         .where(
@@ -362,7 +362,7 @@ async def get_album(
         )
         .order_by(Track.title)
     )
-    track_downloads = result.all()
+    track_downloads = tracks_res.all()
 
     # Build song list
     song_list = []
@@ -423,7 +423,7 @@ async def get_song(
         return subsonic_error(10, "Invalid song ID", f=f)
 
     # Get track with download (only if downloaded)
-    result = await db.execute(
+    song_res = await db.execute(
         select(Track, Download)
         .join(Download, Download.track_id == Track.id)
         .where(
@@ -432,12 +432,12 @@ async def get_song(
             Download.status == "completed",
         )
     )
-    row = result.first()
+    song_row = song_res.first()
 
-    if not row:
+    if not song_row:
         return subsonic_error(70, "Song not found", f=f)
 
-    track, download = row
+    track, download = song_row
     song = build_song_response(track, download)
 
     return subsonic_response({"song": song}, f=f)
@@ -467,7 +467,7 @@ async def get_music_directory(
     """
     # Root folder - list artists
     if id == "1":
-        result = await db.execute(
+        root_artists_res = await db.execute(
             select(Artist)
             .join(Track, Track.artist_id == Artist.id)
             .outerjoin(Download, (Download.track_id == Track.id) & (Download.user_id == current_user.id))
@@ -479,7 +479,7 @@ async def get_music_directory(
             .group_by(Artist.id)
             .order_by(Artist.name)
         )
-        artists = result.scalars().all()
+        artists = root_artists_res.scalars().all()
 
         children = []
         for artist in artists:
@@ -511,10 +511,10 @@ async def get_music_directory(
         return subsonic_error(70, "Directory not found", f=f)
 
     # Check if it's an artist
-    result = await db.execute(select(Artist).where(Artist.id == item_id))
-    artist = result.scalar_one_or_none()
+    item_artist_result = await db.execute(select(Artist).where(Artist.id == item_id))
+    artist_item = item_artist_result.scalar_one_or_none()
 
-    if artist:
+    if artist_item:
         # List albums for this artist (only with downloaded tracks)
         result = await db.execute(
             select(Album)
@@ -572,10 +572,10 @@ async def get_music_directory(
         )
 
     # Check if it's an album
-    result = await db.execute(select(Album).where(Album.id == item_id))
-    album = result.scalar_one_or_none()
+    item_album_result = await db.execute(select(Album).where(Album.id == item_id))
+    album_item = item_album_result.scalar_one_or_none()
 
-    if album:
+    if album_item:
         # Get artist name
         artist_name = "Unknown Artist"
         parent_id = "1"

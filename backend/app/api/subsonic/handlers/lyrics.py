@@ -4,7 +4,7 @@ from app.api.subsonic.auth import subsonic_auth
 from app.db.database import get_db
 from app.models.track import Track
 from app.models.user import User
-from app.schemas.subsonic.base import subsonic_response
+from app.schemas.subsonic.base import subsonic_error, subsonic_response
 from fastapi import APIRouter, Depends, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -55,4 +55,7 @@ async def get_lyrics(
             f=f,
         )
 
-    return subsonic_response({"lyrics": {"artist": track.artist, "title": track.title, "content": lyrics}}, f=f)
+    if track:
+        return subsonic_response({"lyrics": {"artist": track.artist, "title": track.title, "content": lyrics}}, f=f)
+    
+    return subsonic_error(70, "lyrics not found", f=f)

@@ -114,7 +114,7 @@ async def validate_url(url: str) -> tuple[bool, str]:
     try:
         ip_addresses = socket.getaddrinfo(hostname, None)
         for addr_info in ip_addresses:
-            ip_str = addr_info[4][0]
+            ip_str = str(addr_info[4][0])
             if is_private_ip(ip_str):
                 return False, f"Private IP address blocked: {ip_str}"
     except socket.gaierror as e:

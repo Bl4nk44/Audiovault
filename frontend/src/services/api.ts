@@ -14,7 +14,7 @@ export const injectStore = (_store: Store) => {
   store = _store;
 };
 
-export const API_URL = import.meta.env.VITE_API_URL || "/api/v1";
+const API_URL = import.meta.env.VITE_API_URL || "/api/v1";
 
 const api = axios.create({
   baseURL: API_URL,

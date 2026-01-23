@@ -186,7 +186,8 @@ class DeezerService:
         if isinstance(item.get("artist"), dict):
             artist_name = item["artist"].get("name", "Unknown Artist")
         elif isinstance(item.get("artist"), str):
-            artist_name = item.get("artist")
+            artist_name = item.get("artist") or "Unknown Artist"
+
 
         return {
             "id": str(item["id"]),

@@ -250,7 +250,7 @@ class SyncManager:
         tracks = []
         try:
             # Provider based
-            if item.watch_type == "playlist":
+            if item.watch_type == "playlist" and item.source:
                 provider = provider_manager.get_provider_by_name(item.source)
                 if provider:
                     playlist_metadata = await provider.extract_playlist(item.source_id)

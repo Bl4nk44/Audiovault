@@ -1,34 +1,41 @@
 from datetime import UTC, datetime
-from uuid import uuid4
+from typing import TYPE_CHECKING
+from uuid import UUID, uuid4
 
-from sqlalchemy import JSON, Column, DateTime, ForeignKey, Integer, String, Uuid
-from sqlalchemy.orm import relationship
+from sqlalchemy import JSON, DateTime, ForeignKey, Integer, String, Uuid
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.db.base import Base
+
+if TYPE_CHECKING:
+    from app.models.download import Download
+    from app.models.artist import Artist
+    from app.models.album import Album
+    from app.models.watchlist_item import WatchlistItem
 
 
 class Track(Base):
     __tablename__ = "tracks"
 
-    id = Column(Uuid(as_uuid=True), primary_key=True, default=uuid4)
-    title = Column(String(500), index=True, nullable=False)
-    artist = Column(String(500), index=True, nullable=True)  # Kept for simple search/display, nullable if using rel
-    album = Column(String(500), nullable=True)  # Kept for simple search/display
+    id: Mapped[UUID] = mapped_column(Uuid(as_uuid=True), primary_key=True, default=uuid4)
+    title: Mapped[str] = mapped_column(String(500), index=True, nullable=False)
+    artist: Mapped[str | None] = mapped_column(String(500), index=True, nullable=True)  # Kept for simple search/display, nullable if using rel
+    album: Mapped[str | None] = mapped_column(String(500), nullable=True)  # Kept for simple search/display
 
     # Foreign Keys
-    artist_id = Column(Uuid(as_uuid=True), ForeignKey("artists.id"), nullable=True)
-    album_id = Column(Uuid(as_uuid=True), ForeignKey("albums.id"), nullable=True)
+    artist_id: Mapped[UUID | None] = mapped_column(Uuid(as_uuid=True), ForeignKey("artists.id"), nullable=True)
+    album_id: Mapped[UUID | None] = mapped_column(Uuid(as_uuid=True), ForeignKey("albums.id"), nullable=True)
 
-    duration_ms = Column(Integer)  # milliseconds
+    duration_ms: Mapped[int | None] = mapped_column(Integer)  # milliseconds
 
     # Service IDs (for cross-platform lookup)
-    isrc = Column(String(20), unique=True, nullable=True)
-    spotify_id = Column(String(100), nullable=True, unique=True)
-    youtube_id = Column(String(100), nullable=True, unique=True)
-    deezer_id = Column(String(100), nullable=True, unique=True)
+    isrc: Mapped[str | None] = mapped_column(String(20), unique=True, nullable=True)
+    spotify_id: Mapped[str | None] = mapped_column(String(100), nullable=True, unique=True)
+    youtube_id: Mapped[str | None] = mapped_column(String(100), nullable=True, unique=True)
+    deezer_id: Mapped[str | None] = mapped_column(String(100), nullable=True, unique=True)
 
     # Metadata
-    metadata_content = Column(
+    metadata_content: Mapped[dict | None] = mapped_column(
         "metadata",
         JSON,
         default={
@@ -40,11 +47,11 @@ class Track(Base):
         },
     )
 
-    created_at = Column(DateTime(timezone=True), default=lambda: datetime.now(UTC))
-    updated_at = Column(DateTime(timezone=True), onupdate=lambda: datetime.now(UTC))
+    created_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(UTC))
+    updated_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), onupdate=lambda: datetime.now(UTC))
 
     # Relationships
-    downloads = relationship("Download", back_populates="track")
-    artist_rel = relationship("Artist", back_populates="tracks")
-    album_rel = relationship("Album", back_populates="tracks")
-    watchlist_items = relationship("WatchlistItem", back_populates="track")
+    downloads: Mapped[list["Download"]] = relationship("Download", back_populates="track")
+    artist_rel: Mapped["Artist"] = relationship("Artist", back_populates="tracks")
+    album_rel: Mapped["Album"] = relationship("Album", back_populates="tracks")
+    watchlist_items: Mapped[list["WatchlistItem"]] = relationship("WatchlistItem", back_populates="track")

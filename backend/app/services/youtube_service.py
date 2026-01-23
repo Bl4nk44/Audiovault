@@ -113,7 +113,7 @@ class YouTubeService(BaseMusicService):
 
         return [item for item in (self._map_search_result(r) for r in results) if item]
 
-    def _map_search_result(self, item: dict[str, Any]) -> dict[str, Any]:
+    def _map_search_result(self, item: dict[str, Any]) -> dict[str, Any] | None:
         """Maps a YouTube search result to a unified format."""
         result_type = item.get("resultType")
 
@@ -160,7 +160,7 @@ class YouTubeService(BaseMusicService):
         except Exception:
             return []
 
-    def get_playlist_details(self, playlist_id: str, limit: int = 100) -> dict[str, Any]:
+    def get_playlist_details(self, playlist_id: str, limit: int = 100) -> dict[str, Any] | None:
         """
         Fetches full playlist details including metadata and tracks.
         """

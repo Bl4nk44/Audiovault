@@ -105,7 +105,7 @@ class WatchlistEngine:
     async def get_watchlist(self, db: AsyncSession, user_id: str | uuid.UUID) -> list[Watchlist]:
         user_uuid = self._to_uuid(user_id)
         result = await db.execute(select(Watchlist).where(Watchlist.user_id == user_uuid))
-        return result.scalars().all()
+        return list(result.scalars().all())
 
     async def remove_from_watchlist(self, db: AsyncSession, watchlist_id: str | uuid.UUID, user_id: str | uuid.UUID):
         wl_uuid = self._to_uuid(watchlist_id)

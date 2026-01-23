@@ -6,11 +6,11 @@ directly to existing Audiovault models.
 """
 
 from datetime import UTC, datetime
-from uuid import uuid4
+from typing import TYPE_CHECKING
+from uuid import UUID, uuid4
 
 from sqlalchemy import (
     Boolean,
-    Column,
     DateTime,
     ForeignKey,
     Index,
@@ -18,9 +18,13 @@ from sqlalchemy import (
     String,
     Uuid,
 )
-from sqlalchemy.orm import relationship
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.db.base import Base
+
+if TYPE_CHECKING:
+    from app.models.user import User
+    from app.models.track import Track
 
 
 class SubsonicAuthToken(Base):
@@ -38,32 +42,32 @@ class SubsonicAuthToken(Base):
 
     __tablename__ = "subsonic_auth_tokens"
 
-    id = Column(Uuid(as_uuid=True), primary_key=True, default=uuid4)
-    user_id = Column(
+    id: Mapped[UUID] = mapped_column(Uuid(as_uuid=True), primary_key=True, default=uuid4)
+    user_id: Mapped[UUID] = mapped_column(
         Uuid(as_uuid=True),
         ForeignKey("users.id", ondelete="CASCADE"),
         nullable=False,
     )
 
     # Token is a random string, salt is used by client for MD5 hashing
-    token = Column(String(64), unique=True, nullable=False)
-    salt = Column(String(32), nullable=False)
+    token: Mapped[str] = mapped_column(String(64), unique=True, nullable=False)
+    salt: Mapped[str] = mapped_column(String(32), nullable=False)
 
     # Client identification
-    client_name = Column(String(100), nullable=True)
-    client_version = Column(String(50), nullable=True)
+    client_name: Mapped[str | None] = mapped_column(String(100), nullable=True)
+    client_version: Mapped[str | None] = mapped_column(String(50), nullable=True)
 
     # Lifecycle
-    created_at = Column(
+    created_at: Mapped[datetime | None] = mapped_column(
         DateTime(timezone=True),
         default=lambda: datetime.now(UTC),
     )
-    expires_at = Column(DateTime(timezone=True), nullable=False)
-    last_used_at = Column(DateTime(timezone=True), nullable=True)
-    is_active = Column(Boolean, default=True)
+    expires_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    last_used_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    is_active: Mapped[bool] = mapped_column(Boolean, default=True)
 
     # Relationship
-    user = relationship("User", backref="subsonic_tokens")
+    user: Mapped["User"] = relationship("User", backref="subsonic_tokens")
 
     __table_args__ = (
         Index("ix_subsonic_auth_tokens_user_active", "user_id", "is_active"),
@@ -85,29 +89,29 @@ class SubsonicRating(Base):
 
     __tablename__ = "subsonic_ratings"
 
-    id = Column(Uuid(as_uuid=True), primary_key=True, default=uuid4)
-    user_id = Column(
+    id: Mapped[UUID] = mapped_column(Uuid(as_uuid=True), primary_key=True, default=uuid4)
+    user_id: Mapped[UUID] = mapped_column(
         Uuid(as_uuid=True),
         ForeignKey("users.id", ondelete="CASCADE"),
         nullable=False,
     )
-    track_id = Column(
+    track_id: Mapped[UUID] = mapped_column(
         Uuid(as_uuid=True),
         ForeignKey("tracks.id", ondelete="CASCADE"),
         nullable=False,
     )
 
     # Rating value 0-5 (0 = unrated)
-    rating = Column(Integer, nullable=False, default=0)
+    rating: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
 
-    rated_at = Column(
+    rated_at: Mapped[datetime | None] = mapped_column(
         DateTime(timezone=True),
         default=lambda: datetime.now(UTC),
     )
 
     # Relationships
-    user = relationship("User", backref="subsonic_ratings")
-    track = relationship("Track", backref="subsonic_ratings")
+    user: Mapped["User"] = relationship("User", backref="subsonic_ratings")
+    track: Mapped["Track"] = relationship("Track", backref="subsonic_ratings")
 
     __table_args__ = (Index("ix_subsonic_ratings_user_track", "user_id", "track_id", unique=True),)
 
@@ -122,39 +126,39 @@ class SubsonicNowPlaying(Base):
 
     __tablename__ = "subsonic_now_playing"
 
-    id = Column(Uuid(as_uuid=True), primary_key=True, default=uuid4)
-    user_id = Column(
+    id: Mapped[UUID] = mapped_column(Uuid(as_uuid=True), primary_key=True, default=uuid4)
+    user_id: Mapped[UUID] = mapped_column(
         Uuid(as_uuid=True),
         ForeignKey("users.id", ondelete="CASCADE"),
         nullable=False,
     )
-    track_id = Column(
+    track_id: Mapped[UUID] = mapped_column(
         Uuid(as_uuid=True),
         ForeignKey("tracks.id", ondelete="CASCADE"),
         nullable=False,
     )
 
     # Playback info
-    client_name = Column(String(100), nullable=True)
-    player_id = Column(String(100), nullable=True)  # Unique player instance
+    client_name: Mapped[str | None] = mapped_column(String(100), nullable=True)
+    player_id: Mapped[str | None] = mapped_column(String(100), nullable=True)  # Unique player instance
 
     # Timestamps
-    started_at = Column(
+    started_at: Mapped[datetime | None] = mapped_column(
         DateTime(timezone=True),
         default=lambda: datetime.now(UTC),
     )
-    updated_at = Column(
+    updated_at: Mapped[datetime | None] = mapped_column(
         DateTime(timezone=True),
         default=lambda: datetime.now(UTC),
         onupdate=lambda: datetime.now(UTC),
     )
 
     # Position in seconds
-    position_seconds = Column(Integer, default=0)
+    position_seconds: Mapped[int] = mapped_column(Integer, default=0)
 
     # Relationships
-    user = relationship("User", backref="subsonic_now_playing")
-    track = relationship("Track", backref="subsonic_now_playing")
+    user: Mapped["User"] = relationship("User", backref="subsonic_now_playing")
+    track: Mapped["Track"] = relationship("Track", backref="subsonic_now_playing")
 
     __table_args__ = (
         Index("ix_subsonic_now_playing_user", "user_id"),

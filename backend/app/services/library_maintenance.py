@@ -26,8 +26,9 @@ class LibraryMaintenanceService:
             new_source = "youtube"
 
             if d.track:
-                if d.track.metadata_content and d.track.metadata_content.get("source"):
-                    new_source = d.track.metadata_content.get("source").lower()
+                meta = d.track.metadata_content or {}
+                if meta.get("source"):
+                    new_source = meta.get("source", "").lower()
                 elif d.track.spotify_id:
                     new_source = "spotify"
                 elif d.track.deezer_id:

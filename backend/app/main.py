@@ -10,7 +10,7 @@ from fastapi.staticfiles import StaticFiles
 from fastapi_limiter import FastAPILimiter
 from uvicorn.middleware.proxy_headers import ProxyHeadersMiddleware
 
-import app.models  # noqa: F401 - Ensure models are registered
+from app import models  # noqa: F401 - Ensure models are registered
 from app.api.subsonic import router as subsonic_router
 from app.api.v1 import (
     artists,

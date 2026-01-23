@@ -146,7 +146,8 @@ async def search2(
     # Search albums
     albums_result = []
     if albumCount > 0:
-        result = await db.execute(
+
+        albums_result_db = await db.execute(
             select(Album)
             .join(Track, Track.album_id == Album.id)
             .outerjoin(Download, (Download.track_id == Track.id) & (Download.user_id == current_user.id))
@@ -159,7 +160,7 @@ async def search2(
             .limit(albumCount)
         )
 
-        for album in result.scalars():
+        for album in albums_result_db.scalars():
             # Get artist name
             artist_name = "Unknown Artist"
             if album.artist_id:
@@ -196,7 +197,8 @@ async def search2(
     # Search songs
     songs_result = []
     if songCount > 0:
-        result = await db.execute(
+
+        songs_result_db = await db.execute(
             select(Track, Download)
             .join(Download, Download.track_id == Track.id)
             .where(
@@ -212,7 +214,7 @@ async def search2(
             .limit(songCount)
         )
 
-        for track, download in result.all():
+        for track, download in songs_result_db.all():
             song = build_song_response(track, download)
             song["parent"] = str(track.album_id) if track.album_id else "1"
             songs_result.append(song)
@@ -263,7 +265,8 @@ async def search3(
     # Search artists (ID3 format)
     artists_result = []
     if artistCount > 0:
-        result = await db.execute(
+
+        artists_result_db = await db.execute(
             select(Artist)
             .join(Track, Track.artist_id == Artist.id)
             .join(Download, Download.track_id == Track.id)
@@ -278,7 +281,7 @@ async def search3(
             .limit(artistCount)
         )
 
-        for artist in result.scalars():
+        for artist in artists_result_db.scalars():
             album_result = await db.execute(select(func.count(Album.id.distinct())).where(Album.artist_id == artist.id))
             album_count = album_result.scalar() or 0
 
@@ -294,7 +297,8 @@ async def search3(
     # Search albums (ID3 format)
     albums_result = []
     if albumCount > 0:
-        result = await db.execute(
+
+        albums_result_db = await db.execute(
             select(Album)
             .join(Track, Track.album_id == Album.id)
             .join(Download, Download.track_id == Track.id)
@@ -308,7 +312,7 @@ async def search3(
             .limit(albumCount)
         )
 
-        for album in result.scalars():
+        for album in albums_result_db.scalars():
             artist_name = "Unknown Artist"
             if album.artist_id:
                 artist_result = await db.execute(select(Artist.name).where(Artist.id == album.artist_id))
@@ -354,7 +358,8 @@ async def search3(
     # Search songs (same as search2)
     songs_result = []
     if songCount > 0:
-        result = await db.execute(
+
+        songs_result_db = await db.execute(
             select(Track, Download)
             .outerjoin(Download, (Download.track_id == Track.id) & (Download.user_id == current_user.id))
             .where(
@@ -369,7 +374,7 @@ async def search3(
             .limit(songCount)
         )
 
-        for track, download in result.all():
+        for track, download in songs_result_db.all():
             songs_result.append(build_song_response(track, download))
 
     return subsonic_response(

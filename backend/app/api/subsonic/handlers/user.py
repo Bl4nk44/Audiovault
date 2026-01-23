@@ -65,18 +65,18 @@ async def star(
                 track_id = UUID(track_id_str)
 
                 # Check if already starred
-                result = await db.execute(
+                track_result = await db.execute(
                     select(StarredTrack).where(
                         StarredTrack.user_id == current_user.id,
                         StarredTrack.track_id == track_id,
                     )
                 )
-                if not result.scalar_one_or_none():
-                    starred = StarredTrack(
+                if not track_result.scalar_one_or_none():
+                    new_starred_track = StarredTrack(
                         user_id=current_user.id,
                         track_id=track_id,
                     )
-                    db.add(starred)
+                    db.add(new_starred_track)
             except ValueError:
                 continue
 
@@ -86,18 +86,18 @@ async def star(
             try:
                 album_id = UUID(album_id_str)
 
-                result = await db.execute(
+                album_result = await db.execute(
                     select(StarredAlbum).where(
                         StarredAlbum.user_id == current_user.id,
                         StarredAlbum.album_id == album_id,
                     )
                 )
-                if not result.scalar_one_or_none():
-                    starred = StarredAlbum(
+                if not album_result.scalar_one_or_none():
+                    new_starred_album = StarredAlbum(
                         user_id=current_user.id,
                         album_id=album_id,
                     )
-                    db.add(starred)
+                    db.add(new_starred_album)
             except ValueError:
                 continue
 
@@ -107,18 +107,18 @@ async def star(
             try:
                 artist_id = UUID(artist_id_str)
 
-                result = await db.execute(
+                artist_result = await db.execute(
                     select(StarredArtist).where(
                         StarredArtist.user_id == current_user.id,
                         StarredArtist.artist_id == artist_id,
                     )
                 )
-                if not result.scalar_one_or_none():
-                    starred = StarredArtist(
+                if not artist_result.scalar_one_or_none():
+                    new_starred_artist = StarredArtist(
                         user_id=current_user.id,
                         artist_id=artist_id,
                     )
-                    db.add(starred)
+                    db.add(new_starred_artist)
             except ValueError:
                 continue
 
@@ -513,13 +513,14 @@ async def get_random_songs(
         )
     )
 
+    from sqlalchemy import Integer
     # Apply filters
     if fromYear:
         query = query.where(
-            Track.metadata_content["year"].astext.cast(db.bind.dialect.type_descriptor(int)) >= fromYear
+            Track.metadata_content["year"].astext.cast(Integer) >= fromYear
         )
     if toYear:
-        query = query.where(Track.metadata_content["year"].astext.cast(db.bind.dialect.type_descriptor(int)) <= toYear)
+        query = query.where(Track.metadata_content["year"].astext.cast(Integer) <= toYear)
 
     # Random order
     query = query.order_by(sqlfunc.random()).limit(size)
