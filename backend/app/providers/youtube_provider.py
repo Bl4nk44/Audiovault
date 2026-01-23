@@ -1,5 +1,4 @@
 import re
-from typing import Any
 
 from app.providers.base import MusicProvider
 from app.schemas.metadata import PlaylistMetadata, TrackMetadata
@@ -30,7 +29,7 @@ class YouTubeProvider(MusicProvider):
 
         # Get playlist details using YouTubeService
         playlist_data = self.service.get_playlist_details(playlist_id)
-        
+
         if not playlist_data:
             return None
 

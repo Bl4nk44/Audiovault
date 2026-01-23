@@ -28,7 +28,13 @@ async def test_get_track_cover_success(client: AsyncClient, db_session):
     await db_session.commit()
 
     download_id = uuid.uuid4()
-    download = Download(id=download_id, track_id=track_id, user_id=user.id, file_path="/tmp/fake.mp3", status="completed")
+    download = Download(
+        id=download_id,
+        track_id=track_id,
+        user_id=user.id,
+        file_path="/tmp/fake.mp3",
+        status="completed",
+    )
     db_session.add(download)
     await db_session.commit()
 
@@ -163,7 +169,13 @@ async def test_get_track_cover_embedded_fallback(client: AsyncClient, db_session
     track = Track(id=track_id, title="Embedded Track", artist="Artist")
     db_session.add(track)
 
-    download = Download(id=uuid.uuid4(), track_id=track_id, user_id=user.id, file_path="/tmp/embedded.mp3", status="completed")
+    download = Download(
+        id=uuid.uuid4(),
+        track_id=track_id,
+        user_id=user.id,
+        file_path="/tmp/embedded.mp3",
+        status="completed",
+    )
     db_session.add(download)
     await db_session.commit()
 

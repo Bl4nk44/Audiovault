@@ -37,7 +37,7 @@ async def test_get_lyrics_cache_miss_genius_hit(lyrics_service):
         # Be careful with getattr mocks
         mock_song.album = None
         mock_song.release_date = None
-        
+
         mock_genius.search_song.return_value = mock_song
         mock_client.return_value = mock_genius
 

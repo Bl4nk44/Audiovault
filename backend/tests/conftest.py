@@ -10,11 +10,10 @@ from app.main import app
 from httpx import ASGITransport, AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 from sqlalchemy.orm import sessionmaker
+from sqlalchemy.pool import StaticPool
 
 # Use in-memory SQLite for tests
 SQLALCHEMY_DATABASE_URL = "sqlite+aiosqlite:///:memory:"
-
-from sqlalchemy.pool import StaticPool
 
 engine = create_async_engine(
     SQLALCHEMY_DATABASE_URL,
