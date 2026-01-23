@@ -36,7 +36,7 @@ services:
       context: .
       dockerfile: frontend/Dockerfile
       args:
-        - APP_VERSION=${APP_VERSION:-0.10.2}
+        - APP_VERSION=${APP_VERSION:-0.10.3}
     image: bl4nk404/audiovault-frontend:latest
     container_name: audiovault-frontend
     restart: unless-stopped
