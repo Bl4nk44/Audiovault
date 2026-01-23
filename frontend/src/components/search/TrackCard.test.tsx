@@ -1,5 +1,5 @@
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
-import { beforeEach, describe, expect, it, Mock, vi } from "vitest";
+import { beforeEach, describe, expect, it, type Mock, vi } from "vitest";
 import api from "../../services/api";
 import { useStore } from "../../store/useStore";
 import { notify } from "../../utils/notify";
@@ -63,7 +63,7 @@ describe("TrackCard", () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    (useStore as Mock).mockReturnValue({
+    (useStore as unknown as Mock).mockReturnValue({
       playTrack: mockPlayTrack,
       togglePlay: mockTogglePlay,
       currentTrack: null,
@@ -78,7 +78,7 @@ describe("TrackCard", () => {
   });
 
   it("handles download action success", async () => {
-    (api.post as Mock).mockResolvedValue({ data: { task_id: "job1" } });
+    (api.post as unknown as Mock).mockResolvedValue({ data: { task_id: "job1" } });
     render(<TrackCard track={mockTrack} />);
 
     const downloadBtn = screen.getByTitle("Download");
@@ -97,7 +97,7 @@ describe("TrackCard", () => {
   });
 
   it("handles download action error", async () => {
-    (api.post as Mock).mockRejectedValue(new Error("Fail"));
+    (api.post as unknown as Mock).mockRejectedValue(new Error("Fail"));
     render(<TrackCard track={mockTrack} />);
 
     fireEvent.click(screen.getByTitle("Download"));

@@ -1,5 +1,6 @@
 import os
 import uuid
+from typing import Optional
 
 from app.core.config import settings
 from app.models.download import Download
@@ -7,7 +8,6 @@ from sqlalchemy import case, func
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 from sqlalchemy.orm import joinedload
-from typing import Optional
 
 
 class LibraryDataService:
@@ -50,9 +50,9 @@ class LibraryDataService:
         if search:
             search_term = f"%{search.lower()}%"
             conditions.append(
-                (func.lower(Track.title).like(search_term)) |
-                (func.lower(Track.artist).like(search_term)) |
-                (func.lower(Track.album).like(search_term))
+                (func.lower(Track.title).like(search_term))
+                | (func.lower(Track.artist).like(search_term))
+                | (func.lower(Track.album).like(search_term))
             )
 
         # Artist filter
@@ -74,12 +74,7 @@ class LibraryDataService:
         total = total_result.scalar()
 
         # Get paginated items
-        result = await db.execute(
-            query
-            .order_by(Download.created_at.desc())
-            .offset(skip)
-            .limit(limit)
-        )
+        result = await db.execute(query.order_by(Download.created_at.desc()).offset(skip).limit(limit))
         downloads = result.scalars().unique().all()
 
         items = []
@@ -105,14 +100,14 @@ class LibraryDataService:
 
         # Fallback to native cover endpoint if no external URL
         if not image_url:
-             # Use absolute path or relative? Frontend usually prepends API_URL if relative?
-             # But here we are returning data. Frontend code in PlaylistCard uses `playlist.image_url` directly.
-             # If it starts with http, it uses it. If not?
-             # Let's check api.ts or component.
-             # Actually PlaylistCard just sets src={playlist.image_url}. 
-             # If we send "/api/v1/stream/.../cover", browser resolves relative to domain.
-             # That works.
-             image_url = f"{settings.API_V1_STR}/stream/{d.track.id}/cover"
+            # Use absolute path or relative? Frontend usually prepends API_URL if relative?
+            # But here we are returning data. Frontend code in PlaylistCard uses `playlist.image_url` directly.
+            # If it starts with http, it uses it. If not?
+            # Let's check api.ts or component.
+            # Actually PlaylistCard just sets src={playlist.image_url}.
+            # If we send "/api/v1/stream/.../cover", browser resolves relative to domain.
+            # That works.
+            image_url = f"{settings.API_V1_STR}/stream/{d.track.id}/cover"
 
         # Auto-fix for extension mismatch
         if d.file_path and not os.path.exists(d.file_path):

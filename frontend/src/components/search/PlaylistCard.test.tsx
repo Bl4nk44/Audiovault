@@ -1,9 +1,9 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { MemoryRouter } from "react-router-dom";
-import PlaylistCard from "./PlaylistCard";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { Playlist } from "../../types";
+import PlaylistCard from "./PlaylistCard";
 
 // Mock framer-motion
 vi.mock("framer-motion", () => ({
@@ -34,12 +34,7 @@ vi.mock("framer-motion", () => ({
       className?: string;
       title?: string;
     }) => (
-      <button
-        onClick={onClick}
-        disabled={disabled}
-        className={className}
-        title={title}
-      >
+      <button onClick={onClick} disabled={disabled} className={className} title={title}>
         {children}
       </button>
     ),
@@ -77,6 +72,7 @@ import { notify } from "../../utils/notify";
 describe("PlaylistCard", () => {
   const mockPlaylist: Playlist = {
     id: "playlist-1",
+    name: "Test Playlist",
     title: "Test Playlist",
     source: "spotify",
     image_url: "https://example.com/playlist.jpg",
@@ -91,7 +87,7 @@ describe("PlaylistCard", () => {
     return render(
       <MemoryRouter>
         <PlaylistCard playlist={playlist} />
-      </MemoryRouter>,
+      </MemoryRouter>
     );
   };
 
@@ -162,7 +158,7 @@ describe("PlaylistCard", () => {
         source_id: "playlist-1",
         source_name: "Test Playlist",
         auto_download: true,
-      }),
+      })
     );
     expect(notify.success).toHaveBeenCalledWith("Playlist added to watchlist");
   });

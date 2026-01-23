@@ -28,11 +28,13 @@ class WatchlistEngine:
             return val
         return uuid.UUID(str(val))
 
-    async def _handle_download(self, db: AsyncSession, user_id: str | uuid.UUID, track_id: str | uuid.UUID, item, track_title: str) -> bool:
+    async def _handle_download(
+        self, db: AsyncSession, user_id: str | uuid.UUID, track_id: str | uuid.UUID, item, track_title: str
+    ) -> bool:
         """Handle download logic: restore archived or queue new. Returns True if a download was initiated."""
         user_uuid = self._to_uuid(user_id)
         track_uuid = self._to_uuid(track_id)
-        
+
         download_exists_result = await db.execute(
             select(Download).where(Download.user_id == user_uuid, Download.track_id == track_uuid)
         )
@@ -64,7 +66,7 @@ class WatchlistEngine:
     async def add_to_watchlist(self, db: AsyncSession, user_id: str | uuid.UUID, item: dict) -> Watchlist:
         logger.info(f"Adding to watchlist: {item}")
         user_uuid = self._to_uuid(user_id)
-        
+
         # Check if exists
         result = await db.execute(
             select(Watchlist).where(
@@ -108,7 +110,7 @@ class WatchlistEngine:
     async def remove_from_watchlist(self, db: AsyncSession, watchlist_id: str | uuid.UUID, user_id: str | uuid.UUID):
         wl_uuid = self._to_uuid(watchlist_id)
         user_uuid = self._to_uuid(user_id)
-        
+
         result = await db.execute(select(Watchlist).where(Watchlist.id == wl_uuid, Watchlist.user_id == user_uuid))
         item = result.scalar_one_or_none()
         if item:
@@ -130,10 +132,12 @@ class WatchlistEngine:
             return True
         return False
 
-    async def update_watchlist_item(self, db: AsyncSession, watchlist_id: str | uuid.UUID, user_id: str | uuid.UUID, updates: dict):
+    async def update_watchlist_item(
+        self, db: AsyncSession, watchlist_id: str | uuid.UUID, user_id: str | uuid.UUID, updates: dict
+    ):
         wl_uuid = self._to_uuid(watchlist_id)
         user_uuid = self._to_uuid(user_id)
-        
+
         result = await db.execute(select(Watchlist).where(Watchlist.id == wl_uuid, Watchlist.user_id == user_uuid))
         item = result.scalar_one_or_none()
         if item:

@@ -127,44 +127,41 @@ async def download_all_artist_tracks(
     Creates a folder with the artist's name and downloads all albums/singles.
     """
     import logging
-    from app.services.spotify_service import SpotifyService
+
     from app.models.track import Track
-    
+    from app.services.spotify_service import SpotifyService
+
     logger = logging.getLogger(__name__)
-    
+
     if request.source != "spotify":
         raise HTTPException(status_code=400, detail="Only Spotify source is currently supported")
-    
+
     service = SpotifyService()
     if not service.client:
         raise HTTPException(status_code=503, detail="Spotify service not configured")
-    
+
     # Get artist details
     artist = service.get_artist_details(artist_id)
     if not artist:
         raise HTTPException(status_code=404, detail="Artist not found")
-    
+
     artist_name = artist["name"]
     queued_count = 0
-    
+
     # Get all albums for the artist
     albums = service.get_artist_albums(artist_id)
-    
+
     for album in albums:
         album_id = album["id"]
-        
+
         # Get tracks from the album
         tracks = service.get_album_tracks(album_id)
-        
+
         for track_data in tracks:
             # Check if track already exists in DB
-            existing = await db.execute(
-                select(Track).where(
-                    Track.spotify_id == track_data["id"]
-                )
-            )
+            existing = await db.execute(select(Track).where(Track.spotify_id == track_data["id"]))
             track_obj = existing.scalar_one_or_none()
-            
+
             if not track_obj:
                 # Create track in DB
                 track_obj = Track(
@@ -174,42 +171,42 @@ async def download_all_artist_tracks(
                     duration_ms=track_data.get("duration_ms"),
                     metadata_content={
                         "image_url": track_data.get("image_url"),
-                        "album_art": track_data.get("image_url"), # Fallback
+                        "album_art": track_data.get("image_url"),  # Fallback
                         "album": track_data.get("album"),
                         "isrc": track_data.get("isrc"),
-                    }
+                    },
                 )
                 db.add(track_obj)
                 await db.flush()
-            
+
             # Queue download with artist name as folder
             download_data = DownloadCreate(
                 track_id=track_obj.id,
                 source="spotify",
                 playlist_name=artist_name,  # Use artist name as folder
             )
-            
+
             try:
                 await download_manager.add_download(db, current_user.id, download_data)
                 queued_count += 1
             except Exception as e:
                 logger.warning(f"Failed to queue track {track_data['title']}: {e}")
                 continue
-    
+
     await db.commit()
-    
+
     return {
         "status": "success",
         "artist": artist_name,
         "queued_count": queued_count,
-        "message": f"Queued {queued_count} tracks from {artist_name}"
+        "message": f"Queued {queued_count} tracks from {artist_name}",
     }
 
 
 @router.post("/album/{album_id}/download")
 async def download_album(
     album_id: str,
-    request: ArtistDownloadRequest, # reusing this model as it just has 'source'
+    request: ArtistDownloadRequest,  # reusing this model as it just has 'source'
     current_user: User = Depends(get_current_active_user),
     db: AsyncSession = Depends(get_db),
 ):
@@ -218,42 +215,39 @@ async def download_album(
     Creates a folder with the Album name (or Artist/Album structure handled by manager).
     """
     import logging
-    from app.services.spotify_service import SpotifyService
+
     from app.models.track import Track
-    
+    from app.services.spotify_service import SpotifyService
+
     logger = logging.getLogger(__name__)
-    
+
     if request.source != "spotify":
         raise HTTPException(status_code=400, detail="Only Spotify source is currently supported")
-    
+
     service = SpotifyService()
     if not service.client:
         raise HTTPException(status_code=503, detail="Spotify service not configured")
-    
+
     # Get album details for name
     try:
         album_data = service.get_album(album_id)
         if not album_data:
-             raise HTTPException(status_code=404, detail="Album not found")
+            raise HTTPException(status_code=404, detail="Album not found")
         album_name = album_data["name"]
     except Exception as e:
         logger.error(f"Error fetching album {album_id}: {e}")
         raise HTTPException(status_code=404, detail="Album not found")
-    
+
     queued_count = 0
-    
+
     # Get tracks from the album
     tracks = service.get_album_tracks(album_id)
-    
+
     for track_data in tracks:
         # Check if track already exists in DB
-        existing = await db.execute(
-            select(Track).where(
-                Track.spotify_id == track_data["id"]
-            )
-        )
+        existing = await db.execute(select(Track).where(Track.spotify_id == track_data["id"]))
         track_obj = existing.scalar_one_or_none()
-        
+
         if not track_obj:
             # Create track in DB
             track_obj = Track(
@@ -266,39 +260,39 @@ async def download_album(
                     "album_art": track_data.get("image_url"),
                     "album": track_data.get("album"),
                     "isrc": track_data.get("isrc"),
-                }
+                },
             )
             db.add(track_obj)
             await db.flush()
-        
-        # Queue download with album name as playlist/folder? 
+
+        # Queue download with album name as playlist/folder?
         # Usually user prefers Artist/Album structure.
         # But 'playlist_name' in DownloadCreate forces a specific folder.
         # If we pass None, the download manager uses default structure (Artist - Title).
         # Let's pass album_name to group them if desired, OR None for default flat/artist structure.
         # User request implies "download album", usually implying a folder.
         # Let's use album_name as playlist_name so they end up in a folder.
-        
+
         download_data = DownloadCreate(
             track_id=track_obj.id,
             source="spotify",
-            playlist_name=album_name, 
+            playlist_name=album_name,
         )
-        
+
         try:
             await download_manager.add_download(db, current_user.id, download_data)
             queued_count += 1
         except Exception as e:
             logger.warning(f"Failed to queue track {track_data['title']}: {e}")
             continue
-            
+
     await db.commit()
-    
+
     return {
         "status": "success",
         "album": album_name,
         "queued_count": queued_count,
-        "message": f"Queued {queued_count} tracks from {album_name}"
+        "message": f"Queued {queued_count} tracks from {album_name}",
     }
 
 
@@ -403,6 +397,7 @@ async def get_library(
 
 class BulkUpdateRequest(BaseModel):
     """Request model for bulk updating library items."""
+
     download_ids: list[UUID]
     updates: dict  # Fields to update: artist, title, album, genre, year
 
@@ -430,8 +425,7 @@ async def bulk_update_library_items(
     invalid_fields = set(request.updates.keys()) - allowed_fields
     if invalid_fields:
         raise HTTPException(
-            status_code=400,
-            detail=f"Invalid fields: {', '.join(invalid_fields)}. Allowed: {', '.join(allowed_fields)}"
+            status_code=400, detail=f"Invalid fields: {', '.join(invalid_fields)}. Allowed: {', '.join(allowed_fields)}"
         )
 
     success_count = 0
@@ -439,9 +433,7 @@ async def bulk_update_library_items(
 
     for d_id in request.download_ids:
         try:
-            await library_maintenance_service.update_download_item(
-                db, str(current_user.id), str(d_id), request.updates
-            )
+            await library_maintenance_service.update_download_item(db, str(current_user.id), str(d_id), request.updates)
             success_count += 1
         except Exception:
             failed_ids.append(str(d_id))

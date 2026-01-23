@@ -2,29 +2,26 @@
 Extended tests for Subsonic browse handlers to increase code coverage.
 Covers: getArtists, getMusicDirectory edge cases, album/artist not found, invalid IDs.
 """
-import pytest
+
 import uuid
-from httpx import AsyncClient
-from app.models.artist import Artist
+
+import pytest
 from app.models.album import Album
-from app.models.track import Track
+from app.models.artist import Artist
 from app.models.download import Download
+from app.models.track import Track
+from httpx import AsyncClient
 
 
 @pytest.fixture
 def subsonic_auth_params(admin_user):
-    return {
-        "u": admin_user.username,
-        "p": "admin",
-        "c": "pytest",
-        "v": "1.16.1",
-        "f": "json"
-    }
+    return {"u": admin_user.username, "p": "admin", "c": "pytest", "v": "1.16.1", "f": "json"}
 
 
 # =============================================================================
 # getArtists (ID3 view)
 # =============================================================================
+
 
 @pytest.mark.asyncio
 async def test_get_artists(client: AsyncClient, subsonic_auth_params, db_session, admin_user):
@@ -38,7 +35,7 @@ async def test_get_artists(client: AsyncClient, subsonic_auth_params, db_session
     for a in artists:
         db_session.add(a)
     await db_session.flush()
-    
+
     # Create tracks for each artist so they're visible
     for a in artists:
         track = Track(id=uuid.uuid4(), title=f"Track by {a.name}", artist_id=a.id)
@@ -46,9 +43,9 @@ async def test_get_artists(client: AsyncClient, subsonic_auth_params, db_session
         await db_session.flush()
         download = Download(track_id=track.id, user_id=admin_user.id, status="completed", file_path="/tmp/t.mp3")
         db_session.add(download)
-    
+
     await db_session.commit()
-    
+
     response = await client.get("/rest/getArtists.view", params=subsonic_auth_params)
     assert response.status_code == 200
     data = response.json()
@@ -66,6 +63,7 @@ async def test_get_artists_empty(client: AsyncClient, subsonic_auth_params):
 # =============================================================================
 # getArtist edge cases
 # =============================================================================
+
 
 @pytest.mark.asyncio
 async def test_get_artist_not_found(client: AsyncClient, subsonic_auth_params):
@@ -94,22 +92,22 @@ async def test_get_artist_multiple_albums(client: AsyncClient, subsonic_auth_par
     artist = Artist(id=uuid.uuid4(), name="Multi Album Artist")
     db_session.add(artist)
     await db_session.flush()
-    
+
     # Create multiple albums
     for i in range(3):
-        album = Album(id=uuid.uuid4(), title=f"Album {i+1}", artist_id=artist.id, release_date=f"202{i}-01-01")
+        album = Album(id=uuid.uuid4(), title=f"Album {i + 1}", artist_id=artist.id, release_date=f"202{i}-01-01")
         db_session.add(album)
         await db_session.flush()
-        
-        track = Track(id=uuid.uuid4(), title=f"Track from Album {i+1}", artist_id=artist.id, album_id=album.id)
+
+        track = Track(id=uuid.uuid4(), title=f"Track from Album {i + 1}", artist_id=artist.id, album_id=album.id)
         db_session.add(track)
         await db_session.flush()
-        
+
         download = Download(track_id=track.id, user_id=admin_user.id, status="completed", file_path=f"/tmp/a{i}.mp3")
         db_session.add(download)
-    
+
     await db_session.commit()
-    
+
     params = {**subsonic_auth_params, "id": str(artist.id)}
     response = await client.get("/rest/getArtist.view", params=params)
     assert response.status_code == 200
@@ -120,6 +118,7 @@ async def test_get_artist_multiple_albums(client: AsyncClient, subsonic_auth_par
 # =============================================================================
 # getAlbum edge cases
 # =============================================================================
+
 
 @pytest.mark.asyncio
 async def test_get_album_not_found(client: AsyncClient, subsonic_auth_params):
@@ -147,20 +146,22 @@ async def test_get_album_multiple_tracks(client: AsyncClient, subsonic_auth_para
     artist = Artist(id=uuid.uuid4(), name="Album Artist")
     db_session.add(artist)
     await db_session.flush()
-    
+
     album = Album(id=uuid.uuid4(), title="Multi Track Album", artist_id=artist.id)
     db_session.add(album)
     await db_session.flush()
-    
+
     for i in range(5):
-        track = Track(id=uuid.uuid4(), title=f"Track {i+1}", artist_id=artist.id, album_id=album.id, duration_ms=180000)
+        track = Track(
+            id=uuid.uuid4(), title=f"Track {i + 1}", artist_id=artist.id, album_id=album.id, duration_ms=180000
+        )
         db_session.add(track)
         await db_session.flush()
         download = Download(track_id=track.id, user_id=admin_user.id, status="completed", file_path=f"/tmp/t{i}.mp3")
         db_session.add(download)
-    
+
     await db_session.commit()
-    
+
     params = {**subsonic_auth_params, "id": str(album.id)}
     response = await client.get("/rest/getAlbum.view", params=params)
     assert response.status_code == 200
@@ -171,6 +172,7 @@ async def test_get_album_multiple_tracks(client: AsyncClient, subsonic_auth_para
 # =============================================================================
 # getSong edge cases
 # =============================================================================
+
 
 @pytest.mark.asyncio
 async def test_get_song_not_found(client: AsyncClient, subsonic_auth_params):
@@ -198,11 +200,11 @@ async def test_get_song_with_metadata(client: AsyncClient, subsonic_auth_params,
     artist = Artist(id=uuid.uuid4(), name="Song Artist")
     db_session.add(artist)
     await db_session.flush()
-    
+
     album = Album(id=uuid.uuid4(), title="Song Album", artist_id=artist.id)
     db_session.add(album)
     await db_session.flush()
-    
+
     track = Track(
         id=uuid.uuid4(),
         title="Full Metadata Song",
@@ -211,15 +213,17 @@ async def test_get_song_with_metadata(client: AsyncClient, subsonic_auth_params,
         artist_id=artist.id,
         album_id=album.id,
         duration_ms=210000,
-        metadata_content={"image_url": "http://cover.jpg", "genre": "Rock"}
+        metadata_content={"image_url": "http://cover.jpg", "genre": "Rock"},
     )
     db_session.add(track)
     await db_session.flush()
-    
-    download = Download(track_id=track.id, user_id=admin_user.id, status="completed", file_path="/tmp/full.mp3", file_size=5000000)
+
+    download = Download(
+        track_id=track.id, user_id=admin_user.id, status="completed", file_path="/tmp/full.mp3", file_size=5000000
+    )
     db_session.add(download)
     await db_session.commit()
-    
+
     params = {**subsonic_auth_params, "id": str(track.id)}
     response = await client.get("/rest/getSong.view", params=params)
     assert response.status_code == 200
@@ -233,26 +237,27 @@ async def test_get_song_with_metadata(client: AsyncClient, subsonic_auth_params,
 # getMusicDirectory edge cases
 # =============================================================================
 
+
 @pytest.mark.asyncio
 async def test_get_music_directory_album(client: AsyncClient, subsonic_auth_params, db_session, admin_user):
     """Test getMusicDirectory with album ID returns songs."""
     artist = Artist(id=uuid.uuid4(), name="Dir Album Artist")
     db_session.add(artist)
     await db_session.flush()
-    
+
     album = Album(id=uuid.uuid4(), title="Dir Album", artist_id=artist.id)
     db_session.add(album)
     await db_session.flush()
-    
+
     for i in range(3):
-        track = Track(id=uuid.uuid4(), title=f"Dir Song {i+1}", artist_id=artist.id, album_id=album.id)
+        track = Track(id=uuid.uuid4(), title=f"Dir Song {i + 1}", artist_id=artist.id, album_id=album.id)
         db_session.add(track)
         await db_session.flush()
         download = Download(track_id=track.id, user_id=admin_user.id, status="completed", file_path=f"/tmp/d{i}.mp3")
         db_session.add(download)
-    
+
     await db_session.commit()
-    
+
     params = {**subsonic_auth_params, "id": str(album.id)}
     response = await client.get("/rest/getMusicDirectory.view", params=params)
     assert response.status_code == 200
@@ -282,21 +287,22 @@ async def test_get_music_directory_not_found(client: AsyncClient, subsonic_auth_
 # getIndexes edge cases
 # =============================================================================
 
+
 @pytest.mark.asyncio
 async def test_get_indexes_with_modified_since(client: AsyncClient, subsonic_auth_params, db_session, admin_user):
     """Test getIndexes with ifModifiedSince parameter."""
     artist = Artist(id=uuid.uuid4(), name="Modified Artist")
     db_session.add(artist)
     await db_session.flush()
-    
+
     track = Track(id=uuid.uuid4(), title="Mod Track", artist_id=artist.id)
     db_session.add(track)
     await db_session.flush()
-    
+
     download = Download(track_id=track.id, user_id=admin_user.id, status="completed", file_path="/tmp/m.mp3")
     db_session.add(download)
     await db_session.commit()
-    
+
     # Request with a future timestamp (should return empty)
     params = {**subsonic_auth_params, "ifModifiedSince": 9999999999999}
     response = await client.get("/rest/getIndexes.view", params=params)
@@ -309,15 +315,15 @@ async def test_get_indexes_with_music_folder(client: AsyncClient, subsonic_auth_
     artist = Artist(id=uuid.uuid4(), name="Folder Artist")
     db_session.add(artist)
     await db_session.flush()
-    
+
     track = Track(id=uuid.uuid4(), title="Folder Track", artist_id=artist.id)
     db_session.add(track)
     await db_session.flush()
-    
+
     download = Download(track_id=track.id, user_id=admin_user.id, status="completed", file_path="/tmp/f.mp3")
     db_session.add(download)
     await db_session.commit()
-    
+
     params = {**subsonic_auth_params, "musicFolderId": "1"}
     response = await client.get("/rest/getIndexes.view", params=params)
     assert response.status_code == 200

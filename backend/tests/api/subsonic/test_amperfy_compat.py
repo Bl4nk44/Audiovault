@@ -39,7 +39,7 @@ async def test_get_artist_info2(client: AsyncClient, test_user: User, sample_art
     response = await client.get(
         f"/rest/getArtistInfo2.view?id={sample_artist.id}&u=testuser&p=testpass&c=test&v=1.16.1&f=json"
     )
-    
+
     assert response.status_code == 200, f"Expected 200, got {response.status_code}. Body: {response.text}"
     data = response.json()
     assert data["subsonic-response"]["status"] == "ok"
@@ -49,10 +49,8 @@ async def test_get_artist_info2(client: AsyncClient, test_user: User, sample_art
 @pytest.mark.asyncio
 async def test_get_podcasts(client: AsyncClient, test_user: User):
     """Test getPodcasts.view returns empty list (not 404)."""
-    response = await client.get(
-        "/rest/getPodcasts.view?u=testuser&p=testpass&c=test&v=1.16.1&f=json"
-    )
-    
+    response = await client.get("/rest/getPodcasts.view?u=testuser&p=testpass&c=test&v=1.16.1&f=json")
+
     assert response.status_code == 200, f"Expected 200, got {response.status_code}. Body: {response.text}"
     data = response.json()
     assert data["subsonic-response"]["status"] == "ok"
@@ -62,10 +60,8 @@ async def test_get_podcasts(client: AsyncClient, test_user: User):
 @pytest.mark.asyncio
 async def test_get_genres(client: AsyncClient, test_user: User):
     """Test getGenres.view returns valid response (not 404)."""
-    response = await client.get(
-        "/rest/getGenres.view?u=testuser&p=testpass&c=test&v=1.16.1&f=json"
-    )
-    
+    response = await client.get("/rest/getGenres.view?u=testuser&p=testpass&c=test&v=1.16.1&f=json")
+
     assert response.status_code == 200, f"Expected 200, got {response.status_code}. Body: {response.text}"
     data = response.json()
     assert data["subsonic-response"]["status"] == "ok"
@@ -79,21 +75,19 @@ async def test_get_artist_info2_xml_format(client: AsyncClient, test_user: User,
     response = await client.get(
         f"/rest/getArtistInfo2.view?id={sample_artist.id}&u=testuser&p=testpass&c=Amperfy&v=1.11.0"
     )
-    
+
     assert response.status_code == 200, f"Expected 200, got {response.status_code}. Body: {response.text}"
     # Should be XML
-    assert response.headers.get("content-type", "").startswith("application/xml") or \
-           response.headers.get("content-type", "").startswith("text/xml"), \
-           f"Expected XML content-type, got: {response.headers.get('content-type')}"
+    assert response.headers.get("content-type", "").startswith("application/xml") or response.headers.get(
+        "content-type", ""
+    ).startswith("text/xml"), f"Expected XML content-type, got: {response.headers.get('content-type')}"
     # Basic XML structure check
-    assert '<?xml version="1.0"' in response.text or 'subsonic-response' in response.text
+    assert '<?xml version="1.0"' in response.text or "subsonic-response" in response.text
 
 
 @pytest.mark.asyncio
 async def test_get_podcasts_xml_format(client: AsyncClient, test_user: User):
     """Test getPodcasts.view returns valid XML for Amperfy."""
-    response = await client.get(
-        "/rest/getPodcasts.view?u=testuser&p=testpass&c=Amperfy&v=1.11.0&includeEpisodes=false"
-    )
-    
+    response = await client.get("/rest/getPodcasts.view?u=testuser&p=testpass&c=Amperfy&v=1.11.0&includeEpisodes=false")
+
     assert response.status_code == 200, f"Expected 200, got {response.status_code}. Body: {response.text}"

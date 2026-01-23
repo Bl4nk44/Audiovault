@@ -152,7 +152,7 @@ class SyncManager:
         """
         if sync_token not in self._pending_reports:
             raise ValueError("Invalid or expired sync token")
-        
+
         report = self._pending_reports[sync_token]
         watchlist_id = report["watchlist_id"]
 

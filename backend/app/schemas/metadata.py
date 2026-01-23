@@ -34,4 +34,3 @@ class PlaylistMetadata(BaseModel):
     image_url: str | None = None
     source: str | None = None
     source_id: str | None = None
-

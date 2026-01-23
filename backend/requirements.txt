@@ -40,7 +40,7 @@ types-redis
 types-requests
 types-aiofiles
 
-zipp>=3.19.1 # not directly required, pinned by Snyk to avoid a vulnerability
+zipp>=3.23.0 # not directly required, pinned by Snyk to avoid a vulnerability
 dnspython>=2.6.1 # not directly required, pinned by Snyk to avoid a vulnerability
 greenlet>=3.0.0
 aiofiles

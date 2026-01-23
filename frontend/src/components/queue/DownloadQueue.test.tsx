@@ -1,5 +1,5 @@
 import { act, fireEvent, render, screen, waitFor } from "@testing-library/react";
-import { beforeEach, describe, expect, it, Mock, vi } from "vitest";
+import { beforeEach, describe, expect, it, type Mock, vi } from "vitest";
 import { downloadsApi } from "../../api/downloads";
 import api from "../../services/api";
 import { useStore } from "../../store/useStore";
@@ -46,8 +46,8 @@ describe("DownloadQueue Component", () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    (useStore as Mock).mockReturnValue({ addNotification: mockAddNotification });
-    (api.get as Mock).mockResolvedValue({ data: mockQueue });
+    (useStore as unknown as Mock).mockReturnValue({ addNotification: mockAddNotification });
+    (api.get as unknown as Mock).mockResolvedValue({ data: mockQueue });
   });
 
   it("fetches and displays queue items", async () => {
@@ -59,7 +59,7 @@ describe("DownloadQueue Component", () => {
   });
 
   it("displays empty state when queue is empty", async () => {
-    (api.get as Mock).mockResolvedValue({ data: [] });
+    (api.get as unknown as Mock).mockResolvedValue({ data: [] });
     render(<DownloadQueue />);
     await waitFor(() => {
       expect(screen.getByText("Queue is empty")).toBeInTheDocument();
@@ -112,7 +112,7 @@ describe("DownloadQueue Component", () => {
   });
 
   it("handles error during fetch", async () => {
-    (api.get as Mock).mockRejectedValue(new Error("Fail"));
+    (api.get as unknown as Mock).mockRejectedValue(new Error("Fail"));
     render(<DownloadQueue />);
     await waitFor(() => {
       expect(mockAddNotification).toHaveBeenCalledWith("error", expect.any(String));

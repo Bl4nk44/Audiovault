@@ -16,7 +16,9 @@ def mock_yt_dlp():
             return {
                 "url": "https://manifest.googlevideo.com/playback",
                 "http_headers": {
-                    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36",
+                    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
+                    "AppleWebKit/537.36 (KHTML, like Gecko) "
+                    "Chrome/91.0.4472.124 Safari/537.36",
                     "Referer": "https://www.youtube.com/",
                     "Cookie": "CONSENT=YES+cb.20210328-17-p0.en+FX+417",
                 },
@@ -36,8 +38,9 @@ async def test_extract_direct_url_returns_headers(mock_yt_dlp):
     assert url == "https://manifest.googlevideo.com/playback"
     assert headers is not None
     assert (
-        headers["User-Agent"]
-        == "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36"
+        headers["User-Agent"] == "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
+        "AppleWebKit/537.36 (KHTML, like Gecko) "
+        "Chrome/91.0.4472.124 Safari/537.36"
     )
     assert headers["Referer"] == "https://www.youtube.com/"
 
@@ -72,8 +75,8 @@ async def test_stream_content_uses_headers():
         # This test assumes we WILL modify existing _stream_content to take headers
 
         # Using a wrapper to consume the async generator
-        async for _ in _stream_content(test_url, headers=test_headers):
-            pass
+        chunks = [chunk async for chunk in _stream_content(test_url, headers=test_headers)]
+        assert len(chunks) > 0
 
         # Verify headers were passed to get() or Session constructor?
         # Ideally passed to get() for per-request flexibility, or ClientSession(headers=...)

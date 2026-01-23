@@ -7,11 +7,10 @@ import logging
 from typing import Optional
 from uuid import UUID
 
-from sqlalchemy import select, update
-from sqlalchemy.ext.asyncio import AsyncSession
-
 from app.core.encryption import encryption_service
 from app.models.credentials import ServiceCredentials
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
 
 logger = logging.getLogger(__name__)
 
@@ -158,7 +157,9 @@ class CredentialsService:
 
         await db.commit()
 
-        logger.info(f"Credentials migration: {migrated} migrated, {already_encrypted} already encrypted, {failed} failed")
+        logger.info(
+            f"Credentials migration: {migrated} migrated, {already_encrypted} already encrypted, {failed} failed"
+        )
 
         return {
             "migrated": migrated,

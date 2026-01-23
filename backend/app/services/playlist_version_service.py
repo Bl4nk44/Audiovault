@@ -6,11 +6,10 @@ import logging
 from typing import Optional
 from uuid import UUID
 
-from sqlalchemy import func, select
-from sqlalchemy.ext.asyncio import AsyncSession
-
 from app.models.playlist import Playlist, PlaylistTrack
 from app.models.playlist_version import PlaylistVersion
+from sqlalchemy import func, select
+from sqlalchemy.ext.asyncio import AsyncSession
 
 logger = logging.getLogger(__name__)
 
@@ -22,14 +21,10 @@ class PlaylistVersionService:
     """
 
     @staticmethod
-    async def get_next_version_number(
-        db: AsyncSession, playlist_id: UUID
-    ) -> int:
+    async def get_next_version_number(db: AsyncSession, playlist_id: UUID) -> int:
         """Get the next version number for a playlist."""
         result = await db.execute(
-            select(func.max(PlaylistVersion.version_number)).where(
-                PlaylistVersion.playlist_id == playlist_id
-            )
+            select(func.max(PlaylistVersion.version_number)).where(PlaylistVersion.playlist_id == playlist_id)
         )
         current_max = result.scalar()
         return (current_max or 0) + 1
@@ -55,21 +50,14 @@ class PlaylistVersionService:
         Returns:
             Created PlaylistVersion instance
         """
-        version_number = await PlaylistVersionService.get_next_version_number(
-            db, playlist.id
-        )
+        version_number = await PlaylistVersionService.get_next_version_number(db, playlist.id)
 
         # Get current track IDs in order
         result = await db.execute(
-            select(PlaylistTrack)
-            .where(PlaylistTrack.playlist_id == playlist.id)
-            .order_by(PlaylistTrack.order)
+            select(PlaylistTrack).where(PlaylistTrack.playlist_id == playlist.id).order_by(PlaylistTrack.order)
         )
         tracks = result.scalars().all()
-        tracks_snapshot = [
-            {"track_id": str(pt.track_id), "order": pt.order}
-            for pt in tracks
-        ]
+        tracks_snapshot = [{"track_id": str(pt.track_id), "order": pt.order} for pt in tracks]
 
         version = PlaylistVersion(
             playlist_id=playlist.id,
@@ -86,9 +74,7 @@ class PlaylistVersionService:
         await db.commit()
         await db.refresh(version)
 
-        logger.info(
-            f"Created version {version_number} for playlist {playlist.id} ({change_type})"
-        )
+        logger.info(f"Created version {version_number} for playlist {playlist.id} ({change_type})")
 
         return version
 
@@ -146,11 +132,7 @@ class PlaylistVersionService:
         playlist.comment = version.comment
 
         # Delete current tracks
-        await db.execute(
-            PlaylistTrack.__table__.delete().where(
-                PlaylistTrack.playlist_id == playlist.id
-            )
-        )
+        await db.execute(PlaylistTrack.__table__.delete().where(PlaylistTrack.playlist_id == playlist.id))
 
         # Restore tracks from snapshot
         for track_data in version.tracks_snapshot:
@@ -174,9 +156,7 @@ class PlaylistVersionService:
             },
         )
 
-        logger.info(
-            f"Rolled back playlist {playlist.id} to version {version.version_number}"
-        )
+        logger.info(f"Rolled back playlist {playlist.id} to version {version.version_number}")
 
         return new_version
 

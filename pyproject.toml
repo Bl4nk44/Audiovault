@@ -17,10 +17,12 @@ line-length = 120
 target-version = "py312"
 
 [tool.ruff.lint]
-...
+select = ["E", "F", "W", "I"]
+ignore = []
+
 [tool.mypy]
 python_version = "3.12"
-...
+ignore_missing_imports = true
 [tool.pyright]
 include = ["backend/app"]
 exclude = ["**/__pycache__", "**/node_modules", "backend/.venv", "backend/tests"]

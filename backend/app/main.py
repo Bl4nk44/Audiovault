@@ -181,4 +181,3 @@ async def shutdown_event():
 
 # Alias for ASGI compatibility (uvicorn looks for 'app' by default)
 app = application
-

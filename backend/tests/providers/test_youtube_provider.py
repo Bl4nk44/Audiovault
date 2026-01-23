@@ -1,12 +1,14 @@
+from unittest.mock import patch
+
 import pytest
-from unittest.mock import Mock, patch
 from app.providers.youtube_provider import YouTubeProvider
-from app.schemas.metadata import PlaylistMetadata, TrackMetadata
+
 
 @pytest.fixture
 def youtube_provider():
-    with patch('app.providers.youtube_provider.YouTubeService'):
+    with patch("app.providers.youtube_provider.YouTubeService"):
         return YouTubeProvider()
+
 
 @pytest.mark.asyncio
 async def test_can_handle(youtube_provider):
@@ -14,6 +16,7 @@ async def test_can_handle(youtube_provider):
     assert youtube_provider.can_handle("https://youtu.be/123") is True
     assert youtube_provider.can_handle("https://music.youtube.com/watch?v=123") is True
     assert youtube_provider.can_handle("https://spotify.com") is False
+
 
 @pytest.mark.asyncio
 async def test_extract_playlist(youtube_provider):
@@ -25,10 +28,10 @@ async def test_extract_playlist(youtube_provider):
             "artist": "Author 1",
             "album": "Album 1",
             "duration_ms": 3000,
-            "image_url": "img1"
+            "image_url": "img1",
         }
     ]
-    
+
     # Mock YTMusic get_playlist
     youtube_provider.service.yt.get_playlist.return_value = {"title": "My YT Playlist"}
 
@@ -41,12 +44,14 @@ async def test_extract_playlist(youtube_provider):
     assert result.tracks[0].source == "youtube"
     assert result.source_id == "PL123"
 
+
 @pytest.mark.asyncio
 async def test_extract_playlist_no_tracks(youtube_provider):
     youtube_provider.service.get_playlist_tracks.return_value = []
-    
+
     result = await youtube_provider.extract_playlist("https://www.youtube.com/playlist?list=PL404")
     assert result is None
+
 
 @pytest.mark.asyncio
 async def test_get_track(youtube_provider):

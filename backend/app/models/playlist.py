@@ -10,9 +10,7 @@ from app.db.base import Base
 class Playlist(Base):
     __tablename__ = "playlists"
 
-    __table_args__ = (
-        Index("ix_playlists_owner_name", "owner_id", "name"),
-    )
+    __table_args__ = (Index("ix_playlists_owner_name", "owner_id", "name"),)
 
     id = Column(Uuid(as_uuid=True), primary_key=True, default=uuid4)
     name = Column(String, index=True, nullable=False)
@@ -41,9 +39,7 @@ class Playlist(Base):
 class PlaylistTrack(Base):
     __tablename__ = "playlist_tracks"
 
-    __table_args__ = (
-        Index("ix_playlist_tracks_order", "playlist_id", "order"),
-    )
+    __table_args__ = (Index("ix_playlist_tracks_order", "playlist_id", "order"),)
 
     playlist_id = Column(Uuid(as_uuid=True), ForeignKey("playlists.id"), primary_key=True)
     track_id = Column(Uuid(as_uuid=True), ForeignKey("tracks.id"), primary_key=True)
@@ -52,4 +48,3 @@ class PlaylistTrack(Base):
     # Relationships
     playlist = relationship("Playlist", back_populates="tracks")
     track = relationship("Track")
-

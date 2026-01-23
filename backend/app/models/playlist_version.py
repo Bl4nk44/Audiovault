@@ -21,14 +21,10 @@ class PlaylistVersion(Base):
 
     __tablename__ = "playlist_versions"
 
-    __table_args__ = (
-        Index("ix_playlist_versions_playlist_created", "playlist_id", "created_at"),
-    )
+    __table_args__ = (Index("ix_playlist_versions_playlist_created", "playlist_id", "created_at"),)
 
     id = Column(Uuid(as_uuid=True), primary_key=True, default=uuid4)
-    playlist_id = Column(
-        Uuid(as_uuid=True), ForeignKey("playlists.id", ondelete="CASCADE"), nullable=False
-    )
+    playlist_id = Column(Uuid(as_uuid=True), ForeignKey("playlists.id", ondelete="CASCADE"), nullable=False)
     version_number = Column(Integer, nullable=False)
 
     # Snapshot of playlist metadata at this version

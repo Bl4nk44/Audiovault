@@ -1,5 +1,5 @@
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
-import { beforeEach, describe, expect, it, Mock, vi } from "vitest";
+import { beforeEach, describe, expect, it, type Mock, vi } from "vitest";
 import { watchlistApi } from "../../api/watchlist";
 import api from "../../services/api";
 import { useStore } from "../../store/useStore";
@@ -51,13 +51,13 @@ describe("WatchlistManager Component", () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    (useStore as Mock).mockReturnValue({
+    (useStore as unknown as Mock).mockReturnValue({
       fetchDownloads: mockFetchDownloads,
       syncWatchlist: mockSyncWatchlist,
       removeFromWatchlist: mockRemoveFromWatchlist,
       watchlist: mockWatchlist,
     });
-    (watchlistApi.getAll as Mock).mockResolvedValue(mockWatchlist);
+    (watchlistApi.getAll as unknown as Mock).mockResolvedValue(mockWatchlist);
   });
 
   it("renders watchlist items in grid view by default", async () => {
@@ -83,7 +83,7 @@ describe("WatchlistManager Component", () => {
   });
 
   it("handles empty state", async () => {
-    (useStore as Mock).mockReturnValue({
+    (useStore as unknown as Mock).mockReturnValue({
       fetchDownloads: mockFetchDownloads,
       syncWatchlist: mockSyncWatchlist,
       removeFromWatchlist: mockRemoveFromWatchlist,
@@ -145,7 +145,7 @@ describe("WatchlistManager Component", () => {
 
   it("checks for updates manually", async () => {
     // Mock API response
-    (api.post as Mock).mockResolvedValue({ data: { new_downloads: 5 } });
+    (api.post as unknown as Mock).mockResolvedValue({ data: { new_downloads: 5 } });
 
     render(<WatchlistManager />);
     await waitFor(() => expect(screen.getByText("Artist 1")).toBeInTheDocument());
@@ -164,7 +164,7 @@ describe("WatchlistManager Component", () => {
   });
 
   it("handles check updates error", async () => {
-    (api.post as Mock).mockRejectedValue(new Error("Network Error"));
+    (api.post as unknown as Mock).mockRejectedValue(new Error("Network Error"));
 
     render(<WatchlistManager />);
     await waitFor(() => expect(screen.getByText("Artist 1")).toBeInTheDocument());

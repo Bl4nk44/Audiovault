@@ -29,7 +29,6 @@ class Settings(BaseSettings):
     # Genius API for lyrics
     GENIUS_API_TOKEN: str | None = None
 
-
     DOWNLOAD_DIR: str = os.getenv("DOWNLOAD_DIR", os.path.join(os.getcwd(), "downloads"))
     MAX_PARALLEL_DOWNLOADS: int = 3
     STORAGE_QUOTA_GB: int = 500

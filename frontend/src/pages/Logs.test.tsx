@@ -1,5 +1,5 @@
 import { act, fireEvent, render, screen, waitFor } from "@testing-library/react";
-import { beforeEach, describe, expect, it, Mock, vi } from "vitest";
+import { beforeEach, describe, expect, it, type Mock, vi } from "vitest";
 import api from "../services/api";
 import Logs from "./Logs";
 
@@ -27,12 +27,12 @@ describe("Logs Page (History)", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     vi.useRealTimers();
-    (api.get as Mock).mockResolvedValue({ data: [] });
+    (api.get as unknown as Mock).mockResolvedValue({ data: [] });
     globalThis.URL.createObjectURL = vi.fn(() => "blob:url");
   });
 
   it("renders logs and fetches data on mount", async () => {
-    (api.get as Mock).mockResolvedValue({ data: sampleLogs });
+    (api.get as unknown as Mock).mockResolvedValue({ data: sampleLogs });
     render(<Logs />);
     await waitFor(() => {
       expect(screen.getByText("logs.title")).toBeInTheDocument();
@@ -42,7 +42,7 @@ describe("Logs Page (History)", () => {
   });
 
   it("filters logs to show errors only", async () => {
-    (api.get as Mock).mockResolvedValue({ data: sampleLogs });
+    (api.get as unknown as Mock).mockResolvedValue({ data: sampleLogs });
     render(<Logs />);
     await waitFor(() => expect(screen.getByText(/System started/)).toBeInTheDocument());
 
@@ -60,7 +60,7 @@ describe("Logs Page (History)", () => {
 
   it("handles auto-refresh toggle", async () => {
     vi.useFakeTimers();
-    (api.get as Mock).mockResolvedValue({ data: ["Log 1"] });
+    (api.get as unknown as Mock).mockResolvedValue({ data: ["Log 1"] });
 
     render(<Logs />);
     // Initial fetch
@@ -94,7 +94,7 @@ describe("Logs Page (History)", () => {
   }, 15000);
 
   it("handles manual refresh", async () => {
-    (api.get as Mock).mockResolvedValue({ data: ["Log 1"] });
+    (api.get as unknown as Mock).mockResolvedValue({ data: ["Log 1"] });
     render(<Logs />);
     await waitFor(() => expect(screen.getByText("Log 1")).toBeInTheDocument());
 
@@ -108,7 +108,7 @@ describe("Logs Page (History)", () => {
   });
 
   it("clears logs locally", async () => {
-    (api.get as Mock).mockResolvedValue({ data: sampleLogs });
+    (api.get as unknown as Mock).mockResolvedValue({ data: sampleLogs });
     render(<Logs />);
     await waitFor(() => expect(screen.getByText(/System started/)).toBeInTheDocument());
 
@@ -128,7 +128,7 @@ describe("Logs Page (History)", () => {
     render(<Logs />);
     const downloadBtn = screen.getByText("logs.download");
 
-    (api.get as Mock).mockImplementation((url) => {
+    (api.get as unknown as Mock).mockImplementation((url) => {
       if (url.includes("download")) return Promise.resolve({ data: "log content" });
       return Promise.resolve({ data: [] });
     });

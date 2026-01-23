@@ -5,7 +5,6 @@ Uses Fernet symmetric encryption with keys derived from settings.
 
 import base64
 import logging
-import os
 from typing import Optional
 
 from cryptography.fernet import Fernet, InvalidToken
@@ -42,6 +41,7 @@ class EncryptionService:
             secret_key = self._secret_key
             if not secret_key:
                 from app.core.config import settings
+
                 secret_key = settings.JWT_SECRET_KEY
 
             # Derive a proper 32-byte key using PBKDF2

@@ -1,5 +1,6 @@
 import json
-from datetime import datetime
+from datetime import datetime as dt
+from typing import Optional
 from uuid import UUID
 
 from app.core.dependencies import get_current_active_user
@@ -14,8 +15,10 @@ from app.schemas.playlist import (
     PlaylistTrackResponse,
     PlaylistUpdate,
 )
+from app.services.playlist_version_service import playlist_version_service
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.responses import Response
+from pydantic import BaseModel
 from sqlalchemy import delete, func, select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -44,7 +47,7 @@ async def create_playlist(
     db.add(new_playlist)
     await db.commit()
     await db.refresh(new_playlist)
-    
+
     return PlaylistResponse(
         id=new_playlist.id,
         name=new_playlist.name,
@@ -54,7 +57,7 @@ async def create_playlist(
         created_at=new_playlist.created_at,
         updated_at=new_playlist.updated_at,
         tracks_count=0,
-        tracks=[]
+        tracks=[],
     )
 
 
@@ -78,44 +81,48 @@ async def get_playlists(
     result = await db.execute(query)
     playlists = result.scalars().all()
 
-    # Manual mapping to include track count efficiently if needed, 
+    # Manual mapping to include track count efficiently if needed,
     # but for now we rely on the relationship loading.
     # To optimize count, we could use a separate query or column_property.
     # For now (MVP), we will just let Pydantic handle it (check PlaylistResponse logic).
-    
-    # Wait, PlaylistResponse expects tracks list. 
+
+    # Wait, PlaylistResponse expects tracks list.
     # We need to ensure tracks are loaded or handled correctly.
     # The models/playlist.py has tracks relationship loading PlaylistTrack objects.
     # PlaylistTrack has 'track' relationship.
     # We need to map PlaylistTrack -> PlaylistTrackResponse manually or via SQL.
-    
+
     responses = []
     for pl in playlists:
-         # Construct response with tracks
+        # Construct response with tracks
         pl_tracks_resp = []
         for pt in pl.tracks:
             if pt.track:
-                 pl_tracks_resp.append(PlaylistTrackResponse(
-                    track_id=pt.track.id,
-                    order=pt.order,
-                    title=pt.track.title,
-                    artist=pt.track.artist,
-                    album=pt.track.album,
-                    duration_ms=pt.track.duration_ms,
-                    image_url=pt.track.metadata_content.get("image_url") if pt.track.metadata_content else None
-                 ))
-        
-        responses.append(PlaylistResponse(
-            id=pl.id,
-            name=pl.name,
-            comment=pl.comment,
-            public=pl.public,
-            owner_id=pl.owner_id,
-            created_at=pl.created_at,
-            updated_at=pl.updated_at,
-            tracks_count=len(pl_tracks_resp),
-            tracks=pl_tracks_resp
-        ))
+                pl_tracks_resp.append(
+                    PlaylistTrackResponse(
+                        track_id=pt.track.id,
+                        order=pt.order,
+                        title=pt.track.title,
+                        artist=pt.track.artist,
+                        album=pt.track.album,
+                        duration_ms=pt.track.duration_ms,
+                        image_url=pt.track.metadata_content.get("image_url") if pt.track.metadata_content else None,
+                    )
+                )
+
+        responses.append(
+            PlaylistResponse(
+                id=pl.id,
+                name=pl.name,
+                comment=pl.comment,
+                public=pl.public,
+                owner_id=pl.owner_id,
+                created_at=pl.created_at,
+                updated_at=pl.updated_at,
+                tracks_count=len(pl_tracks_resp),
+                tracks=pl_tracks_resp,
+            )
+        )
 
     return responses
 
@@ -144,16 +151,18 @@ async def get_playlist(
     pl_tracks_resp = []
     for pt in playlist.tracks:
         if pt.track:
-                pl_tracks_resp.append(PlaylistTrackResponse(
-                track_id=pt.track.id,
-                order=pt.order,
-                title=pt.track.title,
-                artist=pt.track.artist,
-                album=pt.track.album,
-                duration_ms=pt.track.duration_ms,
-                image_url=pt.track.metadata_content.get("image_url") if pt.track.metadata_content else None
-                ))
-    
+            pl_tracks_resp.append(
+                PlaylistTrackResponse(
+                    track_id=pt.track.id,
+                    order=pt.order,
+                    title=pt.track.title,
+                    artist=pt.track.artist,
+                    album=pt.track.album,
+                    duration_ms=pt.track.duration_ms,
+                    image_url=pt.track.metadata_content.get("image_url") if pt.track.metadata_content else None,
+                )
+            )
+
     return PlaylistResponse(
         id=playlist.id,
         name=playlist.name,
@@ -163,7 +172,7 @@ async def get_playlist(
         created_at=playlist.created_at,
         updated_at=playlist.updated_at,
         tracks_count=len(pl_tracks_resp),
-        tracks=pl_tracks_resp
+        tracks=pl_tracks_resp,
     )
 
 
@@ -190,7 +199,7 @@ async def update_playlist(
 
     await db.commit()
     await db.refresh(playlist)
-    
+
     # Reload for response to match schema structure if needed, or reconstruct
     # Simpler to just return (lazy load will trigger if we access tracks, but better to query with load if needed)
     # For update metadata, tracks shouldn't change, so empty list or previous list is fine.
@@ -203,8 +212,8 @@ async def update_playlist(
         owner_id=playlist.owner_id,
         created_at=playlist.created_at,
         updated_at=playlist.updated_at,
-        tracks_count=0, # Simplified, normally would fetch
-        tracks=[] # Simplified
+        tracks_count=0,  # Simplified, normally would fetch
+        tracks=[],  # Simplified
     )
 
 
@@ -264,12 +273,8 @@ async def add_tracks_to_playlist(
     for i, track_id in enumerate(valid_track_ids):
         # Check if already in playlist? (Optional, skipping check allows duplicates which is standard for playlists)
         # But if we want unique tracks in playlist, we'd check here. Standard is allow duplicates.
-        
-        new_pt = PlaylistTrack(
-            playlist_id=playlist_id,
-            track_id=track_id,
-            order=current_max_order + i + 1
-        )
+
+        new_pt = PlaylistTrack(playlist_id=playlist_id, track_id=track_id, order=current_max_order + i + 1)
         db.add(new_pt)
         added_count += 1
 
@@ -290,7 +295,7 @@ async def remove_tracks_from_playlist(
     db: AsyncSession = Depends(get_db),
 ):
     """
-    Remove tracks from playlist. 
+    Remove tracks from playlist.
     NOTE: This implementation removes ALL occurrences of the specified track_ids from the playlist.
     """
     query = select(Playlist).where(Playlist.id == playlist_id, Playlist.owner_id == current_user.id)
@@ -301,8 +306,7 @@ async def remove_tracks_from_playlist(
         raise HTTPException(status_code=404, detail=PLAYLIST_NOT_FOUND)
 
     stmt = delete(PlaylistTrack).where(
-        PlaylistTrack.playlist_id == playlist_id,
-        PlaylistTrack.track_id.in_(tracks_in.track_ids)
+        PlaylistTrack.playlist_id == playlist_id, PlaylistTrack.track_id.in_(tracks_in.track_ids)
     )
     await db.execute(stmt)
     await db.commit()
@@ -333,15 +337,17 @@ async def export_playlist(
     tracks_data = []
     for pt in playlist.tracks:
         if pt.track:
-            tracks_data.append({
-                "order": pt.order,
-                "title": pt.track.title,
-                "artist": pt.track.artist,
-                "album": pt.track.album,
-                "duration_ms": pt.track.duration_ms,
-                "year": pt.track.metadata_content.get("year"),
-                "genre": pt.track.metadata_content.get("genre"),
-            })
+            tracks_data.append(
+                {
+                    "order": pt.order,
+                    "title": pt.track.title,
+                    "artist": pt.track.artist,
+                    "album": pt.track.album,
+                    "duration_ms": pt.track.duration_ms,
+                    "year": pt.track.metadata_content.get("year"),
+                    "genre": pt.track.metadata_content.get("genre"),
+                }
+            )
 
     export_data = {
         "playlist": {
@@ -354,7 +360,7 @@ async def export_playlist(
         },
         "tracks_count": len(tracks_data),
         "tracks": tracks_data,
-        "exported_at": datetime.now(tz=__import__('datetime').timezone.utc).isoformat(),
+        "exported_at": dt.now(tz=__import__("datetime").timezone.utc).isoformat(),
         "export_version": "1.0",
     }
 
@@ -367,23 +373,16 @@ async def export_playlist(
     return Response(
         content=json_content,
         media_type="application/json",
-        headers={
-            "Content-Disposition": f'attachment; filename="{filename}"'
-        }
+        headers={"Content-Disposition": f'attachment; filename="{filename}"'},
     )
 
 
 # === Playlist Versioning Endpoints ===
 
-from app.models.playlist_version import PlaylistVersion
-from app.services.playlist_version_service import playlist_version_service
-from pydantic import BaseModel
-from typing import Optional
-from datetime import datetime as dt
-
 
 class PlaylistVersionResponse(BaseModel):
     """Response model for playlist version."""
+
     id: UUID
     version_number: int
     name: str
@@ -408,9 +407,7 @@ async def get_playlist_versions(
     Get version history for a playlist.
     """
     # Check if playlist exists and user has access
-    result = await db.execute(
-        select(Playlist).where(Playlist.id == playlist_id)
-    )
+    result = await db.execute(select(Playlist).where(Playlist.id == playlist_id))
     playlist = result.scalar_one_or_none()
 
     if not playlist:
@@ -447,11 +444,7 @@ async def rollback_playlist(
     Rollback a playlist to a previous version.
     """
     # Get playlist with tracks loaded
-    result = await db.execute(
-        select(Playlist)
-        .options(selectinload(Playlist.tracks))
-        .where(Playlist.id == playlist_id)
-    )
+    result = await db.execute(select(Playlist).options(selectinload(Playlist.tracks)).where(Playlist.id == playlist_id))
     playlist = result.scalar_one_or_none()
 
     if not playlist:

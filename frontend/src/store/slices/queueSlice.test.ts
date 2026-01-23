@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, Mock, vi } from "vitest";
+import { beforeEach, describe, expect, it, type Mock, vi } from "vitest";
 import { downloadsApi } from "../../api/downloads";
 import { createQueueSlice, type QueueSlice } from "./queueSlice";
 
@@ -104,7 +104,7 @@ describe("queueSlice", () => {
 
     it("pauseDownload should handle errors", async () => {
       const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => {});
-      (downloadsApi.pause as Mock).mockRejectedValue(new Error("Fail"));
+      (downloadsApi.pause as unknown as Mock).mockRejectedValue(new Error("Fail"));
 
       await state.pauseDownload(downloadId);
 
@@ -122,7 +122,7 @@ describe("queueSlice", () => {
 
     it("resumeDownload should handle errors", async () => {
       const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => {});
-      (downloadsApi.resume as Mock).mockRejectedValue(new Error("Fail"));
+      (downloadsApi.resume as unknown as Mock).mockRejectedValue(new Error("Fail"));
 
       await state.resumeDownload(downloadId);
 
@@ -131,7 +131,7 @@ describe("queueSlice", () => {
     });
 
     it("retryDownload should call api and update status optimistically", async () => {
-      state.updateStatus(downloadId, "error", "Some error");
+      state.updateStatus(downloadId, "failed", "Some error");
 
       await state.retryDownload(downloadId);
 
@@ -142,7 +142,7 @@ describe("queueSlice", () => {
 
     it("retryDownload should handle errors", async () => {
       const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => {});
-      (downloadsApi.retry as Mock).mockRejectedValue(new Error("Fail"));
+      (downloadsApi.retry as unknown as Mock).mockRejectedValue(new Error("Fail"));
 
       await state.retryDownload(downloadId);
 
@@ -161,7 +161,7 @@ describe("queueSlice", () => {
 
     it("fetchDownloads should handle errors", async () => {
       const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => {});
-      (downloadsApi.getAll as Mock).mockRejectedValue(new Error("Fail"));
+      (downloadsApi.getAll as unknown as Mock).mockRejectedValue(new Error("Fail"));
 
       await state.fetchDownloads();
 

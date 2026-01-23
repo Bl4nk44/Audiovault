@@ -1,6 +1,6 @@
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, type Mock, vi } from "vitest";
 import api from "../../services/api";
 import { useStore } from "../../store/useStore";
 import { notify } from "../../utils/notify";
@@ -137,7 +137,7 @@ describe("AccountSettings", () => {
 
   it("should handle avatar selection/upload", async () => {
     const file = new File(["hello"], "hello.png", { type: "image/png" });
-    (api.post as vi.Mock).mockResolvedValue({
+    (api.post as unknown as Mock).mockResolvedValue({
       data: { user: { ...mockUser, preferences: { avatar_url: "/new/avatar.png" } } },
     });
 

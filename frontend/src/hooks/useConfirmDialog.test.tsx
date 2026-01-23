@@ -34,7 +34,7 @@ describe("useConfirmDialog", () => {
     });
 
     // Verify Promise resolved to true
-    // @ts-ignore
+    // @ts-expect-error Typescript doesn't know confirmPromise is definitely assigned
     await expect(confirmPromise).resolves.toBe(true);
 
     // Verify dialog closed
@@ -62,7 +62,7 @@ describe("useConfirmDialog", () => {
     });
 
     // Verify Promise resolved to false
-    // @ts-ignore
+    // @ts-expect-error Typescript doesn't know confirmPromise is definitely assigned
     await expect(confirmPromise).resolves.toBe(false);
 
     // Verify dialog closed

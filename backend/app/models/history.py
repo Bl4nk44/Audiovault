@@ -10,9 +10,7 @@ from app.db.base import Base
 class ListeningHistory(Base):
     __tablename__ = "listening_history"
 
-    __table_args__ = (
-        Index("ix_listening_history_user_played", "user_id", "played_at"),
-    )
+    __table_args__ = (Index("ix_listening_history_user_played", "user_id", "played_at"),)
 
     id = Column(Uuid(as_uuid=True), primary_key=True, default=uuid4)
     user_id = Column(Uuid(as_uuid=True), ForeignKey("users.id"), index=True)
@@ -24,4 +22,3 @@ class ListeningHistory(Base):
     # Relationships
     user = relationship("User", back_populates="history")
     track = relationship("Track")
-

@@ -142,16 +142,18 @@ async def get_playlist(
     )
     result = await db.execute(stmt)
     entries = result.all()
-    
+
     # DEBUG LOGGING
     import logging
+
     logger = logging.getLogger("app.api.subsonic.handlers.playlist")
     logger.info(f"getPlaylist: ID={playlist_id}, entries_found={len(entries)}")
     if len(entries) == 0:
         # Check if any tracks exist at all for this playlist (raw check)
-        raw_count = await db.execute(select(func.count(PlaylistTrack.track_id)).where(PlaylistTrack.playlist_id == playlist_id))
+        raw_count = await db.execute(
+            select(func.count(PlaylistTrack.track_id)).where(PlaylistTrack.playlist_id == playlist_id)
+        )
         logger.info(f"getPlaylist: Raw PlaylistTrack count={raw_count.scalar()}")
-
 
     song_list = []
     total_duration = 0

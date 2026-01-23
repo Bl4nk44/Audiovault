@@ -1,6 +1,6 @@
-import uuid
 import os
-from unittest.mock import patch, MagicMock, AsyncMock
+import uuid
+from unittest.mock import MagicMock, patch
 
 import pytest
 from app.models.download import Download
@@ -103,12 +103,13 @@ async def test_transform_auto_fix_extension(db_session: AsyncSession):
             file_path="tmp_mock/fake.webm",
         )
         download.track = track
-        
+
         with patch("os.path.exists") as mock_exists:
             mock_exists.side_effect = lambda path: path == "tmp_mock/fake.mp3"
             item_data, updated = library_data_service._transform_download_item(download)
             assert updated is True
             assert download.file_path == "tmp_mock/fake.mp3"
+
 
 @pytest.mark.asyncio
 async def test_get_library_items_edge_cases(db_session: AsyncSession):
@@ -132,6 +133,7 @@ async def test_get_library_items_edge_cases(db_session: AsyncSession):
     assert (await library_data_service.get_library_items(db_session, str(user_id), artist="Unique"))["total"] == 1
     assert (await library_data_service.get_library_items(db_session, str(user_id), playlist="__none__"))["total"] == 1
 
+
 @pytest.mark.asyncio
 async def test_get_library_items_playlist_filtered(db_session: AsyncSession):
     user_id = uuid.uuid4()
@@ -142,9 +144,10 @@ async def test_get_library_items_playlist_filtered(db_session: AsyncSession):
     dl.track = track
     db_session.add(dl)
     await db_session.commit()
-    
+
     res = await library_data_service.get_library_items(db_session, str(user_id), playlist="TargetPL")
     assert res["total"] == 1
+
 
 @pytest.mark.asyncio
 async def test_get_library_items_updates_commit(db_session: AsyncSession):
@@ -155,11 +158,12 @@ async def test_get_library_items_updates_commit(db_session: AsyncSession):
     dl = Download(user_id=user_id, track_id=track.id, status="completed", file_path="song.webm")
     db_session.add(dl)
     await db_session.commit()
-    
+
     with patch("os.path.exists") as mock_exists:
         mock_exists.side_effect = lambda p: p.endswith(".mp3")
         await library_data_service.get_library_items(db_session, str(user_id))
         assert dl.file_path.endswith(".mp3")
+
 
 @pytest.mark.asyncio
 async def test_transform_path_resolution_candidate(db_session: AsyncSession):
@@ -169,45 +173,54 @@ async def test_transform_path_resolution_candidate(db_session: AsyncSession):
     await db_session.flush()
     dl = Download(user_id=user_id, track_id=track.id, file_path="/app/downloads/admin/song.mp3", status="completed")
     dl.track = track
-    
-    with patch("app.core.config.settings.DOWNLOAD_DIR", "C:/music"), \
-         patch("app.core.config.settings.API_V1_STR", "/api/v1"), \
-         patch("os.path.exists") as mock_exists, \
-         patch("os.path.relpath") as mock_relpath:
-             
+
+    with (
+        patch("app.core.config.settings.DOWNLOAD_DIR", "C:/music"),
+        patch("app.core.config.settings.API_V1_STR", "/api/v1"),
+        patch("os.path.exists") as mock_exists,
+        patch("os.path.relpath") as mock_relpath,
+    ):
         mock_exists.side_effect = lambda p: os.path.normpath(p) == os.path.normpath("C:/music/admin/song.mp3")
-        mock_relpath.side_effect = lambda path, start: "admin/song.mp3" if os.path.normpath(path) == os.path.normpath("C:/music/admin/song.mp3") else "song.mp3"
-        
+        mock_relpath.side_effect = (
+            lambda path, start: "admin/song.mp3"
+            if os.path.normpath(path) == os.path.normpath("C:/music/admin/song.mp3")
+            else "song.mp3"
+        )
+
         item_data, _ = library_data_service._transform_download_item(dl)
         assert item_data["track"]["filename"] == "admin/song.mp3"
-        
+
         # Test relpath Exception
         mock_relpath.side_effect = ValueError("err")
         item_data, _ = library_data_service._transform_download_item(dl)
         assert item_data["track"]["filename"] == "song.mp3"
+
 
 def test_transform_value_error_filename():
     dl = MagicMock()
     dl.file_path = "C:/song.mp3"
     dl.track.id = uuid.uuid4()
     dl.track.metadata_content = {}
-    
-    with patch("os.path.exists", return_value=True), \
-         patch("os.path.relpath", side_effect=ValueError("cross-drive")):
+
+    with patch("os.path.exists", return_value=True), patch("os.path.relpath", side_effect=ValueError("cross-drive")):
         item_data, _ = library_data_service._transform_download_item(dl)
         assert item_data["track"]["filename"] == "song.mp3"
+
 
 def test_transform_general_exception():
     dl = MagicMock()
     dl.file_path = "C:/song.mp3"
     dl.track.id = uuid.uuid4()
     dl.track.metadata_content = {}
-    
-    with patch("os.path.exists", return_value=True), \
-         patch("app.core.config.settings.DOWNLOAD_DIR", "X:/dir"), \
-         patch("os.path.relpath", side_effect=Exception("Unexpected")):
+
+    with (
+        patch("os.path.exists", return_value=True),
+        patch("app.core.config.settings.DOWNLOAD_DIR", "X:/dir"),
+        patch("os.path.relpath", side_effect=Exception("Unexpected")),
+    ):
         item_data, _ = library_data_service._transform_download_item(dl)
         assert item_data["track"]["filename"] == "song.mp3"
+
 
 @pytest.mark.asyncio
 async def test_get_queue_items_invalid_uuid(db_session: AsyncSession):

@@ -145,7 +145,8 @@ class YouTubeService(BaseMusicService):
 
         return None
 
-    # get_playlist_tracks removed as it duplicated BaseMusicService logic and was likely unused or can be replaced by base.
+    # get_playlist_tracks removed as it duplicated BaseMusicService logic
+    # and was likely unused or can be replaced by base.
 
     def get_artist_tracks(self, channel_id: str) -> list[dict[str, Any]]:
         try:

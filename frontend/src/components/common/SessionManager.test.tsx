@@ -1,5 +1,5 @@
 import { render, waitFor } from "@testing-library/react";
-import { beforeEach, describe, expect, it, Mock, vi } from "vitest";
+import { beforeEach, describe, expect, it, type Mock, vi } from "vitest";
 import { useStore } from "../../store/useStore";
 import { SessionManager } from "./SessionManager";
 
@@ -24,7 +24,7 @@ describe("SessionManager", () => {
   });
 
   it("should not fetch user if not authenticated", () => {
-    (useStore as Mock).mockImplementation((selector) =>
+    (useStore as unknown as Mock).mockImplementation((selector) =>
       selector({ isAuthenticated: false, syncUser: mockSyncUser })
     );
 
@@ -33,7 +33,7 @@ describe("SessionManager", () => {
   });
 
   it("should fetch user and sync if authenticated", async () => {
-    (useStore as Mock).mockImplementation((selector) =>
+    (useStore as unknown as Mock).mockImplementation((selector) =>
       selector({ isAuthenticated: true, syncUser: mockSyncUser })
     );
     mockApiGet.mockResolvedValue({ data: { id: "u1", username: "test" } });
@@ -48,7 +48,7 @@ describe("SessionManager", () => {
 
   it("should handle fetch error gracefully", async () => {
     const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => {});
-    (useStore as Mock).mockImplementation((selector) =>
+    (useStore as unknown as Mock).mockImplementation((selector) =>
       selector({ isAuthenticated: true, syncUser: mockSyncUser })
     );
     mockApiGet.mockRejectedValue(new Error("API Error"));

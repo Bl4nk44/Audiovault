@@ -1,5 +1,6 @@
+/* eslint-disable */
 import { act, fireEvent, render, screen, waitFor } from "@testing-library/react";
-import { beforeEach, describe, expect, it, Mock, vi } from "vitest";
+import { beforeEach, describe, expect, it, type Mock, vi } from "vitest";
 import { useAudioVisualizer } from "../../hooks/useAudioVisualizer";
 import { useStore } from "../../store/useStore";
 import Player from "./Player";
@@ -92,7 +93,9 @@ describe("Player Component - Deep Dive", () => {
     (useAudioVisualizer as any).mockReturnValue({ current: null });
 
     // Polyfill MediaMetadata
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-ignore
+
     globalThis.MediaMetadata = class MediaMetadata {
       title: string;
       artist: string;
@@ -120,7 +123,7 @@ describe("Player Component - Deep Dive", () => {
     vi.spyOn(window.HTMLMediaElement.prototype, "pause").mockImplementation(() => {});
 
     // Reset store default return
-    (useStore as Mock).mockReturnValue({
+    (useStore as unknown as Mock).mockReturnValue({
       currentTrack: mockTrack,
       isPlaying: false,
       volume: 1.0,
@@ -171,7 +174,7 @@ describe("Player Component - Deep Dive", () => {
     render(<Player />);
     const seekToHandler = (navigator.mediaSession.setActionHandler as Mock).mock.calls.find(
       (call) => call[0] === "seekto"
-    )[1];
+    )?.[1];
 
     const audio = document.querySelector("audio") as HTMLAudioElement;
     act(() => {
@@ -186,7 +189,7 @@ describe("Player Component - Deep Dive", () => {
 
   it("handles stream URL construction for tracks without filenames", () => {
     const trackNoFile = { ...mockTrack, filename: undefined };
-    (useStore as Mock).mockReturnValue({
+    (useStore as unknown as Mock).mockReturnValue({
       currentTrack: trackNoFile,
       isPlaying: false,
       volume: 1.0,
@@ -199,7 +202,7 @@ describe("Player Component - Deep Dive", () => {
   });
 
   it("null check: should not render if no track", () => {
-    (useStore as Mock).mockReturnValue({
+    (useStore as unknown as Mock).mockReturnValue({
       currentTrack: null,
       isPlaying: false,
       ...mockActions,

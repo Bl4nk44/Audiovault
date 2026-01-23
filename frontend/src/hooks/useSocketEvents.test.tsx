@@ -1,3 +1,4 @@
+/* eslint-disable */
 import { renderHook } from "@testing-library/react";
 import { io } from "socket.io-client";
 import { beforeEach, describe, expect, it, vi } from "vitest";

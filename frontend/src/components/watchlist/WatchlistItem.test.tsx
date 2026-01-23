@@ -1,5 +1,5 @@
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
-import { beforeEach, describe, expect, it, Mock, vi } from "vitest";
+import { beforeEach, describe, expect, it, type Mock, vi } from "vitest";
 import api from "../../services/api";
 import { notify } from "../../utils/notify";
 import WatchlistItem from "./WatchlistItem";
@@ -40,7 +40,7 @@ describe("WatchlistItem Component", () => {
   });
 
   it("handles auto-download toggle successfully", async () => {
-    (api.patch as Mock).mockResolvedValue({});
+    (api.patch as unknown as Mock).mockResolvedValue({});
     render(<WatchlistItem item={mockItem} onRemove={mockOnRemove} />);
 
     const toggleBtn = screen.getByTitle("Auto-download: ON");
@@ -56,7 +56,7 @@ describe("WatchlistItem Component", () => {
   });
 
   it("handles auto-download toggle failure", async () => {
-    (api.patch as Mock).mockRejectedValue(new Error("Fail"));
+    (api.patch as unknown as Mock).mockRejectedValue(new Error("Fail"));
     render(<WatchlistItem item={mockItem} onRemove={mockOnRemove} />);
 
     const toggleBtn = screen.getByTitle("Auto-download: ON");

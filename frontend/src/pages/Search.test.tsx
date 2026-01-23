@@ -1,6 +1,6 @@
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
-import { beforeEach, describe, expect, it, Mock, vi } from "vitest";
+import { beforeEach, describe, expect, it, type Mock, vi } from "vitest";
 import api from "../services/api";
 import { notify } from "../utils/notify";
 import Search from "./Search";
@@ -32,10 +32,10 @@ vi.mock("../components/search/SearchResults", () => ({
 }));
 
 vi.mock("../components/search/SearchBar", () => ({
-  default: ({ onSearch, isLoading, initialQuery }: any) => {
+  default: ({ onSearch, initialQuery }: any) => {
     return (
       <div data-testid="search-bar">
-        <input data-testid="search-input" defaultValue={initialQuery} onChange={(e) => {}} />
+        <input data-testid="search-input" defaultValue={initialQuery} onChange={() => {}} />
         <button data-testid="search-btn" onClick={() => onSearch("test query", "spotify", "track")}>
           Search Spotify
         </button>
@@ -56,7 +56,7 @@ vi.mock("../components/search/SearchBar", () => ({
 describe("Search Page Integration", () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    (api.get as Mock).mockResolvedValue({ data: [] });
+    (api.get as unknown as Mock).mockResolvedValue({ data: [] });
   });
 
   const renderSearch = (initialEntry = "/search") => {
@@ -74,7 +74,7 @@ describe("Search Page Integration", () => {
   });
 
   it("handles basic Spotify search", async () => {
-    (api.get as Mock).mockResolvedValue({
+    (api.get as unknown as Mock).mockResolvedValue({
       data: [{ id: "1", title: "Spotify Song" }],
     });
 
@@ -93,7 +93,7 @@ describe("Search Page Integration", () => {
   });
 
   it("handles 'All' source search (Multiple APIs)", async () => {
-    (api.get as Mock).mockImplementation((url) => {
+    (api.get as unknown as Mock).mockImplementation((url) => {
       if (url.includes("spotify"))
         return Promise.resolve({ data: [{ id: "s1", title: "Spotify Item" }] });
       if (url.includes("youtube"))
@@ -114,7 +114,7 @@ describe("Search Page Integration", () => {
   });
 
   it("initializes from URL and performs auto-search", async () => {
-    (api.get as Mock).mockResolvedValue({
+    (api.get as unknown as Mock).mockResolvedValue({
       data: [{ id: "u1", title: "URL Param Result" }],
     });
 
@@ -130,7 +130,7 @@ describe("Search Page Integration", () => {
   });
 
   it("handles pagination (Load More)", async () => {
-    (api.get as Mock).mockResolvedValue({
+    (api.get as unknown as Mock).mockResolvedValue({
       data: Array(20)
         .fill(null)
         .map((_, i) => ({ id: `p${i}`, title: `Result ${i}` })),
@@ -142,7 +142,7 @@ describe("Search Page Integration", () => {
     await waitFor(() => expect(screen.getByText("Result 0")).toBeInTheDocument());
 
     const loadMoreBtn = screen.getByText("search.loadMore");
-    (api.get as Mock).mockResolvedValue({
+    (api.get as unknown as Mock).mockResolvedValue({
       data: [{ id: "p20", title: "Result 20" }],
     });
 
@@ -156,7 +156,7 @@ describe("Search Page Integration", () => {
 
   it("handles search errors gracefully", async () => {
     const spy = vi.spyOn(console, "error").mockImplementation(() => {});
-    (api.get as Mock).mockRejectedValue(new Error("API Fail"));
+    (api.get as unknown as Mock).mockRejectedValue(new Error("API Fail"));
 
     renderSearch();
     // Click Soundcloud button which bypasses simplified validation/swallowing

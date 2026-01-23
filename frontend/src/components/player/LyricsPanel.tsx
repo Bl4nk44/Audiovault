@@ -36,7 +36,7 @@ export default function LyricsPanel({ isOpen, onClose }: LyricsPanelProps) {
     if (isOpen && currentTrack) {
       refetch();
     }
-  }, [currentTrack?.id, isOpen, refetch]);
+  }, [currentTrack, isOpen, refetch]);
 
   return (
     <AnimatePresence>

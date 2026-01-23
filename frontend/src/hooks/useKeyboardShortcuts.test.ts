@@ -47,7 +47,7 @@ describe("useKeyboardShortcuts", () => {
 
     // Find the callback for 'space'
     const call = mockUseHotkeys.mock.calls.find((call) => call[0] === "space");
-    const callback = call[1];
+    const callback = call?.[1];
 
     // Simulate event
     const mockEvent = { preventDefault: vi.fn() };
@@ -59,21 +59,21 @@ describe("useKeyboardShortcuts", () => {
 
   it("should trigger nextTrack on right arrow", () => {
     renderHook(() => useKeyboardShortcuts());
-    const callback = mockUseHotkeys.mock.calls.find((call) => call[0] === "right")[1];
+    const callback = mockUseHotkeys.mock.calls.find((call) => call[0] === "right")?.[1];
     callback({ preventDefault: vi.fn() });
     expect(mockNextTrack).toHaveBeenCalled();
   });
 
   it("should trigger prevTrack on left arrow", () => {
     renderHook(() => useKeyboardShortcuts());
-    const callback = mockUseHotkeys.mock.calls.find((call) => call[0] === "left")[1];
+    const callback = mockUseHotkeys.mock.calls.find((call) => call[0] === "left")?.[1];
     callback({ preventDefault: vi.fn() });
     expect(mockPrevTrack).toHaveBeenCalled();
   });
 
   it("should increase volume on up arrow", () => {
     renderHook(() => useKeyboardShortcuts());
-    const callback = mockUseHotkeys.mock.calls.find((call) => call[0].includes("up"))[1];
+    const callback = mockUseHotkeys.mock.calls.find((call) => call[0].includes("up"))?.[1];
 
     callback({ preventDefault: vi.fn() });
 
@@ -83,7 +83,7 @@ describe("useKeyboardShortcuts", () => {
 
   it("should decrease volume on down arrow", () => {
     renderHook(() => useKeyboardShortcuts());
-    const callback = mockUseHotkeys.mock.calls.find((call) => call[0].includes("down"))[1];
+    const callback = mockUseHotkeys.mock.calls.find((call) => call[0].includes("down"))?.[1];
 
     callback({ preventDefault: vi.fn() });
 
@@ -93,7 +93,7 @@ describe("useKeyboardShortcuts", () => {
 
   it("should mute/unmute on m", () => {
     renderHook(() => useKeyboardShortcuts());
-    const callback = mockUseHotkeys.mock.calls.find((call) => call[0] === "m")[1];
+    const callback = mockUseHotkeys.mock.calls.find((call) => call[0] === "m")?.[1];
 
     callback({ preventDefault: vi.fn() });
 

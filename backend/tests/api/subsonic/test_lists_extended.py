@@ -2,24 +2,20 @@
 Extended tests for Subsonic lists handlers to increase code coverage.
 Covers: getGenres, getAlbumList, getRandomSongs, getTopSongs, getSimilarSongs.
 """
-import pytest
+
 import uuid
-from httpx import AsyncClient
-from app.models.track import Track
+
+import pytest
 from app.models.album import Album
 from app.models.artist import Artist
 from app.models.download import Download
+from app.models.track import Track
+from httpx import AsyncClient
 
 
 @pytest.fixture
 def subsonic_auth_params(admin_user):
-    return {
-        "u": admin_user.username,
-        "p": "admin",
-        "c": "pytest",
-        "v": "1.16.1",
-        "f": "json"
-    }
+    return {"u": admin_user.username, "p": "admin", "c": "pytest", "v": "1.16.1", "f": "json"}
 
 
 @pytest.fixture
@@ -30,36 +26,38 @@ async def sample_library_ext(db_session, admin_user):
     artist2 = Artist(id=uuid.uuid4(), name="Pop Artist")
     db_session.add_all([artist1, artist2])
     await db_session.flush()
-    
+
     # Create albums
     album1 = Album(id=uuid.uuid4(), title="Rock Album 2023", artist_id=artist1.id, release_date="2023")
     album2 = Album(id=uuid.uuid4(), title="Pop Album 2024", artist_id=artist2.id, release_date="2024")
     db_session.add_all([album1, album2])
     await db_session.flush()
-    
+
     # Create tracks with different genres
     tracks = []
-    for i, (artist, album, genre) in enumerate([
-        (artist1, album1, "Rock"),
-        (artist1, album1, "Rock"),
-        (artist2, album2, "Pop"),
-    ]):
+    for i, (artist, album, genre) in enumerate(
+        [
+            (artist1, album1, "Rock"),
+            (artist1, album1, "Rock"),
+            (artist2, album2, "Pop"),
+        ]
+    ):
         track = Track(
             id=uuid.uuid4(),
-            title=f"Track {i+1}",
+            title=f"Track {i + 1}",
             artist=artist.name,
             album=album.title,
             album_id=album.id,
             artist_id=artist.id,
-            metadata_content={"genre": genre, "year": int(album.release_date)}
+            metadata_content={"genre": genre, "year": int(album.release_date)},
         )
         db_session.add(track)
         await db_session.flush()
-        
+
         download = Download(track_id=track.id, user_id=admin_user.id, status="completed", file_path=f"/tmp/t{i}.mp3")
         db_session.add(download)
         tracks.append(track)
-    
+
     await db_session.commit()
     return {"artists": [artist1, artist2], "albums": [album1, album2], "tracks": tracks}
 
@@ -67,6 +65,7 @@ async def sample_library_ext(db_session, admin_user):
 # =============================================================================
 # Get Genres
 # =============================================================================
+
 
 @pytest.mark.asyncio
 async def test_get_genres(client: AsyncClient, subsonic_auth_params, sample_library_ext):
@@ -87,6 +86,7 @@ async def test_get_genres_empty(client: AsyncClient, subsonic_auth_params):
 # =============================================================================
 # Get Album List
 # =============================================================================
+
 
 @pytest.mark.asyncio
 async def test_get_album_list_random(client: AsyncClient, subsonic_auth_params, sample_library_ext):
@@ -156,6 +156,7 @@ async def test_get_album_list2_random(client: AsyncClient, subsonic_auth_params,
 # Get Random Songs
 # =============================================================================
 
+
 @pytest.mark.asyncio
 async def test_get_random_songs(client: AsyncClient, subsonic_auth_params, sample_library_ext):
     """Test getting random songs."""
@@ -182,6 +183,7 @@ async def test_get_random_songs_empty(client: AsyncClient, subsonic_auth_params)
 # =============================================================================
 # Get Top Songs
 # =============================================================================
+
 
 @pytest.mark.asyncio
 async def test_get_top_songs(client: AsyncClient, subsonic_auth_params, sample_library_ext):
@@ -210,6 +212,7 @@ async def test_get_top_songs_unknown_artist(client: AsyncClient, subsonic_auth_p
 # =============================================================================
 # Get Similar Songs
 # =============================================================================
+
 
 @pytest.mark.asyncio
 async def test_get_similar_songs(client: AsyncClient, subsonic_auth_params, sample_library_ext):

@@ -1,7 +1,7 @@
 import asyncio
 import os
 from collections.abc import AsyncGenerator
-from unittest.mock import MagicMock, patch
+from unittest.mock import patch
 
 import pytest
 from app.db.base import Base
@@ -72,6 +72,7 @@ async def mock_cache_manager():
 
         # Mock FastAPILimiter to use our mocked redis
         from fastapi_limiter import FastAPILimiter
+
         if not FastAPILimiter.redis:
             await FastAPILimiter.init(real_cache_manager.redis)
 
@@ -96,6 +97,7 @@ async def mock_scheduler():
 async def mock_download_manager():
     """Mock download manager worker to prevent background tasks."""
     from unittest.mock import AsyncMock
+
     with (
         patch("app.services.download_manager.download_manager.start_worker"),
         patch("app.services.download_manager.download_manager.resume_pending_downloads"),
@@ -108,15 +110,22 @@ async def mock_download_manager():
         m_add.return_value = {"status": "queued"}
         yield
 
+
 @pytest.fixture(scope="function")
 async def mock_library_maintenance():
     """Mock library maintenance service."""
     from unittest.mock import AsyncMock
+
     with (
-        patch("app.services.library_maintenance.library_maintenance_service.rescan_library_integrity", new_callable=AsyncMock) as m_rescan,
+        patch(
+            "app.services.library_maintenance.library_maintenance_service.rescan_library_integrity",
+            new_callable=AsyncMock,
+        ) as m_rescan,
         patch("app.services.library_maintenance.library_maintenance_service.clear_history", new_callable=AsyncMock),
         patch("app.services.library_maintenance.library_maintenance_service.fix_legacy_data", new_callable=AsyncMock),
-        patch("app.services.library_maintenance.library_maintenance_service.update_download_item", new_callable=AsyncMock),
+        patch(
+            "app.services.library_maintenance.library_maintenance_service.update_download_item", new_callable=AsyncMock
+        ),
     ):
         m_rescan.return_value = 0
         yield
@@ -156,33 +165,32 @@ async def client(
     app.dependency_overrides.clear()
 
 
-
 @pytest.fixture(scope="function")
 async def admin_user(db_session):
-    from app.models.user import User
-    from app.core.security import get_password_hash
     import uuid
-    
+
+    from app.core.security import get_password_hash
+    from app.models.user import User
+
     password = "admin"
     hashed_password = get_password_hash(password)
-    
+
     user = User(
-        id=uuid.uuid4(),
-        username="admin",
-        email="admin@example.com",
-        hashed_password=hashed_password,
-        is_active=True
+        id=uuid.uuid4(), username="admin", email="admin@example.com", hashed_password=hashed_password, is_active=True
     )
     db_session.add(user)
     await db_session.commit()
     await db_session.refresh(user)
     return user
 
+
 @pytest.fixture(scope="function")
 async def admin_token_headers(admin_user):
     from app.core.security import create_access_token
+
     token = create_access_token(subject=admin_user.id)
     return {"Authorization": f"Bearer {token}"}
+
 
 @pytest.fixture(scope="session", autouse=True)
 async def cleanup_engine():
@@ -193,9 +201,10 @@ async def cleanup_engine():
 @pytest.fixture(scope="function")
 async def sample_track(db_session):
     """Create a sample track for testing."""
-    from app.models.track import Track
     import uuid
-    
+
+    from app.models.track import Track
+
     track = Track(
         id=uuid.uuid4(),
         title="Test Track",
@@ -208,5 +217,3 @@ async def sample_track(db_session):
     await db_session.commit()
     await db_session.refresh(track)
     return track
-
-

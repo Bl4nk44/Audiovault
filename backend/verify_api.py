@@ -141,7 +141,8 @@ async def verify_api():
                         else:
                             try:
                                 logger.error(
-                                    f"❌ Subsonic getCoverArt Failed: {cover_response.status_code} {cover_response.text[:200]}"
+                                    f"❌ Subsonic getCoverArt Failed: {cover_response.status_code} "
+                                    f"{cover_response.text[:200]}"
                                 )
                             except Exception:
                                 logger.error(f"❌ Subsonic getCoverArt Failed: {cover_response.status_code}")

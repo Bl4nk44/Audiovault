@@ -60,6 +60,7 @@ async def download_system_logs():
 
 async def _check_production_update(settings):
     import aiohttp
+
     github_url = "https://api.github.com/repos/Bl4nk44/Audiovault/releases/latest"
     try:
         async with aiohttp.ClientSession() as session:
@@ -100,7 +101,7 @@ async def _check_production_update(settings):
 
 async def _check_development_update():
     import aiohttp
-    
+
     # Check local git HEAD
     git_dir = Path("/app/.git")
     if not git_dir.exists():
@@ -119,8 +120,8 @@ async def _check_development_update():
                 if ref_path.exists():
                     local_sha = ref_path.read_text().strip()
                 else:
-                     # It might be packed-refs, which is harder to read without git command
-                     # For now, simple fallback
+                    # It might be packed-refs, which is harder to read without git command
+                    # For now, simple fallback
                     local_sha = "unknown (packed)"
             else:
                 local_sha = ref  # Detached HEAD
@@ -178,15 +179,12 @@ async def get_system_stats():
     try:
         import psutil
     except ImportError:
-        raise HTTPException(
-            status_code=503,
-            detail="psutil library is not installed. Statistics are unavailable."
-        )
+        raise HTTPException(status_code=503, detail="psutil library is not installed. Statistics are unavailable.")
 
     try:
         # CPU
         cpu_percent = psutil.cpu_percent(interval=None)
-        
+
         # Memory
         mem = psutil.virtual_memory()
         ram_total = mem.total
@@ -205,23 +203,10 @@ async def get_system_stats():
         net_recv = net.bytes_recv
 
         return {
-            "cpu": {
-                "percent": cpu_percent
-            },
-            "memory": {
-                "total": ram_total,
-                "used": ram_used,
-                "percent": ram_percent
-            },
-            "disk": {
-                "total": disk_total,
-                "used": disk_used,
-                "percent": disk_percent
-            },
-            "network": {
-                "sent": net_sent,
-                "recv": net_recv
-            }
+            "cpu": {"percent": cpu_percent},
+            "memory": {"total": ram_total, "used": ram_used, "percent": ram_percent},
+            "disk": {"total": disk_total, "used": disk_used, "percent": disk_percent},
+            "network": {"sent": net_sent, "recv": net_recv},
         }
     except Exception as e:
         logger.error(f"Error gathering system stats: {e}")

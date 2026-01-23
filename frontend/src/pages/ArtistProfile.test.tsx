@@ -1,7 +1,7 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { MemoryRouter, Route, Routes } from "react-router-dom";
-import { beforeEach, describe, expect, it, Mock, vi } from "vitest";
+import { beforeEach, describe, expect, it, type Mock, vi } from "vitest";
 import api from "../services/api";
 import { notify } from "../utils/notify";
 import ArtistProfile from "./ArtistProfile";
@@ -185,7 +185,7 @@ describe("ArtistProfile", () => {
 
   it("handles discography download (Download All)", async () => {
     mockArtistsApi.getById.mockResolvedValue(mockArtistFull);
-    (api.post as Mock).mockResolvedValue({ data: { queued_count: 10 } });
+    (api.post as unknown as Mock).mockResolvedValue({ data: { queued_count: 10 } });
 
     renderComponent("123");
     await waitFor(() => expect(screen.getByText("Download Discography")).toBeInTheDocument());
@@ -203,7 +203,7 @@ describe("ArtistProfile", () => {
 
   it("handles single album download", async () => {
     mockArtistsApi.getById.mockResolvedValue(mockArtistFull);
-    (api.post as Mock).mockResolvedValue({ data: { message: "Album Queued" } });
+    (api.post as unknown as Mock).mockResolvedValue({ data: { message: "Album Queued" } });
 
     renderComponent("123");
     await waitFor(() => expect(screen.getByText("Best Album")).toBeInTheDocument());

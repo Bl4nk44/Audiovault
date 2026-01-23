@@ -5,7 +5,8 @@ from app.services.base_music_service import BaseMusicService
 
 # Lazy import or direct import if circular dependency is not an issue.
 # Assuming unl_helper is fine.
-# We will do dynamic import inside methods to be safe as done in original code effectively (it was imported inside try block? No it was inside method).
+# We will do dynamic import inside methods to be safe as done in original
+# code effectively (it was imported inside try block? No it was inside method).
 
 logger = logging.getLogger(__name__)
 

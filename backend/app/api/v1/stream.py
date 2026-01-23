@@ -5,23 +5,22 @@ from typing import Optional
 
 import aiofiles
 import aiohttp
-import yt_dlp
 import mutagen.mp4
-from fastapi import APIRouter, HTTPException, Depends
-from fastapi.responses import StreamingResponse, Response, RedirectResponse
-from mutagen import File as MutagenFile
-from mutagen.id3 import ID3, APIC
-from sqlalchemy import select
-from sqlalchemy.ext.asyncio import AsyncSession
-
-from app.core.executors import stream_executor
+import yt_dlp
 from app.core.cache import cache_manager
+from app.core.executors import stream_executor
 from app.db.database import get_db
 from app.models.album import Album
 from app.models.download import Download
 from app.models.track import Track
 from app.services.spotify_service import SpotifyService
 from app.services.youtube_service import YouTubeService
+from fastapi import APIRouter, Depends, HTTPException
+from fastapi.responses import RedirectResponse, Response, StreamingResponse
+from mutagen import File as MutagenFile
+from mutagen.id3 import APIC, ID3
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
 
 router = APIRouter()
 logger = logging.getLogger(__name__)
@@ -49,12 +48,14 @@ def _extract_art_flac(audio) -> tuple[Optional[bytes], Optional[str]]:
         return p.data, p.mime
     return None, None
 
+
 def _extract_art_id3(audio) -> tuple[Optional[bytes], Optional[str]]:
     if hasattr(audio, "tags") and isinstance(audio.tags, ID3):
         for tag in audio.tags.values():
             if isinstance(tag, APIC):
                 return tag.data, tag.mime
     return None, None
+
 
 def _extract_art_mp4(audio) -> tuple[Optional[bytes], Optional[str]]:
     if hasattr(audio, "tags") and "covr" in audio.tags:
@@ -67,41 +68,43 @@ def _extract_art_mp4(audio) -> tuple[Optional[bytes], Optional[str]]:
             return bytes(c), mime
     return None, None
 
+
 def _extract_art_sync(path: str) -> tuple[Optional[bytes], Optional[str]]:
     """Synchronous mutagen extraction logic."""
     try:
         audio = MutagenFile(path)
         if not audio:
             return None, None
-        
+
         # Try each strategy
         data, mime = _extract_art_flac(audio)
-        if data: return data, mime
-        
+        if data:
+            return data, mime
+
         data, mime = _extract_art_id3(audio)
-        if data: return data, mime
-        
+        if data:
+            return data, mime
+
         data, mime = _extract_art_mp4(audio)
-        if data: return data, mime
-            
+        if data:
+            return data, mime
+
     except Exception as e:
         logger.debug(f"Mutagen extraction failed for {path}: {e}")
-        
+
     return None, None
 
 
 async def _extract_embedded_cover_art(file_path: str) -> tuple[Optional[bytes], Optional[str]]:
     """Run mutagen extraction in executor."""
     loop = asyncio.get_event_loop()
-    return await loop.run_in_executor(
-        stream_executor, 
-        lambda: _extract_art_sync(file_path)
-    )
+    return await loop.run_in_executor(stream_executor, lambda: _extract_art_sync(file_path))
 
 
 async def _resolve_track_path(db: AsyncSession, track_id: str) -> tuple[Optional[Track], Optional[str]]:
     """Resolve Track and filesystem path."""
     import uuid
+
     try:
         t_uuid = uuid.UUID(str(track_id))
     except ValueError:
@@ -124,7 +127,7 @@ async def _resolve_track_path(db: AsyncSession, track_id: str) -> tuple[Optional
     file_path = None
     dl_res = await db.execute(select(Download).where(Download.track_id == track.id))
     download = dl_res.scalars().first()
-    
+
     if download and download.file_path and os.path.exists(download.file_path):
         file_path = download.file_path
 
@@ -138,7 +141,7 @@ async def get_track_cover(track_id: str, db: AsyncSession = Depends(get_db)):
     Priority: Local File -> Embedded Art -> Linked Album Art
     """
     track, file_path = await _resolve_track_path(db, track_id)
-    
+
     if not track:
         raise HTTPException(status_code=404, detail="Track not found")
 
@@ -162,7 +165,7 @@ async def get_track_cover(track_id: str, db: AsyncSession = Depends(get_db)):
         if album and album.images:
             url = album.images.get("300") or album.images.get("640")
             if url:
-                 return RedirectResponse(url)
+                return RedirectResponse(url)
 
     # 404 if no file source or art found
     raise HTTPException(status_code=404, detail="No cover art found")
@@ -172,6 +175,7 @@ async def get_track_cover(track_id: str, db: AsyncSession = Depends(get_db)):
 async def get_album_cover(album_id: str, db: AsyncSession = Depends(get_db)):
     """Get cover art for an album."""
     import uuid
+
     try:
         a_uuid = uuid.UUID(str(album_id))
     except ValueError:
@@ -179,16 +183,16 @@ async def get_album_cover(album_id: str, db: AsyncSession = Depends(get_db)):
 
     result = await db.execute(select(Album).where(Album.id == a_uuid))
     album = result.scalar_one_or_none()
-    
+
     if not album:
         raise HTTPException(status_code=404, detail="Album not found")
-        
+
     if album.images:
         # Priority: 300px -> 640px -> generic url
         url = album.images.get("300") or album.images.get("640") or album.images.get("url")
         if url:
             return RedirectResponse(url)
-            
+
     raise HTTPException(status_code=404, detail="No cover art found")
 
 
@@ -203,6 +207,7 @@ def _resolve_stream_url_sync(track_info: dict) -> Optional[str]:
     except Exception as e:
         logger.error(f"YouTube search failed: {e}")
     return None
+
 
 def _get_spotify_track_sync(track_id: str) -> Optional[dict]:
     try:
@@ -224,21 +229,18 @@ async def _resolve_stream_url(track_id: str) -> str:
     else:
         # Spotify -> YouTube resolution
         loop = asyncio.get_event_loop()
-        
+
         # 1. Get Spotify Metadata
         track_info = await loop.run_in_executor(stream_executor, lambda: _get_spotify_track_sync(track_id))
-        
+
         if not track_info:
             raise HTTPException(status_code=404, detail="Track not found")
 
         # 2. Search on YouTube
-        found_url = await loop.run_in_executor(
-            stream_executor, 
-            lambda: _resolve_stream_url_sync(track_info)
-        )
-        
+        found_url = await loop.run_in_executor(stream_executor, lambda: _resolve_stream_url_sync(track_info))
+
         if not found_url:
-             raise HTTPException(status_code=404, detail="Stream not found")
+            raise HTTPException(status_code=404, detail="Stream not found")
         youtube_url = found_url
 
     await cache_manager.set(f"stream_url:{track_id}", youtube_url, expire=3600)

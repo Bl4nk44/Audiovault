@@ -1,9 +1,10 @@
-import pytest
 import uuid
-import json
+
+import pytest
 from app.models.playlist import Playlist, PlaylistTrack
-from app.models.track import Track
 from app.models.playlist_version import PlaylistVersion
+from app.models.track import Track
+
 
 @pytest.fixture
 async def sample_playlist(db_session, admin_user):
@@ -13,12 +14,14 @@ async def sample_playlist(db_session, admin_user):
     await db_session.refresh(playlist)
     return playlist
 
+
 @pytest.fixture
 async def sample_track(db_session):
     track = Track(id=uuid.uuid4(), title="Test Song", artist="Artist")
     db_session.add(track)
     await db_session.commit()
     return track
+
 
 @pytest.mark.asyncio
 async def test_create_playlist(client, admin_token_headers):
@@ -28,6 +31,7 @@ async def test_create_playlist(client, admin_token_headers):
     assert response.json()["name"] == "New Playlist"
     assert response.json()["public"] is True
 
+
 @pytest.mark.asyncio
 async def test_get_playlists(client, admin_token_headers, sample_playlist):
     response = await client.get("/api/v1/playlists/", headers=admin_token_headers)
@@ -35,11 +39,13 @@ async def test_get_playlists(client, admin_token_headers, sample_playlist):
     assert len(response.json()) >= 1
     assert response.json()[0]["id"] == str(sample_playlist.id)
 
+
 @pytest.mark.asyncio
 async def test_get_playlist_details(client, admin_token_headers, sample_playlist):
     response = await client.get(f"/api/v1/playlists/{sample_playlist.id}", headers=admin_token_headers)
     assert response.status_code == 200
     assert response.json()["id"] == str(sample_playlist.id)
+
 
 @pytest.mark.asyncio
 async def test_update_playlist(client, admin_token_headers, sample_playlist):
@@ -48,6 +54,7 @@ async def test_update_playlist(client, admin_token_headers, sample_playlist):
     assert response.status_code == 200
     assert response.json()["name"] == "Updated Name"
 
+
 @pytest.mark.asyncio
 async def test_delete_playlist(client, admin_token_headers, sample_playlist, db_session):
     response = await client.delete(f"/api/v1/playlists/{sample_playlist.id}", headers=admin_token_headers)
@@ -55,17 +62,21 @@ async def test_delete_playlist(client, admin_token_headers, sample_playlist, db_
     # Verify
     assert await db_session.get(Playlist, sample_playlist.id) is None
 
+
 @pytest.mark.asyncio
 async def test_add_tracks_to_playlist(client, admin_token_headers, sample_playlist, sample_track, db_session):
     data = {"track_ids": [str(sample_track.id)]}
-    response = await client.post(f"/api/v1/playlists/{sample_playlist.id}/tracks", json=data, headers=admin_token_headers)
+    response = await client.post(
+        f"/api/v1/playlists/{sample_playlist.id}/tracks", json=data, headers=admin_token_headers
+    )
     assert response.status_code == 201
     assert response.json()["added_count"] == 1
-    
+
     # Verify DB
     await db_session.refresh(sample_playlist)
     # Reload tracks relation is tricky in async, need to select again or use await
     # But API response verification is usually enough or direct DB check logic
+
 
 @pytest.mark.asyncio
 async def test_remove_tracks_from_playlist(client, admin_token_headers, sample_playlist, sample_track, db_session):
@@ -75,8 +86,11 @@ async def test_remove_tracks_from_playlist(client, admin_token_headers, sample_p
     await db_session.commit()
 
     data = {"track_ids": [str(sample_track.id)]}
-    response = await client.request("DELETE", f"/api/v1/playlists/{sample_playlist.id}/tracks", json=data, headers=admin_token_headers)
+    response = await client.request(
+        "DELETE", f"/api/v1/playlists/{sample_playlist.id}/tracks", json=data, headers=admin_token_headers
+    )
     assert response.status_code == 204
+
 
 @pytest.mark.asyncio
 async def test_export_playlist(client, admin_token_headers, sample_playlist, sample_track, db_session):
@@ -91,18 +105,19 @@ async def test_export_playlist(client, admin_token_headers, sample_playlist, sam
     assert data["playlist"]["name"] == sample_playlist.name
     assert len(data["tracks"]) == 1
 
+
 @pytest.mark.skip(reason="Fails with TypeError on response.json()")
 @pytest.mark.asyncio
 async def test_playlist_versioning_flow(client, admin_token_headers, sample_playlist, sample_track, db_session):
     # 1. Create version manually or trigger logic if implemented
-    # Assuming service creates versions on change. 
+    # Assuming service creates versions on change.
     # Create fake version directly for testing endpoint
     v = PlaylistVersion(
-        playlist_id=sample_playlist.id, 
-        version_number=1, 
-        name="V1", 
+        playlist_id=sample_playlist.id,
+        version_number=1,
+        name="V1",
         change_type="create",
-        tracks_snapshot=[str(sample_track.id)]
+        tracks_snapshot=[str(sample_track.id)],
     )
     db_session.add(v)
     await db_session.commit()

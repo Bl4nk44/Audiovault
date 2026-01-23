@@ -1,3 +1,4 @@
+/* eslint-disable */
 import { render } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { useAudioVisualizer } from "./useAudioVisualizer";
@@ -73,7 +74,7 @@ describe("useAudioVisualizer - Modes", () => {
     // Mock requestAnimationFrame to run once
     vi.stubGlobal(
       "requestAnimationFrame",
-      vi.fn((cb) => {
+      vi.fn((_cb) => {
         // Don't loop infinitely in tests, just run once if needed
       })
     );

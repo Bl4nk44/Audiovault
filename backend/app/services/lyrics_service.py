@@ -52,9 +52,7 @@ class LyricsService:
         normalized = f"{artist.lower().strip()}:{title.lower().strip()}"
         return f"lyrics:{normalized}"
 
-    async def get_lyrics(
-        self, artist: str, title: str, use_cache: bool = True
-    ) -> Optional[dict]:
+    async def get_lyrics(self, artist: str, title: str, use_cache: bool = True) -> Optional[dict]:
         """
         Fetch lyrics for a song.
 
@@ -88,7 +86,7 @@ class LyricsService:
         """Try to retrieve lyrics from cache."""
         if not cache_manager.redis:
             return None
-            
+
         try:
             cached = await cache_manager.get(cache_key)
             if cached:
@@ -98,9 +96,7 @@ class LyricsService:
             logger.warning(f"Cache read error: {e}")
         return None
 
-    async def _fetch_and_cache_genius(
-        self, genius, artist: str, title: str, cache_key: str
-    ) -> Optional[dict]:
+    async def _fetch_and_cache_genius(self, genius, artist: str, title: str, cache_key: str) -> Optional[dict]:
         """Fetch from Genius and update cache."""
         try:
             song = genius.search_song(title, artist)

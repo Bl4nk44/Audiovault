@@ -2,7 +2,7 @@ import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { syncApi } from "../../api/sync";
-import { WatchlistItem } from "../../types";
+import type { WatchlistItem } from "../../types";
 import { notify } from "../../utils/notify";
 import SyncModal from "./SyncModal";
 
@@ -38,13 +38,16 @@ vi.mock("framer-motion", () => ({
 const mockItem: WatchlistItem = {
   id: "1",
   source_name: "Test Playlist",
-  source_type: "spotify",
+  source: "spotify",
   source_id: "sp1",
-  target_path: "/music",
-  sync_interval: 60,
-  last_sync: "2023-01-01",
+  // target_path: "/music",
+  check_interval_hours: 60,
+  watch_type: "playlist",
+  auto_download: true,
+  new_items_count: 0,
+  last_checked_at: "2023-01-01",
   created_at: "2023-01-01",
-  status: "idle",
+  // status: "idle",
 };
 
 const mockReport = {

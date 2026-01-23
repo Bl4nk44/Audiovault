@@ -1,18 +1,18 @@
+import asyncio
 import logging
 import os
 
-from mutagen import File as MutagenFile
+import aiofiles
 from app.core.config import settings
+from app.core.executors import stream_executor
 from app.models.album import Album
 from app.models.artist import Artist
 from app.models.download import Download
 from app.models.track import Track
+from mutagen import File as MutagenFile
 from mutagen.easyid3 import EasyID3
+from sqlalchemy import delete, select
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, delete
-import aiofiles
-import asyncio
-from app.core.executors import stream_executor
 
 logger = logging.getLogger(__name__)
 
@@ -39,6 +39,7 @@ class LibraryScannerService:
 
     async def _get_known_paths(self, db: AsyncSession, user_id: str) -> set[str]:
         from uuid import UUID as UUID_type
+
         try:
             u_id = UUID_type(str(user_id))
         except ValueError:
@@ -54,10 +55,14 @@ class LibraryScannerService:
         title, artist, album, genre = self._get_default_metadata(os.path.basename(full_path))
         try:
             audio = EasyID3(full_path)
-            if "title" in audio: title = audio["title"][0]
-            if "artist" in audio: artist = audio["artist"][0]
-            if "album" in audio: album = audio["album"][0]
-            if "genre" in audio: genre = audio["genre"][0]
+            if "title" in audio:
+                title = audio["title"][0]
+            if "artist" in audio:
+                artist = audio["artist"][0]
+            if "album" in audio:
+                album = audio["album"][0]
+            if "genre" in audio:
+                genre = audio["genre"][0]
         except Exception:
             pass
         return title, artist, album, genre
@@ -66,28 +71,32 @@ class LibraryScannerService:
         title, artist, album, genre = current_meta
         default_title = os.path.splitext(filename)[0]
 
-        if artist == UNKNOWN_ARTIST and "TPE1" in m: artist = str(m["TPE1"])
-        if title == default_title and "TIT2" in m: title = str(m["TIT2"])
-        if album == UNKNOWN_ALBUM and "TALB" in m: album = str(m["TALB"])
-        if genre is None and "TCON" in m: genre = str(m["TCON"])
-        
+        if artist == UNKNOWN_ARTIST and "TPE1" in m:
+            artist = str(m["TPE1"])
+        if title == default_title and "TIT2" in m:
+            title = str(m["TIT2"])
+        if album == UNKNOWN_ALBUM and "TALB" in m:
+            album = str(m["TALB"])
+        if genre is None and "TCON" in m:
+            genre = str(m["TCON"])
+
         return title, artist, album, genre
 
     def _try_parse_mutagen_fallback(self, full_path: str, current_meta: tuple) -> tuple[str, str, str, str | None, int]:
         title, artist, album, genre = current_meta
         duration_ms = 0
         filename = os.path.basename(full_path)
-        
+
         try:
             m = MutagenFile(full_path)
             if m:
-                if m.info and hasattr(m.info, 'length'):
+                if m.info and hasattr(m.info, "length"):
                     duration_ms = int(m.info.length * 1000)
-                
+
                 title, artist, album, genre = self._update_meta_from_tags(m, (title, artist, album, genre), filename)
         except Exception as e:
             logger.debug(f"Mutagen fallback failed for {filename}: {e}")
-            
+
         return title, artist, album, genre, duration_ms
 
     def _get_default_metadata(self, filename: str) -> tuple[str, str, str, str | None]:
@@ -97,7 +106,7 @@ class LibraryScannerService:
         """Sync version of parse metadata (CPU bound)."""
         # 1. EasyID3
         title, artist, album, genre = self._try_parse_easyid3(full_path)
-        
+
         # 2. Mutagen Fallback & Duration
         return self._try_parse_mutagen_fallback(full_path, (title, artist, album, genre))
 
@@ -177,13 +186,14 @@ class LibraryScannerService:
         try:
             filename = os.path.basename(full_path)
             name = os.path.splitext(filename)[0]
-            
+
             # Find or create Playlist
             from app.models.playlist import Playlist, PlaylistTrack
+
             stmt = select(Playlist).where(Playlist.name == name, Playlist.owner_id == user_id)
             result = await db.execute(stmt)
             playlist = result.scalar_one_or_none()
-            
+
             if not playlist:
                 playlist = Playlist(name=name, owner_id=user_id)
                 db.add(playlist)
@@ -193,34 +203,31 @@ class LibraryScannerService:
             # Parse file and collect matched tracks FIRST
             base_dir = os.path.dirname(full_path)
             matched_tracks = []  # List of track_ids in order
-            
-            async with aiofiles.open(full_path, 'r', encoding='utf-8', errors='ignore') as f:
+
+            async with aiofiles.open(full_path, "r", encoding="utf-8", errors="ignore") as f:
                 lines = await f.readlines()
-                
+
             for line in lines:
                 line = line.strip()
                 if not line or line.startswith("#"):
                     continue
-                
+
                 t_id = await self._find_track_for_playlist_line(db, line, base_dir, user_id)
                 if t_id:
-                     matched_tracks.append(t_id)
+                    matched_tracks.append(t_id)
 
             # Only update playlist if we found tracks
             if matched_tracks:
                 # Clear existing tracks
                 from sqlalchemy import delete
+
                 await db.execute(delete(PlaylistTrack).where(PlaylistTrack.playlist_id == playlist.id))
-                
+
                 # Add new tracks
                 for order, track_id in enumerate(matched_tracks):
-                    pt = PlaylistTrack(
-                        playlist_id=playlist.id, 
-                        track_id=track_id,
-                        order=order
-                    )
+                    pt = PlaylistTrack(playlist_id=playlist.id, track_id=track_id, order=order)
                     db.add(pt)
-                
+
                 await db.commit()
                 logger.info(f"Imported playlist {name} with {len(matched_tracks)} tracks")
             else:
@@ -235,14 +242,14 @@ class LibraryScannerService:
             track_path = line
         else:
             track_path = os.path.normpath(os.path.join(base_dir, line))
-        
+
         download = None
-        
+
         # Strategy 1: Try exact path match
         stmt = select(Download).where(Download.file_path == track_path).limit(1)
         res = await db.execute(stmt)
         download = res.scalar_one_or_none()
-        
+
         # Strategy 2: Try normalized path with /downloads/ prefix
         if not download:
             try:
@@ -253,7 +260,7 @@ class LibraryScannerService:
                 download = res.scalar_one_or_none()
             except ValueError:
                 pass
-        
+
         # Strategy 3: Match by filename only (for this user)
         if not download:
             track_filename = os.path.basename(line)
@@ -267,24 +274,26 @@ class LibraryScannerService:
             )
             res = await db.execute(stmt)
             download = res.scalar_one_or_none()
-        
+
         if download and download.track_id:
             from uuid import UUID
+
             t_id = download.track_id
             if isinstance(t_id, str):
                 t_id = UUID(t_id)
             return t_id
         return None
 
-    async def _process_audio_file(self, db: AsyncSession, user_id: str, full_path: str, filename: str, root_dir: str) -> bool:
+    async def _process_audio_file(
+        self, db: AsyncSession, user_id: str, full_path: str, filename: str, root_dir: str
+    ) -> bool:
         try:
             # Parse metadata in executor to avoid blocking event loop
             loop = asyncio.get_event_loop()
             title, artist, album, genre, duration_ms = await loop.run_in_executor(
-                stream_executor, 
-                lambda p=full_path: self._parse_audio_metadata_sync(p)
+                stream_executor, lambda p=full_path: self._parse_audio_metadata_sync(p)
             )
-            
+
             source, playlist_name = self._infer_source_info(full_path, root_dir)
 
             try:
@@ -313,11 +322,12 @@ class LibraryScannerService:
             await db.flush()
 
             from uuid import UUID as UUID_type
+
             try:
                 u_id = UUID_type(str(user_id))
             except ValueError:
                 return False
-            
+
             new_download = Download(
                 user_id=u_id,
                 track_id=new_track.id,
@@ -338,11 +348,11 @@ class LibraryScannerService:
 
     async def _handle_scan_file(self, db, user_id, full_path, filename, root_dir, known_paths) -> bool:
         lower_name = filename.lower()
-        
+
         # Handle Playlists
         if lower_name.endswith((".m3u", ".m3u8")):
-                await self._import_playlist(db, full_path, user_id)
-                return False
+            await self._import_playlist(db, full_path, user_id)
+            return False
 
         # Handle Audio
         if not lower_name.endswith(".mp3"):
@@ -373,8 +383,8 @@ class LibraryScannerService:
             for filename in filenames:
                 full_path = os.path.join(dirpath, filename)
                 if filename.lower().endswith(".mp3"):
-                     total_found += 1
-                
+                    total_found += 1
+
                 try:
                     if await self._handle_scan_file(db, user_id, full_path, filename, root_dir, known_paths):
                         imported_count += 1
@@ -396,22 +406,23 @@ class LibraryScannerService:
         """Remove tracks from DB if their physical files are missing."""
         result = await db.execute(select(Download).where(Download.status == "completed"))
         downloads = result.scalars().all()
-        
+
         removed_count = 0
         for download in downloads:
             if download.file_path and not os.path.exists(download.file_path):
                 # Delete track and download
                 if download.track_id:
                     from app.models.track import Track
+
                     await db.execute(delete(Track).where(Track.id == download.track_id))
-                
+
                 await db.delete(download)
                 removed_count += 1
-        
+
         if removed_count > 0:
             await db.commit()
             logger.info(f"Cleaned up {removed_count} orphaned tracks")
-            
+
         return removed_count
 
 

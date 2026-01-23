@@ -44,6 +44,3 @@ api_router.include_router(apple_music.router, prefix="/apple_music", tags=["appl
 api_router.include_router(tidal.router, prefix="/tidal", tags=["tidal"])
 api_router.include_router(amazon_music.router, prefix="/amazon_music", tags=["amazon_music"])
 api_router.include_router(soundcloud.router, prefix="/soundcloud", tags=["soundcloud"])
-
-
-

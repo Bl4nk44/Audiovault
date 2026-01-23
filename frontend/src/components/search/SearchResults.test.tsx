@@ -29,10 +29,7 @@ describe("SearchResults Component", () => {
     const skeletons = screen
       .getAllByRole("generic")
       .filter((el) => el.className.includes("animate-pulse"));
-    // Wait, filtering by class might be brittle.
-    // The skeleton is a div in the source: <div className="... animate-pulse ..." />
-    // Let's rely on container structure.
-    // Or just check that we don't see "noResults"
+    expect(skeletons).toHaveLength(10);
   });
 
   it("renders empty state", () => {

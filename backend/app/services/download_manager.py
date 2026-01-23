@@ -3,6 +3,7 @@ import logging
 import os
 import uuid
 from datetime import UTC, datetime
+from typing import Optional
 
 import aiofiles
 import yt_dlp
@@ -18,7 +19,6 @@ from app.utils.sanitization import sanitize_filename
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 from sqlalchemy.orm import selectinload
-from typing import Optional
 
 logger = logging.getLogger(__name__)
 
@@ -231,7 +231,9 @@ class DownloadManager:
         download.progress = 100
         download.completed_at = datetime.now(UTC)
 
-        self._set_download_file_path(download, final_filename_container, output_template, getattr(self, '_target_format', 'mp3'))
+        self._set_download_file_path(
+            download, final_filename_container, output_template, getattr(self, "_target_format", "mp3")
+        )
         self._fix_filename_artifacts(download)
 
         # Force file permissions
@@ -265,7 +267,7 @@ class DownloadManager:
                     download.track.title = title
                     download.track.artist = artist
                     download.track.album = album
-                    
+
                     # Update duration from file metadata
                     if duration_ms > 0:
                         download.track.duration_ms = duration_ms
@@ -285,7 +287,10 @@ class DownloadManager:
 
                     download.track.metadata_content = meta
                     db.add(download.track)
-                    logger.info(f"Updated Track metadata for {download.track.id}: {title} - {artist} [Duration: {duration_ms}ms]")
+                    logger.info(
+                        f"Updated Track metadata for {download.track.id}: {title} - {artist} "
+                        f"[Duration: {duration_ms}ms]"
+                    )
 
         except Exception as e:
             logger.error(f"Failed to update track metadata from file: {e}")
@@ -300,12 +305,12 @@ class DownloadManager:
 
     def _set_download_file_path(self, download, final_filename_container, output_template, target_format="mp3"):
         """Set the final file path for the download.
-        
+
         Args:
             target_format: 'mp3' or 'flac' - determines the file extension
         """
         target_ext = f".{target_format}"
-        
+
         if final_filename_container["path"]:
             base, ext = os.path.splitext(final_filename_container["path"])
             # Always use the target format extension
@@ -671,7 +676,8 @@ class DownloadManager:
         }
 
         schema_map = {
-            "{artist}": "%(artist)s",  # Removed fallback to uploader|creator to correspond with strict filename sanitization
+            "{artist}": "%(artist)s",  # Removed fallback to uploader|creator to
+            # correspond with strict filename sanitization
             "{title}": "%(title)s",
             "{album}": "%(album|Single)s",
             "{id}": "%(id)s",
@@ -792,7 +798,8 @@ class DownloadManager:
             return ""
 
         elif resp_type == "none":
-            # Try default legacy logic if no instruction covers it (shouldn't happen with new logic covering all known sources)
+            # Try default legacy logic if no instruction covers it
+            # (shouldn't happen with new logic covering all known sources)
             # Default for imports etc.
             if track_info:
                 return f"ytsearch1:{track_info.artist} - {track_info.title}"
@@ -876,7 +883,7 @@ class DownloadManager:
                         track_id_to_use = d.track.id
                     elif d.track_id:
                         track_id_to_use = d.track_id
-                        
+
                     if track_id_to_use:
                         valid_track_ids.append(track_id_to_use)
                     else:
@@ -886,6 +893,7 @@ class DownloadManager:
                 if valid_track_ids:
                     # Correct deletion:
                     from sqlalchemy import delete
+
                     await db.execute(delete(PlaylistTrack).where(PlaylistTrack.playlist_id == playlist.id))
 
                     # Add current tracks
@@ -971,7 +979,7 @@ class DownloadManager:
         # 3. Clean up empty directory and m3u8 playlist file
         if downloads and downloads[0].file_path:
             parent_dir = os.path.dirname(downloads[0].file_path)
-            
+
             # Delete the .m3u8 playlist file
             # m3u8 is stored in user's root download folder
             user_download_dir = os.path.dirname(parent_dir) if parent_dir else None
@@ -981,17 +989,17 @@ class DownloadManager:
                     user_download_dir = downloads[0].user.preferences.get("downloadPath")
                 if not user_download_dir:
                     user_download_dir = os.path.join(settings.DOWNLOAD_DIR, downloads[0].user.username)
-            
+
             safe_playlist_name = sanitize_filename(playlist_name)
             m3u8_path = os.path.join(user_download_dir, f"{safe_playlist_name}.m3u8")
-            
+
             if os.path.exists(m3u8_path):
                 try:
                     os.remove(m3u8_path)
                     logger.info(f"Removed playlist file {m3u8_path}")
                 except Exception as e:
                     logger.error(f"Failed to remove playlist file {m3u8_path}: {e}")
-            
+
             # Check if this dir name matches playlist name normalized
             safe_playlist_name_dir = playlist_name.replace("/", "-").replace("\\", "-")
             if safe_playlist_name_dir in os.path.basename(parent_dir):

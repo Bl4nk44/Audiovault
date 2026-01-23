@@ -70,7 +70,7 @@ describe("SearchBar", () => {
   it("clears query when X button is clicked", () => {
     render(<SearchBar onSearch={mockOnSearch} isLoading={false} initialQuery="clear me" />);
 
-    const xButton = screen.getByRole("button", { name: "" }); // The X icon button doesn't have text
+    // const xButton = screen.getByRole("button", { name: "" });
     // The X component has no title, but it's the only other button beside Search
     const buttons = screen.getAllByRole("button");
     const clearButton = buttons.find((b) => b.querySelector("svg"));

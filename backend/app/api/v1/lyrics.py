@@ -55,9 +55,7 @@ async def get_lyrics_by_track(
         raise HTTPException(status_code=404, detail="Track not found")
 
     if not track.artist or not track.title:
-        raise HTTPException(
-            status_code=400, detail="Track missing artist or title information"
-        )
+        raise HTTPException(status_code=400, detail="Track missing artist or title information")
 
     # Fetch lyrics
     lyrics_data = await lyrics_service.get_lyrics(track.artist, track.title)

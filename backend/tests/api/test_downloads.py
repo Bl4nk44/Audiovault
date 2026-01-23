@@ -66,8 +66,10 @@ async def test_get_library(client: AsyncClient, db_session: AsyncSession, overri
 @pytest.mark.asyncio
 async def test_get_queue(client: AsyncClient, db_session: AsyncSession, override_auth_dependency):
     user = override_auth_dependency
-    # User already added by fixture? No, fixture returns object but doesn't persist if we don't ADD it in fixture or test.
-    # The fixture above defines the object. I should add it to DB in the test body to be safely scoped.
+    # User already added by fixture? No, fixture returns object but doesn't persist
+    # if we don't ADD it in fixture or test.
+    # The fixture above defines the object. I should add it to DB in the test body
+    # to be safely scoped.
     # But db connection is shared.
 
     # wait, if I use the SAME override_auth_dependency in multiple tests, I might duplicate insert if I am not careful.

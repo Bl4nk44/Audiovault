@@ -71,5 +71,6 @@ async def test_check_update_semver_logic():
                     pytest.fail(f"Function returned error: {result['error']}")
 
                 assert result["update_available"] == expected, (
-                    f"Failed for latest={latest}, current={current}. Expected {expected}, got {result['update_available']}"
+                    f"Failed for latest={latest}, current={current}. "
+                    f"Expected {expected}, got {result['update_available']}"
                 )

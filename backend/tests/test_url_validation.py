@@ -3,9 +3,7 @@ Tests for SSRF protection in url_helper module.
 """
 
 import pytest
-
 from app.utils.url_helper import (
-    SSRFValidationError,
     is_allowed_domain,
     is_private_ip,
     validate_url,

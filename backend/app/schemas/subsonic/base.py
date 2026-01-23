@@ -13,26 +13,24 @@ from pydantic import BaseModel
 
 # Pattern to match illegal XML 1.0 characters (control chars except tab, newline, carriage return)
 # XML 1.0 allows: #x9 | #xA | #xD | [#x20-#xD7FF] | [#xE000-#xFFFD] | [#x10000-#x10FFFF]
-_ILLEGAL_XML_CHARS_RE = re.compile(
-    r'[\x00-\x08\x0b\x0c\x0e-\x1f\x7f-\x9f]'
-)
+_ILLEGAL_XML_CHARS_RE = re.compile(r"[\x00-\x08\x0b\x0c\x0e-\x1f\x7f-\x9f]")
 
 
 def xml_safe_string(value: str) -> str:
     """
     Remove illegal XML 1.0 control characters from string.
-    
+
     XML 1.0 does not allow certain control characters (0x00-0x08, 0x0B, 0x0C, 0x0E-0x1F).
     If these are present in song titles or other metadata, the XML will be malformed
     and clients like Amperfy will fail to parse it, causing songs to be skipped.
-    
+
     Args:
         value: String that may contain illegal characters
-        
+
     Returns:
         Sanitized string safe for XML serialization
     """
-    return _ILLEGAL_XML_CHARS_RE.sub('', value)
+    return _ILLEGAL_XML_CHARS_RE.sub("", value)
 
 
 class SubsonicError(BaseModel):

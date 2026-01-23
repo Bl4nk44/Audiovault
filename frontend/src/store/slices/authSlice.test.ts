@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, Mock, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi, type Mock } from "vitest";
 import type { User } from "../../types";
 import { createAuthSlice, type AuthSlice } from "./authSlice";
 
@@ -14,7 +14,7 @@ vi.mock("../../services/api", () => ({
 
 // Mock global location reload
 const originalLocation = globalThis.location;
-// @ts-ignore
+// @ts-expect-error Mocking readonly property
 delete globalThis.location;
 globalThis.location = { ...originalLocation, reload: vi.fn() } as any;
 
@@ -163,7 +163,7 @@ describe("authSlice", () => {
   describe("checkAuth", () => {
     it("should verify token and update user", async () => {
       localStorageMock.getItem.mockReturnValue(mockToken);
-      (api.get as Mock).mockResolvedValue({ data: mockUser });
+      (api.get as unknown as Mock).mockResolvedValue({ data: mockUser });
 
       await (state as any).checkAuth();
 
@@ -174,7 +174,7 @@ describe("authSlice", () => {
 
     it("should logout on verification failure", async () => {
       localStorageMock.getItem.mockReturnValue(mockToken);
-      (api.get as Mock).mockRejectedValue(new Error("Unauthorized"));
+      (api.get as unknown as Mock).mockRejectedValue(new Error("Unauthorized"));
       const logoutSpy = vi.spyOn(state, "logout");
 
       await (state as any).checkAuth();

@@ -1,7 +1,7 @@
 import os
 import shutil
 from datetime import UTC, datetime
-from typing import Optional, Any
+from typing import Any, Optional
 
 from app.core.config import settings
 from app.core.dependencies import get_current_active_user
@@ -163,7 +163,7 @@ def _get_image_url(download: Download) -> str | None:
     url = meta.get("image_url") or meta.get("album_art")
     if url:
         return url
-    
+
     # Fallback to native endpoint
     return f"{settings.API_V1_STR}/stream/{download.track.id}/cover"
 

@@ -22,7 +22,7 @@ const detectSourceFromUrl = (query: string): string => {
 
 export default function Search() {
   const [searchParams] = useSearchParams();
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+   
   const [results, setResults] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [offset, setOffset] = useState(0);
@@ -39,7 +39,7 @@ export default function Search() {
     type: string,
     currentOffset: number
   ) => {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+     
     let newResults: any[] = [];
 
     // Determine which types to fetch

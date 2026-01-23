@@ -4,8 +4,7 @@ Provides disk usage, library stats, and growth trends.
 """
 
 import os
-from datetime import datetime, timedelta, UTC
-from typing import Optional
+from datetime import UTC, datetime, timedelta
 
 from app.core.config import settings
 from app.core.dependencies import get_current_active_user
@@ -14,7 +13,7 @@ from app.models.download import Download
 from app.models.user import User
 from fastapi import APIRouter, Depends
 from pydantic import BaseModel
-from sqlalchemy import func, select, extract
+from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 router = APIRouter()
@@ -22,6 +21,7 @@ router = APIRouter()
 
 class StorageStats(BaseModel):
     """Storage statistics response."""
+
     total_files: int
     total_size_bytes: int
     total_size_formatted: str
@@ -102,13 +102,14 @@ async def get_storage_stats(
     # Get disk usage
     download_dir = settings.DOWNLOAD_DIR
     try:
-        disk_stat = os.statvfs(download_dir) if hasattr(os, 'statvfs') else None
+        disk_stat = os.statvfs(download_dir) if hasattr(os, "statvfs") else None
         if disk_stat:
             disk_total = disk_stat.f_blocks * disk_stat.f_frsize
             disk_free = disk_stat.f_bavail * disk_stat.f_frsize
         else:
             # Windows fallback
             import shutil
+
             disk_usage = shutil.disk_usage(download_dir)
             disk_total = disk_usage.total
             disk_free = disk_usage.free
@@ -133,10 +134,7 @@ async def get_storage_stats(
         .group_by(func.date(Download.created_at))
         .order_by(func.date(Download.created_at))
     )
-    growth_data = [
-        {"date": str(row.date), "count": row.count}
-        for row in growth_result.fetchall()
-    ]
+    growth_data = [{"date": str(row.date), "count": row.count} for row in growth_result.fetchall()]
 
     return StorageStats(
         total_files=len(downloads),

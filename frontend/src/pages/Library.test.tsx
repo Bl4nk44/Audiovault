@@ -1,6 +1,6 @@
 import { act, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { BrowserRouter } from "react-router-dom";
-import { beforeEach, describe, expect, it, Mock, vi } from "vitest";
+import { beforeEach, describe, expect, it, type Mock, vi } from "vitest";
 import api from "../services/api";
 import { notify } from "../utils/notify";
 import Library from "./Library";
@@ -241,7 +241,7 @@ describe("Library Page Integration", () => {
   it("handles pagination clicks", async () => {
     // Return many items to trigger pagination?
     // Or just mock the total count.
-    (api.get as Mock).mockImplementation((url: string) => {
+    (api.get as unknown as Mock).mockImplementation((url: string) => {
       if (url === "/downloads/library") {
         return Promise.resolve({
           data: {

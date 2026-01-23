@@ -29,10 +29,10 @@ COPY --from=build /app/dist /usr/share/nginx/html
 
 # Copy custom nginx config
 COPY frontend/nginx.conf /etc/nginx/conf.d/default.conf
+COPY frontend/nginx-main.conf /etc/nginx/nginx.conf
 
 # Support running as non-root
-RUN chown -R nginx:nginx /usr/share/nginx/html /var/cache/nginx /etc/nginx/conf.d
-
+RUN chown -R nginx:nginx /usr/share/nginx/html /var/cache/nginx /etc/nginx/conf.d /var/log/nginx
 USER nginx
 
 EXPOSE 8080

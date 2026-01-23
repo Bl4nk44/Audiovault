@@ -1,5 +1,5 @@
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
-import { beforeEach, describe, expect, it, Mock, vi } from "vitest";
+import { beforeEach, describe, expect, it, type Mock, vi } from "vitest";
 import { playlistsApi } from "../api/playlists";
 import { useStore } from "../store/useStore";
 import { notify } from "../utils/notify";
@@ -84,12 +84,12 @@ describe("PlaylistDetails Page", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mockSource = "local";
-    (useQuery as Mock).mockReturnValue({
+    (useQuery as unknown as Mock).mockReturnValue({
       data: mockPlaylist,
       isLoading: false,
       error: null,
     });
-    (useStore as Mock).mockReturnValue({
+    (useStore as unknown as Mock).mockReturnValue({
       watchlist: [],
       addToWatchlist: mockAddToWatchlist,
       removeFromWatchlist: mockRemoveFromWatchlist,
@@ -104,7 +104,7 @@ describe("PlaylistDetails Page", () => {
   });
 
   it("shows loading state", () => {
-    (useQuery as Mock).mockReturnValue({
+    (useQuery as unknown as Mock).mockReturnValue({
       data: null,
       isLoading: true,
       error: null,
@@ -115,7 +115,7 @@ describe("PlaylistDetails Page", () => {
   });
 
   it("shows error state", () => {
-    (useQuery as Mock).mockReturnValue({
+    (useQuery as unknown as Mock).mockReturnValue({
       data: null,
       isLoading: false,
       error: new Error("Fail"),
@@ -125,7 +125,7 @@ describe("PlaylistDetails Page", () => {
   });
 
   it("handles edit playlist name", async () => {
-    (playlistsApi.update as Mock).mockResolvedValue({});
+    (playlistsApi.update as unknown as Mock).mockResolvedValue({});
     render(<PlaylistDetails />);
 
     fireEvent.click(screen.getByText("Edit"));
@@ -140,7 +140,7 @@ describe("PlaylistDetails Page", () => {
   });
 
   it("handles delete playlist", async () => {
-    (playlistsApi.delete as Mock).mockResolvedValue({});
+    (playlistsApi.delete as unknown as Mock).mockResolvedValue({});
     render(<PlaylistDetails />);
 
     fireEvent.click(screen.getByText("Delete"));
@@ -154,7 +154,7 @@ describe("PlaylistDetails Page", () => {
   });
 
   it("handles track removal", async () => {
-    (playlistsApi.removeTracks as Mock).mockResolvedValue({});
+    (playlistsApi.removeTracks as unknown as Mock).mockResolvedValue({});
     render(<PlaylistDetails />);
 
     // Click remove on track card
@@ -178,7 +178,7 @@ describe("PlaylistDetails Page", () => {
   });
 
   it("handles watchlist toggle (remove)", () => {
-    (useStore as Mock).mockReturnValue({
+    (useStore as unknown as Mock).mockReturnValue({
       watchlist: [{ id: "w1", source_id: "1" }],
       addToWatchlist: mockAddToWatchlist,
       removeFromWatchlist: mockRemoveFromWatchlist,
@@ -190,7 +190,7 @@ describe("PlaylistDetails Page", () => {
   });
 
   it("handles playlist export", async () => {
-    (playlistsApi.exportAsJson as Mock).mockResolvedValue({});
+    (playlistsApi.exportAsJson as unknown as Mock).mockResolvedValue({});
     render(<PlaylistDetails />);
 
     fireEvent.click(screen.getByText("Export JSON"));
@@ -201,7 +201,7 @@ describe("PlaylistDetails Page", () => {
   });
 
   it("handles export error", async () => {
-    (playlistsApi.exportAsJson as Mock).mockRejectedValue(new Error());
+    (playlistsApi.exportAsJson as unknown as Mock).mockRejectedValue(new Error());
     render(<PlaylistDetails />);
 
     fireEvent.click(screen.getByText("Export JSON"));

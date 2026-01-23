@@ -34,7 +34,7 @@ async def delete_user_me(
         user_lib_path = os.path.join(settings.DOWNLOAD_DIR, current_user.username)
 
         if current_user.preferences and "downloadPath" in current_user.preferences:
-            # TODO: Handle custom download paths securely. 
+            # TODO: Handle custom download paths securely.
             # For now, we only delete the default directory to avoid deleting external data.
             pass
 

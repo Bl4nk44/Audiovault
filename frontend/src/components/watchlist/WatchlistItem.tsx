@@ -13,6 +13,30 @@ interface WatchlistItemProps {
   viewMode?: "list" | "grid";
 }
 
+const AutoDownloadSwitch = ({
+  autoDownload,
+  onToggle,
+}: {
+  autoDownload: boolean;
+  onToggle: (e: React.MouseEvent) => void;
+}) => (
+  <button
+    onClick={onToggle}
+    className={`relative w-11 h-6 rounded-full transition-all duration-300 flex items-center cursor-pointer border ${
+      autoDownload
+        ? "bg-green-500/20 border-green-500 shadow-[0_0_10px_rgba(34,197,94,0.4)]"
+        : "bg-red-500/20 border-red-500 shadow-[0_0_10px_rgba(239,68,68,0.4)]"
+    }`}
+    title={autoDownload ? "Auto-download: ON" : "Auto-download: OFF"}
+  >
+    <div
+      className={`absolute w-4 h-4 rounded-full shadow-sm transform transition-all duration-300 ${
+        autoDownload ? "translate-x-6 bg-green-400" : "translate-x-1 bg-red-400"
+      }`}
+    />
+  </button>
+);
+
 export default function WatchlistItem({
   item,
   onRemove,
@@ -51,23 +75,6 @@ export default function WatchlistItem({
   const imageUrl = item.metadata_content?.image_url;
 
   // Helper for the Toggle Switch
-  const AutoDownloadSwitch = () => (
-    <button
-      onClick={toggleAutoDownload}
-      className={`relative w-11 h-6 rounded-full transition-all duration-300 flex items-center cursor-pointer border ${
-        autoDownload
-          ? "bg-green-500/20 border-green-500 shadow-[0_0_10px_rgba(34,197,94,0.4)]"
-          : "bg-red-500/20 border-red-500 shadow-[0_0_10px_rgba(239,68,68,0.4)]"
-      }`}
-      title={autoDownload ? "Auto-download: ON" : "Auto-download: OFF"}
-    >
-      <div
-        className={`absolute w-4 h-4 rounded-full shadow-sm transform transition-all duration-300 ${
-          autoDownload ? "translate-x-6 bg-green-400" : "translate-x-1 bg-red-400"
-        }`}
-      />
-    </button>
-  );
 
   if (viewMode === "grid") {
     return (
@@ -143,7 +150,7 @@ export default function WatchlistItem({
           </div>
 
           <div className="pointer-events-auto shrink-0 pb-0.5" onClick={(e) => e.stopPropagation()}>
-            <AutoDownloadSwitch />
+            <AutoDownloadSwitch autoDownload={autoDownload} onToggle={toggleAutoDownload} />
           </div>
         </div>
       </div>
@@ -187,7 +194,7 @@ export default function WatchlistItem({
 
       <div className="flex items-center gap-4 shrink-0">
         <div onClick={(e) => e.stopPropagation()}>
-          <AutoDownloadSwitch />
+          <AutoDownloadSwitch autoDownload={autoDownload} onToggle={toggleAutoDownload} />
         </div>
 
         {item.new_items_count > 0 && (

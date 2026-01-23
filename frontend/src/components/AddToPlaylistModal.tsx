@@ -22,6 +22,19 @@ const AddToPlaylistModal: React.FC<AddToPlaylistModalProps> = ({ isOpen, onClose
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
   useEffect(() => {
+    const fetchPlaylists = async () => {
+      setLoading(true);
+      try {
+        const data = await playlistsApi.getAll();
+        setPlaylists(data);
+      } catch (err) {
+        console.error("Failed to fetch playlists", err);
+        setErrorMsg(t("playlist.fetch.error", "Failed to load playlists"));
+      } finally {
+        setLoading(false);
+      }
+    };
+
     if (isOpen) {
       fetchPlaylists();
       setSuccessMsg(null);
@@ -29,20 +42,7 @@ const AddToPlaylistModal: React.FC<AddToPlaylistModalProps> = ({ isOpen, onClose
       setCreating(false);
       setNewPlaylistName("");
     }
-  }, [isOpen]);
-
-  const fetchPlaylists = async () => {
-    setLoading(true);
-    try {
-      const data = await playlistsApi.getAll();
-      setPlaylists(data);
-    } catch (err) {
-      console.error("Failed to fetch playlists", err);
-      setErrorMsg(t("playlist.fetch.error", "Failed to load playlists"));
-    } finally {
-      setLoading(false);
-    }
-  };
+  }, [isOpen, t]);
 
   const handleCreatePlaylist = async (e: React.FormEvent) => {
     e.preventDefault();

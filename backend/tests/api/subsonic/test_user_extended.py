@@ -1,18 +1,14 @@
 """Extended tests for Subsonic user handlers - star, unstar, rating, scrobble."""
+
+from uuid import uuid4
+
 import pytest
 from httpx import AsyncClient
-from uuid import uuid4
 
 
 @pytest.fixture
 def subsonic_auth_params(admin_user):
-    return {
-        "u": admin_user.username,
-        "p": "admin",
-        "c": "pytest",
-        "v": "1.16.1",
-        "f": "json"
-    }
+    return {"u": admin_user.username, "p": "admin", "c": "pytest", "v": "1.16.1", "f": "json"}
 
 
 class TestStarUnstar:
@@ -38,7 +34,7 @@ class TestStarUnstar:
         """Test starring multiple items."""
         params = {
             **subsonic_auth_params,
-            "id": [str(sample_track.id), str(uuid4())]  # One valid, one non-existent
+            "id": [str(sample_track.id), str(uuid4())],  # One valid, one non-existent
         }
         response = await client.get("/rest/star.view", params=params)
         assert response.status_code == 200
@@ -122,11 +118,7 @@ class TestScrobble:
     @pytest.mark.asyncio
     async def test_scrobble_submission(self, client: AsyncClient, subsonic_auth_params, sample_track):
         """Test full scrobble submission."""
-        params = {
-            **subsonic_auth_params,
-            "id": str(sample_track.id),
-            "submission": True
-        }
+        params = {**subsonic_auth_params, "id": str(sample_track.id), "submission": True}
         response = await client.get("/rest/scrobble.view", params=params)
         assert response.status_code == 200
         data = response.json()
@@ -135,11 +127,7 @@ class TestScrobble:
     @pytest.mark.asyncio
     async def test_scrobble_now_playing(self, client: AsyncClient, subsonic_auth_params, sample_track):
         """Test now playing update (no submission)."""
-        params = {
-            **subsonic_auth_params,
-            "id": str(sample_track.id),
-            "submission": False
-        }
+        params = {**subsonic_auth_params, "id": str(sample_track.id), "submission": False}
         response = await client.get("/rest/scrobble.view", params=params)
         assert response.status_code == 200
 
@@ -147,10 +135,11 @@ class TestScrobble:
     async def test_scrobble_with_timestamp(self, client: AsyncClient, subsonic_auth_params, sample_track):
         """Test scrobble with custom timestamp."""
         import time
+
         params = {
             **subsonic_auth_params,
             "id": str(sample_track.id),
-            "time": int(time.time() * 1000) - 60000  # 1 minute ago
+            "time": int(time.time() * 1000) - 60000,  # 1 minute ago
         }
         response = await client.get("/rest/scrobble.view", params=params)
         assert response.status_code == 200

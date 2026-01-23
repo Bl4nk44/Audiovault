@@ -30,16 +30,19 @@ class SpotifyService:
 
         # Handle short links / redirects first
         if "spotify.link" in query or "spoti.fi" in query:
-            # We need to run async function in sync method (search is sync here? No, let's check)
-            # Wait, SpotifyService.search is standard sync? Fastapi runs it in threadpool usually if not async def.
+            # We need to run async function in sync method (search is sync here?
+            # No, let's check).
+            # Wait, SpotifyService.search is standard sync? Fastapi runs it in threadpool usually.
             # But let's check if we can make search async or use run_until_complete.
             # Usually standard def in FastAPI is run in threadpool.
             # We can use a loop runner.
-            # Actually, it's better to just resolve it using requests or httpx sync if this is a sync method.
+            # Actually, it's better to just resolve it using requests or httpx sync if this is
+            # a sync method.
             # Checking file... it is `def search`.
-            # Let's import requests for sync resolution for now to avoid async loop issues in threadpool,
-            # or better yet, verify if we can make it async.
-            # Most other services are async (DeezerService async def search). SpotifyService from legacy code is sync using spotipy.
+            # Let's import requests for sync resolution for now to avoid async loop issues in
+            # threadpool, or better yet, verify if we can make it async.
+            # Most other services are async (DeezerService async def search). SpotifyService from
+            # legacy code is sync using spotipy.
             # Let's stick to sync resolution for SpotifyService for consistency.
             try:
                 import requests

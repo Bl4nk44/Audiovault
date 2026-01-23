@@ -6,9 +6,8 @@ import logging
 from typing import Optional
 from uuid import UUID
 
-from sqlalchemy.ext.asyncio import AsyncSession
-
 from app.models.audit_log import AuditLog
+from sqlalchemy.ext.asyncio import AsyncSession
 
 logger = logging.getLogger(__name__)
 
@@ -66,9 +65,7 @@ class AuditService:
         await db.commit()
         await db.refresh(audit_log)
 
-        logger.info(
-            f"Audit: {action} {resource_type} (id={resource_id}) by user {user_id}"
-        )
+        logger.info(f"Audit: {action} {resource_type} (id={resource_id}) by user {user_id}")
 
         return audit_log
 

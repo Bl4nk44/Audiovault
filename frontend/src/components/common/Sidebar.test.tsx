@@ -77,7 +77,7 @@ describe("Sidebar Component", () => {
     // However, finding it relative to the link is hard without a test-id on the link container.
     // Let's check if the link itself has 'text-white' vs 'text-gray-400'.
 
-    const searchSpan = getByText("sidebar.search");
+    // const searchSpan = getByText("sidebar.search");
     // Class names might be on the parent div/link or the span.
     // Looking at Sidebar.tsx usually: className={cn(..., isActive ? "text-white" : "text-gray-400")}
     // Verify class persistence if possible.

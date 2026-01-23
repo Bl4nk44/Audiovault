@@ -2,8 +2,10 @@
 Extended tests for SoundCloudService to increase code coverage.
 Covers: can_handle, get_tracks, get_playlist_info.
 """
+
+from unittest.mock import AsyncMock, MagicMock, patch
+
 import pytest
-from unittest.mock import patch, MagicMock, AsyncMock
 from app.services.soundcloud_service import SoundCloudService
 
 
@@ -16,6 +18,7 @@ def soundcloud_service():
 # =============================================================================
 # can_handle
 # =============================================================================
+
 
 def test_can_handle_soundcloud_url(soundcloud_service):
     """Test can_handle with SoundCloud URL."""
@@ -41,6 +44,7 @@ def test_can_handle_spotify_url(soundcloud_service):
 # get_tracks
 # =============================================================================
 
+
 @pytest.mark.asyncio
 async def test_get_tracks_single_track(soundcloud_service):
     """Test extracting single track."""
@@ -51,16 +55,16 @@ async def test_get_tracks_single_track(soundcloud_service):
         "uploader": "Test Artist",
         "duration": 300,
         "thumbnail": "http://thumb.jpg",
-        "webpage_url": "https://soundcloud.com/artist/track"
+        "webpage_url": "https://soundcloud.com/artist/track",
     }
-    
+
     with patch("yt_dlp.YoutubeDL") as mock_ydl:
         mock_instance = MagicMock()
         mock_instance.extract_info.return_value = mock_info
         mock_ydl.return_value = mock_instance
-        
+
         tracks = await soundcloud_service.get_tracks("https://soundcloud.com/artist/track")
-        
+
         assert len(tracks) == 1
         assert tracks[0]["title"] == "Test Track"
         assert tracks[0]["artist"] == "Test Artist"
@@ -78,25 +82,25 @@ async def test_get_tracks_playlist(soundcloud_service):
                 "title": "Track 1",
                 "uploader": "Artist",
                 "duration": 200,
-                "webpage_url": "https://soundcloud.com/a/t1"
+                "webpage_url": "https://soundcloud.com/a/t1",
             },
             {
                 "id": "2",
                 "title": "Track 2",
                 "artist": "Artist 2",
                 "duration": 250,
-                "webpage_url": "https://soundcloud.com/a/t2"
-            }
-        ]
+                "webpage_url": "https://soundcloud.com/a/t2",
+            },
+        ],
     }
-    
+
     with patch("yt_dlp.YoutubeDL") as mock_ydl:
         mock_instance = MagicMock()
         mock_instance.extract_info.return_value = mock_info
         mock_ydl.return_value = mock_instance
-        
+
         tracks = await soundcloud_service.get_tracks("https://soundcloud.com/artist/sets/myplaylist")
-        
+
         assert len(tracks) == 2
 
 
@@ -107,9 +111,9 @@ async def test_get_tracks_no_info(soundcloud_service):
         mock_instance = MagicMock()
         mock_instance.extract_info.return_value = None
         mock_ydl.return_value = mock_instance
-        
+
         tracks = await soundcloud_service.get_tracks("https://soundcloud.com/invalid")
-        
+
         assert tracks == []
 
 
@@ -118,9 +122,9 @@ async def test_get_tracks_error(soundcloud_service):
     """Test get_tracks with extraction error."""
     with patch("yt_dlp.YoutubeDL") as mock_ydl:
         mock_ydl.return_value.extract_info.side_effect = Exception("Error")
-        
+
         tracks = await soundcloud_service.get_tracks("https://soundcloud.com/artist/track")
-        
+
         assert tracks == []
 
 
@@ -132,19 +136,19 @@ async def test_get_tracks_short_link(soundcloud_service):
         "title": "Short Track",
         "uploader": "Artist",
         "duration": 180,
-        "webpage_url": "https://soundcloud.com/artist/track"
+        "webpage_url": "https://soundcloud.com/artist/track",
     }
-    
+
     with patch("app.utils.url_helper.resolve_redirects", new_callable=AsyncMock) as mock_resolve:
         mock_resolve.return_value = "https://soundcloud.com/artist/track"
-        
+
         with patch("yt_dlp.YoutubeDL") as mock_ydl:
             mock_instance = MagicMock()
             mock_instance.extract_info.return_value = mock_info
             mock_ydl.return_value = mock_instance
-            
-            tracks = await soundcloud_service.get_tracks("https://on.soundcloud.com/abc")
-            
+
+            _ = await soundcloud_service.get_tracks("https://on.soundcloud.com/abc")
+
             mock_resolve.assert_called_once()
 
 
@@ -156,17 +160,17 @@ async def test_get_tracks_null_entry(soundcloud_service):
         "entries": [
             None,
             {"id": "1", "title": "Valid Track", "uploader": "A", "duration": 100, "webpage_url": "url"},
-            None
-        ]
+            None,
+        ],
     }
-    
+
     with patch("yt_dlp.YoutubeDL") as mock_ydl:
         mock_instance = MagicMock()
         mock_instance.extract_info.return_value = mock_info
         mock_ydl.return_value = mock_instance
-        
+
         tracks = await soundcloud_service.get_tracks("https://soundcloud.com/sets/playlist")
-        
+
         assert len(tracks) == 1
 
 
@@ -177,17 +181,17 @@ async def test_get_tracks_no_title(soundcloud_service):
         "_type": "playlist",
         "entries": [
             {"id": "1", "uploader": "A", "duration": 100},  # No title
-            {"id": "2", "title": "Has Title", "uploader": "B", "duration": 150, "webpage_url": "url"}
-        ]
+            {"id": "2", "title": "Has Title", "uploader": "B", "duration": 150, "webpage_url": "url"},
+        ],
     }
-    
+
     with patch("yt_dlp.YoutubeDL") as mock_ydl:
         mock_instance = MagicMock()
         mock_instance.extract_info.return_value = mock_info
         mock_ydl.return_value = mock_instance
-        
+
         tracks = await soundcloud_service.get_tracks("https://soundcloud.com/sets/p")
-        
+
         assert len(tracks) == 1
         assert tracks[0]["title"] == "Has Title"
 
@@ -196,6 +200,7 @@ async def test_get_tracks_no_title(soundcloud_service):
 # get_playlist_info
 # =============================================================================
 
+
 @pytest.mark.asyncio
 async def test_get_playlist_info_success(soundcloud_service):
     """Test getting playlist info."""
@@ -203,16 +208,16 @@ async def test_get_playlist_info_success(soundcloud_service):
         "_type": "playlist",
         "title": "My Playlist",
         "thumbnails": [{"url": "http://thumb.jpg"}],
-        "playlist_count": 15
+        "playlist_count": 15,
     }
-    
+
     with patch("yt_dlp.YoutubeDL") as mock_ydl:
         mock_instance = MagicMock()
         mock_instance.extract_info.return_value = mock_info
         mock_ydl.return_value = mock_instance
-        
+
         info = await soundcloud_service.get_playlist_info("https://soundcloud.com/artist/sets/playlist")
-        
+
         assert info is not None
         assert info["title"] == "My Playlist"
         assert info["source"] == "soundcloud"
@@ -222,37 +227,30 @@ async def test_get_playlist_info_success(soundcloud_service):
 @pytest.mark.asyncio
 async def test_get_playlist_info_no_playlist_count(soundcloud_service):
     """Test playlist info with entries instead of count."""
-    mock_info = {
-        "_type": "playlist",
-        "title": "Playlist",
-        "entries": [{}, {}, {}]
-    }
-    
+    mock_info = {"_type": "playlist", "title": "Playlist", "entries": [{}, {}, {}]}
+
     with patch("yt_dlp.YoutubeDL") as mock_ydl:
         mock_instance = MagicMock()
         mock_instance.extract_info.return_value = mock_info
         mock_ydl.return_value = mock_instance
-        
+
         info = await soundcloud_service.get_playlist_info("https://soundcloud.com/a/sets/p")
-        
+
         assert info["track_count"] == 3
 
 
 @pytest.mark.asyncio
 async def test_get_playlist_info_not_playlist(soundcloud_service):
     """Test get_playlist_info with non-playlist URL."""
-    mock_info = {
-        "_type": "video",
-        "title": "Single Track"
-    }
-    
+    mock_info = {"_type": "video", "title": "Single Track"}
+
     with patch("yt_dlp.YoutubeDL") as mock_ydl:
         mock_instance = MagicMock()
         mock_instance.extract_info.return_value = mock_info
         mock_ydl.return_value = mock_instance
-        
+
         info = await soundcloud_service.get_playlist_info("https://soundcloud.com/artist/track")
-        
+
         assert info is None
 
 
@@ -263,9 +261,9 @@ async def test_get_playlist_info_no_info(soundcloud_service):
         mock_instance = MagicMock()
         mock_instance.extract_info.return_value = None
         mock_ydl.return_value = mock_instance
-        
+
         info = await soundcloud_service.get_playlist_info("https://soundcloud.com/invalid")
-        
+
         assert info is None
 
 
@@ -274,7 +272,7 @@ async def test_get_playlist_info_error(soundcloud_service):
     """Test get_playlist_info with error."""
     with patch("yt_dlp.YoutubeDL") as mock_ydl:
         mock_ydl.return_value.extract_info.side_effect = Exception("Error")
-        
+
         info = await soundcloud_service.get_playlist_info("https://soundcloud.com/sets/p")
-        
+
         assert info is None

@@ -1,5 +1,5 @@
 from datetime import UTC, datetime, timedelta
-from typing import Optional, Any
+from typing import Any, Optional
 
 import bcrypt
 import jwt

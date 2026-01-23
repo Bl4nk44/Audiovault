@@ -1,5 +1,5 @@
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
-import { beforeEach, describe, expect, it, Mock, vi } from "vitest";
+import { beforeEach, describe, expect, it, type Mock, vi } from "vitest";
 import { downloadsApi } from "../../api/downloads";
 import { importApi } from "../../api/import";
 import { useStore } from "../../store/useStore";
@@ -50,7 +50,7 @@ describe("PlaylistImport Component", () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    (useStore as Mock).mockReturnValue({
+    (useStore as unknown as Mock).mockReturnValue({
       fetchDownloads: mockFetchDownloads,
     });
   });
@@ -75,7 +75,7 @@ describe("PlaylistImport Component", () => {
       { title: "Track 2", artist: "Artist 2" },
     ];
 
-    (importApi.importPlaylist as Mock).mockResolvedValue({
+    (importApi.importPlaylist as unknown as Mock).mockResolvedValue({
       job_id: "123",
       message: "Started",
       title: "Imported Playlist",
@@ -83,7 +83,7 @@ describe("PlaylistImport Component", () => {
     });
 
     // Mock resolve for each track
-    (importApi.resolve as Mock).mockImplementation((track) =>
+    (importApi.resolve as unknown as Mock).mockImplementation((track) =>
       Promise.resolve({ ...track, id: "resolved-" + track.title })
     );
 
@@ -114,7 +114,7 @@ describe("PlaylistImport Component", () => {
   });
 
   it("handles import error (empty)", async () => {
-    (importApi.importPlaylist as Mock).mockResolvedValue({
+    (importApi.importPlaylist as unknown as Mock).mockResolvedValue({
       tracks: [],
     });
 
@@ -129,7 +129,7 @@ describe("PlaylistImport Component", () => {
   });
 
   it("handles API error", async () => {
-    (importApi.importPlaylist as Mock).mockRejectedValue({
+    (importApi.importPlaylist as unknown as Mock).mockRejectedValue({
       response: { data: { detail: "Invalid URL" } },
     });
 

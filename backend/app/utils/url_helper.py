@@ -168,4 +168,3 @@ async def resolve_redirects(url: str) -> str:
         except Exception as e2:
             logger.error(f"Failed to resolve URL {url} with GET: {e2}")
             return url
-
