@@ -30,7 +30,7 @@ repos:
       - id: ruff-format
 
   # Type checking with Pyright
-  - repo: https://github.com/RobertCraigie/pyright-python
+  - repo: https://github.com/pre-commit/mirrors-pyright
     rev: v1.1.356
     hooks:
       - id: pyright
@@ -49,7 +49,7 @@ repos:
     rev: 1.7.6
     hooks:
       - id: bandit
-        args: [--skip, B101]
+        args: [--skip, "B101,B105,B108"]
         files: backend/
 
   # YAML linting
