@@ -2,7 +2,6 @@
 node_modules
 
 # Backend
-backend
 .venv
 venv
 __pycache__

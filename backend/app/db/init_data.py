@@ -15,9 +15,7 @@ async def init_db(db: AsyncSession) -> None:
         admin_username = getattr(settings, "ADMIN_USERNAME", "admin")
         admin_email = getattr(settings, "ADMIN_EMAIL", "admin@example.com")
 
-        result = await db.execute(
-            select(User).where((User.email == admin_email) | (User.username == admin_username))
-        )
+        result = await db.execute(select(User).where((User.email == admin_email) | (User.username == admin_username)))
         user = result.scalars().first()
 
         if not user:
