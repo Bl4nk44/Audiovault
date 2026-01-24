@@ -44,10 +44,14 @@ jobs:
           JWT_SECRET_KEY: "test_secret_key_for_ci_tests_only"
         run: |
           cd backend
-          pytest tests/ -v --cov=app --cov-report=xml --cov-fail-under=80
+          pytest tests/ -v --cov=app --cov-report=xml
 
-          file: ./coverage.xml
-          fail_ci_if_error: false
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v4
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          files: ./backend/coverage.xml
+          fail_ci_if_error: true
 
   backend-lint:
     name: Backend Lint (Pyright)
