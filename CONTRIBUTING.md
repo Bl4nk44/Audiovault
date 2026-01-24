@@ -90,17 +90,93 @@ For questions, ideas, or general discussions that don't fit into bug reports or 
    # Edit .env with your development settings
    ```
 
-6. **Start the development environment with Docker**
+6. **Install pre-commit hooks** (IMPORTANT)
+
+   ```bash
+   # Install pre-commit framework
+   pip install pre-commit
+
+   # Install git hooks for the repository
+   pre-commit install
+
+   # (Optional) Run against all files to check for issues
+   pre-commit run --all-files
+   ```
+
+   > **What is pre-commit?** Pre-commit automatically runs linters, formatters, and security checks before each commit. This ensures code quality and consistency. Learn more at [pre-commit.com](https://pre-commit.com/)
+
+7. **Start the development environment with Docker**
 
    ```bash
    docker compose up -d --build
    ```
 
-7. **Check the logs to ensure everything started correctly**
+8. **Check the logs to ensure everything started correctly**
    ```bash
    docker compose logs -f backend
    docker compose logs -f frontend
    ```
+
+### Pre-Commit Configuration
+
+This project uses **pre-commit hooks** to automatically check and fix code quality issues. The configuration includes:
+
+#### What Gets Checked
+
+| Tool | Purpose | Files |
+| --- | --- | --- |
+| **pre-commit-hooks** | General file checks, trailing whitespace, YAML validation | All |
+| **Ruff** | Python linting and formatting | Backend (*.py) |
+| **Pyright** | Python type checking | Backend (*.py) |
+| **Prettier** | JavaScript/TypeScript formatting | Frontend (*.jsx, *.tsx, *.json, *.yaml, *.md) |
+| **Bandit** | Python security scanning | Backend (*.py) |
+| **yamllint** | YAML validation | GitHub Actions, docker-compose.yml |
+
+#### Running Pre-Commit Manually
+
+```bash
+# Check all files
+pre-commit run --all-files
+
+# Check only changed files
+pre-commit run
+
+# Skip pre-commit checks (not recommended)
+git commit --no-verify
+
+# Update all hooks to latest versions
+pre-commit autoupdate
+```
+
+#### Troubleshooting Pre-Commit
+
+**Issue**: `pre-commit: command not found`
+```bash
+# Solution: Install pre-commit
+pip install pre-commit
+pre-commit install
+```
+
+**Issue**: Pyright complains about missing dependencies
+```bash
+# Solution: Run pre-commit with dependencies
+pre-commit run pyright --all-files
+```
+
+**Issue**: Prettier or Ruff is slow or freezing
+```bash
+# Solution: Clear pre-commit cache
+pre-commit clean
+pre-commit run --all-files
+```
+
+**Issue**: Some hooks fail unexpectedly
+```bash
+# Solution: Reinstall all hooks
+pre-commit clean
+pre-commit install --install-hooks
+pre-commit run --all-files
+```
 
 ### Backend Development
 
@@ -116,7 +192,7 @@ pip install -r requirements.txt
 # Run tests
 pytest
 
-# Format code
+# Format code (pre-commit does this automatically)
 black .
 flake8 .
 isort .
@@ -150,7 +226,7 @@ npm run dev
 # Build for production
 npm run build
 
-# Format code
+# Format code (pre-commit does this automatically)
 npm run format
 
 # Lint code
@@ -255,9 +331,9 @@ test123
 
 - Follow [PEP 8](https://www.python.org/dev/peps/pep-0008/)
 - Use type hints for function arguments and return values
-- Maximum line length: 100 characters
+- Maximum line length: 120 characters (configured in pyproject.toml)
 - Use docstrings for all public functions and classes
-- Format with `black` and lint with `flake8` and `isort`
+- Format with `black` and lint with `ruff` and `isort` (pre-commit does this automatically)
 
 **Example**:
 
@@ -280,7 +356,7 @@ def get_user_by_id(user_id: int) -> Optional[User]:
 - Follow [Airbnb JavaScript Style Guide](https://github.com/airbnb/javascript)
 - Use functional components with hooks
 - Use meaningful variable and function names
-- Format with Prettier
+- Format with Prettier (pre-commit does this automatically)
 - Lint with ESLint
 
 **Example**:
@@ -359,6 +435,7 @@ If you discover a security vulnerability, please email [bl4nk44@pm.me](mailto:bl
 - [FastAPI Documentation](https://fastapi.tiangolo.com/)
 - [React Documentation](https://react.dev/)
 - [TailwindCSS Documentation](https://tailwindcss.com/docs)
+- [Pre-commit Framework](https://pre-commit.com/)
 
 ## Questions?
 
