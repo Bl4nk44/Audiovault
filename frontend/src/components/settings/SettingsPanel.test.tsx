@@ -115,8 +115,8 @@ describe("SettingsPanel", () => {
     await waitFor(() => expect(api.get).toHaveBeenCalled());
 
     // Assuming we are on General tab (default)
-    // Find the language select
-    const selects = screen.getAllByRole("combobox");
+    // Find the language select - wait for it to appear
+    const selects = await screen.findAllByRole("combobox");
     // First one should be language based on order in code
     const langSelect = selects[0];
 

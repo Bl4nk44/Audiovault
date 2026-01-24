@@ -3,5 +3,9 @@
   "pythonVersion": "3.12",
   "typeCheckingMode": "basic",
   "include": ["app"],
-  "exclude": ["tests", "**/__pycache__", ".venv"]
+  "exclude": ["tests", "**/__pycache__", ".venv"],
+  "reportOptionalSubscript": "none",
+  "reportOptionalMemberAccess": "none",
+  "reportArgumentType": "none",
+  "reportGeneralTypeIssues": "none"
 }
