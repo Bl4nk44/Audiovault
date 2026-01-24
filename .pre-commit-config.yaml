@@ -40,14 +40,15 @@ repos:
   # Type checking with Pyright
   # NOTE: Using fsouza/mirrors-pyright as an active maintained mirror
   # (pre-commit/mirrors-pyright repository not available)
-  - repo: local
+  - repo: https://github.com/RobertCraigie/pyright-python
+    rev: v1.1.359
     hooks:
       - id: pyright
-        name: pyright
-        entry: pyright
-        language: system
-        types: [python]
         files: ^backend/
+        additional_dependencies:
+          - sqlalchemy
+          - fastapi
+          - pydantic
 
   # JavaScript/TypeScript with Prettier
   # NOTE: mirrors-prettier was archived on Apr 11, 2024
