@@ -13,9 +13,7 @@
 [![SonarQube](https://img.shields.io/badge/Quality-SonarQube-4E9BCD?logo=sonarqube&logoColor=white)](https://sonarqube.org/)
 [![Trivy](https://img.shields.io/badge/Container-Trivy-0077b6?logo=trivy&logoColor=white)](https://github.com/aquasecurity/trivy)
 [![Antigravity](https://img.shields.io/badge/AI-Antigravity-8A2BE2?logo=google-gemini&logoColor=white)](https://deepmind.google/technologies/gemini/)
-<!-- Test Coverage z Codecov -->
 [![codecov](https://codecov.io/gh/Bl4nk44/Audiovault/branch/main/graph/badge.svg)](https://codecov.io/gh/Bl4nk44/Audiovault)
-<!-- Build Status -->
 [![Build Status](https://github.com/Bl4nk44/Audiovault/actions/workflows/ci.yml/badge.svg)](https://github.com/Bl4nk44/Audiovault/actions)
 
 🔗 **Quick Links**:
