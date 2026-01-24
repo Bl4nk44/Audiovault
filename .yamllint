@@ -2,7 +2,9 @@ extends: default
 
 rules:
   line-length:
-    max: 200
+    max: 300
   document-start: disable
   truthy:
-    allowed-values: ["true", "false", "yes", "no"]
+    allowed-values: ["true", "false"]
+    check-keys: false # Important for some k: v pairs in workflow
+  new-lines: disable

@@ -134,9 +134,9 @@ describe("SettingsPanel", () => {
 
   it("saves settings to API", async () => {
     render(<SettingsPanel />);
-    await waitFor(() => expect(api.get).toHaveBeenCalled());
 
-    const saveBtn = screen.getByText("common.save");
+    // Wait for the save button to appear (loading finished)
+    const saveBtn = await screen.findByText("common.save");
     fireEvent.click(saveBtn);
 
     await waitFor(() => {
