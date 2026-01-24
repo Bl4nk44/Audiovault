@@ -13,6 +13,5 @@
   "reportTypedDictNotRequiredAccess": "none",
   "reportReturnType": "none",
   "reportOptionalOperand": "none",
-  "reportOperatorIssue": "none",
-  "reportAttributeAccessIssue": "none"
+  "reportOperatorIssue": "none"
 }

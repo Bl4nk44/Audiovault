@@ -54,9 +54,7 @@ async def get_artist_info(
     # Build artist info response
     artist_info: dict[str, Any] = {
         "biography": artist.bio or "",
-        "musicBrainzId": str(artist.musicbrainz_id)
-        if hasattr(artist, "musicbrainz_id") and artist.musicbrainz_id
-        else None,
+        "musicBrainzId": None,
         "lastFmUrl": "",  # Not implemented
         "smallImageUrl": f"/api/subsonic/getCoverArt.view?id=ar-{artist.id}&size=64" if artist.images else None,
         "mediumImageUrl": f"/api/subsonic/getCoverArt.view?id=ar-{artist.id}&size=126" if artist.images else None,
@@ -99,9 +97,7 @@ async def get_artist_info2(
     # Build artist info response
     artist_info: dict[str, Any] = {
         "biography": artist.bio or "",
-        "musicBrainzId": str(artist.musicbrainz_id)
-        if hasattr(artist, "musicbrainz_id") and artist.musicbrainz_id
-        else None,
+        "musicBrainzId": None,
         "lastFmUrl": "",  # Not implemented
         "smallImageUrl": f"/api/subsonic/getCoverArt.view?id=ar-{artist.id}&size=64" if artist.images else None,
         "mediumImageUrl": f"/api/subsonic/getCoverArt.view?id=ar-{artist.id}&size=126" if artist.images else None,
