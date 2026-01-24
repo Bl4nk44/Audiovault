@@ -7,7 +7,24 @@ from pydantic_settings import BaseSettings
 
 class Settings(BaseSettings):
     PROJECT_NAME: str = "Audiovault"
-    VERSION: str = Path(__file__).parent.parent.parent.joinpath("VERSION").read_text().strip()
+
+    @staticmethod
+    def _get_version() -> str:
+        try:
+            # Try finding VERSION file up to 4 levels up
+            # Docker/Prod: backend/ (copied to root of container) -> parent.parent.parent
+            # Dev/CI: root -> parent.parent.parent.parent
+            path = Path(__file__).resolve()
+            for _ in range(4):
+                path = path.parent
+                version_file = path / "VERSION"
+                if version_file.exists():
+                    return version_file.read_text().strip()
+            return "0.0.0"
+        except Exception:
+            return "0.0.0"
+
+    VERSION: str = _get_version()
     API_V1_STR: str = "/api/v1"
 
     DATABASE_URL: str = os.getenv("DATABASE_URL", "sqlite+aiosqlite:///dummy")
