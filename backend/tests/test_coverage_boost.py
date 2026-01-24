@@ -1,6 +1,5 @@
 import pytest
 from app.core import config, security
-from app.db import database
 from app.main import app
 from httpx import ASGITransport, AsyncClient
 
@@ -9,9 +8,9 @@ from httpx import ASGITransport, AsyncClient
 async def test_main_lifespan():
     """Test app startup and shutdown lifespan."""
     async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as ac:
-        response = await ac.get("/api/v1/system/status")
-        # Just checking that app is up is enough to trigger lifespan coverage
-        assert response.status_code in [200, 401, 403]
+        # Request openapi.json - it's public and triggers valid app stack
+        response = await ac.get("/openapi.json")
+        assert response.status_code == 200
 
 
 def test_config_loading():
@@ -30,5 +29,7 @@ def test_security_utils():
 
 def test_database_url_parsing():
     """Cover database URL helpers."""
-    # Just import to cover the file top-level
-    assert database.Base is not None
+    # Correct import from base
+    from app.db.base import Base
+
+    assert Base is not None
