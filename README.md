@@ -15,7 +15,6 @@
 [![Semgrep](https://img.shields.io/badge/Semgrep-Scanned-00D26A?logo=semgrep)](https://semgrep.dev/)
 [![codecov](https://codecov.io/gh/Bl4nk44/Audiovault/branch/main/graph/badge.svg)](https://codecov.io/gh/Bl4nk44/Audiovault)
 [![Build Status](https://github.com/Bl4nk44/Audiovault/actions/workflows/ci.yml/badge.svg)](https://github.com/Bl4nk44/Audiovault/actions)
-[![Known Vulnerabilities](https://snyk.io/test/github/Bl4nk44/Audiovault/badge.svg)](https://snyk.io/test/github/Bl4nk44/Audiovault)
 
 🔗 **Quick Links**:
 [📖 Wiki](https://github.com/Bl4nk44/Audiovault/wiki) •
