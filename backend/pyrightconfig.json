@@ -1,5 +1,7 @@
 {
   "reportMissingTypeStubs": false,
-  "pythonVersion": "3.11",
-  "typeCheckingMode": "basic"
+  "pythonVersion": "3.12",
+  "typeCheckingMode": "basic",
+  "include": ["app"],
+  "exclude": ["tests", "**/__pycache__", ".venv"]
 }
