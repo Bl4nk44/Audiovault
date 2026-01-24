@@ -34,7 +34,6 @@ repos:
     rev: v1.1.356
     hooks:
       - id: pyright
-        args: [--outputjson]
         additional_dependencies: ["sqlalchemy"]
 
   # JavaScript/TypeScript with Prettier

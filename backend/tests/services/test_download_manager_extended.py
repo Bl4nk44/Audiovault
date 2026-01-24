@@ -81,6 +81,8 @@ async def test_dm_process_queue_paused_item(download_manager):
     except asyncio.CancelledError:
         pass
 
+    await asyncio.sleep(0.1)  # Yield to allow any cleanup tasks to run
+
     # Verify task_done called and _process_with_semaphore NOT called
     with patch.object(download_manager, "_process_with_semaphore") as mock_process:
         assert download_manager.queue.task_done.call_count >= 1
