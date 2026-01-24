@@ -1,9 +1,9 @@
-import uuid
-from datetime import datetime
+from datetime import datetime, timezone
 
 from app.models.album import Album
 from app.models.artist import Artist
 from app.models.audit_log import AuditLog
+from app.models.credentials import ServiceCredentials
 from app.models.download import Download
 from app.models.history import History
 from app.models.playlist import Playlist
@@ -37,7 +37,7 @@ def test_artist_model_coverage():
 
 
 def test_download_model_coverage():
-    d = Download(id=uuid.uuid4(), track_id=uuid.uuid4(), status="pending", created_at=datetime.utcnow())
+    d = Download(id=uuid.uuid4(), track_id=uuid.uuid4(), status="pending", created_at=datetime.now(timezone.utc))
     assert d.status == "pending"
 
 
@@ -52,7 +52,7 @@ def test_playlist_version_coverage():
 
 
 def test_history_model_coverage():
-    h = History(id=uuid.uuid4(), track_id=uuid.uuid4(), listened_at=datetime.utcnow())
+    h = History(id=uuid.uuid4(), track_id=uuid.uuid4(), listened_at=datetime.now(timezone.utc))
     assert h.track_id is not None
 
 
@@ -72,7 +72,7 @@ def test_starred_model_coverage():
 
 
 def test_audit_log_model_coverage():
-    al = AuditLog(id=uuid.uuid4(), action="LOGIN", timestamp=datetime.utcnow())
+    al = AuditLog(id=uuid.uuid4(), action="LOGIN", timestamp=datetime.now(timezone.utc))
     assert al.action == "LOGIN"
 
 
