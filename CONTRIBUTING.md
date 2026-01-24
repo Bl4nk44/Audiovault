@@ -148,6 +148,16 @@ git commit --no-verify
 pre-commit autoupdate
 ```
 
+#### Prettier Version Note
+
+⚠️ **Important**: The `pre-commit/mirrors-prettier` repository was **archived on April 11, 2024**. This means:
+- ✅ Latest available version: **v3.1.0**
+- ⏸️ No newer versions will be released for this mirror
+- ✅ It works reliably and is stable
+- 📝 Audiovault uses v3.1.0
+
+If you see an error like `couldn't find remote ref v3.2.5`, it means you're trying to use a non-existent version. Update `.pre-commit-config.yaml` to use v3.1.0.
+
 #### Troubleshooting Pre-Commit
 
 **Issue**: `pre-commit: command not found`
@@ -159,7 +169,8 @@ pre-commit install
 
 **Issue**: Pyright complains about missing dependencies
 ```bash
-# Solution: Run pre-commit with dependencies
+# Solution: Install required packages
+pip install fastapi sqlalchemy pydantic
 pre-commit run pyright --all-files
 ```
 
@@ -167,6 +178,7 @@ pre-commit run pyright --all-files
 ```bash
 # Solution: Clear pre-commit cache
 pre-commit clean
+pre-commit install --install-hooks
 pre-commit run --all-files
 ```
 
@@ -177,6 +189,21 @@ pre-commit clean
 pre-commit install --install-hooks
 pre-commit run --all-files
 ```
+
+**Issue**: "couldn't find remote ref v3.2.5" or "Prettier: No parser found"
+```bash
+# Solution: Ensure you're using v3.1.0 (latest available)
+# Check .pre-commit-config.yaml:
+cat .pre-commit-config.yaml | grep -A 3 'mirrors-prettier'
+# Should show: rev: v3.1.0
+
+# If not, update and reinstall
+pre-commit clean
+pre-commit install --install-hooks
+pre-commit run --all-files
+```
+
+For more detailed troubleshooting, see [`docs/PRE_COMMIT.md`](docs/PRE_COMMIT.md).
 
 ### Backend Development
 
@@ -436,6 +463,7 @@ If you discover a security vulnerability, please email [bl4nk44@pm.me](mailto:bl
 - [React Documentation](https://react.dev/)
 - [TailwindCSS Documentation](https://tailwindcss.com/docs)
 - [Pre-commit Framework](https://pre-commit.com/)
+- [Pre-commit Guide](docs/PRE_COMMIT.md)
 
 ## Questions?
 
