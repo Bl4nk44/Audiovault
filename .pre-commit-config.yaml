@@ -30,7 +30,7 @@ repos:
       - id: ruff-format
 
   # Type checking with Pyright
-  - repo: https://github.com/necaris/pre-commit-pyright
+  - repo: https://github.com/RobertCraigie/pyright-python
     rev: v1.1.356
     hooks:
       - id: pyright
