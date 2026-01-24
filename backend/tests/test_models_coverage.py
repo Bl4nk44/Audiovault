@@ -4,7 +4,6 @@ from datetime import datetime
 from app.models.album import Album
 from app.models.artist import Artist
 from app.models.audit_log import AuditLog
-from app.models.credentials import Credentials
 from app.models.download import Download
 from app.models.history import History
 from app.models.playlist import Playlist
@@ -78,5 +77,5 @@ def test_audit_log_model_coverage():
 
 
 def test_credentials_model_coverage():
-    c = Credentials(id=uuid.uuid4(), user_id=uuid.uuid4(), provider="spotify")
-    assert c.provider == "spotify"
+    c = ServiceCredentials(id=uuid.uuid4(), user_id=uuid.uuid4(), service="spotify")
+    assert c.service == "spotify"
