@@ -30,8 +30,8 @@ repos:
       - id: ruff-format
 
   # Type checking with Pyright
-  - repo: https://github.com/microsoft/pyright
-    rev: 1.1.356
+  - repo: https://github.com/pre-commit/mirrors-pyright
+    rev: v1.1.356
     hooks:
       - id: pyright
         additional_dependencies: ["sqlalchemy"]
