@@ -19,5 +19,6 @@ def test_base_schemas_coverage():
 def test_subsonic_schemas_coverage():
     # Instantiate complex subsonic schemas to cover definitions
     s = ResponseStatus(status="ok", version="1.16.1")
+    assert s.status == "ok"
     r = SubsonicResponse(status="ok", version="1.16.1", type="audiovault")
     assert r.status == "ok"
