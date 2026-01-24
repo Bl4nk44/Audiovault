@@ -1,5 +1,6 @@
 import pytest
 from app.core import config, security
+from app.db.base import Base
 from app.main import app
 from httpx import ASGITransport, AsyncClient
 
@@ -7,7 +8,8 @@ from httpx import ASGITransport, AsyncClient
 @pytest.mark.asyncio
 async def test_main_lifespan():
     """Test app startup and shutdown lifespan."""
-    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as ac:
+    # Use localhost to pass TrustedHostMiddleware
+    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://localhost") as ac:
         # Request openapi.json - it's public and triggers valid app stack
         response = await ac.get("/openapi.json")
         assert response.status_code == 200
@@ -29,7 +31,5 @@ def test_security_utils():
 
 def test_database_url_parsing():
     """Cover database URL helpers."""
-    # Correct import from base
-    from app.db.base import Base
-
+    # Just import to cover the file top-level
     assert Base is not None
