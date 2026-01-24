@@ -11,7 +11,7 @@ async def test_main_lifespan():
     # Use localhost to pass TrustedHostMiddleware
     async with AsyncClient(transport=ASGITransport(app=app), base_url="http://localhost") as ac:
         # Request openapi.json - it's public and triggers valid app stack
-        response = await ac.get("/openapi.json")
+        response = await ac.get("/api/v1/openapi.json")
         assert response.status_code == 200
 
 
