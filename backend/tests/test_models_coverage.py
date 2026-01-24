@@ -23,7 +23,7 @@ def test_user_model_coverage():
 
 
 def test_track_model_coverage():
-    t = Track(id=uuid.uuid4(), title="Test Track", duration=120, file_path="/tmp/test.mp3")
+    t = Track(id=uuid.uuid4(), title="Test Track", duration_ms=120000, file_path="/tmp/test.mp3")
     assert t.title == "Test Track"
 
 
@@ -48,18 +48,20 @@ def test_playlist_model_coverage():
 
 
 def test_playlist_version_coverage():
-    pv = PlaylistVersion(id=uuid.uuid4(), playlist_id=uuid.uuid4(), version=1)
-    assert pv.version == 1
+    pv = PlaylistVersion(
+        id=uuid.uuid4(), playlist_id=uuid.uuid4(), version_number=1, name="Snapshot", change_type="CREATE"
+    )
+    assert pv.version_number == 1
 
 
 def test_history_model_coverage():
-    h = ListeningHistory(id=uuid.uuid4(), track_id=uuid.uuid4(), listened_at=datetime.now(timezone.utc))
+    h = ListeningHistory(id=uuid.uuid4(), track_id=uuid.uuid4(), played_at=datetime.now(timezone.utc))
     assert h.track_id is not None
 
 
 def test_watchlist_model_coverage():
-    w = Watchlist(id=uuid.uuid4(), name="WL", user_id=uuid.uuid4())
-    assert w.name == "WL"
+    w = Watchlist(id=uuid.uuid4(), source_name="WL", user_id=uuid.uuid4())
+    assert w.source_name == "WL"
 
 
 def test_watchlist_item_coverage():
@@ -73,7 +75,7 @@ def test_starred_model_coverage():
 
 
 def test_audit_log_model_coverage():
-    al = AuditLog(id=uuid.uuid4(), action="LOGIN", timestamp=datetime.now(timezone.utc))
+    al = AuditLog(id=uuid.uuid4(), action="LOGIN", resource_type="auth", created_at=datetime.now(timezone.utc))
     assert al.action == "LOGIN"
 
 
