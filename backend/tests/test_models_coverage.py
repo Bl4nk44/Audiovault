@@ -9,7 +9,7 @@ from app.models.download import Download
 from app.models.history import ListeningHistory
 from app.models.playlist import Playlist
 from app.models.playlist_version import PlaylistVersion
-from app.models.starred import Starred
+from app.models.starred import StarredTrack
 from app.models.track import Track
 from app.models.user import User
 from app.models.watchlist import Watchlist
@@ -68,7 +68,7 @@ def test_watchlist_item_coverage():
 
 
 def test_starred_model_coverage():
-    s = Starred(id=uuid.uuid4(), user_id=uuid.uuid4(), track_id=uuid.uuid4())
+    s = StarredTrack(id=uuid.uuid4(), user_id=uuid.uuid4(), track_id=uuid.uuid4())
     assert s.user_id is not None
 
 
