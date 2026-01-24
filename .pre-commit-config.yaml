@@ -8,7 +8,7 @@ exclude: ^(frontend/dist/|backend/venv/|.*\.egg-info/|.*\.png|.*\.jpg|.*\.jpeg|.
 repos:
   # General formatting and file checks
   - repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v6.0.0
+    rev: v5.0.0
     hooks:
       - id: trailing-whitespace
         exclude: ^(frontend/|docs/)
@@ -41,11 +41,11 @@ repos:
   # NOTE: Using fsouza/mirrors-pyright as an active maintained mirror
   # (pre-commit/mirrors-pyright repository not available)
   - repo: https://github.com/fsouza/mirrors-pyright
-    rev: v1.1.365
+    rev: v1.1.408
     hooks:
       - id: pyright
         files: ^backend/
-        additional_dependencies: 
+        additional_dependencies:
           - sqlalchemy
           - fastapi
           - pydantic
@@ -77,7 +77,7 @@ repos:
     rev: 1.7.9
     hooks:
       - id: bandit
-        args: [--skip, B101,B105,B108,B601]
+        args: [--skip, B101, B105, B108, B601]
         files: ^backend/
         exclude: ^(backend/venv/|backend/tests/|backend/.venv/)
 
