@@ -155,6 +155,17 @@ pre-commit run pyright --all-files
 
 **Configuration**: See `.prettierrc`
 
+⚠️ **Important Note**: The `pre-commit/mirrors-prettier` repository was **archived on April 11, 2024**. This means:
+- ✅ Latest available version: **v3.1.0**
+- ❌ No newer versions will be released
+- ✅ It still works reliably for current projects
+- 📝 Audiovault uses v3.1.0 which is stable and well-tested
+
+If you need newer Prettier features, consider:
+1. Using `node-prettier` directly via Node.js (not through pre-commit)
+2. Running Prettier as part of your frontend build process
+3. Using a Node.js-based pre-commit hook
+
 ```bash
 pre-commit run prettier --all-files
 ```
@@ -227,17 +238,26 @@ pre-commit install --install-hooks
 pre-commit run --all-files
 ```
 
-### Problem: "Prettier: No parser found" Error
+### Problem: "Prettier: No parser found" Error or "couldn't find remote ref v3.2.5"
 
 **Symptoms**:
 ```
 Error: No parser found for path
+fatal: couldn't find remote ref v3.2.5
 ```
+
+**Explanation**: This happens when trying to use a Prettier version that doesn't exist. The `mirrors-prettier` repo only has releases up to v3.1.0.
 
 **Solution**:
 ```bash
-cd frontend
-npm install
+# Clear and reinstall
+pre-commit clean
+pre-commit install --install-hooks
+
+# Verify correct version (should be v3.1.0)
+cat .pre-commit-config.yaml | grep -A 3 'mirrors-prettier'
+
+# Run again
 pre-commit run prettier --all-files
 ```
 
@@ -374,6 +394,8 @@ git add .pre-commit-config.yaml
 git commit -m "chore: Update pre-commit hooks"
 ```
 
+⚠️ **Note**: Prettier will not update beyond v3.1.0 due to `mirrors-prettier` being archived.
+
 ## Uninstalling Pre-Commit
 
 If you need to remove pre-commit:
@@ -430,12 +452,14 @@ repos:  # Define repositories with hooks
 - Read pre-commit error messages carefully
 - Use `--no-verify` only when absolutely necessary
 - Ask for help if hooks are confusing
+- Check `.pre-commit-config.yaml` for version information
 
 ❌ **Don't**:
 - Ignore pre-commit failures
 - Use `--no-verify` habitually
 - Commit with `--no-verify` without review
 - Manually apply fixes that pre-commit should handle
+- Update to non-existent hook versions
 
 ## Additional Resources
 
@@ -444,6 +468,7 @@ repos:  # Define repositories with hooks
 - [Pyright Documentation](https://github.com/microsoft/pyright)
 - [Prettier Documentation](https://prettier.io/)
 - [Bandit Documentation](https://bandit.readthedocs.io/)
+- [Archived mirrors-prettier Repository](https://github.com/pre-commit/mirrors-prettier) (for reference)
 
 ## Questions?
 
