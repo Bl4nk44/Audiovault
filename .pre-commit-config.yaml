@@ -38,7 +38,9 @@ repos:
         files: ^backend/
 
   # Type checking with Pyright
-  - repo: https://github.com/pre-commit/mirrors-pyright
+  # NOTE: Using fsouza/mirrors-pyright as an active maintained mirror
+  # (pre-commit/mirrors-pyright repository not available)
+  - repo: https://github.com/fsouza/mirrors-pyright
     rev: v1.1.365
     hooks:
       - id: pyright
