@@ -290,7 +290,7 @@ async def download_file(
 
 async def _get_remote_image(image_url: str) -> Response | None:
     try:
-        url_hash = hashlib.md5(image_url.encode()).hexdigest()
+        url_hash = hashlib.sha256(image_url.encode()).hexdigest()
         cache_path = os.path.join(COVER_ART_CACHE_DIR, f"{url_hash}.img")
 
         # Check cache

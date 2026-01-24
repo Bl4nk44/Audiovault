@@ -48,7 +48,8 @@ jobs:
           REDIS_URL: "redis://localhost:6379/0"
           JWT_SECRET_KEY: "test_secret_key_for_ci_tests_only"
         run: |
-          pytest backend/tests/ -v --cov=backend/app --cov-report=xml --cov-fail-under=80
+          cd backend
+          pytest tests/ -v --cov=app --cov-report=xml --cov-fail-under=80
 
       - name: Upload coverage reports to Codecov
         uses: codecov/codecov-action@v4
