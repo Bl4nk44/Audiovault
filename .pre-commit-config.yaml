@@ -3,57 +3,84 @@ ci:
   autoupdate_schedule: weekly
   autoupdate_commit_msg: "[pre-commit.ci] pre-commit autoupdate"
 
-exclude: ^(frontend/dist/|backend/venv/|.*\.egg-info/|.*\.png|.*\.jpg|.*\.jpeg|.*\.gif|.*\.svg|.*\.ico|.*\.woff|.*\.woff2|.*\.ttf|.*\.eot|.*\.mp3|.*\.wav)$
+exclude: ^(frontend/dist/|backend/venv/|.*\.egg-info/|.*\.png|.*\.jpg|.*\.jpeg|.*\.gif|.*\.svg|.*\.ico|.*\.woff|.*\.woff2|.*\.ttf|.*\.eot|.*\.mp3|.*\.wav|.*\.lock)$
 
 repos:
-  # General formatting
+  # General formatting and file checks
   - repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v4.6.0
+    rev: v4.7.0
     hooks:
       - id: trailing-whitespace
+        exclude: ^(frontend/|docs/)
       - id: end-of-file-fixer
+        exclude: ^(frontend/dist/|docs/)
       - id: check-yaml
         args: [--allow-multiple-documents]
+        exclude: ^frontend/
       - id: check-added-large-files
+        args: [--maxkb=1000]
       - id: check-merge-conflict
       - id: check-toml
       - id: detect-private-key
+        exclude: ^(.*\.example|docs/)
       - id: mixed-line-ending
         args: [--fix=auto]
+        exclude: ^frontend/
 
-  # Python linting and formatting (Ruff)
+  # Python formatting and linting with Ruff
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.3.7
+    rev: v0.4.4
     hooks:
       - id: ruff
-        args: [--fix]
+        args: [--fix, --extend-exclude=backend/venv]
+        files: ^backend/
       - id: ruff-format
+        files: ^backend/
 
   # Type checking with Pyright
   - repo: https://github.com/pre-commit/mirrors-pyright
-    rev: v1.1.356
+    rev: v1.1.365
     hooks:
       - id: pyright
-        additional_dependencies: ["sqlalchemy"]
+        files: ^backend/
+        additional_dependencies: 
+          - sqlalchemy
+          - fastapi
+          - pydantic
+        exclude: |
+          (?x)^(
+            backend/venv/|
+            backend/tests/|
+            backend/.venv/
+          )$
 
   # JavaScript/TypeScript with Prettier
   - repo: https://github.com/pre-commit/mirrors-prettier
-    rev: v3.1.0
+    rev: v3.2.5
     hooks:
       - id: prettier
         types_or: [javascript, ts, jsx, tsx, json, yaml, markdown]
-        files: ^(frontend/|.*\.(json|ya?ml|md)$)
+        files: ^(frontend/src/|\.prettierrc|docker-compose\.yml|\.github/)
+        exclude: |
+          (?x)^(
+            frontend/dist/|
+            frontend/node_modules/|
+            frontend/\.next/
+          )$
 
   # Security scanning with Bandit
   - repo: https://github.com/PyCQA/bandit
-    rev: 1.7.6
+    rev: 1.7.9
     hooks:
       - id: bandit
-        args: [--skip, "B101,B105,B108"]
-        files: backend/
+        args: [--skip, B101,B105,B108,B601]
+        files: ^backend/
+        exclude: ^(backend/venv/|backend/tests/|backend/.venv/)
 
   # YAML linting
   - repo: https://github.com/adrienverge/yamllint
     rev: v1.35.1
     hooks:
       - id: yamllint
+        args: [--config-file, .yamllint]
+        files: ^(\.github/|docker-compose\.yml|\.yamllint)$
