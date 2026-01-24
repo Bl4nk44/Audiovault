@@ -64,7 +64,7 @@ repos:
     rev: 1.9.3
     hooks:
       - id: bandit
-        args: [--skip, B101, B105, B108, B601]
+        args: ["--skip", "B101,B105,B108,B601"]
         files: ^backend/
         exclude: ^(backend/venv/|backend/tests/|backend/.venv/)
 
