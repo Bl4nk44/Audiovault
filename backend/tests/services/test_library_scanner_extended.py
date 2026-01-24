@@ -205,7 +205,9 @@ def test_infer_source_info_root_file(scanner):
 @pytest.mark.asyncio
 async def test_resolve_artist_and_album_existing(scanner):
     """Test resolving existing artist and album."""
-    db_mock = AsyncMock()
+    db_mock = MagicMock()
+    db_mock.execute = AsyncMock()
+    db_mock.commit = AsyncMock()
 
     mock_artist = MagicMock()
     mock_artist.id = uuid.uuid4()
@@ -229,7 +231,10 @@ async def test_resolve_artist_and_album_existing(scanner):
 @pytest.mark.asyncio
 async def test_resolve_artist_and_album_create_new(scanner):
     """Test creating new artist and album."""
-    db_mock = AsyncMock()
+    db_mock = MagicMock()
+    db_mock.execute = AsyncMock()
+    db_mock.commit = AsyncMock()
+    db_mock.flush = AsyncMock()
 
     # Both queries return None (nothing exists)
     mock_result = MagicMock()
@@ -246,7 +251,10 @@ async def test_resolve_artist_and_album_create_new(scanner):
 @pytest.mark.asyncio
 async def test_resolve_artist_and_album_empty_names(scanner):
     """Test resolving with empty names defaults to Unknown."""
-    db_mock = AsyncMock()
+    db_mock = MagicMock()
+    db_mock.execute = AsyncMock()
+    db_mock.commit = AsyncMock()
+    db_mock.flush = AsyncMock()
 
     mock_result = MagicMock()
     mock_result.scalar_one_or_none.return_value = None
@@ -266,7 +274,8 @@ async def test_resolve_artist_and_album_empty_names(scanner):
 @pytest.mark.asyncio
 async def test_scan_directory_nonexistent(scanner):
     """Test scanning non-existent directory."""
-    db_mock = AsyncMock()
+    db_mock = MagicMock()
+    db_mock.execute = AsyncMock()
 
     with patch("os.path.exists", return_value=False):
         result = await scanner.scan_directory(db_mock, "user123", "/downloads/missing")
@@ -278,7 +287,8 @@ async def test_scan_directory_nonexistent(scanner):
 @pytest.mark.asyncio
 async def test_scan_directory_access_denied(scanner):
     """Test scanning directory outside allowed path."""
-    db_mock = AsyncMock()
+    db_mock = MagicMock()
+    db_mock.execute = AsyncMock()
 
     result = await scanner.scan_directory(db_mock, "user123", "/etc/passwd")
 
@@ -289,7 +299,8 @@ async def test_scan_directory_access_denied(scanner):
 @pytest.mark.asyncio
 async def test_scan_directory_empty(scanner):
     """Test scanning empty directory."""
-    db_mock = AsyncMock()
+    db_mock = MagicMock()
+    db_mock.execute = AsyncMock()
 
     mock_result = MagicMock()
     mock_result.all.return_value = []
@@ -305,7 +316,9 @@ async def test_scan_directory_empty(scanner):
 @pytest.mark.asyncio
 async def test_scan_directory_with_files(scanner):
     """Test scanning directory with MP3 files."""
-    db_mock = AsyncMock()
+    db_mock = MagicMock()
+    db_mock.execute = AsyncMock()
+    db_mock.commit = AsyncMock()
 
     mock_result = MagicMock()
     mock_result.all.return_value = []
@@ -332,7 +345,8 @@ async def test_scan_directory_with_files(scanner):
 @pytest.mark.asyncio
 async def test_get_known_paths(scanner):
     """Test getting known paths for user."""
-    db_mock = AsyncMock()
+    db_mock = MagicMock()
+    db_mock.execute = AsyncMock()
 
     mock_result = MagicMock()
     mock_result.all.return_value = [
@@ -350,7 +364,7 @@ async def test_get_known_paths(scanner):
 @pytest.mark.asyncio
 async def test_get_known_paths_invalid_uuid(scanner):
     """Test known paths with invalid user ID."""
-    db_mock = AsyncMock()
+    db_mock = MagicMock()
 
     paths = await scanner._get_known_paths(db_mock, "invalid-uuid")
 
@@ -365,7 +379,7 @@ async def test_get_known_paths_invalid_uuid(scanner):
 @pytest.mark.asyncio
 async def test_handle_scan_file_playlist(scanner):
     """Test handling M3U playlist file."""
-    db_mock = AsyncMock()
+    db_mock = MagicMock()
 
     with patch.object(scanner, "_import_playlist", new_callable=AsyncMock):
         result = await scanner._handle_scan_file(
@@ -378,7 +392,7 @@ async def test_handle_scan_file_playlist(scanner):
 @pytest.mark.asyncio
 async def test_handle_scan_file_non_mp3(scanner):
     """Test handling non-MP3 audio file."""
-    db_mock = AsyncMock()
+    db_mock = MagicMock()
 
     result = await scanner._handle_scan_file(db_mock, "user", "/downloads/song.wav", "song.wav", "/downloads", set())
 
@@ -388,7 +402,7 @@ async def test_handle_scan_file_non_mp3(scanner):
 @pytest.mark.asyncio
 async def test_handle_scan_file_already_known(scanner):
     """Test handling already imported file."""
-    db_mock = AsyncMock()
+    db_mock = MagicMock()
     known = {os.path.normpath("/downloads/known.mp3")}
 
     result = await scanner._handle_scan_file(db_mock, "user", "/downloads/known.mp3", "known.mp3", "/downloads", known)
@@ -399,7 +413,8 @@ async def test_handle_scan_file_already_known(scanner):
 @pytest.mark.asyncio
 async def test_handle_scan_file_new_mp3(scanner):
     """Test handling new MP3 file."""
-    db_mock = AsyncMock()
+    db_mock = MagicMock()
+    db_mock.execute = AsyncMock()
 
     with patch.object(scanner, "_process_audio_file", new_callable=AsyncMock):
         result = await scanner._handle_scan_file(db_mock, "user", "/downloads/new.mp3", "new.mp3", "/downloads", set())
@@ -415,7 +430,8 @@ async def test_handle_scan_file_new_mp3(scanner):
 @pytest.mark.asyncio
 async def test_cleanup_orphans_none(scanner):
     """Test cleanup when no orphans exist."""
-    db_mock = AsyncMock()
+    db_mock = MagicMock()
+    db_mock.execute = AsyncMock()
 
     mock_result = MagicMock()
     mock_result.scalars.return_value.all.return_value = []
@@ -429,7 +445,10 @@ async def test_cleanup_orphans_none(scanner):
 @pytest.mark.asyncio
 async def test_cleanup_orphans_with_orphans(scanner):
     """Test cleanup removes orphaned records."""
-    db_mock = AsyncMock()
+    db_mock = MagicMock()
+    db_mock.execute = AsyncMock()
+    db_mock.commit = AsyncMock()
+    db_mock.delete = AsyncMock()
 
     orphan = MagicMock()
     orphan.file_path = "/downloads/missing.mp3"

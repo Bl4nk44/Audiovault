@@ -3,7 +3,7 @@ Additional tests for url_helper to improve coverage.
 """
 
 import socket
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 from app.utils.url_helper import (
@@ -188,7 +188,7 @@ async def test_resolve_redirects_success():
             mock_cm = AsyncMock()
             mock_cm.__aenter__.return_value = mock_response
 
-            mock_session = AsyncMock()
+            mock_session = MagicMock()
             mock_session.head.return_value = mock_cm
 
             MockSession.return_value.__aenter__.return_value = mock_session

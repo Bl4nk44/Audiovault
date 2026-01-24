@@ -18,7 +18,10 @@ async def test_dm_add_download(download_manager):
     user_id = str(uuid.uuid4())
     track_id = uuid.uuid4()
     download_data = DownloadCreate(track_id=track_id, source="spotify")
-    db_mock = AsyncMock()
+    db_mock = MagicMock()
+    db_mock.execute = AsyncMock()
+    db_mock.commit = AsyncMock()
+    db_mock.refresh = AsyncMock()
 
     with patch("app.services.download_manager.DownloadManager.start_worker", new_callable=AsyncMock) as mock_start:
         download = await download_manager.add_download(db_mock, user_id, download_data)
@@ -38,11 +41,18 @@ async def test_dm_pause_resume_download(download_manager):
 
     with patch("app.services.download_manager.DownloadManager.start_worker", new_callable=AsyncMock):
         # We need a db mock for resume
-        db_mock = AsyncMock()
+        db_mock = MagicMock()
+        db_mock.execute = AsyncMock()
+        db_mock.commit = AsyncMock()
+        db_mock.refresh = AsyncMock()
         mock_result = MagicMock()
         mock_download = MagicMock(status="paused")
         mock_result.scalar_one_or_none.return_value = mock_download
         db_mock.execute.return_value = mock_result
+
+        # NOTE: db.commit is async in AsyncSession, but db.add is synchronous.
+        # Here we only use execute/commit which are async in previous code context?
+        # Actually in SQLAlchemy asyncio, execute is awaitable.
 
         await download_manager.resume_download(db_mock, download_id)
         assert download_id not in download_manager.paused_downloads
@@ -52,7 +62,10 @@ async def test_dm_pause_resume_download(download_manager):
 @pytest.mark.asyncio
 async def test_dm_cancel_download(download_manager):
     download_id = str(uuid.uuid4())
-    db_mock = AsyncMock()
+    db_mock = MagicMock()
+    db_mock.execute = AsyncMock()
+    db_mock.delete = AsyncMock()
+    db_mock.commit = AsyncMock()
     mock_result = MagicMock()
     mock_download = MagicMock()
     mock_result.scalar_one_or_none.return_value = mock_download
@@ -73,7 +86,10 @@ async def test_dm_cancel_download(download_manager):
 @pytest.mark.asyncio
 async def test_dm_restart_all_downloads(download_manager):
     user_id = str(uuid.uuid4())
-    db_mock = AsyncMock()
+    db_mock = MagicMock()
+    db_mock.execute = AsyncMock()
+    db_mock.commit = AsyncMock()
+    db_mock.refresh = AsyncMock()
 
     with patch("app.services.download_manager.DownloadManager.start_worker", new_callable=AsyncMock):
         # Result mock
@@ -88,12 +104,13 @@ async def test_dm_restart_all_downloads(download_manager):
         assert download_manager.queue.qsize() == 1
 
 
-@pytest.mark.asyncio
 async def test_dm_process_download_fail_resolution(download_manager):
     download_id = str(uuid.uuid4())
 
     with patch("app.services.download_manager.AsyncSessionLocal") as mock_session_local:
-        db_mock = AsyncMock()
+        db_mock = MagicMock()
+        db_mock.execute = AsyncMock()
+        db_mock.commit = AsyncMock()
         mock_session_local.return_value.__aenter__.return_value = db_mock
 
         mock_result = MagicMock()
@@ -177,7 +194,9 @@ async def test_dm_progress_hook_pause(download_manager):
 
 @pytest.mark.asyncio
 async def test_dm_handle_completion_metadata(download_manager):
-    db_mock = AsyncMock()
+    db_mock = MagicMock()
+    db_mock.execute = AsyncMock()
+    db_mock.commit = AsyncMock()
     download = MagicMock(id="dl1", file_path="/tmp/test.mp3", source="spotify")
     download.track.id = "track1"
     download.track.metadata_content = {}

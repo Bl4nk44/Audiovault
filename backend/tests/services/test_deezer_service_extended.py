@@ -42,7 +42,6 @@ async def test_search_track_url(deezer_service):
         mock_get.return_value = {"id": "123", "title": "Track"}
 
         await deezer_service.search("https://www.deezer.com/track/123")
-
         mock_get.assert_called_once_with("123")
 
 
@@ -53,7 +52,6 @@ async def test_search_album_url(deezer_service):
         mock_get.return_value = [{"id": "1"}, {"id": "2"}]
 
         await deezer_service.search("https://deezer.com/pl/album/456")
-
         mock_get.assert_called_once_with("456")
 
 
@@ -64,7 +62,6 @@ async def test_search_playlist_url(deezer_service):
         mock_get.return_value = [{"id": "1"}]
 
         await deezer_service.search("https://deezer.com/en/playlist/789")
-
         mock_get.assert_called_once_with("789")
 
 
@@ -78,7 +75,6 @@ async def test_search_short_link(deezer_service):
             mock_get.return_value = {"id": "123", "title": "Track"}
 
             await deezer_service.search("https://deezer.page.link/abc")
-
             mock_resolve.assert_called_once()
 
 
@@ -110,8 +106,11 @@ async def test_get_track_success(deezer_service):
     }
 
     mock_resp = create_mock_response(200, mock_data)
-    mock_session = AsyncMock()
+
+    # session.get returns a context manager, not a coroutine directly
+    mock_session = MagicMock()
     mock_session.get.return_value.__aenter__.return_value = mock_resp
+    mock_session.get.return_value.__aexit__.return_value = None
 
     with patch(
         "aiohttp.ClientSession",
@@ -124,8 +123,10 @@ async def test_get_track_success(deezer_service):
 async def test_get_track_not_found(deezer_service):
     """Test getting non-existent track."""
     mock_resp = create_mock_response(404, {})
-    mock_session = AsyncMock()
+
+    mock_session = MagicMock()
     mock_session.get.return_value.__aenter__.return_value = mock_resp
+    mock_session.get.return_value.__aexit__.return_value = None
 
     with patch(
         "aiohttp.ClientSession",
@@ -139,8 +140,10 @@ async def test_get_track_error_response(deezer_service):
     """Test getting track with error in response."""
     mock_data = {"error": {"message": "Not found"}}
     mock_resp = create_mock_response(200, mock_data)
-    mock_session = AsyncMock()
+
+    mock_session = MagicMock()
     mock_session.get.return_value.__aenter__.return_value = mock_resp
+    mock_session.get.return_value.__aexit__.return_value = None
 
     with patch(
         "aiohttp.ClientSession",
@@ -165,8 +168,10 @@ async def test_get_album_tracks_success(deezer_service):
     }
 
     mock_resp = create_mock_response(200, mock_data)
-    mock_session = AsyncMock()
+
+    mock_session = MagicMock()
     mock_session.get.return_value.__aenter__.return_value = mock_resp
+    mock_session.get.return_value.__aexit__.return_value = None
 
     with patch(
         "aiohttp.ClientSession",
@@ -179,8 +184,10 @@ async def test_get_album_tracks_success(deezer_service):
 async def test_get_album_tracks_not_found(deezer_service):
     """Test getting album tracks when not found."""
     mock_resp = create_mock_response(404, {})
-    mock_session = AsyncMock()
+
+    mock_session = MagicMock()
     mock_session.get.return_value.__aenter__.return_value = mock_resp
+    mock_session.get.return_value.__aexit__.return_value = None
 
     with patch(
         "aiohttp.ClientSession",
@@ -200,8 +207,10 @@ async def test_get_playlist_tracks_success(deezer_service):
     mock_data = {"data": [{"id": 1, "title": "T1", "artist": {"name": "A"}, "album": {"title": "AL"}, "duration": 180}]}
 
     mock_resp = create_mock_response(200, mock_data)
-    mock_session = AsyncMock()
+
+    mock_session = MagicMock()
     mock_session.get.return_value.__aenter__.return_value = mock_resp
+    mock_session.get.return_value.__aexit__.return_value = None
 
     with patch(
         "aiohttp.ClientSession",
@@ -214,8 +223,10 @@ async def test_get_playlist_tracks_success(deezer_service):
 async def test_get_playlist_tracks_not_found(deezer_service):
     """Test getting playlist tracks when not found."""
     mock_resp = create_mock_response(404, {})
-    mock_session = AsyncMock()
+
+    mock_session = MagicMock()
     mock_session.get.return_value.__aenter__.return_value = mock_resp
+    mock_session.get.return_value.__aexit__.return_value = None
 
     with patch(
         "aiohttp.ClientSession",
@@ -244,8 +255,10 @@ async def test_get_playlist_details_success(deezer_service):
     }
 
     mock_resp = create_mock_response(200, mock_data)
-    mock_session = AsyncMock()
+
+    mock_session = MagicMock()
     mock_session.get.return_value.__aenter__.return_value = mock_resp
+    mock_session.get.return_value.__aexit__.return_value = None
 
     with patch(
         "aiohttp.ClientSession",
@@ -258,8 +271,10 @@ async def test_get_playlist_details_success(deezer_service):
 async def test_get_playlist_details_not_found(deezer_service):
     """Test getting non-existent playlist details."""
     mock_resp = create_mock_response(404, {})
-    mock_session = AsyncMock()
+
+    mock_session = MagicMock()
     mock_session.get.return_value.__aenter__.return_value = mock_resp
+    mock_session.get.return_value.__aexit__.return_value = None
 
     with patch(
         "aiohttp.ClientSession",
@@ -273,8 +288,10 @@ async def test_get_playlist_details_error(deezer_service):
     """Test getting playlist details with error."""
     mock_data = {"error": {"message": "Error"}}
     mock_resp = create_mock_response(200, mock_data)
-    mock_session = AsyncMock()
+
+    mock_session = MagicMock()
     mock_session.get.return_value.__aenter__.return_value = mock_resp
+    mock_session.get.return_value.__aexit__.return_value = None
 
     with patch(
         "aiohttp.ClientSession",
@@ -328,8 +345,10 @@ async def test_get_artist_details_success(deezer_service):
 async def test_get_artist_details_not_found(deezer_service):
     """Test getting non-existent artist."""
     mock_resp = create_mock_response(404, {})
-    mock_session = AsyncMock()
+
+    mock_session = MagicMock()
     mock_session.get.return_value.__aenter__.return_value = mock_resp
+    mock_session.get.return_value.__aexit__.return_value = None
 
     with patch(
         "aiohttp.ClientSession",
@@ -343,8 +362,10 @@ async def test_get_artist_details_error(deezer_service):
     """Test getting artist with error response."""
     mock_data = {"error": {"message": "Not found"}}
     mock_resp = create_mock_response(200, mock_data)
-    mock_session = AsyncMock()
+
+    mock_session = MagicMock()
     mock_session.get.return_value.__aenter__.return_value = mock_resp
+    mock_session.get.return_value.__aexit__.return_value = None
 
     with patch(
         "aiohttp.ClientSession",
