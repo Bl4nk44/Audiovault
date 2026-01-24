@@ -23,7 +23,7 @@ def test_user_model_coverage():
 
 
 def test_track_model_coverage():
-    t = Track(id=uuid.uuid4(), title="Test Track", duration_ms=120000, file_path="/tmp/test.mp3")
+    t = Track(id=uuid.uuid4(), title="Test Track", duration_ms=120000)
     assert t.title == "Test Track"
 
 
