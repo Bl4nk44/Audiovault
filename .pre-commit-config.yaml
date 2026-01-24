@@ -55,8 +55,10 @@ repos:
           )$
 
   # JavaScript/TypeScript with Prettier
+  # NOTE: mirrors-prettier was archived on Apr 11, 2024
+  # Latest available version is v3.1.0
   - repo: https://github.com/pre-commit/mirrors-prettier
-    rev: v3.2.5
+    rev: v3.1.0
     hooks:
       - id: prettier
         types_or: [javascript, ts, jsx, tsx, json, yaml, markdown]
