@@ -1,3 +1,4 @@
+import uuid
 from datetime import datetime, timezone
 
 from app.models.album import Album
@@ -5,7 +6,7 @@ from app.models.artist import Artist
 from app.models.audit_log import AuditLog
 from app.models.credentials import ServiceCredentials
 from app.models.download import Download
-from app.models.history import History
+from app.models.history import ListeningHistory
 from app.models.playlist import Playlist
 from app.models.playlist_version import PlaylistVersion
 from app.models.starred import Starred
@@ -52,7 +53,7 @@ def test_playlist_version_coverage():
 
 
 def test_history_model_coverage():
-    h = History(id=uuid.uuid4(), track_id=uuid.uuid4(), listened_at=datetime.now(timezone.utc))
+    h = ListeningHistory(id=uuid.uuid4(), track_id=uuid.uuid4(), listened_at=datetime.now(timezone.utc))
     assert h.track_id is not None
 
 
