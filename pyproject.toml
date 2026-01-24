@@ -12,6 +12,11 @@ allowed_tags = ["build", "chore", "ci", "docs", "feat", "fix", "perf", "style", 
 minor_tags = ["feat"]
 patch_tags = ["fix", "perf", "chore"]
 
+[project]
+name = "audiovault"
+description = "CI issue resolution and stability improvements"
+version = "0.10.4"
+
 [tool.ruff]
 line-length = 120
 target-version = "py312"
