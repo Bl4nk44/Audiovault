@@ -9,8 +9,8 @@ logger = logging.getLogger(__name__)
 
 BASE_URL = "http://localhost:8000"
 # Default credentials (from init_data.py usually)
-USERNAME = "admin"
-PASSWORD = "admin"
+USERNAME = "admin"  # nosec B105
+PASSWORD = "admin"  # nosec B105
 
 
 async def verify_api():

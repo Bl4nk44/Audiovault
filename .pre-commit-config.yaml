@@ -8,7 +8,7 @@ exclude: ^(frontend/dist/|backend/venv/|.*\.egg-info/|.*\.png|.*\.jpg|.*\.jpeg|.
 repos:
   # General formatting and file checks
   - repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v5.0.0
+    rev: v6.0.0
     hooks:
       - id: trailing-whitespace
         exclude: ^(frontend/|docs/)
@@ -40,21 +40,14 @@ repos:
   # Type checking with Pyright
   # NOTE: Using fsouza/mirrors-pyright as an active maintained mirror
   # (pre-commit/mirrors-pyright repository not available)
-  - repo: https://github.com/fsouza/mirrors-pyright
-    rev: v1.1.408
+  - repo: local
     hooks:
       - id: pyright
+        name: pyright
+        entry: pyright
+        language: system
+        types: [python]
         files: ^backend/
-        additional_dependencies:
-          - sqlalchemy
-          - fastapi
-          - pydantic
-        exclude: |
-          (?x)^(
-            backend/venv/|
-            backend/tests/|
-            backend/.venv/
-          )$
 
   # JavaScript/TypeScript with Prettier
   # NOTE: mirrors-prettier was archived on Apr 11, 2024

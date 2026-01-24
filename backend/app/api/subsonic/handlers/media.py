@@ -10,6 +10,7 @@ Handles streaming and media endpoints:
 import hashlib
 import logging
 import os
+import tempfile
 from urllib.parse import quote, urlparse
 from uuid import UUID
 
@@ -71,7 +72,9 @@ def safe_content_disposition(filename: str, disposition: str = "inline") -> str:
 
 
 # Cover art cache directory
-COVER_ART_CACHE_DIR = os.environ.get("COVER_ART_CACHE_DIR", "/tmp/audiovault_cache/cover_art")
+COVER_ART_CACHE_DIR = os.environ.get(
+    "COVER_ART_CACHE_DIR", os.path.join(tempfile.gettempdir(), "audiovault_cache", "cover_art")
+)
 os.makedirs(COVER_ART_CACHE_DIR, exist_ok=True)
 
 router = APIRouter()
@@ -415,8 +418,8 @@ def _extract_embedded_art(file_path: str) -> Response | None:
             return resp
 
         return _try_extract_id3_art(audio_file)
-    except Exception:
-        pass
+    except Exception as e:
+        logger.debug(f"Failed to extract embedded art from {file_path}: {e}")
     return None
 
 

@@ -42,7 +42,7 @@ class Settings(BaseSettings):
         "http://127.0.0.1:3000",
         "http://127.0.0.1:5173",
     ]
-    ALLOWED_HOSTS: list[str] | str = ["localhost", "127.0.0.1", "0.0.0.0"]
+    ALLOWED_HOSTS: list[str] | str = ["localhost", "127.0.0.1", "0.0.0.0"]  # nosec B104
 
     @field_validator("BACKEND_CORS_ORIGINS", "ALLOWED_HOSTS", mode="before")
     @classmethod

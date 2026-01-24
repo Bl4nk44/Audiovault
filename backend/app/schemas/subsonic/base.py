@@ -5,7 +5,7 @@ Subsonic API uses a specific response format with nested 'subsonic-response' obj
 """
 
 import re
-import xml.etree.ElementTree as ET  # noqa: S314
+import xml.etree.ElementTree as ET  # nosec B405
 from typing import Any
 
 from fastapi import Response

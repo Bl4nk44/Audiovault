@@ -62,8 +62,8 @@ def catch_all_subsonic(request: Request, path_name: str):
     try:
         with open("/app/subsonic_debug.log", "a") as f:
             f.write(log_line)
-    except Exception:
-        pass
+    except Exception as e:
+        print(f"Failed to write log: {e}")
     print(log_line)
     return Response(
         content='<?xml version="1.0" encoding="UTF-8"?>\n'

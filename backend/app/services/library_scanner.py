@@ -64,8 +64,8 @@ class LibraryScannerService:
                 album = audio["album"][0]
             if "genre" in audio:
                 genre = audio["genre"][0]
-        except Exception:
-            pass
+        except Exception as e:
+            logger.debug(f"EasyID3 parse failed: {e}")
         return title, artist, album, genre
 
     def _update_meta_from_tags(self, m, current_meta: tuple, filename: str) -> tuple[str, str, str, str | None]:

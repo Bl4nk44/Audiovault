@@ -1,3 +1,4 @@
+import logging
 from uuid import UUID
 
 from app.api.subsonic.auth import subsonic_auth
@@ -7,6 +8,8 @@ from app.models.user import User
 from app.schemas.subsonic.base import subsonic_error, subsonic_response
 from fastapi import APIRouter, Depends, Query
 from sqlalchemy.ext.asyncio import AsyncSession
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter()
 
@@ -28,8 +31,8 @@ async def get_lyrics(
     if id:
         try:
             track = await db.get(Track, UUID(id))
-        except Exception:
-            pass
+        except Exception as e:
+            logger.warning(f"Failed to get track by ID: {e}")
 
     # If no track found by ID, could search by artist/title?
     # For now, just return empty or error.
