@@ -113,10 +113,7 @@ export default function PlaylistImport() {
         animate={{ opacity: 1 }}
         transition={{ delay: 0.1 }}
       >
-        <form
-          onSubmit={handleAnalyze}
-          className="flex gap-4 flex-col sm:flex-row"
-        >
+        <form onSubmit={handleAnalyze} className="flex gap-4 flex-col sm:flex-row">
           <div className="relative flex-1">
             <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
               <Search className="h-5 w-5 text-muted-foreground" />
@@ -186,21 +183,14 @@ export default function PlaylistImport() {
               <div className="space-y-2 bg-card rounded-lg p-4 border border-white/5">
                 <div className="flex justify-between text-sm">
                   <span>Importing tracks...</span>
-                  <span>
-                    {Math.round(
-                      (importedCount / previewData.tracks.length) * 100
-                    )}
-                    %
-                  </span>
+                  <span>{Math.round((importedCount / previewData.tracks.length) * 100)}%</span>
                 </div>
                 <div className="h-2 w-full bg-secondary rounded-full overflow-hidden">
                   <motion.div
                     className="h-full bg-green-500"
                     initial={{ width: 0 }}
                     animate={{
-                      width: `${
-                        (importedCount / previewData.tracks.length) * 100
-                      }%`,
+                      width: `${(importedCount / previewData.tracks.length) * 100}%`,
                     }}
                     transition={{ duration: 0.3 }}
                   />
@@ -232,19 +222,13 @@ export default function PlaylistImport() {
                     )}
                   </div>
                   <div className="flex-1 min-w-0">
-                    <h4 className="font-medium text-white truncate">
-                      {track.title}
-                    </h4>
-                    <p className="text-sm text-muted-foreground truncate">
-                      {track.artist}
-                    </p>
+                    <h4 className="font-medium text-white truncate">{track.title}</h4>
+                    <p className="text-sm text-muted-foreground truncate">{track.artist}</p>
                   </div>
                   <div className="opacity-0 group-hover:opacity-100 transition-opacity">
                     <span className="text-xs text-muted-foreground">
                       {track.duration_ms
-                        ? `${Math.floor(
-                            track.duration_ms / 1000 / 60
-                          )}:${String(
+                        ? `${Math.floor(track.duration_ms / 1000 / 60)}:${String(
                             Math.floor((track.duration_ms / 1000) % 60)
                           ).padStart(2, "0")}`
                         : ""}

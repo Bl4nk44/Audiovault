@@ -70,16 +70,11 @@ export default function ConfirmModal({
                           : "bg-primary/10 text-primary"
                       )}
                     >
-                      <AlertTriangle className="w-6 h-6" />{" "}
-                      {/* Changed size prop to className */}
+                      <AlertTriangle className="w-6 h-6" /> {/* Changed size prop to className */}
                     </div>
                     <div className="flex-1">
-                      <h3 className="text-xl font-bold text-foreground mb-2">
-                        {title}
-                      </h3>
-                      <p className="text-muted-foreground leading-relaxed">
-                        {message}
-                      </p>
+                      <h3 className="text-xl font-bold text-foreground mb-2">{title}</h3>
+                      <p className="text-muted-foreground leading-relaxed">{message}</p>
                       {children}
                     </div>
                     <button

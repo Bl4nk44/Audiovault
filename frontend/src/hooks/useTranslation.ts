@@ -5,10 +5,7 @@ import { useCallback } from "react";
 
 type TranslationMap = { [key: string]: string | TranslationMap };
 
-function getNestedValue(
-  obj: TranslationMap | string,
-  keys: string[]
-): string | undefined {
+function getNestedValue(obj: TranslationMap | string, keys: string[]): string | undefined {
   let current: TranslationMap | string = obj;
 
   for (const key of keys) {
@@ -29,13 +26,12 @@ function getNestedValue(
 
 export function useTranslation() {
   const user = useStore((state) => state.user);
-  const language =
-    (user?.preferences?.language as keyof typeof translations) || "en";
+  const language = (user?.preferences?.language as keyof typeof translations) || "en";
 
   const t = useCallback(
     (path: string): string => {
       const keys = path.split(".");
-      
+
       // Try current language
       const currentTranslation = translations[language];
       if (currentTranslation) {

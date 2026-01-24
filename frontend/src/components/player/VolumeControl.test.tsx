@@ -37,9 +37,7 @@ describe("VolumeControl", () => {
   it("should mute when volume button is clicked and not muted", async () => {
     const user = userEvent.setup();
     const setVolume = vi.fn();
-    render(
-      <VolumeControl {...defaultProps} volume={0.5} setVolume={setVolume} />,
-    );
+    render(<VolumeControl {...defaultProps} volume={0.5} setVolume={setVolume} />);
 
     await user.click(screen.getByRole("button", { name: /mute/i }));
 
@@ -49,9 +47,7 @@ describe("VolumeControl", () => {
   it("should unmute when volume button is clicked and muted", async () => {
     const user = userEvent.setup();
     const setVolume = vi.fn();
-    render(
-      <VolumeControl {...defaultProps} volume={0} setVolume={setVolume} />,
-    );
+    render(<VolumeControl {...defaultProps} volume={0} setVolume={setVolume} />);
 
     await user.click(screen.getByRole("button", { name: /unmute/i }));
 
@@ -78,18 +74,14 @@ describe("VolumeControl", () => {
   });
 
   it("should be hidden on mobile when not expanded", () => {
-    const { container } = render(
-      <VolumeControl {...defaultProps} isExpanded={false} />,
-    );
+    const { container } = render(<VolumeControl {...defaultProps} isExpanded={false} />);
 
     expect(container.firstChild).toHaveClass("hidden");
     expect(container.firstChild).toHaveClass("md:flex");
   });
 
   it("should be visible when expanded", () => {
-    const { container } = render(
-      <VolumeControl {...defaultProps} isExpanded={true} />,
-    );
+    const { container } = render(<VolumeControl {...defaultProps} isExpanded={true} />);
 
     expect(container.firstChild).not.toHaveClass("hidden");
   });

@@ -69,28 +69,16 @@ export default function SearchBar({
               onChange={(e) => setType(e.target.value)}
               className="w-full appearance-none px-6 py-5 rounded-2xl bg-card/60 backdrop-blur-xl border border-border text-foreground font-medium focus:outline-none focus:border-primary/50 cursor-pointer hover:bg-card/80 transition-all"
             >
-              <option
-                value="all"
-                className="bg-popover text-popover-foreground"
-              >
+              <option value="all" className="bg-popover text-popover-foreground">
                 {t("filters.allTypes")}
               </option>
-              <option
-                value="artist"
-                className="bg-popover text-popover-foreground"
-              >
+              <option value="artist" className="bg-popover text-popover-foreground">
                 {t("filters.artists")}
               </option>
-              <option
-                value="playlist"
-                className="bg-popover text-popover-foreground"
-              >
+              <option value="playlist" className="bg-popover text-popover-foreground">
                 {t("filters.playlists")}
               </option>
-              <option
-                value="track"
-                className="bg-popover text-popover-foreground"
-              >
+              <option value="track" className="bg-popover text-popover-foreground">
                 {t("filters.tracks")}
               </option>
             </select>
@@ -106,52 +94,28 @@ export default function SearchBar({
               onChange={(e) => setSource(e.target.value)}
               className="w-full appearance-none px-6 py-5 rounded-2xl bg-card/60 backdrop-blur-xl border border-border text-foreground font-medium focus:outline-none focus:border-primary/50 cursor-pointer hover:bg-card/80 transition-all"
             >
-              <option
-                value="all"
-                className="bg-popover text-popover-foreground"
-              >
+              <option value="all" className="bg-popover text-popover-foreground">
                 {t("filters.allSources")}
               </option>
-              <option
-                value="spotify"
-                className="bg-popover text-popover-foreground"
-              >
+              <option value="spotify" className="bg-popover text-popover-foreground">
                 Spotify
               </option>
-              <option
-                value="youtube"
-                className="bg-popover text-popover-foreground"
-              >
+              <option value="youtube" className="bg-popover text-popover-foreground">
                 YouTube
               </option>
-              <option
-                value="deezer"
-                className="bg-popover text-popover-foreground"
-              >
+              <option value="deezer" className="bg-popover text-popover-foreground">
                 Deezer
               </option>
-              <option
-                value="apple_music"
-                className="bg-popover text-popover-foreground"
-              >
+              <option value="apple_music" className="bg-popover text-popover-foreground">
                 Apple Music
               </option>
-              <option
-                value="tidal"
-                className="bg-popover text-popover-foreground"
-              >
+              <option value="tidal" className="bg-popover text-popover-foreground">
                 Tidal
               </option>
-              <option
-                value="amazon_music"
-                className="bg-popover text-popover-foreground"
-              >
+              <option value="amazon_music" className="bg-popover text-popover-foreground">
                 Amazon Music
               </option>
-              <option
-                value="soundcloud"
-                className="bg-popover text-popover-foreground"
-              >
+              <option value="soundcloud" className="bg-popover text-popover-foreground">
                 SoundCloud
               </option>
             </select>

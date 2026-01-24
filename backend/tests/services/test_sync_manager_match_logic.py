@@ -12,6 +12,7 @@ from app.services.sync_manager import SyncManager
 def sync_manager():
     return SyncManager()
 
+
 @pytest.mark.asyncio
 async def test_analyze_watchlist_safety_warnings(sync_manager):
     # Setup: 100 local items, remove 30 (30% > 10% threshold)
@@ -43,7 +44,7 @@ async def test_analyze_watchlist_safety_warnings(sync_manager):
                 )
             )
         ),
-        MagicMock(scalars=MagicMock(return_value=MagicMock(all=MagicMock(return_value=local_items))))
+        MagicMock(scalars=MagicMock(return_value=MagicMock(all=MagicMock(return_value=local_items)))),
     ]
 
     # Mock remote tracks (only 70 matching)
@@ -61,6 +62,7 @@ async def test_analyze_watchlist_safety_warnings(sync_manager):
         assert "deletion" in report["warning_message"]
         assert report["to_remove_count"] == 30
 
+
 @pytest.mark.asyncio
 async def test_analyze_watchlist_matching_logic(sync_manager):
     # Test matching by youtube_id and metadata
@@ -74,11 +76,7 @@ async def test_analyze_watchlist_matching_logic(sync_manager):
     # Track 3: No match
     t3 = Track(id=str(uuid.uuid4()), title="T3")
 
-    local_items = [
-        WatchlistItem(track=t1),
-        WatchlistItem(track=t2),
-        WatchlistItem(track=t3)
-    ]
+    local_items = [WatchlistItem(track=t1), WatchlistItem(track=t2), WatchlistItem(track=t3)]
 
     # Helper to run analysis relative to source type
     async def run_analysis(source, remote_ids):
@@ -86,7 +84,7 @@ async def test_analyze_watchlist_matching_logic(sync_manager):
         wl = Watchlist(id=w_id, user_id=u_id, source=source, watch_type="playlist", source_id="s")
         mock_db.execute.side_effect = [
             MagicMock(scalar_one_or_none=MagicMock(return_value=wl)),
-            MagicMock(scalars=MagicMock(return_value=MagicMock(all=MagicMock(return_value=local_items))))
+            MagicMock(scalars=MagicMock(return_value=MagicMock(all=MagicMock(return_value=local_items)))),
         ]
 
         remote = [{"id": rid, "title": "X", "artist": "Y"} for rid in remote_ids]
@@ -109,15 +107,14 @@ async def test_analyze_watchlist_matching_logic(sync_manager):
     assert str(t2.id) not in removals_dz
     assert str(t3.id) in removals_dz
 
+
 @pytest.mark.asyncio
 async def test_fetch_remote_tracks_strategies(sync_manager):
     # 1. Playlist via Provider
     wl_pl = Watchlist(watch_type="playlist", source="spotify", source_id="pl1")
     with patch("app.services.sync_manager.provider_manager.get_provider_by_name") as m_get_prov:
         mock_prov = AsyncMock()
-        mock_prov.extract_playlist.return_value.tracks = [
-            MagicMock(source_id="t1", title="Tit", artist="Art")
-        ]
+        mock_prov.extract_playlist.return_value.tracks = [MagicMock(source_id="t1", title="Tit", artist="Art")]
         m_get_prov.return_value = mock_prov
 
         tracks = await sync_manager._fetch_remote_tracks(wl_pl)
@@ -139,6 +136,7 @@ async def test_fetch_remote_tracks_strategies(sync_manager):
         tracks_ar = await sync_manager._fetch_remote_tracks(wl_ar)
         assert len(tracks_ar) == 1
         assert tracks_ar[0]["id"] == "t2"
+
 
 @pytest.mark.asyncio
 async def test_fetch_remote_tracks_error(sync_manager):

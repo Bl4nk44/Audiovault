@@ -57,22 +57,26 @@ For questions, ideas, or general discussions that don't fit into bug reports or 
 ### Setting Up Your Development Environment
 
 1. **Fork the repository**
+
    ```bash
    # Navigate to https://github.com/Bl4nk44/Audiovault and click Fork
    ```
 
 2. **Clone your fork**
+
    ```bash
    git clone https://github.com/your-username/Audiovault.git
    cd Audiovault
    ```
 
 3. **Add upstream remote**
+
    ```bash
    git remote add upstream https://github.com/Bl4nk44/Audiovault.git
    ```
 
 4. **Create a development branch**
+
    ```bash
    git checkout -b feature/your-feature-name
    # or
@@ -80,12 +84,14 @@ For questions, ideas, or general discussions that don't fit into bug reports or 
    ```
 
 5. **Set up environment variables**
+
    ```bash
    cp .env.example .env
    # Edit .env with your development settings
    ```
 
 6. **Start the development environment with Docker**
+
    ```bash
    docker compose up -d --build
    ```
@@ -120,6 +126,7 @@ isort .
 ```
 
 **Key Files**:
+
 - `backend/app/main.py` - FastAPI application entry point
 - `backend/app/api/` - API route definitions
 - `backend/app/models/` - Database models
@@ -151,6 +158,7 @@ npm run lint
 ```
 
 **Key Directories**:
+
 - `frontend/src/components/` - React components
 - `frontend/src/pages/` - Page components
 - `frontend/src/hooks/` - Custom React hooks
@@ -194,6 +202,7 @@ test123
 **Format**: `<type>: <description>`
 
 **Types**:
+
 - `feat:` - A new feature
 - `fix:` - A bug fix
 - `docs:` - Documentation only changes
@@ -207,17 +216,20 @@ test123
 ### Pull Request Process
 
 1. **Update your branch**
+
    ```bash
    git fetch upstream
    git rebase upstream/main
    ```
 
 2. **Push to your fork**
+
    ```bash
    git push origin your-branch-name
    ```
 
 3. **Create a Pull Request**
+
    - Go to the [Pull Requests](https://github.com/Bl4nk44/Audiovault/pulls) page
    - Click "New Pull Request"
    - Select your branch and provide a clear description
@@ -225,6 +237,7 @@ test123
    - Link any related issues using `Closes #issue-number`
 
 4. **Respond to feedback**
+
    - Address any review comments
    - Push changes to the same branch (they'll automatically update the PR)
    - Request re-review when ready
@@ -247,13 +260,14 @@ test123
 - Format with `black` and lint with `flake8` and `isort`
 
 **Example**:
+
 ```python
 def get_user_by_id(user_id: int) -> Optional[User]:
     """Retrieve a user by their ID.
-    
+
     Args:
         user_id: The unique identifier of the user
-        
+
     Returns:
         User object if found, None otherwise
     """
@@ -270,6 +284,7 @@ def get_user_by_id(user_id: int) -> Optional[User]:
 - Lint with ESLint
 
 **Example**:
+
 ```typescript
 interface PlaylistProps {
   playlistId: string;
@@ -317,6 +332,7 @@ npm test -- --coverage
 ```
 
 **Please ensure**:
+
 - All tests pass before submitting a PR
 - Add tests for new features
 - Update tests when modifying existing functionality

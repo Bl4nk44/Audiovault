@@ -18,7 +18,9 @@ export default function Gauge({ value, label, subLabel, color, icon }: Readonly<
   const center = radius + strokeWidth;
 
   // Arc calculation
-  const arcPath = `M ${strokeWidth},${center} A ${radius},${radius} 0 0,1 ${center * 2 - strokeWidth},${center}`;
+  const arcPath = `M ${strokeWidth},${center} A ${radius},${radius} 0 0,1 ${
+    center * 2 - strokeWidth
+  },${center}`;
   const arcLength = Math.PI * radius;
 
   const strokeDashoffset = arcLength - (clampedValue / 100) * arcLength;

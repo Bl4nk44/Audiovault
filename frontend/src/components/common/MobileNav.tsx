@@ -22,9 +22,7 @@ export default function MobileNav() {
             className={({ isActive }) =>
               cn(
                 "flex flex-col items-center justify-center gap-1 p-2 rounded-xl transition-all relative overflow-hidden",
-                isActive
-                  ? "text-primary"
-                  : "text-muted-foreground hover:text-white"
+                isActive ? "text-primary" : "text-muted-foreground hover:text-white"
               )
             }
           >
@@ -40,9 +38,7 @@ export default function MobileNav() {
                 )}
                 <item.icon
                   size={24}
-                  className={cn(
-                    isActive && "drop-shadow-[0_0_8px_rgba(var(--primary),0.5)]"
-                  )}
+                  className={cn(isActive && "drop-shadow-[0_0_8px_rgba(var(--primary),0.5)]")}
                 />
                 <span className="text-[10px] font-medium">{item.label}</span>
               </>

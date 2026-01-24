@@ -14,11 +14,7 @@ export const downloadsApi = {
     return response.data;
   },
 
-  add: async (data: {
-    track_id: string;
-    source: string;
-    playlist_name?: string;
-  }) => {
+  add: async (data: { track_id: string; source: string; playlist_name?: string }) => {
     const response = await api.post("/downloads/add", data);
     return response.data;
   },

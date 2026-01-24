@@ -39,7 +39,7 @@ describe("albumsApi", () => {
 
     it("should throw error for unsupported sources", async () => {
       await expect(albumsApi.getById("album-1", "unsupported")).rejects.toThrow(
-        "Unsupported source: unsupported",
+        "Unsupported source: unsupported"
       );
     });
   });

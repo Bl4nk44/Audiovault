@@ -25,7 +25,7 @@ describe("ErrorBoundary", () => {
     render(
       <ErrorBoundary>
         <div>Test content</div>
-      </ErrorBoundary>,
+      </ErrorBoundary>
     );
 
     expect(screen.getByText("Test content")).toBeTruthy();
@@ -35,7 +35,7 @@ describe("ErrorBoundary", () => {
     render(
       <ErrorBoundary>
         <ThrowError shouldThrow={true} />
-      </ErrorBoundary>,
+      </ErrorBoundary>
     );
 
     expect(screen.getByText("Something went wrong")).toBeTruthy();
@@ -46,7 +46,7 @@ describe("ErrorBoundary", () => {
     render(
       <ErrorBoundary>
         <ThrowError shouldThrow={true} />
-      </ErrorBoundary>,
+      </ErrorBoundary>
     );
 
     expect(screen.getByRole("button", { name: /Reload Page/i })).toBeTruthy();
@@ -63,7 +63,7 @@ describe("ErrorBoundary", () => {
     render(
       <ErrorBoundary>
         <ThrowError shouldThrow={true} />
-      </ErrorBoundary>,
+      </ErrorBoundary>
     );
 
     await user.click(screen.getByRole("button", { name: /Reload Page/i }));

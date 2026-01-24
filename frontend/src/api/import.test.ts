@@ -25,9 +25,7 @@ describe("importApi", () => {
       };
       vi.mocked(api.post).mockResolvedValue({ data: mockPlaylist });
 
-      const result = await importApi.importPlaylist(
-        "https://spotify.com/playlist/123",
-      );
+      const result = await importApi.importPlaylist("https://spotify.com/playlist/123");
 
       expect(api.post).toHaveBeenCalledWith("/import/playlist", {
         url: "https://spotify.com/playlist/123",

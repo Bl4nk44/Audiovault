@@ -42,9 +42,7 @@ export default function LoginForm() {
         message?: string;
       };
       const errorMessage =
-        err.response?.data?.detail ||
-        err.message ||
-        "Login failed. Please check your connection.";
+        err.response?.data?.detail || err.message || "Login failed. Please check your connection.";
       toast.error(errorMessage);
     } finally {
       setIsLoading(false);
@@ -65,15 +63,9 @@ export default function LoginForm() {
   };
 
   return (
-    <form
-      onSubmit={handleSubmit(onSubmit)}
-      className="space-y-6 w-full max-w-md relative z-10"
-    >
+    <form onSubmit={handleSubmit(onSubmit)} className="space-y-6 w-full max-w-md relative z-10">
       <div className="space-y-2">
-        <label
-          htmlFor="email"
-          className="text-sm font-medium ml-1 text-gray-300"
-        >
+        <label htmlFor="email" className="text-sm font-medium ml-1 text-gray-300">
           Username or Email
         </label>
         <div className="relative group">
@@ -107,10 +99,7 @@ export default function LoginForm() {
       </div>
 
       <div className="space-y-2">
-        <label
-          htmlFor="password"
-          className="text-sm font-medium ml-1 text-gray-300"
-        >
+        <label htmlFor="password" className="text-sm font-medium ml-1 text-gray-300">
           Password
         </label>
         <div className="relative group">

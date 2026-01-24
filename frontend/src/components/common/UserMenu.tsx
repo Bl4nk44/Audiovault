@@ -31,14 +31,11 @@ export default function UserMenu() {
     if (!url) return undefined;
     if (url.startsWith("http")) return url;
     return `${
-      import.meta.env.VITE_API_URL?.replace("/api/v1", "") ||
-      "http://localhost:8000"
+      import.meta.env.VITE_API_URL?.replace("/api/v1", "") || "http://localhost:8000"
     }${url}`;
   };
 
-  const otherSessions = Object.values(sessions).filter(
-    (s) => s.user.id !== user?.id
-  );
+  const otherSessions = Object.values(sessions).filter((s) => s.user.id !== user?.id);
 
   return (
     <div className="relative" ref={menuRef}>
@@ -49,8 +46,7 @@ export default function UserMenu() {
         className="flex items-center gap-2 group focus:outline-none"
       >
         <div className="w-8 h-8 rounded-full bg-linear-to-br from-primary to-green-600 flex items-center justify-center shadow-lg ring-2 ring-transparent group-hover:ring-primary/50 transition-all overflow-hidden">
-          {user?.preferences?.avatar_url &&
-          typeof user.preferences.avatar_url === "string" ? (
+          {user?.preferences?.avatar_url && typeof user.preferences.avatar_url === "string" ? (
             <img
               src={getAvatarSrc(user.preferences.avatar_url)}
               alt="Avatar"
@@ -65,9 +61,7 @@ export default function UserMenu() {
         </span>
         <ChevronDown
           size={16}
-          className={`text-gray-400 transition-transform ${
-            isOpen ? "rotate-180" : ""
-          }`}
+          className={`text-gray-400 transition-transform ${isOpen ? "rotate-180" : ""}`}
         />
       </motion.button>
 
@@ -94,9 +88,7 @@ export default function UserMenu() {
                 )}
               </div>
               <div className="overflow-hidden">
-                <p className="font-bold text-white truncate">
-                  {user?.username}
-                </p>
+                <p className="font-bold text-white truncate">{user?.username}</p>
                 <p className="text-xs text-gray-400 truncate">{user?.email}</p>
               </div>
             </div>

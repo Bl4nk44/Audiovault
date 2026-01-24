@@ -21,16 +21,17 @@ export const createAuthSlice: StateCreator<AuthSlice> = (set, get) => {
   // Attempt to restore user from sessions based on active token
   const token = localStorage.getItem("access_token");
   const refreshToken = localStorage.getItem("refresh_token");
-  const sessions = JSON.parse(
-    localStorage.getItem("sessions") || "{}"
-  ) as Record<string, { user: User; token: string; refreshToken: string }>;
+  const sessions = JSON.parse(localStorage.getItem("sessions") || "{}") as Record<
+    string,
+    { user: User; token: string; refreshToken: string }
+  >;
   let user = null;
 
   if (token) {
     // deepcode ignore ObservableTimingDiscrepancy: Client-side token comparison
-    const session = Object.values(sessions).find(
-      (s: { token: string }) => s.token === token
-    ) as { user: User; token: string } | undefined;
+    const session = Object.values(sessions).find((s: { token: string }) => s.token === token) as
+      | { user: User; token: string }
+      | undefined;
     if (session) {
       user = session.user;
     }
@@ -136,8 +137,7 @@ export const createAuthSlice: StateCreator<AuthSlice> = (set, get) => {
     syncUser: (user: User) => {
       // Get current tokens (either from state or storage if state empty due to reload)
       const token = get().token || localStorage.getItem("access_token");
-      const refreshToken =
-        get().refreshToken || localStorage.getItem("refresh_token");
+      const refreshToken = get().refreshToken || localStorage.getItem("refresh_token");
 
       if (token && refreshToken) {
         set({ user });

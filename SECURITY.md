@@ -26,12 +26,14 @@ The Audiovault team takes security vulnerabilities very seriously. We appreciate
 ### Sensitive Information
 
 **Never include in issues, PRs, or discussions:**
+
 - API keys or authentication tokens
 - Database credentials
 - Personal or private user information
 - Sensitive server configurations
 
 **If you accidentally expose sensitive information:**
+
 1. Contact us immediately at [bl4nk44@pm.me](mailto:bl4nk44@pm.me)
 2. Rotate/revoke any exposed credentials
 3. We will help remove the information from the repository history
@@ -58,6 +60,7 @@ When running Audiovault, please follow these guidelines:
 - Use environment-specific values for development vs. production
 
 **Example `.env` Security**:
+
 ```bash
 # ✅ Good - Strong, random password
 ADMIN_PASSWORD=Tr0p!c@lL!m0n_K3y$uP3r#Secure_2024
@@ -137,10 +140,12 @@ When exposing Audiovault to the internet:
 ### Staying Updated
 
 1. **Watch the Repository**
+
    - Click "Watch" → "Custom" → Select "Releases"
    - You'll be notified of new releases
 
 2. **Subscribe to Announcements**
+
    - Check the [Discussions](https://github.com/Bl4nk44/Audiovault/discussions) category for security announcements
 
 3. **Regular Docker Image Updates**
@@ -152,6 +157,7 @@ When exposing Audiovault to the internet:
 ### Security Patches
 
 Security updates are released as patch versions (e.g., 1.0.1, 1.0.2) and will be applied to:
+
 - `latest` tag
 - Specific version tag (e.g., `v1.0.1`)
 

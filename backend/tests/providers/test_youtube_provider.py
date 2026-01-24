@@ -34,7 +34,7 @@ async def test_extract_playlist(youtube_provider):
                 "duration_ms": 3000,
                 "image_url": "img1",
             }
-        ]
+        ],
     }
 
     result = await youtube_provider.extract_playlist("https://www.youtube.com/playlist?list=PL123")

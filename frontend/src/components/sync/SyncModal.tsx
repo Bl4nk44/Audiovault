@@ -13,9 +13,7 @@ interface SyncModalProps {
 }
 
 export default function SyncModal({ item, onClose }: SyncModalProps) {
-  const [step, setStep] = useState<
-    "analyzing" | "review" | "executing" | "success"
-  >("analyzing");
+  const [step, setStep] = useState<"analyzing" | "review" | "executing" | "success">("analyzing");
   const [report, setReport] = useState<SyncReport | null>(null);
   const [selectedRemovals, setSelectedRemovals] = useState<string[]>([]);
   const [result, setResult] = useState<SyncResult | null>(null);
@@ -45,11 +43,7 @@ export default function SyncModal({ item, onClose }: SyncModalProps) {
     if (!report || !item) return;
     setStep("executing");
     try {
-      const res = await syncApi.execute(
-        item.id,
-        report.sync_token,
-        selectedRemovals
-      );
+      const res = await syncApi.execute(item.id, report.sync_token, selectedRemovals);
       setResult(res);
       setStep("success");
       toast.success("Sync completed successfully");
@@ -104,9 +98,7 @@ export default function SyncModal({ item, onClose }: SyncModalProps) {
             {step === "analyzing" && (
               <div className="flex flex-col items-center justify-center h-64 gap-4">
                 <Loader2 className="w-10 h-10 animate-spin text-primary" />
-                <p className="text-muted-foreground">
-                  Analyzing playlist state...
-                </p>
+                <p className="text-muted-foreground">Analyzing playlist state...</p>
               </div>
             )}
 
@@ -115,17 +107,13 @@ export default function SyncModal({ item, onClose }: SyncModalProps) {
                 {/* Stats */}
                 <div className="grid grid-cols-2 gap-4 text-center">
                   <div className="p-4 bg-secondary/30 rounded-lg border border-border/50">
-                    <div className="text-2xl font-bold">
-                      {report.local_count}
-                    </div>
+                    <div className="text-2xl font-bold">{report.local_count}</div>
                     <div className="text-xs text-muted-foreground uppercase tracking-wider">
                       Local Tracks
                     </div>
                   </div>
                   <div className="p-4 bg-secondary/30 rounded-lg border border-border/50">
-                    <div className="text-2xl font-bold">
-                      {report.remote_count}
-                    </div>
+                    <div className="text-2xl font-bold">{report.remote_count}</div>
                     <div className="text-xs text-muted-foreground uppercase tracking-wider">
                       Remote Tracks
                     </div>
@@ -138,9 +126,7 @@ export default function SyncModal({ item, onClose }: SyncModalProps) {
                     <AlertTriangle className="h-5 w-5 shrink-0" />
                     <div>
                       <h4 className="font-bold text-sm">Safety Warning</h4>
-                      <p className="text-sm opacity-90">
-                        {report.warning_message}
-                      </p>
+                      <p className="text-sm opacity-90">{report.warning_message}</p>
                     </div>
                   </div>
                 )}
@@ -150,9 +136,7 @@ export default function SyncModal({ item, onClose }: SyncModalProps) {
                   <div className="text-center py-8 text-green-400 bg-green-400/5 rounded-xl border border-green-400/10">
                     <CheckCircle className="w-12 h-12 mx-auto mb-3 opacity-80" />
                     <p className="font-medium">Library is in sync.</p>
-                    <p className="text-sm opacity-70">
-                      No tracks need to be removed.
-                    </p>
+                    <p className="text-sm opacity-70">No tracks need to be removed.</p>
                   </div>
                 ) : (
                   <div>
@@ -161,9 +145,7 @@ export default function SyncModal({ item, onClose }: SyncModalProps) {
                         <Trash2 size={16} className="text-destructive" />
                         Tracks to Remove ({selectedRemovals.length})
                       </span>
-                      <span className="text-xs text-muted-foreground">
-                        Uncheck to keep
-                      </span>
+                      <span className="text-xs text-muted-foreground">Uncheck to keep</span>
                     </h3>
                     <div className="border border-border/50 rounded-lg divide-y divide-border/50 max-h-60 overflow-y-auto bg-black/20">
                       {report.to_remove_items.map((track) => (
@@ -176,15 +158,10 @@ export default function SyncModal({ item, onClose }: SyncModalProps) {
                             checked={selectedRemovals.includes(track.track_id)}
                             onChange={(e) => {
                               if (e.target.checked) {
-                                setSelectedRemovals([
-                                  ...selectedRemovals,
-                                  track.track_id,
-                                ]);
+                                setSelectedRemovals([...selectedRemovals, track.track_id]);
                               } else {
                                 setSelectedRemovals(
-                                  selectedRemovals.filter(
-                                    (id) => id !== track.track_id
-                                  )
+                                  selectedRemovals.filter((id) => id !== track.track_id)
                                 );
                               }
                             }}
@@ -205,8 +182,7 @@ export default function SyncModal({ item, onClose }: SyncModalProps) {
                       ))}
                     </div>
                     <p className="text-xs text-muted-foreground mt-3 flex items-center gap-2">
-                      <CheckCircle size={12} /> Files will be moved to Recycle
-                      Bin (safe delete).
+                      <CheckCircle size={12} /> Files will be moved to Recycle Bin (safe delete).
                     </p>
                   </div>
                 )}
@@ -219,9 +195,7 @@ export default function SyncModal({ item, onClose }: SyncModalProps) {
                   <div className="absolute inset-0 bg-destructive/20 rounded-full animate-ping" />
                   <Loader2 className="w-12 h-12 animate-spin text-destructive relative z-10" />
                 </div>
-                <p className="text-muted-foreground font-medium">
-                  Synchronizing library...
-                </p>
+                <p className="text-muted-foreground font-medium">Synchronizing library...</p>
               </div>
             )}
 
@@ -231,12 +205,8 @@ export default function SyncModal({ item, onClose }: SyncModalProps) {
                   <CheckCircle className="w-10 h-10" />
                 </div>
                 <div>
-                  <h3 className="text-2xl font-bold text-foreground">
-                    Sync Complete
-                  </h3>
-                  <p className="text-muted-foreground">
-                    Your library is now up to date.
-                  </p>
+                  <h3 className="text-2xl font-bold text-foreground">Sync Complete</h3>
+                  <p className="text-muted-foreground">Your library is now up to date.</p>
                 </div>
 
                 <div className="grid grid-cols-2 gap-4 w-full max-w-sm">
@@ -244,17 +214,13 @@ export default function SyncModal({ item, onClose }: SyncModalProps) {
                     <div className="text-2xl font-bold text-foreground">
                       {result.removed_from_playlist}
                     </div>
-                    <div className="text-xs text-muted-foreground">
-                      Removed from Queue
-                    </div>
+                    <div className="text-xs text-muted-foreground">Removed from Queue</div>
                   </div>
                   <div className="bg-secondary/20 p-4 rounded-lg">
                     <div className="text-2xl font-bold text-foreground">
                       {result.files_soft_deleted}
                     </div>
-                    <div className="text-xs text-muted-foreground">
-                      Files Moved to Trash
-                    </div>
+                    <div className="text-xs text-muted-foreground">Files Moved to Trash</div>
                   </div>
                 </div>
               </div>
@@ -279,8 +245,7 @@ export default function SyncModal({ item, onClose }: SyncModalProps) {
                 className={cn(
                   "px-4 py-2 rounded-lg text-white font-medium text-sm transition-all shadow-lg flex items-center gap-2",
                   "bg-destructive hover:bg-destructive/90 shadow-destructive/20",
-                  selectedRemovals.length === 0 &&
-                    "opacity-50 cursor-not-allowed"
+                  selectedRemovals.length === 0 && "opacity-50 cursor-not-allowed"
                 )}
               >
                 <Trash2 size={16} />

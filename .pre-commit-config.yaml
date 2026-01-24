@@ -1,16 +1,25 @@
+ci:
+  autofix_prs: true
+  autoupdate_schedule: weekly
+  autoupdate_commit_msg: "[pre-commit.ci] pre-commit autoupdate"
+
+exclude: ^(frontend/dist/|backend/venv/|.*\.egg-info/|.*\.png|.*\.jpg|.*\.jpeg|.*\.gif|.*\.svg|.*\.ico|.*\.woff|.*\.woff2|.*\.ttf|.*\.eot|.*\.mp3|.*\.wav)$
+
 repos:
-  # YAML formatting
+  # General formatting
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v4.6.0
     hooks:
       - id: trailing-whitespace
       - id: end-of-file-fixer
       - id: check-yaml
+        args: [--allow-multiple-documents]
       - id: check-added-large-files
       - id: check-merge-conflict
       - id: check-toml
       - id: detect-private-key
       - id: mixed-line-ending
+        args: [--fix=auto]
 
   # Python linting and formatting (Ruff)
   - repo: https://github.com/astral-sh/ruff-pre-commit
@@ -33,7 +42,7 @@ repos:
     rev: v3.1.0
     hooks:
       - id: prettier
-        types_or: [javascript, typescript, jsx, tsx, json, yaml, markdown]
+        types_or: [javascript, ts, jsx, tsx, json, yaml, markdown]
         files: ^(frontend/|.*\.(json|ya?ml|md)$)
 
   # Security scanning with Bandit
@@ -49,8 +58,3 @@ repos:
     rev: v1.35.1
     hooks:
       - id: yamllint
-        args:
-          [
-            --config-data,
-            "{extends: default, rules: {line-length: {max: 120}, document-start: disable}}",
-          ]

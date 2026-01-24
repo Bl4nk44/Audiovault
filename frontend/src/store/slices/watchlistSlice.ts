@@ -30,10 +30,7 @@ export interface WatchlistSlice {
   removeFromWatchlist: (id: string) => Promise<void>;
 }
 
-export const createWatchlistSlice: StateCreator<WatchlistSlice> = (
-  set,
-  get
-) => ({
+export const createWatchlistSlice: StateCreator<WatchlistSlice> = (set, get) => ({
   watchlist: loadFromStorage(),
   syncWatchlist: async () => {
     try {

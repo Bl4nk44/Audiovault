@@ -15,14 +15,13 @@ const detectSourceFromUrl = (query: string): string => {
   if (q.includes("music.apple.com")) return "apple_music";
   if (q.includes("listen.tidal.com") || q.includes("tidal.com")) return "tidal";
   if (q.includes("deezer.com")) return "deezer";
-  if (q.includes("music.amazon.com") || q.includes("amazon.com/music"))
-    return "amazon_music";
+  if (q.includes("music.amazon.com") || q.includes("amazon.com/music")) return "amazon_music";
   return "all";
 };
 
 export default function Search() {
   const [searchParams] = useSearchParams();
-   
+
   const [results, setResults] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [offset, setOffset] = useState(0);
@@ -39,7 +38,6 @@ export default function Search() {
     type: string,
     currentOffset: number
   ) => {
-     
     let newResults: any[] = [];
 
     // Determine which types to fetch
@@ -109,11 +107,7 @@ export default function Search() {
       ]);
       const deezerResults = youtubeResultsArray.pop(); // Last one is deezer
 
-      newResults = [
-        ...spotifyResults,
-        ...youtubeResultsArray.flat(),
-        ...deezerResults,
-      ];
+      newResults = [...spotifyResults, ...youtubeResultsArray.flat(), ...deezerResults];
     } else {
       // Fallback for other sources (deezer, apple_music, tidal, amazon_music)
       const response = await api.get(`/${source}/search`, {
@@ -125,9 +119,7 @@ export default function Search() {
     if (newResults.length === 0) {
       setHasMore(false);
     } else {
-      setResults((prev) =>
-        currentOffset === 0 ? newResults : [...prev, ...newResults]
-      );
+      setResults((prev) => (currentOffset === 0 ? newResults : [...prev, ...newResults]));
       setOffset(currentOffset + 20);
     }
   };
@@ -201,12 +193,7 @@ export default function Search() {
         sourceParam !== currentSource ||
         typeParam !== currentType
       ) {
-
-        handleSearch(
-          queryParam,
-          sourceParam,
-          typeParam
-        );
+        handleSearch(queryParam, sourceParam, typeParam);
       }
     }
   }, [searchParams]);
@@ -227,9 +214,7 @@ export default function Search() {
   return (
     <div className="space-y-8">
       <div className="text-center space-y-4">
-        <h1 className="text-4xl font-bold tracking-tight">
-          {t("search.title")}
-        </h1>
+        <h1 className="text-4xl font-bold tracking-tight">{t("search.title")}</h1>
         <p className="text-muted-foreground">{t("search.subtitle")}</p>
       </div>
 
@@ -243,10 +228,7 @@ export default function Search() {
       />
 
       <div className="mt-8 space-y-8">
-        <SearchResults
-          results={results}
-          isLoading={isLoading && offset === 0}
-        />
+        <SearchResults results={results} isLoading={isLoading && offset === 0} />
 
         {results.length > 0 && hasMore && (
           <div className="flex justify-center pb-20">

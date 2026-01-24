@@ -12,11 +12,7 @@ describe("isValidImageUrl", () => {
     });
 
     it("should return true for URLs with query parameters", () => {
-      expect(
-        isValidImageUrl(
-          "https://cdn.example.com/img.jpg?size=large&quality=high",
-        ),
-      ).toBe(true);
+      expect(isValidImageUrl("https://cdn.example.com/img.jpg?size=large&quality=high")).toBe(true);
     });
 
     it("should return true for relative paths starting with /", () => {
@@ -24,11 +20,7 @@ describe("isValidImageUrl", () => {
     });
 
     it("should return true for complex CDN URLs", () => {
-      expect(
-        isValidImageUrl(
-          "https://i.scdn.co/image/ab67616d0000b273123456789abcdef",
-        ),
-      ).toBe(true);
+      expect(isValidImageUrl("https://i.scdn.co/image/ab67616d0000b273123456789abcdef")).toBe(true);
     });
   });
 

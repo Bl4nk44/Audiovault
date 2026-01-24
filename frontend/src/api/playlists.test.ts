@@ -46,7 +46,7 @@ describe("playlistsApi", () => {
 
     it("should throw error for unsupported sources", async () => {
       await expect(playlistsApi.getById("pl-1", "deezer")).rejects.toThrow(
-        "Source deezer not supported yet for playlist details",
+        "Source deezer not supported yet for playlist details"
       );
     });
   });

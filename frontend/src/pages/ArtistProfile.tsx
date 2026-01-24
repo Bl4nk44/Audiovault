@@ -125,7 +125,6 @@ export default function ArtistProfile() {
       });
 
       toast.success(response.data.message || "Album queued for download");
-       
     } catch (error: any) {
       console.error("Failed to download album:", error);
       toast.error(error.response?.data?.detail || "Failed to queue album download");

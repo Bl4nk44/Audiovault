@@ -36,10 +36,7 @@ export default function Sidebar() {
       className="w-full h-full flex flex-col gap-4 z-30"
     >
       <aside className="w-full glass-neon rounded-3xl h-full p-6 flex flex-col gap-6 transition-[background-color,backdrop-filter] duration-500">
-        <motion.div
-          whileHover={{ scale: 1.02 }}
-          className="cursor-default px-2"
-        >
+        <motion.div whileHover={{ scale: 1.02 }} className="cursor-default px-2">
           <Logo />
         </motion.div>
 
@@ -69,8 +66,7 @@ export default function Sidebar() {
                     size={24}
                     className={cn(
                       "transition-transform duration-300 group-hover:scale-110",
-                      isActive &&
-                        "text-primary drop-shadow-[0_0_8px_rgba(34,197,94,0.5)]"
+                      isActive && "text-primary drop-shadow-[0_0_8px_rgba(34,197,94,0.5)]"
                     )}
                   />
                   <span className="relative z-10">{navItem.label}</span>

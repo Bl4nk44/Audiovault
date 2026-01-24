@@ -25,14 +25,11 @@ const container = {
   },
 };
 
-export default function SearchResults({
-  results,
-  isLoading,
-}: Readonly<SearchResultsProps>) {
+export default function SearchResults({ results, isLoading }: Readonly<SearchResultsProps>) {
   const { t } = useTranslation();
 
   const [skeletonIds] = useState(() => Array.from({ length: 10 }, () => uuidv4()));
-  
+
   if (isLoading) {
     return (
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
@@ -59,10 +56,8 @@ export default function SearchResults({
   }
 
   // Type Guards
-  const isArtist = (item: SearchResultItem): item is Artist =>
-    item.type === "artist";
-  const isPlaylist = (item: SearchResultItem): item is Playlist =>
-    item.type === "playlist";
+  const isArtist = (item: SearchResultItem): item is Artist => item.type === "artist";
+  const isPlaylist = (item: SearchResultItem): item is Playlist => item.type === "playlist";
   const isTrack = (item: SearchResultItem): item is Track =>
     !item.type || item.type === "track" || item.type === "song";
 
@@ -71,24 +66,13 @@ export default function SearchResults({
   const tracks = results.filter(isTrack);
 
   return (
-    <motion.div
-      variants={container}
-      initial="hidden"
-      animate="show"
-      className="space-y-8 pb-20"
-    >
+    <motion.div variants={container} initial="hidden" animate="show" className="space-y-8 pb-20">
       {tracks.length > 0 && (
         <section>
-          <h2 className="text-2xl font-bold mb-4 text-white">
-            {t("search.headers.tracks")}
-          </h2>
+          <h2 className="text-2xl font-bold mb-4 text-white">{t("search.headers.tracks")}</h2>
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
             {tracks.map((item) => (
-              <TrackCard
-                key={`${item.source}-${item.id}`}
-                track={item}
-                queue={tracks}
-              />
+              <TrackCard key={`${item.source}-${item.id}`} track={item} queue={tracks} />
             ))}
           </div>
         </section>
@@ -96,9 +80,7 @@ export default function SearchResults({
 
       {artists.length > 0 && (
         <section>
-          <h2 className="text-2xl font-bold mb-4 text-white">
-            {t("search.headers.artists")}
-          </h2>
+          <h2 className="text-2xl font-bold mb-4 text-white">{t("search.headers.artists")}</h2>
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
             {artists.map((item) => (
               <ArtistCard key={`${item.source}-${item.id}`} artist={item} />
@@ -109,9 +91,7 @@ export default function SearchResults({
 
       {playlists.length > 0 && (
         <section>
-          <h2 className="text-2xl font-bold mb-4 text-white">
-            {t("search.headers.playlists")}
-          </h2>
+          <h2 className="text-2xl font-bold mb-4 text-white">{t("search.headers.playlists")}</h2>
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
             {playlists.map((item) => (
               <PlaylistCard key={`${item.source}-${item.id}`} playlist={item} />

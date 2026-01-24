@@ -38,13 +38,7 @@ interface DownloadItemProps {
 }
 
 export default function DownloadItem({ item, queue }: Readonly<DownloadItemProps>) {
-  const {
-    playTrack,
-    pauseDownload,
-    resumeDownload,
-    retryDownload,
-    removeFromQueue,
-  } = useStore();
+  const { playTrack, pauseDownload, resumeDownload, retryDownload, removeFromQueue } = useStore();
   const [showDeleteModal, setShowDeleteModal] = useState(false);
 
   const handlePlay = () => {
@@ -119,9 +113,7 @@ export default function DownloadItem({ item, queue }: Readonly<DownloadItemProps
         isDownloading
           ? "border-primary/50 shadow-[0_0_20px_rgba(var(--primary),0.15)] bg-card/80"
           : "hover:border-white/10",
-        item.status === "completed"
-          ? "cursor-pointer hover:bg-white/5 hover:scale-[1.01]"
-          : ""
+        item.status === "completed" ? "cursor-pointer hover:bg-white/5 hover:scale-[1.01]" : ""
       )}
     >
       {/* Active Download Background Gradient */}
@@ -151,9 +143,7 @@ export default function DownloadItem({ item, queue }: Readonly<DownloadItemProps
         {/* Progress Overlay for Image */}
         {isDownloading && (
           <div className="absolute inset-0 bg-black/60 flex items-center justify-center backdrop-blur-[1px]">
-            <span className="text-xs font-bold text-primary">
-              {Math.round(item.progress)}%
-            </span>
+            <span className="text-xs font-bold text-primary">{Math.round(item.progress)}%</span>
           </div>
         )}
       </div>
@@ -164,9 +154,7 @@ export default function DownloadItem({ item, queue }: Readonly<DownloadItemProps
             <h4 className="font-bold text-white truncate text-lg leading-tight">
               {item.track.title}
             </h4>
-            <p className="text-sm text-gray-400 truncate">
-              {item.track.artist}
-            </p>
+            <p className="text-sm text-gray-400 truncate">{item.track.artist}</p>
           </div>
           <div className="shrink-0">{getStatusBadge()}</div>
         </div>
@@ -245,9 +233,7 @@ export default function DownloadItem({ item, queue }: Readonly<DownloadItemProps
           </button>
         )}
 
-        {(item.status === "completed" ||
-          item.status === "failed" ||
-          item.status === "paused") && (
+        {(item.status === "completed" || item.status === "failed" || item.status === "paused") && (
           <div className="opacity-0 group-hover:opacity-100 transition-opacity">
             <button
               onClick={(e) => {

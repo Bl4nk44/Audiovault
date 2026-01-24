@@ -37,9 +37,7 @@ export default function RegisterForm() {
         message?: string;
       };
       const errorMessage =
-        err.response?.data?.detail ||
-        err.message ||
-        "Registration failed. Please try again.";
+        err.response?.data?.detail || err.message || "Registration failed. Please try again.";
       toast.error(errorMessage);
     } finally {
       setIsLoading(false);
@@ -60,15 +58,9 @@ export default function RegisterForm() {
   };
 
   return (
-    <form
-      onSubmit={handleSubmit(onSubmit)}
-      className="space-y-6 w-full max-w-md relative z-10"
-    >
+    <form onSubmit={handleSubmit(onSubmit)} className="space-y-6 w-full max-w-md relative z-10">
       <div className="space-y-2">
-        <label
-          htmlFor="username"
-          className="text-sm font-medium ml-1 text-gray-300"
-        >
+        <label htmlFor="username" className="text-sm font-medium ml-1 text-gray-300">
           Username
         </label>
         <div className="relative group">
@@ -106,10 +98,7 @@ export default function RegisterForm() {
       </div>
 
       <div className="space-y-2">
-        <label
-          htmlFor="email"
-          className="text-sm font-medium ml-1 text-gray-300"
-        >
+        <label htmlFor="email" className="text-sm font-medium ml-1 text-gray-300">
           Email
         </label>
         <div className="relative group">
@@ -147,10 +136,7 @@ export default function RegisterForm() {
       </div>
 
       <div className="space-y-2">
-        <label
-          htmlFor="password"
-          className="text-sm font-medium ml-1 text-gray-300"
-        >
+        <label htmlFor="password" className="text-sm font-medium ml-1 text-gray-300">
           Password
         </label>
         <div className="relative group">
@@ -188,10 +174,7 @@ export default function RegisterForm() {
       </div>
 
       <div className="space-y-2">
-        <label
-          htmlFor="confirmPassword"
-          className="text-sm font-medium ml-1 text-gray-300"
-        >
+        <label htmlFor="confirmPassword" className="text-sm font-medium ml-1 text-gray-300">
           Confirm Password
         </label>
         <div className="relative group">

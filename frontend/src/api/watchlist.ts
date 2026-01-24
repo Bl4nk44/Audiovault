@@ -18,10 +18,7 @@ export const watchlistApi = {
   },
 
   update: async (id: string, updates: { auto_download: boolean }) => {
-    const response = await api.patch<WatchlistItem>(
-      `/watchlist/${id}`,
-      updates
-    );
+    const response = await api.patch<WatchlistItem>(`/watchlist/${id}`, updates);
     return response.data;
   },
 

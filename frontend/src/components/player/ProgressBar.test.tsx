@@ -56,33 +56,25 @@ describe("ProgressBar", () => {
   });
 
   it("should be hidden on mobile when not expanded", () => {
-    const { container } = render(
-      <ProgressBar {...defaultProps} isExpanded={false} />,
-    );
+    const { container } = render(<ProgressBar {...defaultProps} isExpanded={false} />);
 
     expect(container.firstChild).toHaveClass("hidden");
     expect(container.firstChild).toHaveClass("md:flex");
   });
 
   it("should be visible when expanded", () => {
-    const { container } = render(
-      <ProgressBar {...defaultProps} isExpanded={true} />,
-    );
+    const { container } = render(<ProgressBar {...defaultProps} isExpanded={true} />);
 
     expect(container.firstChild).not.toHaveClass("hidden");
   });
 
   it("should format time correctly for various values", () => {
-    const { rerender } = render(
-      <ProgressBar {...defaultProps} currentTime={5} duration={65} />,
-    );
+    const { rerender } = render(<ProgressBar {...defaultProps} currentTime={5} duration={65} />);
 
     expect(screen.getByText("0:05")).toBeTruthy();
     expect(screen.getByText("1:05")).toBeTruthy();
 
-    rerender(
-      <ProgressBar {...defaultProps} currentTime={3661} duration={7200} />,
-    );
+    rerender(<ProgressBar {...defaultProps} currentTime={3661} duration={7200} />);
     expect(screen.getByText("61:01")).toBeTruthy();
   });
 });

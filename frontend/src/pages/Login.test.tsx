@@ -6,20 +6,12 @@ import Login from "./Login";
 // Mock framer-motion
 vi.mock("framer-motion", () => ({
   motion: {
-    div: ({
-      children,
-      className,
-    }: {
-      children: React.ReactNode;
-      className?: string;
-    }) => <div className={className}>{children}</div>,
-    p: ({
-      children,
-      className,
-    }: {
-      children: React.ReactNode;
-      className?: string;
-    }) => <p className={className}>{children}</p>,
+    div: ({ children, className }: { children: React.ReactNode; className?: string }) => (
+      <div className={className}>{children}</div>
+    ),
+    p: ({ children, className }: { children: React.ReactNode; className?: string }) => (
+      <p className={className}>{children}</p>
+    ),
   },
 }));
 
@@ -38,7 +30,7 @@ describe("Login", () => {
     return render(
       <MemoryRouter>
         <Login />
-      </MemoryRouter>,
+      </MemoryRouter>
     );
   };
 

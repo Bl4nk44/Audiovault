@@ -15,9 +15,7 @@ describe("PlayerControls", () => {
   it("should render all control buttons", () => {
     render(<PlayerControls {...defaultProps} />);
 
-    expect(
-      screen.getByRole("button", { name: /previous track/i }),
-    ).toBeTruthy();
+    expect(screen.getByRole("button", { name: /previous track/i })).toBeTruthy();
     expect(screen.getByRole("button", { name: /play/i })).toBeTruthy();
     expect(screen.getByRole("button", { name: /next track/i })).toBeTruthy();
   });
@@ -65,9 +63,7 @@ describe("PlayerControls", () => {
   });
 
   it("should apply expanded styles when isExpanded is true", () => {
-    render(
-      <PlayerControls {...defaultProps} isExpanded={true} />,
-    );
+    render(<PlayerControls {...defaultProps} isExpanded={true} />);
 
     // Play button should have larger size class in expanded mode
     const playButton = screen.getByRole("button", { name: /play/i });

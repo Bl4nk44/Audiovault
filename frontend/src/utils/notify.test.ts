@@ -34,10 +34,7 @@ describe("notify", () => {
     it("should add notification to store and show toast", () => {
       notify.success("Operation successful");
 
-      expect(mockAddNotification).toHaveBeenCalledWith(
-        "success",
-        "Operation successful",
-      );
+      expect(mockAddNotification).toHaveBeenCalledWith("success", "Operation successful");
       expect(toast.success).toHaveBeenCalledWith("Operation successful");
     });
   });
@@ -46,10 +43,7 @@ describe("notify", () => {
     it("should add notification to store and show error toast", () => {
       notify.error("Something went wrong");
 
-      expect(mockAddNotification).toHaveBeenCalledWith(
-        "error",
-        "Something went wrong",
-      );
+      expect(mockAddNotification).toHaveBeenCalledWith("error", "Something went wrong");
       expect(toast.error).toHaveBeenCalledWith("Something went wrong");
     });
   });
@@ -58,10 +52,7 @@ describe("notify", () => {
     it("should add notification to store and show info toast with icon", () => {
       notify.info("Information message");
 
-      expect(mockAddNotification).toHaveBeenCalledWith(
-        "info",
-        "Information message",
-      );
+      expect(mockAddNotification).toHaveBeenCalledWith("info", "Information message");
       expect(toast).toHaveBeenCalledWith("Information message", { icon: "ℹ️" });
     });
   });
@@ -70,10 +61,7 @@ describe("notify", () => {
     it("should add notification to store and show warning toast with icon", () => {
       notify.warning("Warning message");
 
-      expect(mockAddNotification).toHaveBeenCalledWith(
-        "warning",
-        "Warning message",
-      );
+      expect(mockAddNotification).toHaveBeenCalledWith("warning", "Warning message");
       expect(toast).toHaveBeenCalledWith("Warning message", { icon: "⚠️" });
     });
   });

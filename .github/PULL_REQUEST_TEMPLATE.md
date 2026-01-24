@@ -1,8 +1,9 @@
 ## Description
+
 <!-- Describe your changes in detail -->
 
-
 ## Type of Change
+
 <!-- Mark the relevant option with an "x" -->
 
 - [ ] 🐛 Bug fix (non-breaking change which fixes an issue)
@@ -16,10 +17,13 @@
 - [ ] 💥 Breaking change (fix or feature that would cause existing functionality to change)
 
 ## Related Issue
+
 <!-- Link to the issue this PR addresses -->
+
 Closes #
 
 ## Testing
+
 <!-- Describe how you tested your changes -->
 
 - [ ] Unit tests added/updated
@@ -28,15 +32,16 @@ Closes #
 - [ ] No new tests needed (explain why)
 
 ## Testing Steps
+
 <!-- Provide steps to manually test your changes -->
 
-1. 
-2. 
-3. 
+1.
+2.
+3.
 
 ## Screenshots (if applicable)
-<!-- Add screenshots of UI changes -->
 
+<!-- Add screenshots of UI changes -->
 
 ## Checklist
 
@@ -51,10 +56,11 @@ Closes #
 - [ ] I have updated the CHANGELOG.md (if applicable)
 
 ## Breaking Changes
+
 <!-- Describe any breaking changes -->
 
 - None / N/A
 
 ## Additional Context
-<!-- Add any other context about the PR -->
 
+<!-- Add any other context about the PR -->

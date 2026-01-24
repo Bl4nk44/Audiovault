@@ -8,10 +8,7 @@ describe("React Router Smoke Test", () => {
     render(
       <MemoryRouter initialEntries={["/test"]}>
         <Routes>
-          <Route
-            path="/test"
-            element={<div data-testid="test-route">Router Works</div>}
-          />
+          <Route path="/test" element={<div data-testid="test-route">Router Works</div>} />
         </Routes>
       </MemoryRouter>
     );

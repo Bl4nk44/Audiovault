@@ -46,10 +46,7 @@ describe("syncApi", () => {
       };
       vi.mocked(api.post).mockResolvedValue({ data: mockResult });
 
-      const result = await syncApi.execute("wl-1", "token-123", [
-        "track-1",
-        "track-2",
-      ]);
+      const result = await syncApi.execute("wl-1", "token-123", ["track-1", "track-2"]);
 
       expect(api.post).toHaveBeenCalledWith("/sync/wl-1/execute", {
         sync_token: "token-123",

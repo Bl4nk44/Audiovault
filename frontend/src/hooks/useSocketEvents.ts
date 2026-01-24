@@ -38,39 +38,27 @@ export function useSocketEvents() {
 
     // Bridge download events to global CustomEvents
     socket.on("download:progress", (data) => {
-      globalThis.dispatchEvent(
-        new CustomEvent("download:progress", { detail: data })
-      );
+      globalThis.dispatchEvent(new CustomEvent("download:progress", { detail: data }));
     });
 
     socket.on("download:completed", (data) => {
-      globalThis.dispatchEvent(
-        new CustomEvent("download:completed", { detail: data })
-      );
+      globalThis.dispatchEvent(new CustomEvent("download:completed", { detail: data }));
     });
 
     socket.on("download:error", (data) => {
-      globalThis.dispatchEvent(
-        new CustomEvent("download:error", { detail: data })
-      );
+      globalThis.dispatchEvent(new CustomEvent("download:error", { detail: data }));
     });
 
     socket.on("download:processing", (data) => {
-      globalThis.dispatchEvent(
-        new CustomEvent("download:processing", { detail: data })
-      );
+      globalThis.dispatchEvent(new CustomEvent("download:processing", { detail: data }));
     });
 
     socket.on("download:paused", (data) => {
-      globalThis.dispatchEvent(
-        new CustomEvent("download:paused", { detail: data })
-      );
+      globalThis.dispatchEvent(new CustomEvent("download:paused", { detail: data }));
     });
 
     socket.on("download:cancelled", (data) => {
-      globalThis.dispatchEvent(
-        new CustomEvent("download:cancelled", { detail: data })
-      );
+      globalThis.dispatchEvent(new CustomEvent("download:cancelled", { detail: data }));
     });
 
     return () => {

@@ -7,15 +7,9 @@ interface VolumeControlProps {
   isExpanded: boolean;
 }
 
-export function VolumeControl({
-  volume,
-  setVolume,
-  isExpanded,
-}: Readonly<VolumeControlProps>) {
+export function VolumeControl({ volume, setVolume, isExpanded }: Readonly<VolumeControlProps>) {
   return (
-    <div
-      className={cn("flex items-center gap-2 group", !isExpanded && "hidden md:flex")}
-    >
+    <div className={cn("flex items-center gap-2 group", !isExpanded && "hidden md:flex")}>
       <button
         onClick={() => setVolume(volume === 0 ? 1 : 0)}
         className="text-gray-400 hover:text-white"

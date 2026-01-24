@@ -8,7 +8,7 @@ describe("NotFound", () => {
     return render(
       <MemoryRouter>
         <NotFound />
-      </MemoryRouter>,
+      </MemoryRouter>
     );
   };
 

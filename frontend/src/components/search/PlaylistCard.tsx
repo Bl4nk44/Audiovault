@@ -86,9 +86,7 @@ export default function PlaylistCard({ playlist }: Readonly<PlaylistCardProps>) 
           <p className="text-sm text-gray-400 capitalize">{playlist.source}</p>
         </div>
         {playlist.tracks_count && (
-          <span className="text-xs text-gray-500">
-            {playlist.tracks_count} tracks
-          </span>
+          <span className="text-xs text-gray-500">{playlist.tracks_count} tracks</span>
         )}
       </div>
 

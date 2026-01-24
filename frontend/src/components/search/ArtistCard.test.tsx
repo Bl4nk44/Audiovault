@@ -34,12 +34,7 @@ vi.mock("framer-motion", () => ({
       className?: string;
       title?: string;
     }) => (
-      <button
-        onClick={onClick}
-        disabled={disabled}
-        className={className}
-        title={title}
-      >
+      <button onClick={onClick} disabled={disabled} className={className} title={title}>
         {children}
       </button>
     ),
@@ -90,7 +85,7 @@ describe("ArtistCard", () => {
     return render(
       <MemoryRouter>
         <ArtistCard artist={artist} />
-      </MemoryRouter>,
+      </MemoryRouter>
     );
   };
 
@@ -148,7 +143,7 @@ describe("ArtistCard", () => {
         source_id: "artist-1",
         source_name: "Test Artist",
         auto_download: true,
-      }),
+      })
     );
     expect(notify.success).toHaveBeenCalledWith("Artist added to watchlist");
   });
