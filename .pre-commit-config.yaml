@@ -37,12 +37,6 @@ repos:
       - id: ruff-format
         files: ^backend/
 
-  - repo: https://github.com/robertcraigie/pyright-python
-    rev: v1.1.408
-    hooks:
-      - id: pyright
-        files: ^backend/
-
   # JavaScript/TypeScript with Prettier
   # NOTE: mirrors-prettier was archived on Apr 11, 2024
   # Latest available version is v3.1.0

@@ -46,12 +46,27 @@ jobs:
           cd backend
           pytest tests/ -v --cov=app --cov-report=xml --cov-fail-under=80
 
-      - name: Upload coverage reports to Codecov
-        uses: codecov/codecov-action@v4
-        with:
-          token: ${{ secrets.CODECOV_TOKEN }}
           file: ./coverage.xml
           fail_ci_if_error: false
+
+  backend-lint:
+    name: Backend Lint (Pyright)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: "pip"
+      - name: Install dependencies
+        run: |
+          pip install -r backend/requirements.txt
+          pip install pyright
+      - name: Run Pyright
+        run: |
+          cd backend
+          pyright
 
   frontend-test:
     name: Frontend Test
