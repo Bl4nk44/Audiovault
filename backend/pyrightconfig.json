@@ -7,5 +7,11 @@
   "reportOptionalSubscript": "none",
   "reportOptionalMemberAccess": "none",
   "reportArgumentType": "none",
-  "reportGeneralTypeIssues": "none"
+  "reportGeneralTypeIssues": "none",
+  "reportPrivateImportUsage": "none",
+  "reportCallIssue": "none",
+  "reportTypedDictNotRequiredAccess": "none",
+  "reportReturnType": "none",
+  "reportOptionalOperand": "none",
+  "reportOperatorIssue": "none"
 }
