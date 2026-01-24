@@ -30,7 +30,7 @@ router = APIRouter()
 async def get_artist_info(
     id: str = Query(..., description="Artist ID"),
     count: int = Query(20, description="Max similar artists"),
-    includeNotPresent: bool = Query(False, description="Include non-present artists"),
+    include_not_present: bool = Query(False, alias="includeNotPresent", description="Include non-present artists"),
     f: str = "xml",
     current_user: User = Depends(subsonic_auth),
     db: AsyncSession = Depends(get_db),
@@ -73,7 +73,7 @@ async def get_artist_info(
 async def get_artist_info2(
     id: str = Query(..., description="Artist ID"),
     count: int = Query(20, description="Max similar artists"),
-    includeNotPresent: bool = Query(False, description="Include non-present artists"),
+    include_not_present: bool = Query(False, alias="includeNotPresent", description="Include non-present artists"),
     f: str = "xml",
     current_user: User = Depends(subsonic_auth),
     db: AsyncSession = Depends(get_db),
@@ -168,7 +168,7 @@ async def get_similar_songs2(
 @router.get("/getPodcasts.view")
 @router.post("/getPodcasts.view")
 async def get_podcasts(
-    includeEpisodes: bool = Query(True, description="Include episodes"),
+    include_episodes: bool = Query(True, alias="includeEpisodes", description="Include episodes"),
     id: str = Query(None, description="Podcast ID"),
     f: str = "xml",
     current_user: User = Depends(subsonic_auth),
