@@ -10,16 +10,16 @@ logger = logging.getLogger(__name__)
 
 async def init_db(db: AsyncSession) -> None:
     try:
-        result = await db.execute(select(User).where(User.username == "admin"))
+        from app.core.config import settings
+
+        admin_username = getattr(settings, "ADMIN_USERNAME", "admin")
+        admin_email = getattr(settings, "ADMIN_EMAIL", "admin@example.com")
+
+        result = await db.execute(select(User).where((User.email == admin_email) | (User.username == admin_username)))
         user = result.scalars().first()
 
         if not user:
             logger.info("Creating default admin user")
-            # Use environment variables for initial setup security
-            from app.core.config import settings
-
-            admin_username = getattr(settings, "ADMIN_USERNAME", "admin")
-            admin_email = getattr(settings, "ADMIN_EMAIL", "admin@example.com")
             # Require password from environment variable for security
             admin_password = getattr(settings, "ADMIN_PASSWORD", None)
 
@@ -46,3 +46,4 @@ async def init_db(db: AsyncSession) -> None:
             logger.info("Admin user already exists")
     except Exception as e:
         logger.error(f"Error creating default admin user: {e}")
+        await db.rollback()
