@@ -349,7 +349,12 @@ export default function AccountSettings() {
               Permanently delete your account and all associated data.
             </p>
           </div>
-          <Button variant="danger" onClick={() => setIsDeleteModalOpen(true)} className="shrink-0">
+          <Button
+            variant="danger"
+            onClick={() => setIsDeleteModalOpen(true)}
+            className="shrink-0"
+            data-testid="delete-account-btn"
+          >
             <Trash2 size={18} className="mr-2" /> Delete Account
           </Button>
         </div>

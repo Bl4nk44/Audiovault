@@ -41,6 +41,7 @@ vi.mock("lucide-react", () => ({
   Save: () => <div>Icon-Save</div>,
   Trash2: () => <div>Icon-Trash</div>,
   User: () => <div>Icon-User</div>,
+  Loader2: () => <div>Icon-Loader</div>,
 }));
 
 vi.mock("../ui/ConfirmModal", () => ({
@@ -106,6 +107,89 @@ describe("AccountSettings", () => {
         new_password: "newpassword",
       });
       expect(notify.success).toHaveBeenCalled();
+    });
+  });
+
+  it("updates username profile", async () => {
+    (api.put as any).mockResolvedValue({ data: { user: { username: "newname" } } });
+    render(<AccountSettings />);
+
+    const usernameInput = document.getElementById("username");
+    const saveBtn = screen.getByText("settings.saveProfile"); // Assuming translation key
+
+    if (!usernameInput) throw new Error("Input not found");
+
+    fireEvent.change(usernameInput, { target: { value: "newname" } });
+    fireEvent.click(saveBtn);
+
+    await waitFor(() => {
+      expect(api.put).toHaveBeenCalledWith(
+        "/users/me",
+        expect.objectContaining({ username: "newname" })
+      );
+      expect(notify.success).toHaveBeenCalledWith("settings.messages.profileUpdated");
+    });
+  });
+
+  it("handles account deletion", async () => {
+    (api.delete as any).mockResolvedValue({});
+    render(<AccountSettings />);
+
+    // Click delete button
+    fireEvent.click(screen.getByTestId("delete-account-btn"));
+
+    // Modal should be open
+    await waitFor(() => expect(screen.getByTestId("confirm-modal")).toBeInTheDocument());
+
+    // Confirm delete
+    fireEvent.click(screen.getByText("Confirm Delete"));
+
+    await waitFor(() => {
+      expect(api.delete).toHaveBeenCalledWith(
+        "/users/me",
+        expect.objectContaining({ params: { delete_library: false } })
+      );
+      expect(notify.success).toHaveBeenCalledWith("Account deleted successfully");
+    });
+  });
+
+  it("handles account deletion error", async () => {
+    (api.delete as any).mockRejectedValue(new Error("Delete failed"));
+    render(<AccountSettings />);
+
+    fireEvent.click(screen.getByTestId("delete-account-btn"));
+    await waitFor(() => expect(screen.getByTestId("confirm-modal")).toBeInTheDocument());
+    fireEvent.click(screen.getByText("Confirm Delete"));
+
+    await waitFor(() => {
+      expect(notify.error).toHaveBeenCalledWith("Failed to delete account");
+    });
+  });
+
+  it("handles avatar upload", async () => {
+    (api.post as any).mockResolvedValue({
+      data: { user: { preferences: { avatar_url: "/new-avatar.jpg" } } },
+    });
+    render(<AccountSettings />);
+
+    // Find hidden file input
+    const fileInput = document.querySelector('input[type="file"]');
+    if (!fileInput) throw new Error("File input not found");
+
+    const file = new File(["(⌐□_□)"], "chucknorris.png", { type: "image/png" });
+
+    // Trigger upload
+    await waitFor(() => {
+      fireEvent.change(fileInput, { target: { files: [file] } });
+    });
+
+    await waitFor(() => {
+      expect(api.post).toHaveBeenCalledWith(
+        "/users/me/avatar",
+        expect.any(FormData),
+        expect.any(Object)
+      );
+      expect(notify.success).toHaveBeenCalledWith("settings.messages.avatarUpdated");
     });
   });
 });

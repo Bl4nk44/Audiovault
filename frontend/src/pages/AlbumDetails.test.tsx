@@ -29,7 +29,27 @@ vi.mock("../components/AddToPlaylistModal", () => ({
   default: ({ isOpen }: any) => (isOpen ? <div data-testid="playlist-modal">Modal</div> : null),
 }));
 
+// Mock useNavigate
+const mockNavigate = vi.fn();
+vi.mock("react-router-dom", async () => {
+  const actual = await vi.importActual("react-router-dom");
+  return {
+    ...actual,
+    useNavigate: () => mockNavigate,
+  };
+});
+
 describe("AlbumDetails Page", () => {
+  // ... existing describe setup ...
+  // I need to be careful not to replace the whole describe block content if I can help it,
+  // but sticking the mock before describe is fine.
+  // And I'll append tests at the end.
+
+  // Wait, I can't put the mock INSIDE describe if I use replace_file_content for the whole file or large chunks.
+  // The mock needs to be top level.
+  // And I need to append tests.
+  // I will use two chunks. One for top level mock, one for appending tests.
+
   const mockAlbum = {
     id: "123",
     title: "Test Album",
@@ -116,5 +136,57 @@ describe("AlbumDetails Page", () => {
     fireEvent.click(playlistBtn);
 
     expect(screen.getByTestId("playlist-modal")).toBeInTheDocument();
+  });
+
+  it("handles navigation to artist profile", async () => {
+    (useQuery as any).mockReturnValue({
+      isLoading: false,
+      data: { ...mockAlbum, artist_id: "artist-123" },
+    });
+    renderWithRouter();
+
+    await waitFor(() => screen.getByText("Test Artist"));
+    fireEvent.click(screen.getByText("Test Artist"));
+
+    expect(mockNavigate).toHaveBeenCalledWith(
+      "/artist/artist-123",
+      expect.objectContaining({ state: { source: "spotify" } })
+    );
+  });
+
+  it("handles back navigation", () => {
+    (useQuery as any).mockReturnValue({ isLoading: false, data: mockAlbum });
+    renderWithRouter();
+
+    fireEvent.click(screen.getByText("Back"));
+    expect(mockNavigate).toHaveBeenCalledWith(-1);
+  });
+
+  it("renders placeholder when cover image is invalid or missing", async () => {
+    // Assuming isValidImageUrl returns false for "invalid-url" based on previous context,
+    // or we mock the util if we want to be strict.
+    // However, AlbumDetails.tsx imports isValidImageUrl.
+    // If isValidImageUrl("invalid-url") is false/true depends on implementation.
+    // Let's assume empty string or null is definitely invalid.
+    const albumEmptyImg = { ...mockAlbum, image_url: "" };
+
+    (useQuery as any).mockReturnValue({ isLoading: false, data: albumEmptyImg });
+    renderWithRouter();
+
+    await waitFor(() => screen.getByText("Test Album"));
+    const img = screen.queryByRole("img", { name: "Test Album" });
+    expect(img).not.toBeInTheDocument();
+    // It should render the Disc icon placeholder
+    // Disc icon is usually an svg, hard to query by role strictly, but we can check if img is absent.
+  });
+
+  it("renders gracefully without release date", async () => {
+    const albumNoDate = { ...mockAlbum, release_date: null };
+    (useQuery as any).mockReturnValue({ isLoading: false, data: albumNoDate });
+    renderWithRouter();
+
+    await waitFor(() => screen.getByText("Test Album"));
+    // Should verify it does not crash and maybe doesn't show "NaN" or similar
+    expect(screen.getByText("Test Album")).toBeInTheDocument();
   });
 });

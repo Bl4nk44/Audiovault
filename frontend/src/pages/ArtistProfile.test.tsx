@@ -1,5 +1,5 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { act, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { MemoryRouter, Route, Routes } from "react-router-dom";
 import { beforeEach, describe, expect, it, type Mock, vi } from "vitest";
 import api from "../services/api";
@@ -123,11 +123,6 @@ describe("ArtistProfile", () => {
   it("renders loading state", () => {
     mockArtistsApi.getById.mockImplementation(() => new Promise(() => {})); // Hang
     renderComponent("123");
-    // Check for spinner or loading class ?
-    // The component renders Loader2.
-    // We can't easily query loader by text, but we can assume if no artist name is there, it's loading.
-    // Or query by class if unique.
-    // Just verifying it doesn't crash here.
   });
 
   it("renders full artist profile", async () => {
@@ -144,7 +139,6 @@ describe("ArtistProfile", () => {
   });
 
   it("handles watchlist toggle (Follow/Unfollow)", async () => {
-    // Case 1: Not watched
     mockArtistsApi.getById.mockResolvedValue({ ...mockArtistFull, spotify_id: "new-id" });
     renderComponent("new-id");
 
@@ -160,10 +154,6 @@ describe("ArtistProfile", () => {
       })
     );
     expect(notify.success).toHaveBeenCalledWith("Following Test Artist");
-
-    // Case 2: Already watched (matches store mock)
-    // Store has "spotify-watched"
-    // Re-render with watched ID
   });
 
   it("handles unfollow logic", async () => {
@@ -209,7 +199,6 @@ describe("ArtistProfile", () => {
     await waitFor(() => expect(screen.getByText("Best Album")).toBeInTheDocument());
 
     const dlAlbumBtns = screen.getAllByTitle("Download Album");
-    // Pick the first one
     fireEvent.click(dlAlbumBtns[0]);
 
     await waitFor(() => {
@@ -226,8 +215,109 @@ describe("ArtistProfile", () => {
     renderComponent("123");
     await waitFor(() => expect(screen.getByTestId("icon-back")).toBeInTheDocument());
 
-    // Can't easily test useNavigate() -1 without full router mock history.
-    // But we can verify the button is clickable without error.
     fireEvent.click(screen.getByTestId("icon-back"));
+  });
+
+  it("handles discography download failure", async () => {
+    mockArtistsApi.getById.mockResolvedValue(mockArtistFull);
+    const errorMsg = "Download failed";
+
+    // Controlled promise to catch loading state
+    let rejectPromise: (reason?: any) => void;
+    (api.post as unknown as Mock).mockReturnValue(
+      new Promise((_, reject) => {
+        rejectPromise = reject;
+      })
+    );
+
+    renderComponent("123");
+    await waitFor(() => expect(screen.getByText("Download Discography")).toBeInTheDocument());
+
+    const dlBtn = screen.getByText("Download Discography");
+    fireEvent.click(dlBtn);
+
+    // Verify loading state
+    await waitFor(() => expect(screen.getByText("Downloading...")).toBeInTheDocument());
+
+    // Trigger failure
+    await act(async () => {
+      rejectPromise!({ response: { data: { detail: errorMsg } } });
+    });
+
+    await waitFor(() => {
+      expect(notify.error).toHaveBeenCalledWith("Failed to queue downloads");
+    });
+
+    // Should return to normal state
+    expect(screen.getByText("Download Discography")).toBeInTheDocument();
+  });
+
+  it("handles single album download failure", async () => {
+    mockArtistsApi.getById.mockResolvedValue(mockArtistFull);
+    const specificError = "Region blocked";
+    (api.post as unknown as Mock).mockRejectedValue({
+      response: { data: { detail: specificError } },
+    });
+
+    renderComponent("123");
+    await waitFor(() => expect(screen.getByText("Best Album")).toBeInTheDocument());
+
+    const dlAlbumBtns = screen.getAllByTitle("Download Album");
+    fireEvent.click(dlAlbumBtns[0]);
+
+    await waitFor(() => {
+      expect(notify.error).toHaveBeenCalledWith(specificError);
+    });
+  });
+
+  it("handles keyboard navigation for albums", async () => {
+    mockArtistsApi.getById.mockResolvedValue(mockArtistFull);
+    renderComponent("123");
+
+    await waitFor(() => expect(screen.getByText("Best Album")).toBeInTheDocument());
+
+    const albumTitle = screen.getByText("Best Album");
+    const card = albumTitle.closest("div[role='button']");
+
+    fireEvent.keyDown(card!, { key: "Enter", code: "Enter" });
+  });
+
+  it("renders placeholder when image is invalid or missing", async () => {
+    const artistWithBadImg = {
+      ...mockArtistFull,
+      image_url: "javascript:alert(1)",
+      albums: [
+        {
+          ...mockArtistFull.albums[0],
+          image_url: undefined,
+          images: { url: "invalid-url" },
+        },
+      ],
+    };
+
+    mockArtistsApi.getById.mockResolvedValue(artistWithBadImg);
+    renderComponent("123");
+
+    await waitFor(() => expect(screen.getByText("Test Artist")).toBeInTheDocument());
+
+    // Ensure image is not rendered due to validation failure
+    const img = screen.queryByAltText("Test Artist");
+    expect(img).not.toBeInTheDocument();
+  });
+
+  it("renders artist with no content gracefully", async () => {
+    const emptyArtist = {
+      id: "empty",
+      name: "Empty Artist",
+      tracks: [],
+      albums: [],
+    };
+    mockArtistsApi.getById.mockResolvedValue(emptyArtist);
+    renderComponent("empty");
+
+    await waitFor(() => expect(screen.getByText("Empty Artist")).toBeInTheDocument());
+
+    expect(screen.queryByText("Popular Tracks")).not.toBeInTheDocument();
+    expect(screen.queryByText("Albums")).not.toBeInTheDocument();
   });
 });

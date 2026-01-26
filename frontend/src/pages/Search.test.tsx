@@ -167,4 +167,66 @@ describe("Search Page Integration", () => {
     });
     spy.mockRestore();
   });
+
+  it("handles partial failure in 'All' search", async () => {
+    (api.get as unknown as Mock).mockImplementation((url) => {
+      if (url.includes("spotify"))
+        return Promise.resolve({ data: [{ id: "s1", title: "Spotify" }] });
+      // YouTube fails silently in the code (catch returns [])
+      if (url.includes("youtube")) return Promise.reject(new Error("YT Fail"));
+      // Deezer fails
+      if (url.includes("deezer")) return Promise.reject(new Error("Deezer Fail"));
+      return Promise.resolve({ data: [] });
+    });
+
+    renderSearch();
+    fireEvent.click(screen.getByTestId("search-all-btn"));
+
+    await waitFor(() => {
+      // Should still show Spotify results
+      expect(screen.getByText("Spotify")).toBeInTheDocument();
+      // Should not crash
+    });
+  });
+
+  it("handles empty results and disables load more", async () => {
+    (api.get as unknown as Mock).mockResolvedValue({ data: [] });
+
+    renderSearch();
+    fireEvent.click(screen.getByTestId("search-btn"));
+
+    await waitFor(() => {
+      // API called
+      expect(api.get).toHaveBeenCalled();
+      // No results (implied by mocked SearchResults or lack of items)
+    });
+
+    // Load more button should NOT be present if hasMore is false
+    // Implementation: if (newResults.length === 0) setHasMore(false)
+    await waitFor(() => {
+      expect(screen.queryByText("search.loadMore")).not.toBeInTheDocument();
+    });
+  });
+
+  it("handles load more error", async () => {
+    // First search succeeds
+    (api.get as unknown as Mock).mockResolvedValueOnce({
+      data: [{ id: "p1", title: "Res 1" }],
+    });
+
+    renderSearch();
+    // Use soundcloud button which maps to a source that throws errors (unlike spotify which swallows them)
+    fireEvent.click(screen.getByTestId("search-error-btn"));
+    await waitFor(() => expect(screen.getByText("Res 1")).toBeInTheDocument());
+
+    // Load more fails
+    const loadMoreBtn = screen.getByText("search.loadMore");
+    (api.get as unknown as Mock).mockRejectedValueOnce(new Error("Load more fail"));
+
+    fireEvent.click(loadMoreBtn);
+
+    await waitFor(() => {
+      expect(notify.error).toHaveBeenCalledWith("Failed to load more");
+    });
+  });
 });
