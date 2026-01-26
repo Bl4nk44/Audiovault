@@ -41,6 +41,7 @@ vi.mock("lucide-react", () => ({
   Save: () => <div>Icon-Save</div>,
   Trash2: () => <div>Icon-Trash</div>,
   User: () => <div>Icon-User</div>,
+  Loader2: () => <div>Icon-Loader</div>,
 }));
 
 vi.mock("../ui/ConfirmModal", () => ({
