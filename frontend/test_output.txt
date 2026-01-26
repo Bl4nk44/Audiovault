@@ -339,4 +339,3 @@ Ignored nodes: comments, script, style
 [2m      Tests [22m [1m[31m1 failed[39m[22m[2m | [22m[1m[32m15 passed[39m[22m[90m (16)[39m
 [2m   Start at [22m 17:44:05
 [2m   Duration [22m 1.38s[2m (transform 96ms, setup 74ms, import 391ms, tests 398ms, environment 428ms)[22m
-
