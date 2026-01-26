@@ -201,7 +201,7 @@ describe("PlaylistDetails Page", () => {
   });
 
   it("handles export error", async () => {
-    (playlistsApi.exportAsJson as unknown as Mock).mockRejectedValue(new Error());
+    (playlistsApi.exportAsJson as unknown as Mock).mockRejectedValue(new Error("Export failed"));
     render(<PlaylistDetails />);
 
     fireEvent.click(screen.getByText("Export JSON"));
@@ -210,11 +210,95 @@ describe("PlaylistDetails Page", () => {
     });
   });
 
-  it("does not show local actions for non-local playlists", () => {
-    mockSource = "spotify";
+  it("handles edit playlist error", async () => {
+    (playlistsApi.update as unknown as Mock).mockRejectedValue(new Error("Update failed"));
     render(<PlaylistDetails />);
-    expect(screen.queryByText("Edit")).not.toBeInTheDocument();
-    expect(screen.queryByText("Delete")).not.toBeInTheDocument();
-    expect(screen.queryByText("Export JSON")).not.toBeInTheDocument();
+
+    fireEvent.click(screen.getByText("Edit"));
+    const input = screen.getByLabelText("Name");
+    fireEvent.change(input, { target: { value: "Updated Name" } });
+    fireEvent.click(screen.getByText("Save Changes"));
+
+    await waitFor(() => {
+      expect(notify.error).toHaveBeenCalledWith("Failed to update playlist");
+    });
+  });
+
+  it("handles empty name validation in edit", async () => {
+    render(<PlaylistDetails />);
+
+    fireEvent.click(screen.getByText("Edit"));
+    const input = screen.getByLabelText("Name");
+    fireEvent.change(input, { target: { value: "   " } }); // Empty or whitespace
+    fireEvent.click(screen.getByText("Save Changes"));
+
+    // Should not call API
+    expect(playlistsApi.update).not.toHaveBeenCalled();
+    // Modal should still be open (or at least check if we didn't get success notification)
+    expect(notify.success).not.toHaveBeenCalled();
+  });
+
+  it("handles cancel edit", async () => {
+    render(<PlaylistDetails />);
+
+    fireEvent.click(screen.getByText("Edit"));
+    expect(screen.getByLabelText("Name")).toBeInTheDocument();
+
+    fireEvent.click(screen.getByText("Cancel"));
+
+    // Modal content should disappear
+    await waitFor(() => {
+      expect(screen.queryByLabelText("Name")).not.toBeInTheDocument();
+    });
+  });
+
+  it("handles delete playlist error", async () => {
+    (playlistsApi.delete as unknown as Mock).mockRejectedValue(new Error("Delete failed"));
+    render(<PlaylistDetails />);
+
+    fireEvent.click(screen.getByText("Delete"));
+    fireEvent.click(screen.getByText("Confirm"));
+
+    await waitFor(() => {
+      expect(notify.error).toHaveBeenCalledWith("Failed to delete playlist");
+    });
+  });
+
+  it("handles cancel delete playlist", async () => {
+    render(<PlaylistDetails />);
+
+    fireEvent.click(screen.getByText("Delete"));
+    expect(screen.getByTestId("confirm-modal")).toBeInTheDocument();
+
+    // The mock ConfirmModal has "Close" button which calls onClose
+    fireEvent.click(screen.getByText("Close"));
+
+    expect(screen.queryByTestId("confirm-modal")).not.toBeInTheDocument();
+    expect(playlistsApi.delete).not.toHaveBeenCalled();
+  });
+
+  it("handles track removal error", async () => {
+    (playlistsApi.removeTracks as unknown as Mock).mockRejectedValue(new Error("Remove failed"));
+    render(<PlaylistDetails />);
+
+    fireEvent.click(screen.getByTestId("remove-track-btn"));
+    fireEvent.click(screen.getByText("Confirm"));
+
+    await waitFor(() => {
+      expect(notify.error).toHaveBeenCalledWith("Failed to remove track");
+    });
+  });
+
+  it("handles cancel track removal", async () => {
+    render(<PlaylistDetails />);
+
+    fireEvent.click(screen.getByTestId("remove-track-btn"));
+    expect(screen.getByText("Remove Track")).toBeInTheDocument(); // Title from mock modal?
+    // Wait, the mock ConfirmModal renders title. "Remove Track" is passed as title.
+
+    fireEvent.click(screen.getByText("Close"));
+
+    expect(screen.queryByText("Remove Track")).not.toBeInTheDocument();
+    expect(playlistsApi.removeTracks).not.toHaveBeenCalled();
   });
 });

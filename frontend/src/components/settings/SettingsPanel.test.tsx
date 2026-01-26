@@ -163,4 +163,96 @@ describe("SettingsPanel", () => {
 
     expect(input).toHaveValue("/new/path");
   });
+
+  it("shows loading state initially", () => {
+    // We need to delay the resolution or just check before waiting?
+    // Since render triggers useEffect -> fetchSettings -> api.get.
+    // api.get is mocked to resolve immediately?
+    // If we want to see loading, we can make mock return a pending promise first?
+    // However, with `await waitFor` in other tests, we assume it finishes.
+    // Here we can try to render and immediately check text.
+    render(<SettingsPanel />);
+    expect(screen.getByText("common.loading")).toBeInTheDocument();
+  });
+
+  it("handles fetch settings error", async () => {
+    (api.get as unknown as Mock).mockRejectedValue(new Error("Fetch failed"));
+    render(<SettingsPanel />);
+
+    await waitFor(() => {
+      expect(notify.error).toHaveBeenCalledWith("common.error");
+    });
+  });
+
+  it("handles save settings error", async () => {
+    render(<SettingsPanel />);
+    await waitFor(() => expect(screen.getByText("common.save")).toBeInTheDocument());
+
+    (api.post as unknown as Mock).mockRejectedValue(new Error("Save failed"));
+
+    fireEvent.click(screen.getByText("common.save"));
+
+    await waitFor(() => {
+      expect(notify.error).toHaveBeenCalledWith("common.error");
+    });
+  });
+
+  it("changes theme and updates document", async () => {
+    render(<SettingsPanel />);
+    await waitFor(() => expect(api.get).toHaveBeenCalled());
+
+    fireEvent.click(screen.getByText("settings.appearance"));
+
+    const oceanThemeBtn = screen.getByText("settings.themes.ocean");
+    fireEvent.click(oceanThemeBtn);
+
+    // Check if state updated (via class on document or store?)
+    // The component does: document.documentElement.className = settings.theme;
+    expect(document.documentElement.className).toBe("ocean");
+  });
+
+  it("updates audio quality and max downloads", async () => {
+    render(<SettingsPanel />);
+    await waitFor(() => expect(api.get).toHaveBeenCalled());
+
+    // Audio Quality (General tab)
+    // Find select by text label? Label is "settings.audioQuality"
+    // There are 2 selects. Audio quality is the second one usually.
+    // Or simpler: find by display value (mocked as "high" -> "quality.high")
+    // Wait, <option> text is "quality.high".
+    // But <select> value is "high".
+    // We can find select via label using getByLabelText?
+    // Markup: <label>...{t("settings.audioQuality")}</label>...<select>
+    // But the label is not linked via htmlFor. It's just a div wrapper.
+    // So getByLabelText won't work easily.
+    // We can rely on `combobox` role interactions.
+
+    const selects = await screen.findAllByRole("combobox");
+    const qualitySelect = selects[1];
+    fireEvent.change(qualitySelect, { target: { value: "lossless" } });
+    expect(qualitySelect).toHaveValue("lossless");
+
+    // Max Downloads
+    const maxDlInput = screen.getByDisplayValue("3");
+    fireEvent.change(maxDlInput, { target: { value: "5" } });
+    expect(maxDlInput).toHaveValue(5);
+  });
+
+  it("renders filename schema preview correctly", async () => {
+    // Set schema
+    render(<SettingsPanel />);
+    await waitFor(() => expect(api.get).toHaveBeenCalled());
+
+    fireEvent.click(screen.getByText("settings.files"));
+
+    const input = screen.getByDisplayValue("{artist} - {title}");
+    fireEvent.change(input, { target: { value: "{artist}/{album}/{title}" } });
+
+    // Check preview text presence
+    // Logic: .replace("{artist}", "The Weeknd")...
+    // "The Weeknd/After Hours/Blinding Lights"
+    expect(screen.getByText("The Weeknd")).toBeInTheDocument();
+    expect(screen.getByText("After Hours")).toBeInTheDocument();
+    expect(screen.getByText("Blinding Lights.mp3")).toBeInTheDocument();
+  });
 });

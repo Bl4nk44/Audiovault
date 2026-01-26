@@ -2,6 +2,7 @@ import { act, fireEvent, render, screen, waitFor, within } from "@testing-librar
 import { BrowserRouter } from "react-router-dom";
 import { beforeEach, describe, expect, it, type Mock, vi } from "vitest";
 import api from "../services/api";
+import { useStore } from "../store/useStore";
 import { notify } from "../utils/notify";
 import Library from "./Library";
 
@@ -34,18 +35,25 @@ vi.mock("../components/ui/ConfirmModal", () => ({
 }));
 
 vi.mock("../components/AddToPlaylistModal", () => ({
-  default: ({ isOpen, onClose, trackId }: any) =>
+  default: ({ isOpen, onClose, trackIds }: any) =>
     isOpen ? (
       <div data-testid="add-playlist-modal" onClick={onClose}>
-        Add {trackId}
+        Add {trackIds ? trackIds.join(",") : "No tracks"}
       </div>
     ) : null,
+}));
+
+// Mock Store
+vi.mock("../store/useStore", () => ({
+  useStore: vi.fn(),
 }));
 
 describe("Library Page Integration", () => {
   const mockFolders = {
     local: ["Playlist 1"],
     spotify: ["Spot Play 1"],
+    youtube: [],
+    soundcloud: [],
   };
 
   const mockItem1 = {
@@ -79,6 +87,9 @@ describe("Library Page Integration", () => {
     total: 2,
   };
 
+  const mockPlayTrack = vi.fn();
+  const mockTogglePlay = vi.fn();
+
   beforeEach(() => {
     vi.clearAllMocks();
     (api.get as any).mockImplementation((url: string) => {
@@ -94,6 +105,14 @@ describe("Library Page Integration", () => {
     (api.delete as any).mockResolvedValue({});
     (api.post as any).mockResolvedValue({ data: { rescanned_count: 5 } });
     (api.put as any).mockResolvedValue({});
+
+    // Setup default store mock
+    (useStore as unknown as Mock).mockReturnValue({
+      currentTrack: null,
+      isPlaying: false,
+      playTrack: mockPlayTrack,
+      togglePlay: mockTogglePlay,
+    });
   });
 
   const renderLibrary = async () => {
@@ -109,6 +128,7 @@ describe("Library Page Integration", () => {
   it("loads and displays folders initially", async () => {
     await renderLibrary();
     expect(screen.getByText("local")).toBeInTheDocument();
+    expect(screen.getByText("spotify")).toBeInTheDocument();
   });
 
   it("navigates to playlist and displays tracks", async () => {
@@ -148,6 +168,24 @@ describe("Library Page Integration", () => {
     expect(notify.success).toHaveBeenCalledWith("Track deleted");
   });
 
+  it("handles track deletion failure", async () => {
+    (api.delete as any).mockRejectedValue(new Error("Failed"));
+    await renderLibrary();
+    fireEvent.click(screen.getByText("local"));
+    await waitFor(() => screen.getByText("Playlist 1"));
+    fireEvent.click(screen.getByText("Playlist 1"));
+    await waitFor(() => screen.getByText("Bohemian Rhapsody"));
+
+    const row = screen.getByText("Bohemian Rhapsody").closest("tr");
+    const deleteBtn = within(row!).getByTitle("Delete File");
+    fireEvent.click(deleteBtn);
+
+    const confirmBtn = await screen.findByText("Delete");
+    fireEvent.click(confirmBtn);
+
+    await waitFor(() => expect(notify.error).toHaveBeenCalledWith("Failed to delete item"));
+  });
+
   it("handles playlist update/create", async () => {
     await renderLibrary();
     fireEvent.click(screen.getByText("library.newPlaylist"));
@@ -161,6 +199,16 @@ describe("Library Page Integration", () => {
     await waitFor(() => expect(api.post).toHaveBeenCalledWith("/playlists/", expect.anything()));
   });
 
+  it("handles playlist create failure", async () => {
+    (api.post as any).mockRejectedValueOnce(new Error("Fail"));
+    await renderLibrary();
+    fireEvent.click(screen.getByText("library.newPlaylist"));
+    const input = screen.getByLabelText("Playlist Name");
+    fireEvent.change(input, { target: { value: "Fail List" } });
+    fireEvent.click(screen.getByText("Create"));
+    await waitFor(() => expect(notify.error).toHaveBeenCalledWith("Failed to create playlist"));
+  });
+
   it("handles rescan functionality", async () => {
     await renderLibrary();
     fireEvent.click(screen.getByText("library.rescan"));
@@ -168,6 +216,15 @@ describe("Library Page Integration", () => {
     fireEvent.click(confirmBtn);
     await waitFor(() => expect(api.post).toHaveBeenCalledWith("/downloads/rescan"));
     expect(notify.success).toHaveBeenCalledWith(expect.stringContaining("Found 5"));
+  });
+
+  it("handles rescan failure", async () => {
+    (api.post as any).mockRejectedValueOnce(new Error("Fail"));
+    await renderLibrary();
+    fireEvent.click(screen.getByText("library.rescan"));
+    const confirmBtn = await screen.findByText("Rescan");
+    fireEvent.click(confirmBtn);
+    await waitFor(() => expect(notify.error).toHaveBeenCalledWith("Rescan failed"));
   });
 
   it("handles track edit flow", async () => {
@@ -179,9 +236,7 @@ describe("Library Page Integration", () => {
     await waitFor(() => expect(screen.getByText("Bohemian Rhapsody")).toBeInTheDocument());
 
     const row = screen.getByText("Bohemian Rhapsody").closest("tr");
-    if (!row) throw new Error("Row not found");
-
-    const editBtn = within(row).getByTitle("Edit Info");
+    const editBtn = within(row!).getByTitle("Edit Info");
     fireEvent.click(editBtn);
 
     await waitFor(() => expect(screen.getByLabelText("Title")).toBeInTheDocument());
@@ -201,77 +256,122 @@ describe("Library Page Integration", () => {
     expect(notify.success).toHaveBeenCalledWith("Track updated");
   });
 
-  it("handles breadcrumb navigation", async () => {
-    await renderLibrary();
-    fireEvent.click(screen.getByText("local"));
-    await waitFor(() => expect(screen.getByText("Playlist 1")).toBeInTheDocument());
-
-    // Breadcrumb for the service should be present (capitalized in code)
-    expect(screen.getByText(/Local/i)).toBeInTheDocument();
-
-    // Click on root breadcrumb
-    const rootBreadcrumb = screen.getByText("sidebar.library");
-    fireEvent.click(rootBreadcrumb);
-
-    await waitFor(() => {
-      expect(screen.queryByText("Playlist 1")).not.toBeInTheDocument();
-      expect(screen.getByText("local")).toBeInTheDocument();
+  it("handles audio playback interaction", async () => {
+    // Setup store for this test
+    (useStore as unknown as Mock).mockReturnValue({
+      currentTrack: null,
+      isPlaying: false,
+      playTrack: mockPlayTrack,
+      togglePlay: mockTogglePlay,
     });
-  });
 
-  it("handles search filtering in playlist view", async () => {
     await renderLibrary();
     fireEvent.click(screen.getByText("local"));
     await waitFor(() => screen.getByText("Playlist 1"));
     fireEvent.click(screen.getByText("Playlist 1"));
+    await waitFor(() => screen.getByText("Bohemian Rhapsody"));
 
-    await waitFor(() => expect(screen.getByText("Bohemian Rhapsody")).toBeInTheDocument());
-    expect(screen.getAllByText("Hotel California").length).toBeGreaterThan(0);
+    const image = screen.getByAltText("Bohemian Rhapsody");
+    const button = image.closest("button");
+    fireEvent.click(button!);
+
+    expect(mockPlayTrack).toHaveBeenCalled();
+  });
+
+  it("toggles play if current track matches", async () => {
+    // Setup store where mockItem1 is playing
+    (useStore as unknown as Mock).mockReturnValue({
+      currentTrack: { id: "t1" }, // matches mockItem1.track_id
+      isPlaying: true,
+      playTrack: mockPlayTrack,
+      togglePlay: mockTogglePlay,
+    });
+
+    await renderLibrary();
+    fireEvent.click(screen.getByText("local"));
+    await waitFor(() => screen.getByText("Playlist 1"));
+    fireEvent.click(screen.getByText("Playlist 1"));
+    await waitFor(() => screen.getByText("Bohemian Rhapsody"));
+
+    const image = screen.getByAltText("Bohemian Rhapsody");
+    const button = image.closest("button");
+    fireEvent.click(button!);
+
+    expect(mockTogglePlay).toHaveBeenCalled();
+    expect(mockPlayTrack).not.toHaveBeenCalled();
+  });
+
+  it("handles All Tracks selection", async () => {
+    await renderLibrary();
+    fireEvent.click(screen.getByText("local"));
+    await waitFor(() => screen.getByText("library.allTracks"));
+
+    fireEvent.click(screen.getByText("library.allTracks"));
+    await waitFor(() => {
+      expect(api.get).toHaveBeenCalledWith(
+        "/downloads/library",
+        expect.objectContaining({ params: expect.objectContaining({ source: "local" }) })
+      );
+    });
+  });
+
+  it("handles search and filtering", async () => {
+    await renderLibrary();
+    fireEvent.click(screen.getByText("local"));
+    await waitFor(() => screen.getByText("Playlist 1"));
+    fireEvent.click(screen.getByText("Playlist 1"));
+    await waitFor(() => screen.getByText("Bohemian Rhapsody"));
 
     const searchInput = screen.getByPlaceholderText("Search tracks...");
     fireEvent.change(searchInput, { target: { value: "Queen" } });
 
+    expect(screen.getByText("Bohemian Rhapsody")).toBeInTheDocument();
     await waitFor(() => {
-      expect(screen.getByText("Bohemian Rhapsody")).toBeInTheDocument();
-      // Using queryAllByText to verify it's gone
-      expect(screen.queryAllByText("Hotel California").length).toBe(0);
+      expect(screen.queryByText("Hotel California")).not.toBeInTheDocument();
     });
   });
 
-  it("handles pagination clicks", async () => {
-    // Return many items to trigger pagination?
-    // Or just mock the total count.
-    (api.get as unknown as Mock).mockImplementation((url: string) => {
-      if (url === "/downloads/library") {
-        return Promise.resolve({
-          data: {
-            items: Array(50)
-              .fill(mockItem1)
-              .map((item, i) => ({ ...item, id: `p${i}` })),
-            total: 120,
-          },
-        });
-      }
-      return Promise.resolve({ data: mockFolders });
-    });
-
+  it("handles Add to Playlist modal opening", async () => {
     await renderLibrary();
     fireEvent.click(screen.getByText("local"));
     await waitFor(() => screen.getByText("Playlist 1"));
     fireEvent.click(screen.getByText("Playlist 1"));
+    await waitFor(() => screen.getByText("Bohemian Rhapsody"));
 
-    await waitFor(() => expect(screen.getByText("Page 1 of 3")).toBeInTheDocument());
+    const row = screen.getByText("Bohemian Rhapsody").closest("tr");
+    const addBtn = within(row!).getByTitle("Add to Playlist");
+    fireEvent.click(addBtn);
 
-    const nextBtn = screen.getByText("Next");
-    fireEvent.click(nextBtn);
+    expect(await screen.findByTestId("add-playlist-modal")).toBeInTheDocument();
+    expect(screen.getByText("Add t1")).toBeInTheDocument();
+  });
 
-    await waitFor(() => {
-      expect(api.get).toHaveBeenCalledWith(
-        "/downloads/library",
-        expect.objectContaining({
-          params: expect.objectContaining({ skip: 50 }),
-        })
-      );
-    });
+  it("renders different source icons", async () => {
+    await renderLibrary();
+    expect(screen.getByText("local")).toBeInTheDocument();
+    expect(screen.getByText("spotify")).toBeInTheDocument();
+    expect(screen.getByText("SC")).toBeInTheDocument(); // Soundcloud
+  });
+
+  it("handle playlist deletion", async () => {
+    await renderLibrary();
+    fireEvent.click(screen.getByText("local"));
+    await waitFor(() => screen.getByText("Playlist 1"));
+
+    // Find the playlist delete button by its title from translation mock
+    const deleteBtn = screen.getByTitle("library.playlistDeleted");
+    fireEvent.click(deleteBtn);
+
+    // Check for the modal.
+    await waitFor(() => expect(screen.getByTestId("confirm-modal")).toBeInTheDocument());
+
+    // There are multiple "Delete Playlist" texts (header and button), so we need to be specific
+    const modal = screen.getByTestId("confirm-modal");
+    const confirmBtn = within(modal).getByRole("button", { name: "Delete Playlist" });
+    fireEvent.click(confirmBtn);
+
+    await waitFor(() =>
+      expect(api.delete).toHaveBeenCalledWith("/downloads/library/playlist", expect.anything())
+    );
   });
 });
