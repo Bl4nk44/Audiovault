@@ -2,7 +2,6 @@
 
 # Audiovault
 
-**Your Personal Music Sanctuary.**
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![GitHub Release](https://img.shields.io/github/v/release/Bl4nk44/Audiovault?logo=github)](https://github.com/Bl4nk44/Audiovault/releases)
@@ -104,17 +103,6 @@ Turn Audiovault into your personal Spotify.
 ## 🚀 Getting Started
 
 The recommended way to run Audiovault is via **Docker**.
-
-### System Requirements
-
-- **OS**: Windows, macOS, or Linux (any OS running Docker)
-- **CPU**: 2 vCPU cores (Minimum). `yt-dlp` benefits from faster CPUs during encoding
-- **RAM**:
-  - **Minimum**: 2 GB
-  - **Recommended**: 4 GB (Smooth operation for heavy encoding tasks)
-- **Storage**:
-  - Application: ~2 GB (Docker Images & Database)
-  - Content: Depends on your music library size
 
 ### Installation
 
