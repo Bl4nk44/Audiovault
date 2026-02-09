@@ -181,10 +181,8 @@ async def test_transform_path_resolution_candidate(db_session: AsyncSession):
         patch("os.path.relpath") as mock_relpath,
     ):
         mock_exists.side_effect = lambda p: os.path.normpath(p) == os.path.normpath("C:/music/admin/song.mp3")
-        mock_relpath.side_effect = (
-            lambda path, start: "admin/song.mp3"
-            if os.path.normpath(path) == os.path.normpath("C:/music/admin/song.mp3")
-            else "song.mp3"
+        mock_relpath.side_effect = lambda path, start: (
+            "admin/song.mp3" if os.path.normpath(path) == os.path.normpath("C:/music/admin/song.mp3") else "song.mp3"
         )
 
         item_data, _ = library_data_service._transform_download_item(dl)
