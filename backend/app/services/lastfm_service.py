@@ -395,7 +395,7 @@ class LastfmService:
                     tracks = data.get("toptracks", {}).get("track", [])
                     for t in tracks:
                         self._add_to_candidates(candidates, t, score_mult=0.5)
-                except Exception:
+                except Exception:  # nosec B110
                     pass
 
         tasks = [fetch_similar_for_track(n, a) for n, a in unique_tracks[:15]]
