@@ -53,35 +53,102 @@ class LyricsService:
         normalized = f"{artist.lower().strip()}:{title.lower().strip()}"
         return f"lyrics:{normalized}"
 
-    async def get_lyrics(self, artist: str, title: str, use_cache: bool = True) -> Optional[dict]:
+    async def get_lyrics(
+        self, artist: str, title: str, use_cache: bool = True, track_id: Optional[str] = None
+    ) -> Optional[dict]:
         """
         Fetch lyrics for a song.
-
-        Args:
-            artist: Artist name
-            title: Song title
-            use_cache: Whether to use Redis cache
-
-        Returns:
-            Dict with lyrics data or None if not found
+        Checks cache, then DB metadata (if track_id provided), then LRCLIB, then Genius.
         """
         if not artist or not title:
             return None
 
         cache_key = self._get_cache_key(artist, title)
 
-        # Try cache first
+        # 1. Try cache first
         if use_cache:
             cached = await self._get_from_cache(cache_key, artist, title)
             if cached:
                 return cached
 
-        # Fetch from Genius
+        # 2. Try DB metadata if track_id is provided
+        db_lyrics = None
+        if track_id:
+            try:
+                from uuid import UUID
+
+                from app.db.database import SessionLocal
+                from app.models.track import Track
+                from sqlalchemy import select
+
+                async with SessionLocal() as db:
+                    result = await db.execute(select(Track).where(Track.id == UUID(str(track_id))))
+                    track = result.scalar_one_or_none()
+                    if track and track.metadata_content and track.metadata_content.get("lyrics"):
+                        # Check if it has synced lyrics format
+                        lyrics_text = track.metadata_content["lyrics"]
+                        is_synced = "[" in lyrics_text and "]" in lyrics_text
+
+                        db_lyrics = {
+                            "found": True,
+                            "lyrics": lyrics_text,
+                            "synced_lyrics": lyrics_text if is_synced else None,
+                            "source": "local",
+                        }
+                        # Cache it for future use without DB lookup
+                        await self._cache_result(cache_key, db_lyrics, LYRICS_CACHE_TTL)
+                        return db_lyrics
+            except Exception as e:
+                logger.warning(f"Failed to fetch lyrics from DB metadata: {e}")
+
+        # 3. Try LRCLIB for synced lyrics (high priority)
+        lrclib_data = await self._get_from_lrclib(artist, title)
+        if lrclib_data and lrclib_data.get("found"):
+            await self._cache_result(cache_key, lrclib_data, LYRICS_CACHE_TTL)
+            return lrclib_data
+
+        # 4. Fetch from Genius (fallback for plain lyrics)
         genius = self._get_genius_client()
         if not genius:
-            return None
+            return lrclib_data  # return LRCLIB negative result if Genius is unavailable
 
         return await self._fetch_and_cache_genius(genius, artist, title, cache_key)
+
+    async def _get_from_lrclib(self, artist: str, title: str) -> Optional[dict]:
+        """
+        Fetch lyrics from LRCLIB API.
+        LRCLIB provides high-quality synced lyrics (LRC format).
+        """
+        import httpx
+
+        url = "https://lrclib.net/api/get"
+        params = {
+            "artist_name": artist,
+            "track_name": title,
+        }
+
+        try:
+            async with httpx.AsyncClient(timeout=10.0) as client:
+                response = await client.get(url, params=params)
+                if response.status_code == 200:
+                    data = response.json()
+                    return {
+                        "found": True,
+                        "lyrics": data.get("plainLyrics") or data.get("syncedLyrics"),
+                        "synced_lyrics": data.get("syncedLyrics"),
+                        "title": data.get("trackName"),
+                        "artist": data.get("artistName"),
+                        "album": data.get("albumName"),
+                        "source": "lrclib",
+                    }
+                elif response.status_code == 404:
+                    logger.info(f"LRCLIB: No lyrics found for {artist} - {title}")
+                else:
+                    logger.warning(f"LRCLIB: API error {response.status_code} for {artist} - {title}")
+        except Exception as e:
+            logger.error(f"LRCLIB: Request failed for {artist} - {title}: {e}")
+
+        return {"found": False, "lyrics": None, "synced_lyrics": None}
 
     async def _get_from_cache(self, cache_key: str, artist: str, title: str) -> Optional[dict]:
         """Try to retrieve lyrics from cache."""
@@ -109,11 +176,11 @@ class LyricsService:
             result = {
                 "found": True,
                 "lyrics": song.lyrics,
+                "synced_lyrics": None,
                 "title": song.title,
                 "artist": song.artist,
                 "url": song.url,
                 "album": getattr(song, "album", None),
-                "release_date": getattr(song, "release_date", None),
             }
 
             # Cache successful result

@@ -8,6 +8,7 @@ from app.api.v1 import (
     deezer,
     downloads,
     history,
+    lastfm,
     lyrics,
     playlists,
     settings,
@@ -34,6 +35,7 @@ api_router.include_router(youtube.router, prefix="/youtube", tags=["youtube"])
 api_router.include_router(dashboard.router, prefix="/dashboard", tags=["dashboard"])
 api_router.include_router(stream.router, prefix="/stream", tags=["stream"])
 api_router.include_router(lyrics.router, prefix="/lyrics", tags=["lyrics"])
+api_router.include_router(lastfm.router, prefix="/lastfm", tags=["lastfm"])
 api_router.include_router(audit.router, prefix="/audit", tags=["audit"])
 api_router.include_router(storage.router, prefix="/storage", tags=["storage"])
 

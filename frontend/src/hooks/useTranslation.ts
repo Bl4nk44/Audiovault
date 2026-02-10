@@ -1,5 +1,5 @@
-import { useStore } from "../store/useStore";
 import { translations } from "../i18n/translations";
+import { useStore } from "../store/useStore";
 
 import { useCallback } from "react";
 
@@ -29,7 +29,7 @@ export function useTranslation() {
   const language = (user?.preferences?.language as keyof typeof translations) || "en";
 
   const t = useCallback(
-    (path: string): string => {
+    (path: string, defaultValue?: string): string => {
       const keys = path.split(".");
 
       // Try current language
@@ -46,7 +46,7 @@ export function useTranslation() {
         if (found) return found;
       }
 
-      return path;
+      return defaultValue || path;
     },
     [language]
   );

@@ -46,19 +46,45 @@ export default function Player() {
   }, [currentTrack]);
 
   // Record history
+  // Record history and Scrobble
   useEffect(() => {
-    if (currentTime > 30 && !hasRecordedRef.current && currentTrack) {
-      hasRecordedRef.current = true;
-      import("../../services/api").then((module) => {
-        module.default
-          .post("/history/record", {
-            track_id: currentTrack.id,
-            duration_played: 30,
-          })
-          .catch((err) => console.error("Failed to record history", err));
+    // 1. Scrobble Now Playing when track changes
+    if (currentTrack && isPlaying && audioRef.current && audioRef.current.currentTime < 5) {
+      import("../../services/lastfm").then((mod) => {
+        mod.scrobbleNowPlaying(currentTrack.title, currentTrack.artist, currentTrack.album);
       });
     }
-  }, [currentTime, currentTrack]);
+  }, [currentTrack, isPlaying]);
+
+  useEffect(() => {
+    // 2. Scrobble Track after 30s or 50%
+    if (currentTrack && !hasRecordedRef.current) {
+      // Logic: Audivault history records at 30s. Last.fm matches this often.
+      if (currentTime > 30) {
+        hasRecordedRef.current = true;
+
+        // internal history
+        import("../../services/api").then((module) => {
+          module.default
+            .post("/history/record", {
+              track_id: currentTrack.id,
+              duration_played: 30,
+            })
+            .catch((err) => console.error("Failed to record history", err));
+        });
+
+        // Last.fm Scrobble
+        import("../../services/lastfm").then((mod) => {
+          mod.scrobbleTrack(
+            currentTrack.title,
+            currentTrack.artist,
+            Math.floor(Date.now() / 1000) - 30, // rough timestamp
+            currentTrack.album
+          );
+        });
+      }
+    }
+  }, [currentTime, currentTrack, duration]);
 
   // Playback Control
   useEffect(() => {
@@ -233,7 +259,11 @@ export default function Player() {
       </motion.div>
 
       {/* Lyrics Panel */}
-      <LyricsPanel isOpen={lyricsOpen} onClose={() => setLyricsOpen(false)} />
+      <LyricsPanel
+        isOpen={lyricsOpen}
+        onClose={() => setLyricsOpen(false)}
+        currentTime={currentTime}
+      />
     </>
   );
 }

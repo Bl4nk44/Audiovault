@@ -75,12 +75,13 @@ export const playlistsApi = {
     await api.delete(`/playlists/${id}`);
   },
 
-  addTracks: async (id: string, trackIds: string[]) => {
-    const data: PlaylistTrackAddRequest = { track_ids: trackIds };
-    const response = await api.post<{ status: string; added_count: number }>(
-      `/playlists/${id}/tracks`,
-      data
-    );
+  addTracks: async (id: string, track_ids: string[]) => {
+    const data: PlaylistTrackAddRequest = { track_ids };
+    const response = await api.post<{
+      added_count: number;
+      duplicate_count: number;
+      total_processed: number;
+    }>(`/playlists/${id}/tracks`, data);
     return response.data;
   },
 

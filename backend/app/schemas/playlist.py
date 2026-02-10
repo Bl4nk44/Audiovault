@@ -21,7 +21,14 @@ class PlaylistUpdate(BaseModel):
 
 
 class PlaylistTrackAdd(BaseModel):
-    track_ids: list[UUID]
+    # Supports both UUID strings and "external:artist:track" format
+    track_ids: list[str]
+
+
+class PlaylistTrackAddResponse(BaseModel):
+    added_count: int
+    duplicate_count: int
+    total_processed: int
 
 
 class PlaylistTrackResponse(BaseModel):

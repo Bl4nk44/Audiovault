@@ -16,6 +16,7 @@ export const es = {
     library: "Mi Biblioteca",
     downloads: "Descargas",
     settings: "Ajustes",
+    recommendations: "Recomendaciones",
     logs: "Registros",
   },
   dashboard: {
@@ -171,5 +172,15 @@ export const es = {
     removeFromWatchlist: "Eliminar de seguimiento",
     newItems: "nuevos",
     addToWatchlist: "Añadir a seguimiento",
+  },
+  recommendations: {
+    title: "Descubrimiento musical",
+    subtitle: "Selecciones personalizadas basadas en tus hábitos de escucha",
+  },
+  lastfm: {
+    connect: "Conectar con Last.fm",
+    connected: "¡Conectado exitosamente con Last.fm!",
+    error: "Error al conectar con Last.fm",
+    scrobbling: "Scrobbling activado",
   },
 };

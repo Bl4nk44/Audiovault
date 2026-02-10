@@ -54,19 +54,14 @@ async def test_stream_track_success(client: AsyncClient, admin_token_headers):
         with patch("app.api.v1.stream._extract_direct_url", new_callable=AsyncMock) as mock_ext:
             mock_ext.return_value = ("https://googlevideo.com/stream", {"User-Agent": "test"})
 
-            async def mock_stream_content(url, headers):
-                yield b"audio_chunk"
+            response = await client.get(
+                f"/api/v1/stream/{track_id}.mp3",
+                headers=admin_token_headers,
+                follow_redirects=False,
+            )
 
-            with patch("app.api.v1.stream._stream_content", side_effect=mock_stream_content):
-                response = await client.get(f"/api/v1/stream/{track_id}.mp3", headers=admin_token_headers)
-
-                assert response.status_code == 200
-                assert response.headers["content-type"] == "audio/mpeg"
-                # For StreamingResponse, we read the content
-                content = b""
-                async for chunk in response.aiter_bytes():
-                    content += chunk
-                assert content == b"audio_chunk"
+            assert response.status_code == 302
+            assert response.headers["location"] == "https://googlevideo.com/stream"
 
 
 @pytest.mark.asyncio

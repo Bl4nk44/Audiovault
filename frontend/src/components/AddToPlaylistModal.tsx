@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { toast } from "react-hot-toast";
 import { useTranslation } from "react-i18next";
 import { IoAdd, IoCheckmark, IoClose, IoMusicalNote } from "react-icons/io5";
 import { playlistsApi } from "../api/playlists";
@@ -63,12 +64,39 @@ const AddToPlaylistModal: React.FC<AddToPlaylistModalProps> = ({ isOpen, onClose
 
   const handleAddToPlaylist = async (playlistId: string) => {
     try {
-      await playlistsApi.addTracks(playlistId, trackIds);
-      setSuccessMsg(t("playlist.add.success", "Added to playlist"));
-      setTimeout(() => {
-        onClose();
-        setSuccessMsg(null);
-      }, 1000);
+      const response = await playlistsApi.addTracks(playlistId, trackIds);
+
+      const { added_count, duplicate_count } = response;
+
+      if (added_count > 0) {
+        toast.success(
+          t("playlist.add.success", `Added ${added_count} tracks to playlist`, {
+            count: added_count,
+          })
+        );
+      }
+
+      if (duplicate_count > 0) {
+        toast.error(
+          t("playlist.add.duplicates", `${duplicate_count} tracks were already in the playlist`, {
+            count: duplicate_count,
+          }),
+          {
+            icon: "ℹ️",
+            duration: 4000,
+          }
+        );
+      }
+
+      // Trigger refresh
+      globalThis.dispatchEvent(new CustomEvent("library:refresh"));
+
+      if (added_count > 0) {
+        setTimeout(() => {
+          onClose();
+          setSuccessMsg(null);
+        }, 1500);
+      }
     } catch (err) {
       console.error("Failed to add tracks", err);
       setErrorMsg(t("playlist.add.error", "Failed to add tracks"));
@@ -83,7 +111,7 @@ const AddToPlaylistModal: React.FC<AddToPlaylistModalProps> = ({ isOpen, onClose
         {/* Header */}
         <div className="flex items-center justify-between p-4 border-b border-white/5 bg-zinc-800/50">
           <h2 className="text-lg font-bold text-white flex items-center gap-2">
-            <IoMusicalNote className="text-primary-500" />
+            <IoMusicalNote className="text-primary" />
             {t("playlist.modal.title", "Add to Playlist")}
           </h2>
           <button
@@ -119,7 +147,7 @@ const AddToPlaylistModal: React.FC<AddToPlaylistModalProps> = ({ isOpen, onClose
                 value={newPlaylistName}
                 onChange={(e) => setNewPlaylistName(e.target.value)}
                 placeholder={t("playlist.create.placeholder", "Playlist name")}
-                className="w-full bg-zinc-950 border border-white/10 rounded px-3 py-2 text-white focus:outline-none focus:border-primary-500 mb-2"
+                className="w-full bg-zinc-950 border border-white/10 rounded px-3 py-2 text-white focus:outline-none focus:border-primary mb-2"
               />
               <div className="flex justify-end gap-2">
                 <button
@@ -132,7 +160,7 @@ const AddToPlaylistModal: React.FC<AddToPlaylistModalProps> = ({ isOpen, onClose
                 <button
                   type="submit"
                   disabled={!newPlaylistName.trim()}
-                  className="px-3 py-1.5 text-sm bg-primary-600 hover:bg-primary-500 text-white rounded disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="px-3 py-1.5 text-sm bg-primary hover:opacity-80 text-white rounded disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {t("common.create", "Create")}
                 </button>
@@ -141,9 +169,9 @@ const AddToPlaylistModal: React.FC<AddToPlaylistModalProps> = ({ isOpen, onClose
           ) : (
             <button
               onClick={() => setCreating(true)}
-              className="w-full flex items-center gap-3 p-3 mb-2 rounded-lg hover:bg-white/5 text-left group transition-colors border border-dashed border-white/10 hover:border-primary-500/50"
+              className="w-full flex items-center gap-3 p-3 mb-2 rounded-lg hover:bg-white/5 text-left group transition-colors border border-dashed border-white/10 hover:border-primary/50"
             >
-              <div className="w-10 h-10 flex items-center justify-center bg-white/5 rounded group-hover:bg-primary-500/20 text-white/50 group-hover:text-primary-500 transition-colors">
+              <div className="w-10 h-10 flex items-center justify-center bg-white/5 rounded group-hover:bg-primary/20 text-white/50 group-hover:text-primary transition-colors">
                 <IoAdd size={24} />
               </div>
               <span className="font-medium text-zinc-300 group-hover:text-white">
@@ -153,15 +181,16 @@ const AddToPlaylistModal: React.FC<AddToPlaylistModalProps> = ({ isOpen, onClose
           )}
 
           <div className="space-y-1">
-            {loading ? (
-              <div className="text-center py-4 text-zinc-500">Loading layouts...</div>
-            ) : playlists.length === 0 ? (
-              !creating && (
-                <div className="text-center py-4 text-zinc-500 text-sm">
-                  No playlists found. Create one above!
-                </div>
-              )
-            ) : (
+            {loading && <div className="text-center py-4 text-zinc-500">Loading layouts...</div>}
+
+            {!loading && playlists.length === 0 && !creating && (
+              <div className="text-center py-4 text-zinc-500 text-sm">
+                No playlists found. Create one above!
+              </div>
+            )}
+
+            {!loading &&
+              playlists.length > 0 &&
               playlists.map((pl) => (
                 <button
                   key={pl.id}
@@ -177,8 +206,7 @@ const AddToPlaylistModal: React.FC<AddToPlaylistModalProps> = ({ isOpen, onClose
                     <p className="text-xs text-zinc-500">{pl.tracks_count || 0} tracks</p>
                   </div>
                 </button>
-              ))
-            )}
+              ))}
           </div>
         </div>
       </div>

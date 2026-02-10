@@ -15,6 +15,8 @@ from pydantic import BaseModel
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+USE_CACHE_DESCRIPTION = "Whether to use cached results instead of fetching from external APIs"
+
 router = APIRouter()
 
 
@@ -23,6 +25,7 @@ class LyricsResponse(BaseModel):
 
     found: bool
     lyrics: Optional[str] = None
+    synced_lyrics: Optional[str] = None
     title: Optional[str] = None
     artist: Optional[str] = None
     url: Optional[str] = None
@@ -40,6 +43,7 @@ class LyricsSearchRequest(BaseModel):
 @router.get("/track/{track_id}", response_model=LyricsResponse)
 async def get_lyrics_by_track(
     track_id: UUID,
+    use_cache: bool = Query(True, description=USE_CACHE_DESCRIPTION),
     current_user: User = Depends(get_current_active_user),
     db: AsyncSession = Depends(get_db),
 ):
@@ -57,8 +61,8 @@ async def get_lyrics_by_track(
     if not track.artist or not track.title:
         raise HTTPException(status_code=400, detail="Track missing artist or title information")
 
-    # Fetch lyrics
-    lyrics_data = await lyrics_service.get_lyrics(track.artist, track.title)
+    # Fetch lyrics with track_id context for local metadata
+    lyrics_data = await lyrics_service.get_lyrics(track.artist, track.title, use_cache=use_cache, track_id=track_id)
 
     if not lyrics_data:
         return LyricsResponse(found=False)
@@ -66,23 +70,26 @@ async def get_lyrics_by_track(
     return LyricsResponse(
         found=lyrics_data.get("found", False),
         lyrics=lyrics_data.get("lyrics"),
+        synced_lyrics=lyrics_data.get("synced_lyrics"),
         title=lyrics_data.get("title"),
         artist=lyrics_data.get("artist"),
         url=lyrics_data.get("url"),
         album=lyrics_data.get("album"),
+        cached=lyrics_data.get("cached", False),
     )
 
 
 @router.post("/search", response_model=LyricsResponse)
 async def search_lyrics(
     request: LyricsSearchRequest,
+    use_cache: bool = Query(True, description=USE_CACHE_DESCRIPTION),
     current_user: User = Depends(get_current_active_user),
 ):
     """
     Search for lyrics by artist and title.
     Does not require track to exist in database.
     """
-    lyrics_data = await lyrics_service.get_lyrics(request.artist, request.title)
+    lyrics_data = await lyrics_service.get_lyrics(request.artist, request.title, use_cache=use_cache)
 
     if not lyrics_data:
         return LyricsResponse(found=False)
@@ -90,10 +97,12 @@ async def search_lyrics(
     return LyricsResponse(
         found=lyrics_data.get("found", False),
         lyrics=lyrics_data.get("lyrics"),
+        synced_lyrics=lyrics_data.get("synced_lyrics"),
         title=lyrics_data.get("title"),
         artist=lyrics_data.get("artist"),
         url=lyrics_data.get("url"),
         album=lyrics_data.get("album"),
+        cached=lyrics_data.get("cached", False),
     )
 
 
@@ -101,12 +110,13 @@ async def search_lyrics(
 async def search_lyrics_get(
     artist: str = Query(..., description="Artist name"),
     title: str = Query(..., description="Song title"),
+    use_cache: bool = Query(True, description=USE_CACHE_DESCRIPTION),
     current_user: User = Depends(get_current_active_user),
 ):
     """
     Search for lyrics by artist and title (GET version for easy testing).
     """
-    lyrics_data = await lyrics_service.get_lyrics(artist, title)
+    lyrics_data = await lyrics_service.get_lyrics(artist, title, use_cache=use_cache)
 
     if not lyrics_data:
         return LyricsResponse(found=False)
@@ -114,8 +124,10 @@ async def search_lyrics_get(
     return LyricsResponse(
         found=lyrics_data.get("found", False),
         lyrics=lyrics_data.get("lyrics"),
+        synced_lyrics=lyrics_data.get("synced_lyrics"),
         title=lyrics_data.get("title"),
         artist=lyrics_data.get("artist"),
         url=lyrics_data.get("url"),
         album=lyrics_data.get("album"),
+        cached=lyrics_data.get("cached", False),
     )

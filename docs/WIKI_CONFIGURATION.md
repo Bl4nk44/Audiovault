@@ -57,6 +57,14 @@ SPOTIFY_CLIENT_SECRET=your_client_secret
 SPOTIFY_CACHE_EXPIRE_MINUTES=60
 ```
 
+### ![Genius](https://img.shields.io/badge/Genius-ffff00?style=flat-square&logo=genius&logoColor=black) Lyrics
+
+```bash
+# Get API token: https://genius.com/api-clients
+# Create an "API Client" and use the "Client Access Token" (NOT Client ID/Secret)
+GENIUS_API_TOKEN=your_genius_access_token_here
+```
+
 ### ![YouTube](https://img.shields.io/badge/YouTube-FF0000?style=flat-square&logo=youtube&logoColor=white) Integration
 
 ```bash

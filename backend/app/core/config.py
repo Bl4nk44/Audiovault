@@ -2,7 +2,7 @@ import os
 from pathlib import Path
 
 from pydantic import field_validator
-from pydantic_settings import BaseSettings
+from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class Settings(BaseSettings):
@@ -45,6 +45,10 @@ class Settings(BaseSettings):
 
     # Genius API for lyrics
     GENIUS_API_TOKEN: str | None = None
+
+    # Last.fm API
+    LASTFM_API_KEY: str | None = None
+    LASTFM_API_SECRET: str | None = None
 
     DOWNLOAD_DIR: str = os.getenv("DOWNLOAD_DIR", os.path.join(os.getcwd(), "downloads"))
     MAX_PARALLEL_DOWNLOADS: int = 3
@@ -89,9 +93,7 @@ class Settings(BaseSettings):
                         return rel_path
         return v
 
-    class Config:
-        env_file = ".env"
-        case_sensitive = True
+    model_config = SettingsConfigDict(env_file=".env", case_sensitive=True, extra="ignore")
 
 
 settings = Settings()

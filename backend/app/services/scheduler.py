@@ -4,6 +4,7 @@ from app.core.cache import cache_manager
 from app.db.database import AsyncSessionLocal
 from app.models.user import User
 from app.services.download_manager import download_manager
+from app.services.recommendation_engine import recommendation_engine
 from app.services.watchlist_engine import watchlist_engine
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from apscheduler.triggers.interval import IntervalTrigger
@@ -42,8 +43,15 @@ class SchedulerService:
                 id="stuck_downloads_check",
                 replace_existing=True,
             )
+            # Schedule recommendation sync daily (midnight or every 24h)
+            self.scheduler.add_job(
+                self.scheduled_recommendation_refresh,
+                trigger=IntervalTrigger(hours=24),
+                id="recommendation_sync",
+                replace_existing=True,
+            )
             self.scheduler.start()
-            logger.info("🚀 Scheduler started: Watchlist sync (60m), Auto-retry (5m)")
+            logger.info("🚀 Scheduler started: Watchlist sync (60m), Recommendations (24h), Auto-retry (5m)")
 
     def stop(self):
         if self.scheduler.running:
@@ -94,6 +102,24 @@ class SchedulerService:
             # Release lock
             if cache_manager.redis:
                 await cache_manager.redis.delete(self.lock_key)
+
+    async def scheduled_recommendation_refresh(self):
+        """Daily refresh of recommendations for connected users."""
+        logger.info("⏰ Starting scheduled recommendation refresh...")
+        try:
+            async with AsyncSessionLocal() as db:
+                users_result = await db.execute(select(User).where(User.lastfm_session_key.isnot(None)))
+                users = users_result.scalars().all()
+
+                for user in users:
+                    try:
+                        await recommendation_engine.get_recommendations(user, force_refresh=True)
+                        logger.info(f"Refreshed recommendations for {user.username}")
+                    except Exception as e:
+                        logger.error(f"Failed to refresh recommendations for {user.username}: {e}")
+
+        except Exception as e:
+            logger.error(f"🔥 Error in scheduled_recommendation_refresh: {e}")
 
     async def scheduled_retry_downloads(self):
         """Auto-retry failed downloads."""

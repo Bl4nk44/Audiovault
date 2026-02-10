@@ -3,6 +3,7 @@ import api from "../services/api";
 export interface LyricsResponse {
   found: boolean;
   lyrics: string | null;
+  synced_lyrics: string | null;
   title: string | null;
   artist: string | null;
   url: string | null;
@@ -13,17 +14,19 @@ export const lyricsApi = {
   /**
    * Get lyrics for a track by its database ID.
    */
-  getByTrackId: async (trackId: string): Promise<LyricsResponse> => {
-    const response = await api.get<LyricsResponse>(`/lyrics/track/${trackId}`);
+  getByTrackId: async (trackId: string, useCache = true): Promise<LyricsResponse> => {
+    const response = await api.get<LyricsResponse>(`/lyrics/track/${trackId}`, {
+      params: { use_cache: useCache },
+    });
     return response.data;
   },
 
   /**
    * Search for lyrics by artist and title.
    */
-  search: async (artist: string, title: string): Promise<LyricsResponse> => {
+  search: async (artist: string, title: string, useCache = true): Promise<LyricsResponse> => {
     const response = await api.get<LyricsResponse>("/lyrics/search", {
-      params: { artist, title },
+      params: { artist, title, use_cache: useCache },
     });
     return response.data;
   },
