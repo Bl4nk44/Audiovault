@@ -436,7 +436,7 @@ async def scrobble(
                     album=track_obj.album,
                     timestamp=int(played_at.timestamp()),
                 )
-            except Exception: # nosec B110
+            except Exception:  # nosec B110
                 # Log but don't fail the request
                 pass
 
@@ -464,7 +464,7 @@ async def scrobble(
             await scrobbler_service.update_now_playing(
                 user=current_user, track=track_obj.title, artist=track_obj.artist, album=track_obj.album
             )
-        except Exception: # nosec B110
+        except Exception:  # nosec B110
             pass
 
     await db.commit()
