@@ -262,7 +262,8 @@ class HybridRecommendationEngine:
 
         if tracks or artists or playlists:
             logger.info(
-                f"Caching recommendations for user {user.id}: {len(tracks)} tracks, {len(artists)} artists, {len(playlists)} playlists"
+                f"Caching recommendations for user {user.id}: {len(tracks)} tracks, "
+                f"{len(artists)} artists, {len(playlists)} playlists"
             )
             try:
                 await self.cache.set(cache_key, response.model_dump_json(), expire=86400)

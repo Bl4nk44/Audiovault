@@ -2,18 +2,12 @@ from unittest.mock import AsyncMock, Mock
 
 import httpx
 import pytest
-from app.config.lastfm_config import LastfmConfig
 from app.services.lastfm_service import LastfmAPIError, LastfmRateLimitError, LastfmService
 
 
 @pytest.fixture
-def lastfm_config():
-    return LastfmConfig(API_KEY="test", API_SECRET="test", CALLBACK_URL="http://test")
-
-
-@pytest.fixture
-def lastfm_service(lastfm_config):
-    service = LastfmService(lastfm_config)
+def lastfm_service():
+    service = LastfmService()
     # Mock the client instance directly
     service.client = AsyncMock()
     return service
