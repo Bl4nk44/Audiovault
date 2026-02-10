@@ -19,7 +19,7 @@ services:
       - DATABASE_URL=postgresql+asyncpg://postgres:postgres@db:5432/audiovault
       - REDIS_URL=redis://redis:6379/0
       - ALLOWED_HOSTS=*
-      - BACKEND_CORS_ORIGINS=*
+      - BACKEND_CORS_ORIGINS=${BACKEND_CORS_ORIGINS:-http://localhost:2137}
       - ENVIRONMENT=production
       - TIMEZONE=${TIMEZONE:-UTC}
       - TZ=${TIMEZONE:-UTC}

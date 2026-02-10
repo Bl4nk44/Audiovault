@@ -25,5 +25,11 @@ class CacheManager:
         assert self.redis is not None
         await self.redis.set(key, value, ex=expire)
 
+    async def delete(self, key: str):
+        if self.redis is None:
+            await self.connect()
+        assert self.redis is not None
+        await self.redis.delete(key)
+
 
 cache_manager = CacheManager()

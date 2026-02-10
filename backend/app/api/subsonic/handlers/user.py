@@ -394,10 +394,16 @@ async def scrobble(
     Returns:
         Empty success response
     """
+    from app.services.scrobbler import scrobbler as scrobbler_service
+
     try:
         track_id = UUID(id)
     except ValueError:
         return subsonic_error(10, "Invalid song ID", f=f)
+
+    # Fetch track details for Last.fm
+    track_result = await db.execute(select(Track).where(Track.id == track_id))
+    track_obj = track_result.scalar_one_or_none()
 
     if submission:
         # Record in listening history
@@ -412,6 +418,23 @@ async def scrobble(
             duration_played=None,  # Could track this with now_playing
         )
         db.add(history_entry)
+
+        # Last.fm Scrobble
+        if track_obj:
+            try:
+                # Fire and forget (or await if fast enough, usually better to await in handler to ensure it happens)
+                # But for Subsonic responsiveness, better to let it float or handle quickly.
+                # Since scrobbler methods are async, we await them.
+                await scrobbler_service.scrobble_track(
+                    user=current_user,
+                    track=track_obj.title,
+                    artist=track_obj.artist,
+                    album=track_obj.album,
+                    timestamp=int(played_at.timestamp()),
+                )
+            except Exception:
+                # Log but don't fail the request
+                pass
 
     # Update now playing regardless
     result = await db.execute(
@@ -430,6 +453,15 @@ async def scrobble(
             track_id=track_id,
         )
         db.add(now_playing)
+
+    # Last.fm Now Playing
+    if not submission and track_obj:
+        try:
+            await scrobbler_service.update_now_playing(
+                user=current_user, track=track_obj.title, artist=track_obj.artist, album=track_obj.album
+            )
+        except Exception:
+            pass
 
     await db.commit()
     return subsonic_response(f=f)

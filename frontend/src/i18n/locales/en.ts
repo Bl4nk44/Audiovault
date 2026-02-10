@@ -16,6 +16,7 @@ export const en = {
     library: "My Library",
     downloads: "Downloads",
     settings: "Settings",
+    recommendations: "Recommendations",
     logs: "Logs",
   },
   logs: {
@@ -172,5 +173,15 @@ export const en = {
     removeFromWatchlist: "Remove from watchlist",
     newItems: "new",
     addToWatchlist: "Add to Watchlist",
+  },
+  recommendations: {
+    title: "Music Discovery",
+    subtitle: "Personalized picks based on your listening habits",
+  },
+  lastfm: {
+    connect: "Connect Last.fm",
+    connected: "Successfully connected to Last.fm!",
+    error: "Failed to connect to Last.fm",
+    scrobbling: "Scrobbling enabled",
   },
 };

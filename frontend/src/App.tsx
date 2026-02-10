@@ -21,6 +21,7 @@ import ArtistProfile from "./pages/ArtistProfile";
 import Import from "./pages/Import";
 import NotFound from "./pages/NotFound";
 import PlaylistDetails from "./pages/PlaylistDetails";
+import RecommendationsPage from "./pages/RecommendationsPage";
 
 function App() {
   return (
@@ -53,7 +54,10 @@ function App() {
             <Route path="album/:id" element={<AlbumDetails />} />
             <Route path="playlist/:id" element={<PlaylistDetails />} />
             <Route path="import" element={<Import />} />
+            <Route path="playlist/:id" element={<PlaylistDetails />} />
+            <Route path="import" element={<Import />} />
             <Route path="logs" element={<Logs />} />
+            <Route path="recommendations" element={<RecommendationsPage />} />
           </Route>
 
           <Route path="*" element={<NotFound />} />

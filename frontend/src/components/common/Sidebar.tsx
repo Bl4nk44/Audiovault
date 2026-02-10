@@ -1,17 +1,18 @@
+import { motion } from "framer-motion";
 import {
-  Home,
-  Search,
-  Settings as SettingsIcon,
-  Eye,
-  Music,
   Download,
   ExternalLink,
+  Eye,
+  Home,
+  Music,
+  Search,
+  Settings as SettingsIcon,
+  Sparkles,
   Terminal,
 } from "lucide-react";
 import { NavLink } from "react-router-dom";
-import { cn } from "../../lib/utils";
-import { motion } from "framer-motion";
 import { useTranslation } from "../../hooks/useTranslation";
+import { cn } from "../../lib/utils";
 import Logo from "./Logo";
 
 export default function Sidebar() {
@@ -22,6 +23,7 @@ export default function Sidebar() {
     { icon: Search, label: t("sidebar.search"), path: "/search" },
     { icon: Eye, label: t("sidebar.watchlist"), path: "/watchlist" },
     { icon: Music, label: t("sidebar.library"), path: "/library" },
+    { icon: Sparkles, label: t("sidebar.discover", "Discovery"), path: "/recommendations" },
     { icon: Download, label: t("sidebar.downloads"), path: "/queue" },
 
     { icon: SettingsIcon, label: t("sidebar.settings"), path: "/settings" },

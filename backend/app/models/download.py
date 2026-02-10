@@ -21,6 +21,7 @@ class Download(Base):
 
     # Download details
     source: Mapped[str | None] = mapped_column(String(20), nullable=True)  # spotify, youtube, deezer
+    playlist_id: Mapped[UUID | None] = mapped_column(Uuid(as_uuid=True), ForeignKey("playlists.id"), nullable=True)
     playlist_name: Mapped[str | None] = mapped_column(String(255), nullable=True)  # Name of the playlist if part of one
     status: Mapped[str | None] = mapped_column(String(20), default="pending", nullable=True)
     # pending, downloading, processing, completed, failed

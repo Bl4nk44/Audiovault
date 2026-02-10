@@ -83,9 +83,12 @@ class LibraryScannerService:
 
         return title, artist, album, genre
 
-    def _try_parse_mutagen_fallback(self, full_path: str, current_meta: tuple) -> tuple[str, str, str, str | None, int]:
+    def _try_parse_mutagen_fallback(
+        self, full_path: str, current_meta: tuple
+    ) -> tuple[str, str, str, str | None, int, str | None]:
         title, artist, album, genre = current_meta
         duration_ms = 0
+        lyrics = None
         filename = os.path.basename(full_path)
 
         try:
@@ -95,20 +98,51 @@ class LibraryScannerService:
                     duration_ms = int(m.info.length * 1000)
 
                 title, artist, album, genre = self._update_meta_from_tags(m, (title, artist, album, genre), filename)
+
+                # Extract Lyrics (USLT for ID3, LYRICS for Flac/Vorbis)
+                if hasattr(m, "tags"):
+                    # ID3 (mp3)
+                    if "USLT::eng" in m.tags:
+                        lyrics = str(m.tags["USLT::eng"])
+                    elif "USLT:" in m.tags:
+                        lyrics = str(m.tags["USLT:"])
+                # FLAC/Vorbis
+                elif "lyrics" in m.tags:
+                    lyrics = m.tags["lyrics"][0]
+                # Generic lookup for frames starting with USLT
+                else:
+                    for tag in m.tags:
+                        if tag.startswith("USLT"):
+                            lyrics = str(m.tags[tag])
+                            break
+
+            # 3. Check for external .lrc file (prioritize over tags as it's likely better/synced)
+            base_path = os.path.splitext(full_path)[0]
+            lrc_path = base_path + ".lrc"
+            if os.path.exists(lrc_path):
+                try:
+                    with open(lrc_path, "r", encoding="utf-8", errors="replace") as f:
+                        lrc_content = f.read().strip()
+                        if lrc_content:
+                            lyrics = lrc_content
+                            logger.info(f"Found external lyrics for {filename} in {os.path.basename(lrc_path)}")
+                except Exception as lrc_e:
+                    logger.warning(f"Failed to read .lrc file {lrc_path}: {lrc_e}")
+
         except Exception as e:
             logger.debug(f"Mutagen fallback failed for {filename}: {e}")
 
-        return title, artist, album, genre, duration_ms
+        return title, artist, album, genre, duration_ms, lyrics
 
     def _get_default_metadata(self, filename: str) -> tuple[str, str, str, str | None]:
         return os.path.splitext(filename)[0], UNKNOWN_ARTIST, UNKNOWN_ALBUM, None
 
-    def _parse_audio_metadata_sync(self, full_path: str) -> tuple[str, str, str, str | None, int]:
+    def _parse_audio_metadata_sync(self, full_path: str) -> tuple[str, str, str, str | None, int, str | None]:
         """Sync version of parse metadata (CPU bound)."""
         # 1. EasyID3
         title, artist, album, genre = self._try_parse_easyid3(full_path)
 
-        # 2. Mutagen Fallback & Duration
+        # 2. Mutagen Fallback & Duration & Lyrics
         return self._try_parse_mutagen_fallback(full_path, (title, artist, album, genre))
 
     def _infer_source_info(self, full_path: str, root_dir: str) -> tuple[str, str]:
@@ -295,7 +329,7 @@ class LibraryScannerService:
             def parse_sync(p: str = full_path):
                 return self._parse_audio_metadata_sync(p)
 
-            title, artist, album, genre, duration_ms = await loop.run_in_executor(stream_executor, parse_sync)
+            title, artist, album, genre, duration_ms, lyrics = await loop.run_in_executor(stream_executor, parse_sync)
 
             source, playlist_name = self._infer_source_info(full_path, root_dir)
 
@@ -307,6 +341,8 @@ class LibraryScannerService:
             metadata = {"source": source, "imported": True}
             if genre:
                 metadata["genre"] = genre
+            if lyrics:
+                metadata["lyrics"] = lyrics
 
             new_track = Track(
                 title=title,

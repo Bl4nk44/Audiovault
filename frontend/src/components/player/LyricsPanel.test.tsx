@@ -45,7 +45,7 @@ describe("LyricsPanel", () => {
   const renderComponent = (isOpen = true) => {
     render(
       <QueryClientProvider client={queryClient}>
-        <LyricsPanel isOpen={isOpen} onClose={vi.fn()} />
+        <LyricsPanel isOpen={isOpen} onClose={vi.fn()} currentTime={0} />
       </QueryClientProvider>
     );
   };

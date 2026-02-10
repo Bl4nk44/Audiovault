@@ -62,7 +62,16 @@ Never miss a track. If a download fails (e.g., due to geo-restrictions or broken
 
 - **MP3**: 128kbps, 192kbps, 320kbps
 - **FLAC**: Lossless audio for audiophiles
+- **FLAC**: Lossless audio for audiophiles
 - Automatic format selection based on user preferences
+
+### 🎵 Last.fm Integration
+
+- **Scrobbling**: Automatically sync your listening history to Last.fm
+- **Recommendations**: Personalized track suggestions based on your taste
+- **Integration**: Easy setup with OAuth connection
+- [Read the Setup Guide](docs/LASTFM_INTEGRATION.md)
+  > **Note**: When creating your API key, use `http://localhost:2137/recommendations` as the **Callback URL**.
 
 ### Personal Streaming Server
 

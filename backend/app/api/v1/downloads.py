@@ -14,9 +14,80 @@ from sqlalchemy.future import select
 
 router = APIRouter()
 
+SPOTIFY_CONFIG_ERROR = "Spotify service not configured"
+
+
+async def _resolve_track_to_local_id(db: AsyncSession, track_id_str: str, source: str) -> UUID:
+    """Helper to resolve a possibly external track ID to a local UUID."""
+    from app.models.track import Track
+    from app.services.spotify_service import SpotifyService
+
+    # 1. Try to see if it's already a local UUID
+    try:
+        potential_uuid = UUID(track_id_str)
+        # Check if it exists in DB
+        result = await db.execute(select(Track).where(Track.id == potential_uuid))
+        track_obj = result.scalar_one_or_none()
+        if track_obj:
+            return track_obj.id
+    except (ValueError, AttributeError):
+        # Not a valid UUID format, treat as external ID
+        pass
+
+    # 2. Try resolution by source
+    if source == "spotify":
+        # Check if we already have this spotify_id
+        result = await db.execute(select(Track).where(Track.spotify_id == track_id_str))
+        track_obj = result.scalar_one_or_none()
+
+        if not track_obj:
+            # Resolve from Spotify
+            spotify = SpotifyService()
+            if not spotify.client:
+                raise HTTPException(status_code=503, detail=SPOTIFY_CONFIG_ERROR)
+
+            track_data = spotify.get_track(track_id_str)
+            if not track_data:
+                raise HTTPException(status_code=404, detail="Track not found on Spotify")
+
+            # Create local track
+            track_obj = Track(
+                title=track_data["title"],
+                artist=track_data["artist"],
+                spotify_id=track_id_str,
+                duration_ms=track_data.get("duration_ms"),
+                metadata_content={
+                    "image_url": track_data.get("image_url"),
+                    "album": track_data.get("album"),
+                    "isrc": track_data.get("isrc"),
+                },
+            )
+            db.add(track_obj)
+            await db.flush()  # Get the generated UUID
+
+        return track_obj.id
+
+    if source == "youtube":
+        # Check if we already have this youtube_id
+        result = await db.execute(select(Track).where(Track.youtube_id == track_id_str))
+        track_obj = result.scalar_one_or_none()
+
+        if track_obj:
+            return track_obj.id
+
+        raise HTTPException(
+            status_code=400,
+            detail="YouTube track resolution from ID not yet implemented. Please add to library from search results first.",
+        )
+
+    raise HTTPException(
+        status_code=400,
+        detail=f"Track ID {track_id_str} not found and source {source} does not support resolution",
+    )
+
 
 class DownloadRequest(BaseModel):
-    track_id: UUID
+    track_id: str  # Changed from UUID to str to support external IDs
     source: str
     playlist_name: str | None = None
 
@@ -34,12 +105,16 @@ async def add_download(
     current_user: User = Depends(get_current_active_user),
     db: AsyncSession = Depends(get_db),
 ):
+    local_track_id = await _resolve_track_to_local_id(db, request.track_id, request.source)
+
     download_data = DownloadCreate(
-        track_id=request.track_id,
+        track_id=local_track_id,
         source=request.source,
         playlist_name=request.playlist_name,
     )
-    return await download_manager.add_download(db, current_user.id, download_data)
+    res = await download_manager.add_download(db, current_user.id, download_data)
+    await db.commit()
+    return res
 
 
 @router.post("/{download_id}/pause")
@@ -138,7 +213,7 @@ async def download_all_artist_tracks(
 
     service = SpotifyService()
     if not service.client:
-        raise HTTPException(status_code=503, detail="Spotify service not configured")
+        raise HTTPException(status_code=503, detail=SPOTIFY_CONFIG_ERROR)
 
     # Get artist details
     artist = service.get_artist_details(artist_id)
@@ -226,7 +301,7 @@ async def download_album(
 
     service = SpotifyService()
     if not service.client:
-        raise HTTPException(status_code=503, detail="Spotify service not configured")
+        raise HTTPException(status_code=503, detail=SPOTIFY_CONFIG_ERROR)
 
     # Get album details for name
     try:
@@ -361,7 +436,7 @@ async def get_library_folders(
     # Convert sets to sorted lists
     response = {}
     for source, playlists in structure.items():
-        response[source] = sorted(list(playlists))
+        response[source] = sorted(playlists)
 
     return response
 

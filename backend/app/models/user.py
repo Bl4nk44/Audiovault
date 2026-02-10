@@ -41,6 +41,11 @@ class User(Base):
     subsonic_password: Mapped[str | None] = mapped_column(String(100), nullable=True)
     subsonic_salt: Mapped[str | None] = mapped_column(String(100), nullable=True)
 
+    # Last.fm integration
+    lastfm_session_key: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    lastfm_username: Mapped[str | None] = mapped_column(String(100), nullable=True)
+    lastfm_connected_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+
     is_active: Mapped[bool] = mapped_column(Boolean, default=True)
     created_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(UTC))
 

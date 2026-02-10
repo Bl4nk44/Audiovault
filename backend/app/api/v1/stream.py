@@ -4,7 +4,7 @@ import os
 from typing import Optional
 
 import aiofiles
-import aiohttp
+import httpx
 import mutagen.mp4
 import yt_dlp
 from app.core.cache import cache_manager
@@ -15,8 +15,8 @@ from app.models.download import Download
 from app.models.track import Track
 from app.services.spotify_service import SpotifyService
 from app.services.youtube_service import YouTubeService
-from fastapi import APIRouter, Depends, HTTPException
-from fastapi.responses import RedirectResponse, Response, StreamingResponse
+from fastapi import APIRouter, Depends, HTTPException, Request
+from fastapi.responses import RedirectResponse, Response
 from mutagen import File as MutagenFile
 from mutagen.id3 import APIC, ID3
 from sqlalchemy import select
@@ -261,19 +261,37 @@ async def _extract_direct_url(youtube_url: str) -> tuple[str, dict]:
         return info["url"], info.get("http_headers", {})
 
 
-async def _stream_content(url: str, headers: Optional[dict] = None):
-    async with aiohttp.ClientSession() as session:
-        async with session.get(url, headers=headers) as response:
-            async for chunk in response.content.iter_chunked(8192):
-                yield chunk
-
-
 @router.get("/{track_id}.mp3")
-async def stream_track(track_id: str):
+async def stream_track(track_id: str, request: Request):
     try:
         youtube_url = await _resolve_stream_url(track_id)
         url, headers = await _extract_direct_url(youtube_url)
-        return StreamingResponse(_stream_content(url, headers), media_type="audio/mpeg")
+
+        # Forward Range header from browser for seeking support
+        range_header = request.headers.get("range")
+        if range_header:
+            headers["Range"] = range_header
+
+        async with httpx.AsyncClient() as client:
+            upstream = await client.get(url, headers=headers, follow_redirects=True)
+
+            response_headers = {
+                "Content-Type": "audio/mpeg",
+                "Accept-Ranges": "bytes",
+            }
+
+            # Forward Content-Range and Content-Length from upstream
+            if "content-range" in upstream.headers:
+                response_headers["Content-Range"] = upstream.headers["content-range"]
+            if "content-length" in upstream.headers:
+                response_headers["Content-Length"] = upstream.headers["content-length"]
+
+            status_code = 206 if upstream.status_code == 206 else 200
+            return Response(
+                content=upstream.content,
+                status_code=status_code,
+                headers=response_headers,
+            )
     except HTTPException as he:
         raise he
     except Exception as e:

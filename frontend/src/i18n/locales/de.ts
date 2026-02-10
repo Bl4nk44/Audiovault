@@ -16,6 +16,7 @@ export const de = {
     library: "Meine Bibliothek",
     downloads: "Downloads",
     settings: "Einstellungen",
+    recommendations: "Empfehlungen",
     logs: "Protokolle",
   },
   logs: {
@@ -171,5 +172,15 @@ export const de = {
     removeFromWatchlist: "Von Beobachtungsliste entfernen",
     newItems: "neu",
     addToWatchlist: "Zur Beobachtungsliste hinzufügen",
+  },
+  recommendations: {
+    title: "Musik entdecken",
+    subtitle: "Personalisierte Auswahl basierend auf Ihren Hörgewohnheiten",
+  },
+  lastfm: {
+    connect: "Mit Last.fm verbinden",
+    connected: "Erfolgreich mit Last.fm verbunden!",
+    error: "Verbindung zu Last.fm fehlgeschlagen",
+    scrobbling: "Scrobbling aktiviert",
   },
 };

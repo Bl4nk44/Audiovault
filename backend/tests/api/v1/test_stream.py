@@ -53,15 +53,13 @@ async def test_stream_track_success(client: AsyncClient):
     with (
         patch("app.api.v1.stream._resolve_stream_url", new_callable=AsyncMock) as m_resolve,
         patch("app.api.v1.stream._extract_direct_url", new_callable=AsyncMock) as m_extract,
-        patch("app.api.v1.stream._stream_content") as m_stream,
     ):
         m_resolve.return_value = "https://youtube.com/watch?v=123"
-        m_extract.return_value = ("https://googlevideo.com/...", {"User-Agent": "test"})
-        m_stream.return_value = [b"chunk1", b"chunk2"]
+        m_extract.return_value = ("https://googlevideo.com/direct-audio-url", {"User-Agent": "test"})
 
-        response = await client.get("/api/v1/stream/123.mp3")
-        assert response.status_code == 200
-        assert response.content == b"chunk1chunk2"
+        response = await client.get("/api/v1/stream/123.mp3", follow_redirects=False)
+        assert response.status_code == 302
+        assert response.headers["location"] == "https://googlevideo.com/direct-audio-url"
 
 
 def test_extract_art_flac_with_pictures():

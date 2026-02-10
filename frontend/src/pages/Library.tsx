@@ -608,6 +608,11 @@ export default function Library() {
   // Initialize: Fetch Folder Structure
   useEffect(() => {
     fetchFolders();
+
+    // Listen for refresh events
+    const handleRefresh = () => fetchFolders();
+    window.addEventListener("library:refresh", handleRefresh);
+    return () => window.removeEventListener("library:refresh", handleRefresh);
   }, []);
 
   // Fetch items when selection changes or page changes

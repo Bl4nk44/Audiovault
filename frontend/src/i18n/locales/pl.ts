@@ -16,6 +16,7 @@ export const pl = {
     library: "Moja Biblioteka",
     downloads: "Pobrane",
     settings: "Ustawienia",
+    recommendations: "Rekomendacje",
     logs: "Logi",
   },
   logs: {
@@ -172,5 +173,15 @@ export const pl = {
     removeFromWatchlist: "Usuń z obserwowanych",
     newItems: "nowe",
     addToWatchlist: "Dodaj do obserwowanych",
+  },
+  recommendations: {
+    title: "Odkrywaj Muzykę",
+    subtitle: "Spersonalizowane propozycje na podstawie tego, czego słuchasz",
+  },
+  lastfm: {
+    connect: "Połącz z Last.fm",
+    connected: "Pomyślnie połączono z Last.fm!",
+    error: "Nie udało się połączyć z Last.fm",
+    scrobbling: "Scrobbling włączony",
   },
 };

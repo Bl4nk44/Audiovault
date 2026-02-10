@@ -11,6 +11,7 @@ COPY VERSION ./VERSION
 
 # Copy frontend package files first for better caching
 COPY frontend/package*.json ./
+COPY frontend/.npmrc ./
 
 # Install dependencies with retry logic
 RUN npm ci --prefer-offline --no-audit || npm ci --prefer-offline --no-audit

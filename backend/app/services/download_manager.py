@@ -16,6 +16,7 @@ from app.schemas.download import DownloadCreate
 from app.services.fallback_service import fallback_service
 from app.services.socket_manager import socket_manager
 from app.utils.sanitization import sanitize_filename
+from sqlalchemy import delete
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 from sqlalchemy.orm import selectinload
@@ -198,6 +199,7 @@ class DownloadManager:
             user_id=user_id,
             track_id=download_data.track_id,
             source=download_data.source,
+            playlist_id=download_data.playlist_id,
             playlist_name=download_data.playlist_name,
             status="pending",
         )
@@ -858,11 +860,21 @@ class DownloadManager:
             try:
                 from app.models.playlist import Playlist, PlaylistTrack
 
-                # Check if playlist exists in DB
-                pl_result = await db.execute(
-                    select(Playlist).where(Playlist.owner_id == user_id, Playlist.name == playlist_name)
-                )
-                playlist = pl_result.scalar_one_or_none()
+                # 1. Resolve which playlist to update
+                playlist = None
+
+                # Try by ID first if we have it in any download record
+                playlist_id = next((d.playlist_id for d in downloads if d.playlist_id), None)
+                if playlist_id:
+                    pl_result = await db.execute(select(Playlist).where(Playlist.id == playlist_id))
+                    playlist = pl_result.scalar_one_or_none()
+
+                # Fallback to name if not found by ID
+                if not playlist:
+                    pl_result = await db.execute(
+                        select(Playlist).where(Playlist.owner_id == user_id, Playlist.name == playlist_name)
+                    )
+                    playlist = pl_result.scalar_one_or_none()
 
                 if not playlist:
                     playlist = Playlist(
@@ -942,7 +954,19 @@ class DownloadManager:
 
             await self._delete_db_records(db, downloads)
 
-            logger.info(f"Deleted playlist {playlist_name} for user {user_id}")
+            # Also delete from playlists table if matches
+            from app.models.playlist import Playlist, PlaylistTrack
+
+            pl_query = select(Playlist).where(Playlist.owner_id == user_id, Playlist.name == playlist_name)
+            pl_res = await db.execute(pl_query)
+            playlist_obj = pl_res.scalar_one_or_none()
+
+            if playlist_obj:
+                # Delete tracks mapping first to avoid FK constraint error
+                await db.execute(delete(PlaylistTrack).where(PlaylistTrack.playlist_id == playlist_obj.id))
+                await db.execute(delete(Playlist).where(Playlist.id == playlist_obj.id))
+
+            logger.info(f"Deleted playlist {playlist_name} for user {user_id} and synced with playlists/tracks tables")
 
         except Exception as e:
             logger.error(f"Error deleting playlist {playlist_name}: {e}")

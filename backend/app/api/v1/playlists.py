@@ -8,19 +8,21 @@ from app.db.database import get_db
 from app.models.playlist import Playlist, PlaylistTrack
 from app.models.track import Track
 from app.models.user import User
+from app.schemas.download import DownloadCreate
 from app.schemas.playlist import (
     PlaylistCreate,
     PlaylistResponse,
     PlaylistTrackAdd,
+    PlaylistTrackAddResponse,
     PlaylistTrackResponse,
     PlaylistUpdate,
 )
+from app.services.download_manager import download_manager
 from app.services.playlist_version_service import playlist_version_service
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.responses import Response
 from pydantic import BaseModel
 from sqlalchemy import delete, func, select
-from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
@@ -245,8 +247,14 @@ async def add_tracks_to_playlist(
     db: AsyncSession = Depends(get_db),
 ):
     """
-    Add tracks to playlist. Tracks must exist in the database.
+    Add tracks to playlist. Supports:
+    - UUID track IDs (existing database tracks)
+    - External format: "external:Artist Name:Track Name" (will search or create)
     """
+    import logging
+
+    logger = logging.getLogger(__name__)
+
     # 1. Verify playlist ownership
     query = select(Playlist).where(Playlist.id == playlist_id, Playlist.owner_id == current_user.id)
     result = await db.execute(query)
@@ -260,31 +268,118 @@ async def add_tracks_to_playlist(
     max_order_res = await db.execute(max_order_query)
     current_max_order = max_order_res.scalar() or 0
 
-    # 3. Add tracks
-    # Filter valid tracks first
-    valid_tracks_query = select(Track.id).where(Track.id.in_(tracks_in.track_ids))
-    valid_tracks_res = await db.execute(valid_tracks_query)
-    valid_track_ids = valid_tracks_res.scalars().all()
+    # 3. Resolve track IDs (both UUID and external formats)
+    resolved_track_ids = []
+
+    for track_id_str in tracks_in.track_ids:
+        if track_id_str.startswith("external:"):
+            # External format: "external:Artist:Track"
+            parts = track_id_str.split(":", 2)
+            if len(parts) >= 3:
+                artist_name = parts[1]
+                track_name = parts[2]
+                logger.info(f"Resolving external track: {artist_name} - {track_name}")
+
+                # Try to find existing track by title and artist
+                find_query = (
+                    select(Track)
+                    .where(Track.title.ilike(f"%{track_name}%"), Track.artist.ilike(f"%{artist_name}%"))
+                    .limit(1)
+                )
+                find_result = await db.execute(find_query)
+                existing_track = find_result.scalar_one_or_none()
+
+                if existing_track:
+                    resolved_track_ids.append(existing_track.id)
+                    logger.info(f"Found existing track: {existing_track.id}")
+                else:
+                    # Create a placeholder track entry
+                    new_track = Track(
+                        title=track_name,
+                        artist=artist_name,
+                        duration_ms=0,
+                        metadata_content={
+                            "source": "lastfm",
+                            "image_url": None,
+                        },
+                    )
+                    db.add(new_track)
+                    await db.flush()  # Get the ID
+                    resolved_track_ids.append(new_track.id)
+                    logger.info(f"Created placeholder track: {new_track.id}")
+
+                    # Automatically trigger download for the new external track
+                    try:
+                        await download_manager.add_download(
+                            db=db,
+                            user_id=current_user.id,
+                            download_data=DownloadCreate(
+                                track_id=new_track.id,
+                                source="lastfm",
+                                playlist_id=playlist.id,
+                                playlist_name=playlist.name,
+                            ),
+                        )
+                        logger.info(f"Triggered automatic download for external track: {new_track.id}")
+                    except Exception as e:
+                        logger.error(f"Failed to trigger automatic download: {e}")
+        else:
+            # Try to parse as UUID
+            try:
+                uuid_id = UUID(track_id_str)
+                resolved_track_ids.append(uuid_id)
+            except ValueError:
+                logger.warning(f"Invalid track ID format: {track_id_str}")
+                continue
+
+    # 4. Validate resolved track IDs exist in database
+    if resolved_track_ids:
+        valid_tracks_query = select(Track.id).where(Track.id.in_(resolved_track_ids))
+        valid_tracks_res = await db.execute(valid_tracks_query)
+        valid_track_ids = valid_tracks_res.scalars().all()
+    else:
+        valid_track_ids = []
 
     if not valid_track_ids:
         raise HTTPException(status_code=400, detail="No valid track IDs provided or tracks do not exist.")
 
     added_count = 0
-    for i, track_id in enumerate(valid_track_ids):
-        # Check if already in playlist? (Optional, skipping check allows duplicates which is standard for playlists)
-        # But if we want unique tracks in playlist, we'd check here. Standard is allow duplicates.
+    duplicate_count = 0
 
-        new_pt = PlaylistTrack(playlist_id=playlist_id, track_id=track_id, order=current_max_order + i + 1)
+    # 5. Check for duplicates and add new tracks
+    for i, track_id in enumerate(valid_track_ids):
+        # Check if track already in playlist
+        exists_query = select(PlaylistTrack).where(
+            PlaylistTrack.playlist_id == playlist_id, PlaylistTrack.track_id == track_id
+        )
+        exists_res = await db.execute(exists_query)
+        if exists_res.scalar_one_or_none():
+            duplicate_count += 1
+            logger.info(f"Track {track_id} already in playlist {playlist_id}, skipping.")
+            continue
+
+        new_pt = PlaylistTrack(playlist_id=playlist_id, track_id=track_id, order=current_max_order + added_count + 1)
         db.add(new_pt)
         added_count += 1
 
+    if added_count == 0 and duplicate_count > 0:
+        # If we tried to add tracks but they were all duplicates
+        # We don't need to throw error, just return the report
+        pass
+    elif added_count == 0:
+        # This shouldn't happen due to previous valid_track_ids check, but for safety:
+        raise HTTPException(status_code=400, detail="No tracks were added.")
+
     try:
         await db.commit()
-    except IntegrityError:
+    except Exception as e:
+        logger.error(f"Commit failed: {e}")
         await db.rollback()
-        raise HTTPException(status_code=400, detail="Error adding tracks (possible constraint violation).")
+        raise HTTPException(status_code=500, detail="Database error occurred.")
 
-    return {"status": "success", "added_count": added_count}
+    return PlaylistTrackAddResponse(
+        added_count=added_count, duplicate_count=duplicate_count, total_processed=len(tracks_in.track_ids)
+    )
 
 
 @router.delete("/{playlist_id}/tracks", status_code=status.HTTP_204_NO_CONTENT)
