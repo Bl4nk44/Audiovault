@@ -77,7 +77,8 @@ async def _resolve_track_to_local_id(db: AsyncSession, track_id_str: str, source
 
         raise HTTPException(
             status_code=400,
-            detail="YouTube track resolution from ID not yet implemented. Please add to library from search results first.",
+            detail="YouTube track resolution from ID not yet implemented. "
+            "Please add to library from search results first.",
         )
 
     raise HTTPException(
@@ -500,7 +501,8 @@ async def bulk_update_library_items(
     invalid_fields = set(request.updates.keys()) - allowed_fields
     if invalid_fields:
         raise HTTPException(
-            status_code=400, detail=f"Invalid fields: {', '.join(invalid_fields)}. Allowed: {', '.join(allowed_fields)}"
+            status_code=400,
+            detail=f"Invalid fields: {', '.join(invalid_fields)}. Allowed: {', '.join(allowed_fields)}",
         )
 
     success_count = 0

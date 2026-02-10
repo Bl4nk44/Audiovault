@@ -260,7 +260,7 @@ class DownloadManager:
                 # Import here to avoid circular imports if possible, or move to top if safe
                 from app.services.library_scanner import library_scanner_service
 
-                title, artist, album, genre, duration_ms = library_scanner_service._parse_audio_metadata_sync(
+                title, artist, album, genre, duration_ms, lyrics = library_scanner_service._parse_audio_metadata_sync(
                     download.file_path
                 )
 

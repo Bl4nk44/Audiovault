@@ -394,7 +394,11 @@ async def scrobble(
     Returns:
         Empty success response
     """
-    from app.services.scrobbler import scrobbler as scrobbler_service
+    from app.services.lastfm_service import LastfmService
+    from app.services.scrobbler import AudiovaultScrobbler
+
+    lastfm_service = LastfmService()
+    scrobbler_service = AudiovaultScrobbler(lastfm_service)
 
     try:
         track_id = UUID(id)
@@ -432,7 +436,7 @@ async def scrobble(
                     album=track_obj.album,
                     timestamp=int(played_at.timestamp()),
                 )
-            except Exception:
+            except Exception:  # nosec B110
                 # Log but don't fail the request
                 pass
 
@@ -460,7 +464,7 @@ async def scrobble(
             await scrobbler_service.update_now_playing(
                 user=current_user, track=track_obj.title, artist=track_obj.artist, album=track_obj.album
             )
-        except Exception:
+        except Exception:  # nosec B110
             pass
 
     await db.commit()

@@ -19,9 +19,16 @@ async def get_current_user(token: str = Depends(oauth2_scheme), db: AsyncSession
     )
     try:
         payload = jwt.decode(token, settings.JWT_SECRET_KEY, algorithms=[settings.JWT_ALGORITHM])
-        user_id: str = payload.get("sub")
-        token_type: str = payload.get("type")
-        if user_id is None or token_type != "access":  # nosec
+        user_id_raw = payload.get("sub")
+        token_type_raw = payload.get("type")
+
+        if not isinstance(user_id_raw, str) or not isinstance(token_type_raw, str):
+            raise credentials_exception
+
+        user_id: str = user_id_raw
+        token_type: str = token_type_raw
+
+        if token_type != "access":  # nosec
             raise credentials_exception
     except InvalidTokenError as e:
         raise credentials_exception from e

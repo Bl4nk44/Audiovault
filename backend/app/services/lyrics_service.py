@@ -110,7 +110,7 @@ class LyricsService:
         # 4. Fetch from Genius (fallback for plain lyrics)
         genius = self._get_genius_client()
         if not genius:
-            return lrclib_data  # return LRCLIB negative result if Genius is unavailable
+            return lrclib_data
 
         return await self._fetch_and_cache_genius(genius, artist, title, cache_key)
 

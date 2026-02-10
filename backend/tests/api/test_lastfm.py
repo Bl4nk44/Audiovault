@@ -1,8 +1,7 @@
-from unittest.mock import AsyncMock
+from unittest.mock import AsyncMock, patch
 
 import pytest
 from app.api.v1.lastfm import get_lastfm_service
-from app.config.lastfm_config import LastfmConfig
 from app.main import app
 from app.services.lastfm_service import LastfmService
 
@@ -10,9 +9,12 @@ from app.services.lastfm_service import LastfmService
 @pytest.fixture
 def mock_lastfm_service():
     """Create a service instance with dummy config to avoid validation errors."""
-    config = LastfmConfig(API_KEY="test_key", API_SECRET="test_secret", CALLBACK_URL="http://test.com")
-    service = LastfmService(config)
-    return service
+    with patch("app.services.lastfm_service.settings") as mock_settings:
+        mock_settings.LASTFM_API_KEY = "test_key"
+        mock_settings.LASTFM_API_SECRET = "test_secret"
+        mock_settings.CALLBACK_URL = "http://test.com"  # ensure callback url is set if needed
+        service = LastfmService()
+        yield service
 
 
 @pytest.fixture(autouse=True)
@@ -51,7 +53,7 @@ async def test_callback_exchanges_token(client, admin_token_headers, mock_lastfm
     assert data["status"] == "connected"
     assert data["username"] == "testuser"
 
-    msg = mock_lastfm_service.get_session.assert_called_once_with("test_token")
+    mock_lastfm_service.get_session.assert_called_once_with("test_token")
 
 
 @pytest.mark.asyncio
