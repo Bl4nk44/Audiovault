@@ -23,7 +23,9 @@ describe("Lyrics API", () => {
 
     const result = await lyricsApi.getByTrackId("123");
 
-    expect(api.get).toHaveBeenCalledWith("/lyrics/track/123");
+    expect(api.get).toHaveBeenCalledWith("/lyrics/track/123", {
+      params: { use_cache: true },
+    });
     expect(result).toEqual(mockLyricsResponse);
   });
 
@@ -33,7 +35,7 @@ describe("Lyrics API", () => {
     const result = await lyricsApi.search("Queen", "Bohemian Rhapsody");
 
     expect(api.get).toHaveBeenCalledWith("/lyrics/search", {
-      params: { artist: "Queen", title: "Bohemian Rhapsody" },
+      params: { artist: "Queen", title: "Bohemian Rhapsody", use_cache: true },
     });
     expect(result).toEqual(mockLyricsResponse);
   });

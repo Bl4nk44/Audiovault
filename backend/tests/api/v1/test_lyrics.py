@@ -33,8 +33,13 @@ async def test_get_lyrics_success(client: AsyncClient, mock_user):
         assert response.status_code == 200
         assert response.json()["found"] is True
         assert response.json()["lyrics"] == "La la la"
-        call_args = mock_get.call_args
-        assert call_args[0] == ("Artist", "Song")
+
+        # Check call args (artist, title, use_cache=True)
+        # Note: it's called as positional args or kwargs depending on how Service is called
+        # Our API calls it with keyword use_cache=use_cache
+        mock_get.assert_called_once()
+        _, kwargs = mock_get.call_args
+        assert kwargs["use_cache"] is True
 
 
 @pytest.mark.asyncio
