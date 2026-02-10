@@ -210,7 +210,7 @@ async def test_dm_handle_completion_metadata(download_manager):
         patch("app.services.download_manager.socket_manager.emit", new_callable=AsyncMock),
         patch(
             "app.services.library_scanner.library_scanner_service._parse_audio_metadata_sync",
-            return_value=("Title", "Artist", "Album", "Genre", 5000),
+            return_value=("Title", "Artist", "Album", "Genre", 5000, None),
         ),
         patch(
             "app.services.library_scanner.library_scanner_service.resolve_artist_and_album",

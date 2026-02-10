@@ -109,7 +109,7 @@ async def test_import_playlist_no_matches(scanner):
             # Since db.execute is used for select playlist too...
             # We can check logs or logic flow?
             # Or mock sqlalchemy.delete specifically
-            pass
+            # pass - removed as it's unreachable/unneeded with the comment explaining why
 
 
 # =============================================================================
@@ -122,7 +122,7 @@ async def test_process_audio_file_invalid_user_id(scanner):
     """Test processing file with invalid user UUID."""
     db_mock = AsyncMock()
 
-    with patch.object(scanner, "_parse_audio_metadata_sync", return_value=("T", "A", "AL", None, 0)):
+    with patch.object(scanner, "_parse_audio_metadata_sync", return_value=("T", "A", "AL", None, 0, None)):
         with patch.object(scanner, "resolve_artist_and_album", return_value=(None, None)):
             result = await scanner._process_audio_file(db_mock, "invalid-uuid", "/tmp/file.mp3", "file.mp3", "/tmp")
             assert result is False
@@ -134,7 +134,7 @@ async def test_process_audio_file_os_error_size(scanner):
     db_mock = AsyncMock()
     user_id = str(uuid.uuid4())
 
-    with patch.object(scanner, "_parse_audio_metadata_sync", return_value=("T", "A", "AL", None, 0)):
+    with patch.object(scanner, "_parse_audio_metadata_sync", return_value=("T", "A", "AL", None, 0, None)):
         with patch.object(scanner, "resolve_artist_and_album", return_value=(None, None)):
             with patch("os.path.getsize", side_effect=OSError):
                 result = await scanner._process_audio_file(db_mock, user_id, "/tmp/file.mp3", "file.mp3", "/tmp")

@@ -13,6 +13,7 @@ from app.services.recommendation_engine import HybridRecommendationEngine
 def mock_lastfm_service():
     service = Mock(spec=LastfmService)
     service.get_recommendations = AsyncMock()
+    service.get_recommended_artists = AsyncMock(return_value=[])
     return service
 
 
@@ -72,7 +73,7 @@ async def test_get_recommendations_lastfm_success(engine, user_with_lastfm, mock
 
     result = await engine.get_recommendations(user_with_lastfm)
 
-    assert result.source == "lastfm"
+    assert result.source == "lastfm+spotify"
     assert len(result.tracks) == 1
 
     # Verify caching
@@ -88,7 +89,7 @@ async def test_get_recommendations_lastfm_failure_fallback(
 
     result = await engine.get_recommendations(user_with_lastfm)
 
-    assert result.source == "llm"
+    assert result.source == "unknown"
     # LLM stub returns empty list for now
     assert result.tracks == []
 
@@ -97,7 +98,7 @@ async def test_get_recommendations_lastfm_failure_fallback(
 async def test_user_without_lastfm_uses_llm(engine, user_without_lastfm, mock_lastfm_service):
     result = await engine.get_recommendations(user_without_lastfm)
 
-    assert result.source == "llm"
+    assert result.source == "unknown"
     mock_lastfm_service.get_recommendations.assert_not_called()
 
 

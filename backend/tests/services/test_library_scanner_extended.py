@@ -76,7 +76,7 @@ def test_get_default_metadata(scanner):
 
 def test_get_default_metadata_complex_name(scanner):
     """Test default metadata with complex filename."""
-    title, artist, album, genre = scanner._get_default_metadata("Artist - Track Name.flac")
+    title, _, _, _ = scanner._get_default_metadata("Artist - Track Name.flac")
 
     assert title == "Artist - Track Name"
 
@@ -105,7 +105,7 @@ def test_try_parse_easyid3_no_tags(scanner):
     with patch("app.services.library_scanner.EasyID3") as mock_id3:
         mock_id3.return_value = {}
 
-        title, artist, album, genre = scanner._try_parse_easyid3("/tmp/default.mp3")
+        title, artist, _, _ = scanner._try_parse_easyid3("/tmp/default.mp3")
 
         # Should use defaults from filename
         assert "default" in title
@@ -115,7 +115,7 @@ def test_try_parse_easyid3_no_tags(scanner):
 def test_try_parse_easyid3_error(scanner):
     """Test EasyID3 graceful error handling."""
     with patch("app.services.library_scanner.EasyID3", side_effect=Exception("Parse error")):
-        title, artist, album, genre = scanner._try_parse_easyid3("/tmp/broken.mp3")
+        _, artist, _, _ = scanner._try_parse_easyid3("/tmp/broken.mp3")
 
         # Should fall back to defaults
         assert artist == UNKNOWN_ARTIST
@@ -136,7 +136,7 @@ def test_try_parse_mutagen_fallback(scanner):
         mock_mutagen.return_value = mock_file
 
         current_meta = ("default", UNKNOWN_ARTIST, UNKNOWN_ALBUM, None)
-        title, artist, album, genre, duration = scanner._try_parse_mutagen_fallback("/tmp/test.mp3", current_meta)
+        _, _, _, _, duration, _ = scanner._try_parse_mutagen_fallback("/tmp/test.mp3", current_meta)
 
         assert duration == 180500  # 180.5 * 1000
 
@@ -145,7 +145,7 @@ def test_try_parse_mutagen_fallback_no_info(scanner):
     """Test Mutagen fallback with no audio info."""
     with patch("app.services.library_scanner.MutagenFile", return_value=None):
         current_meta = ("title", "artist", "album", "genre")
-        title, artist, album, genre, duration = scanner._try_parse_mutagen_fallback("/tmp/test.mp3", current_meta)
+        title, _, _, _, duration, _ = scanner._try_parse_mutagen_fallback("/tmp/test.mp3", current_meta)
 
         assert title == "title"
         assert duration == 0
@@ -183,7 +183,7 @@ def test_infer_source_info_youtube(scanner):
 
 def test_infer_source_info_unknown_folder(scanner):
     """Test source inference for unknown folder structure."""
-    source, playlist = scanner._infer_source_info("/downloads/CustomFolder/song.mp3", "/downloads")
+    _, playlist = scanner._infer_source_info("/downloads/CustomFolder/song.mp3", "/downloads")
 
     # Should treat as playlist name, not source
     assert playlist == "CustomFolder"
@@ -241,7 +241,7 @@ async def test_resolve_artist_and_album_create_new(scanner):
     mock_result.scalar_one_or_none.return_value = None
     db_mock.execute.return_value = mock_result
 
-    artist_id, album_id = await scanner.resolve_artist_and_album(db_mock, "New Artist", "New Album")
+    _, _ = await scanner.resolve_artist_and_album(db_mock, "New Artist", "New Album")
 
     # Should have added new entities
     assert db_mock.add.call_count >= 2

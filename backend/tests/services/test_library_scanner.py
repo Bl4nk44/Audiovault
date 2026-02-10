@@ -59,7 +59,7 @@ def test_infer_source_info_local(scanner):
 
 def test_parse_audio_metadata_sync_no_tags(scanner):
     with patch("app.services.library_scanner.MutagenFile", return_value=None):
-        title, artist, album, _, duration = scanner._parse_audio_metadata_sync("/fake/song.mp3")
+        title, artist, album, _, duration, _ = scanner._parse_audio_metadata_sync("/fake/song.mp3")
         assert title == "song"
         assert artist == "Unknown Artist"
         assert album == "Unknown Album"
@@ -162,7 +162,7 @@ async def test_parse_audio_metadata_with_easyid3(scanner):
         mock_mutagen.info.length = 120.5
         mock_mutagen.__getitem__.side_effect = KeyError("No tags")
         with patch("app.services.library_scanner.MutagenFile", return_value=mock_mutagen):
-            title, artist, _, _, duration = scanner._parse_audio_metadata_sync("/fake/song.mp3")
+            title, artist, _, _, duration, _ = scanner._parse_audio_metadata_sync("/fake/song.mp3")
             assert title == "Tagged Title"
             assert artist == "Tagged Artist"
             assert duration == 120500
