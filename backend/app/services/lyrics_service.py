@@ -77,7 +77,7 @@ class LyricsService:
             try:
                 from uuid import UUID
 
-                from app.db.database import SessionLocal
+                from app.db.database import AsyncSessionLocal as SessionLocal
                 from app.models.track import Track
                 from sqlalchemy import select
 

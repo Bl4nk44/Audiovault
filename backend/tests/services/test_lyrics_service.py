@@ -66,7 +66,13 @@ async def test_get_lyrics_not_found(lyrics_service):
 
 @pytest.mark.asyncio
 async def test_get_lyrics_no_client(lyrics_service):
-    with patch("app.services.lyrics_service.LyricsService._get_genius_client", return_value=None):
+    async def mock_get_lrclib(*args, **kwargs):
+        return None
+
+    with (
+        patch("app.services.lyrics_service.LyricsService._get_genius_client", return_value=None),
+        patch("app.services.lyrics_service.LyricsService._get_from_lrclib", side_effect=mock_get_lrclib)
+    ):
         res = await lyrics_service.get_lyrics("Artist", "Title")
         assert res is None
 
