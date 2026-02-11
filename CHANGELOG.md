@@ -14,7 +14,6 @@ All notable changes to Audiovault will be documented in this file.
 
 ### Bug Fixes
 
-- Rozwiazanie problemow CI i poprawki stabilnosci
 - **tests**: Resolve ruff lint errors in smoke tests
 - Resolve all 34 MyPy type errors across backend
 - Lint errors and code formatting in Handlers and Utils

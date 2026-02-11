@@ -96,6 +96,7 @@ export default defineConfig({
         "src/**/*.d.ts",
         "src/main.tsx",
         "src/vite-env.d.ts",
+        "src/types/**",
       ],
       thresholds: {
         // TODO: Gradually increase thresholds as more tests are added

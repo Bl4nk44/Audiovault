@@ -186,4 +186,63 @@ describe("SyncModal", () => {
     // Should return to review step (button still visible)
     expect(screen.getByText("Confirm Deletion")).toBeInTheDocument();
   });
+
+  it("should display safety warning if present", async () => {
+    (syncApi.analyze as any).mockResolvedValue({
+      ...mockReport,
+      safety_warning: true,
+      warning_message: "Dangerous sync!",
+    });
+
+    render(<SyncModal item={mockItem} onClose={() => {}} />);
+
+    await waitFor(() => {
+      expect(screen.getByText("Safety Warning")).toBeInTheDocument();
+      expect(screen.getByText("Dangerous sync!")).toBeInTheDocument();
+    });
+  });
+
+  it("should show success state when no tracks to remove", async () => {
+    (syncApi.analyze as any).mockResolvedValue({
+      ...mockReport,
+      to_remove_count: 0,
+      to_remove_items: [],
+    });
+
+    render(<SyncModal item={mockItem} onClose={() => {}} />);
+
+    await waitFor(() => {
+      expect(screen.getByText("Library is in sync.")).toBeInTheDocument();
+    });
+
+    expect(screen.queryByText("Confirm Deletion")).not.toBeInTheDocument();
+    expect(screen.getByText("Cancel")).toBeInTheDocument();
+  });
+
+  it("should allow retry after execution failure", async () => {
+    const user = userEvent.setup();
+    (syncApi.analyze as any).mockResolvedValue(mockReport);
+    // First fail, then succeed
+    (syncApi.execute as any)
+      .mockRejectedValueOnce(new Error("Fail"))
+      .mockResolvedValueOnce(mockResult);
+
+    render(<SyncModal item={mockItem} onClose={() => {}} />);
+
+    await waitFor(() => {
+      expect(screen.getByText("Confirm Deletion")).toBeInTheDocument();
+    });
+
+    // First attempt
+    await user.click(screen.getByText("Confirm Deletion"));
+    await waitFor(() => {
+      expect(notify.error).toHaveBeenCalledWith("Execution failed");
+    });
+
+    // Second attempt
+    await user.click(screen.getByText("Confirm Deletion"));
+    await waitFor(() => {
+      expect(screen.getByText("Sync Complete")).toBeInTheDocument();
+    });
+  });
 });
