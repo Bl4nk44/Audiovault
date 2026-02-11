@@ -1,0 +1,159 @@
+﻿============================= test session starts =============================
+platform win32 -- Python 3.14.2, pytest-9.0.2, pluggy-1.6.0 -- C:\Users\Mati\DEV\Audiovault\.venv\Scripts\python.exe
+cachedir: .pytest_cache
+rootdir: C:\Users\Mati\DEV\Audiovault\backend
+configfile: pytest.ini
+plugins: anyio-4.12.1, pyfakefs-6.0.0, asyncio-1.3.0, cov-7.0.0
+asyncio: mode=Mode.AUTO, debug=False, asyncio_default_fixture_loop_scope=None, asyncio_default_test_loop_scope=function
+collecting ... collected 5 items
+
+tests/api/subsonic/test_subsonic_auth_coverage.py::test_decode_hex_password PASSED [ 20%]
+tests/api/subsonic/test_subsonic_auth_coverage.py::test_verify_token_auth_expired PASSED [ 40%]
+tests/api/subsonic/test_subsonic_auth_coverage.py::test_subsonic_auth_disabled_user PASSED [ 60%]
+tests/api/subsonic/test_subsonic_auth_coverage.py::test_subsonic_auth_wrong_password FAILED [ 80%]
+tests/api/subsonic/test_subsonic_auth_coverage.py::test_create_auth_token_coverage PASSED [100%]
+
+================================== FAILURES ===================================
+______________________ test_subsonic_auth_wrong_password ______________________
+
+    @pytest.mark.asyncio
+    async def test_subsonic_auth_wrong_password():
+        db = AsyncMock()
+        user = User(username="user", is_active=True, hashed_password="hashed")
+
+        with (
+            patch("app.api.subsonic.auth.get_user_by_username", return_value=user),
+            patch("app.api.subsonic.auth.verify_password", return_value=False)
+        ):
+            with pytest.raises(HTTPException) as excinfo:
+>               await subsonic_auth(u="user", p="wrong", c="test", db=db)
+
+tests\api\subsonic\test_subsonic_auth_coverage.py:72:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+u = 'user', p = 'wrong', t = Query(None), s = Query(None), c = 'test'
+v = Query(1.16.1), f = Query(json), db = <AsyncMock id='1777663126432'>
+
+    async def subsonic_auth(
+        u: str = Query(..., description="Username"),
+        p: str | None = Query(None, description="Password (plaintext or enc:hex)"),
+        t: str | None = Query(None, description="MD5(password+salt) token"),
+        s: str | None = Query(None, description="Salt for token auth"),
+        c: str = Query(..., description="Client name"),
+        v: str = Query("1.16.1", description="API version"),
+        f: str = Query("json", description="Response format (json/xml)"),
+        db: AsyncSession = Depends(get_db),
+    ) -> User:
+        """
+        Subsonic authentication dependency.
+
+        Supports three authentication methods:
+        1. Plaintext password: p=mypassword
+        2. Hex-encoded password: p=enc:6d7970617373776f7264
+        3. Token-based: t=md5hash&s=salt
+
+        Args:
+            u: Username
+            p: Password (plaintext or hex-encoded)
+            t: Token (MD5 hash)
+            s: Salt for token
+            c: Client name
+            v: API version
+            f: Response format
+            db: Database session
+
+        Returns:
+            Authenticated User object
+
+        Raises:
+            HTTPException: If authentication fails
+        """
+        # Get user by username
+        user = await get_user_by_username(db, u)
+
+        if not user:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail={
+                    "subsonic-response": {
+                        "status": "failed",
+                        "version": "1.16.1",
+                        "error": {"code": 40, "message": "Wrong username or password"},
+                    }
+                },
+            )
+
+        if not user.is_active:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail={
+                    "subsonic-response": {
+                        "status": "failed",
+                        "version": "1.16.1",
+                        "error": {"code": 50, "message": "User is disabled"},
+                    }
+                },
+            )
+
+        auth_success = False
+
+        # Method 1: Token-based authentication (t + s)
+        # Some clients might send both t/s and p. We try token first.
+        if t and s:
+>           auth_success = await verify_token_auth(db, user, t, s)
+                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+app\api\subsonic\auth.py:251:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+db = <AsyncMock id='1777663126432'>
+user = <app.models.user.User object at 0x0000019DE4F5AD50>
+client_token = Query(None), client_salt = Query(None)
+
+    async def verify_token_auth(
+        db: AsyncSession,
+        user: User,
+        client_token: str,
+        client_salt: str,
+    ) -> bool:
+        """
+        Verify token-based authentication.
+
+        Client sends: t=MD5(token+s), s=salt
+        We check if any of user's tokens match.
+
+        Args:
+            db: Database session
+            user: User to verify
+            client_token: MD5 hash from client (t parameter)
+            client_salt: Salt from client (s parameter)
+
+        Returns:
+            True if authentication successful
+        """
+        # Get active tokens for user
+        result = await db.execute(
+            select(SubsonicAuthToken).where(
+                and_(
+                    SubsonicAuthToken.user_id == user.id,
+                    SubsonicAuthToken.is_active,
+                    SubsonicAuthToken.expires_at > datetime.now(UTC),
+                )
+            )
+        )
+>       tokens = result.scalars().all()
+                 ^^^^^^^^^^^^^^^^^^^^
+E       AttributeError: 'coroutine' object has no attribute 'all'
+
+app\api\subsonic\auth.py:111: AttributeError
+============================== warnings summary ===============================
+tests/api/subsonic/test_subsonic_auth_coverage.py::test_create_auth_token_coverage
+  C:\Users\Mati\DEV\Audiovault\backend\app\api\subsonic\auth.py:158: RuntimeWarning: coroutine 'AsyncMockMixin._execute_mock_call' was never awaited
+    db.add(auth_token)
+  Enable tracemalloc to get traceback where the object was allocated.
+  See https://docs.pytest.org/en/stable/how-to/capture-warnings.html#resource-warnings for more info.
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ===========================
+FAILED tests/api/subsonic/test_subsonic_auth_coverage.py::test_subsonic_auth_wrong_password
+=================== 1 failed, 4 passed, 1 warning in 0.21s ====================

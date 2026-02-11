@@ -29,6 +29,7 @@ from app.api.v1 import (
     stream,
     sync,
     system,
+    tidal,
     users,
     watchlist,
     youtube,
@@ -97,6 +98,7 @@ application.include_router(audit.router, prefix="/api/v1/audit", tags=["audit"])
 application.include_router(lyrics.router, prefix="/api/v1/lyrics", tags=["lyrics"])
 application.include_router(playlists.router, prefix="/api/v1/playlists", tags=["playlists"])
 application.include_router(storage.router, prefix="/api/v1/storage", tags=["storage"])
+application.include_router(tidal.router, prefix="/api/v1/tidal", tags=["tidal"])
 application.include_router(lastfm.router, prefix="/api/v1/lastfm", tags=["lastfm"])
 
 # Subsonic API (compatible with Sonixd, Amperfy, DSub, etc.)
