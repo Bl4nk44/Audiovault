@@ -1,0 +1,29 @@
+# ==============================================
+# Trivy Ignore — False Positives & Noise Reduction
+# ==============================================
+
+# Virtual environment — external packages (yt-dlp extractors contain
+# hardcoded JWT tokens and AWS keys used as API constants, not secrets)
+.venv/
+
+# Node modules
+node_modules/
+frontend/node_modules/
+
+# Build artifacts
+dist/
+build/
+.next/
+
+# Python cache
+__pycache__/
+*.pyc
+
+# Tests (no security scanning needed)
+backend/tests/
+
+# Coverage reports
+coverage/
+
+# Downloaded media files
+downloads/

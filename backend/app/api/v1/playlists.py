@@ -23,6 +23,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.responses import Response
 from pydantic import BaseModel
 from sqlalchemy import delete, func, select
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
@@ -372,6 +373,10 @@ async def add_tracks_to_playlist(
 
     try:
         await db.commit()
+    except IntegrityError as ie:
+        logger.error(f"Commit failed: {ie}")
+        await db.rollback()
+        raise HTTPException(status_code=400, detail="Duplicate or constraint error.")
     except Exception as e:
         logger.error(f"Commit failed: {e}")
         await db.rollback()

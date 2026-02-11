@@ -1,7 +1,0 @@
-scan:
-  skip-dirs:
-    - .venv
-    - backend/tests
-    - frontend/node_modules
-    - coverage
-    - downloads

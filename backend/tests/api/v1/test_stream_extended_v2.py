@@ -54,14 +54,26 @@ async def test_stream_track_success(client: AsyncClient, admin_token_headers):
         with patch("app.api.v1.stream._extract_direct_url", new_callable=AsyncMock) as mock_ext:
             mock_ext.return_value = ("https://googlevideo.com/stream", {"User-Agent": "test"})
 
-            response = await client.get(
-                f"/api/v1/stream/{track_id}.mp3",
-                headers=admin_token_headers,
-                follow_redirects=False,
-            )
+            # Mock httpx.AsyncClient to avoid real HTTP request
+            mock_upstream_response = MagicMock()
+            mock_upstream_response.status_code = 200
+            mock_upstream_response.content = b"fake_audio_data"
+            mock_upstream_response.headers = {"content-length": "14"}
 
-            assert response.status_code == 302
-            assert response.headers["location"] == "https://googlevideo.com/stream"
+            mock_http_client = AsyncMock()
+            mock_http_client.get.return_value = mock_upstream_response
+            mock_http_client.__aenter__ = AsyncMock(return_value=mock_http_client)
+            mock_http_client.__aexit__ = AsyncMock(return_value=False)
+
+            with patch("app.api.v1.stream.httpx.AsyncClient", return_value=mock_http_client):
+                response = await client.get(
+                    f"/api/v1/stream/{track_id}.mp3",
+                    headers=admin_token_headers,
+                    follow_redirects=False,
+                )
+
+                assert response.status_code == 200
+                assert response.headers["content-type"] == "audio/mpeg"
 
 
 @pytest.mark.asyncio

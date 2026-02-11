@@ -1,0 +1,18 @@
+[run]
+source = app
+relative_files = true
+
+[paths]
+source =
+    backend/app
+    app
+
+[report]
+omit =
+    */tests/*
+    */migrations/*
+    */__pycache__/*
+    */venv/*
+
+[xml]
+output = coverage.xml
