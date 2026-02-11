@@ -70,9 +70,9 @@ describe("lastfmService", () => {
   });
 
   it("getLastfmProfile should return profile data", async () => {
-    vi.mocked(api.get).mockResolvedValue({ data: { name: "User" } });
+    vi.mocked(api.get).mockResolvedValue({ data: { user: { name: "User" }, friends: [] } });
     const result = await lastfmService.getLastfmProfile();
     expect(api.get).toHaveBeenCalledWith("/lastfm/profile");
-    expect(result.name).toBe("User");
+    expect(result.user.name).toBe("User");
   });
 });
