@@ -189,5 +189,3 @@ All notable changes to Audiovault will be documented in this file.
 - Add Amperfy iOS compatibility tests for Subsonic API
 
 ## [0.9.0] - 2026-01-11
-
-
