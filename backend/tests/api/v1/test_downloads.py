@@ -1,4 +1,5 @@
 import uuid
+from unittest.mock import MagicMock, patch
 
 import pytest
 from app.models.download import Download
@@ -28,8 +29,20 @@ async def test_get_downloads(client, admin_token_headers, sample_download):
 @pytest.mark.asyncio
 async def test_create_download(client, admin_token_headers):
     data = {"track_id": str(uuid.uuid4()), "source": "spotify", "playlist_name": "Test"}
-    response = await client.post("/api/v1/downloads/add", json=data, headers=admin_token_headers)
-    assert response.status_code in [200, 201]
+    with patch("app.services.spotify_service.SpotifyService") as MockSpotify:
+        mock_instance = MockSpotify.return_value
+        mock_instance.client = MagicMock()
+        mock_instance.get_track.return_value = {
+            "title": "Test Title",
+            "artist": "Test Artist",
+            "duration_ms": 1000,
+            "image_url": "http://example.com/img.jpg",
+            "album": "Test Album",
+            "isrc": "US123",
+        }
+
+        response = await client.post("/api/v1/downloads/add", json=data, headers=admin_token_headers)
+        assert response.status_code in [200, 201]
 
 
 @pytest.mark.asyncio

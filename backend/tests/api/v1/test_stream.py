@@ -57,9 +57,23 @@ async def test_stream_track_success(client: AsyncClient):
         m_resolve.return_value = "https://youtube.com/watch?v=123"
         m_extract.return_value = ("https://googlevideo.com/direct-audio-url", {"User-Agent": "test"})
 
-        response = await client.get("/api/v1/stream/123.mp3", follow_redirects=False)
-        assert response.status_code == 302
-        assert response.headers["location"] == "https://googlevideo.com/direct-audio-url"
+        # Mock httpx to avoid external call and return fake audio
+        with patch("httpx.AsyncClient") as mock_client_cls:
+            mock_upstream = AsyncMock()
+            mock_upstream.status_code = 200
+            mock_upstream.headers = {"Content-Type": "audio/mpeg", "Content-Length": "123"}
+            mock_upstream.content = b"fake_audio_content"
+
+            mock_client_instance = AsyncMock()
+            mock_client_instance.__aenter__.return_value = mock_client_instance
+            mock_client_instance.get.return_value = mock_upstream
+            mock_client_cls.return_value = mock_client_instance
+
+            response = await client.get("/api/v1/stream/123.mp3", follow_redirects=False)
+
+            assert response.status_code == 200
+            assert response.content == b"fake_audio_content"
+            assert response.headers["Content-Type"] == "audio/mpeg"
 
 
 def test_extract_art_flac_with_pictures():

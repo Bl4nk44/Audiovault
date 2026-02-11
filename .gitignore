@@ -30,6 +30,7 @@ postgres_data/
 
 
 # Cache
+.cache
 backend/.cache
 
 # Logs

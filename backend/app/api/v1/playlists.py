@@ -400,9 +400,17 @@ async def remove_tracks_from_playlist(
     if not playlist:
         raise HTTPException(status_code=404, detail=PLAYLIST_NOT_FOUND)
 
-    stmt = delete(PlaylistTrack).where(
-        PlaylistTrack.playlist_id == playlist_id, PlaylistTrack.track_id.in_(tracks_in.track_ids)
-    )
+    target_ids = []
+    for t_id in tracks_in.track_ids:
+        try:
+            target_ids.append(UUID(t_id))
+        except ValueError:
+            continue
+
+    if not target_ids:
+        return
+
+    stmt = delete(PlaylistTrack).where(PlaylistTrack.playlist_id == playlist_id, PlaylistTrack.track_id.in_(target_ids))
     await db.execute(stmt)
     await db.commit()
 
