@@ -23,7 +23,7 @@ psycopg2-binary>=2.9.11
 python-socketio>=5.16.1
 email-validator>=2.3.0
 lyricsgenius>=3.7.5
-fastapi-limiter==0.1.6
+fastapi-limiter==0.2.0
 pytest>=9.0.2
 pytest-cov>=7.0.0
 httpx>=0.28.1
