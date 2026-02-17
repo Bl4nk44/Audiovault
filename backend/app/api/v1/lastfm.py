@@ -1,7 +1,7 @@
 import logging
 from datetime import UTC, datetime
 
-from typing import Annotated, Any, Dict, List, Optional, cast
+from typing import Annotated
 from app.core.dependencies import get_current_user
 from app.db.database import get_db
 from app.models.user import User
@@ -67,11 +67,11 @@ async def lastfm_callback(
 
 @router.get("/recommendations", response_model=RecommendationResponse)
 async def get_recommendations(
-    force_refresh: bool = False,
-    source: str = "auto",
     db: Annotated[AsyncSession, Depends(get_db)],
     current_user: Annotated[User, Depends(get_current_user)],
     service: Annotated[LastfmService, Depends(get_lastfm_service)],
+    force_refresh: bool = False,
+    source: str = "auto",
 ):
     """
     Get personalized recommendations.

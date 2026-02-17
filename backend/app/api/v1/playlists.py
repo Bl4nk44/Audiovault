@@ -17,13 +17,11 @@ from app.schemas.playlist import (
     PlaylistTrackResponse,
     PlaylistUpdate,
 )
-from app.services.download_manager import download_manager
 from app.services.playlist_version_service import playlist_version_service
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.responses import Response
 from pydantic import BaseModel
 from sqlalchemy import delete, func, select
-from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 

@@ -397,6 +397,7 @@ class LastfmService:
 
         # 2. Process Seeds to find Similar Tracks/Top Tracks
         sem = asyncio.Semaphore(10)
+        candidates: Dict[str, RecommendedTrack] = {}
 
         async def fetch_similar_for_track(name, artist):
             async with sem:
