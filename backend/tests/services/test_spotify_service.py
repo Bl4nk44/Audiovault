@@ -1,3 +1,4 @@
+from typing import Any, Dict
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -12,7 +13,7 @@ def spotify_service():
     ):
         service = SpotifyService()
         mock_client = MagicMock()
-        safe_paginated = {"items": [], "next": None, "tracks": {"items": [], "next": None}}
+        safe_paginated: dict[str, Any] = {"items": [], "next": None, "tracks": {"items": [], "next": None}}
         mock_client.next.return_value = {"next": None, "items": []}
         mock_client.search.return_value = safe_paginated
         mock_client.artist_albums.return_value = safe_paginated

@@ -162,6 +162,7 @@ async def test_get_library_items_updates_commit(db_session: AsyncSession):
     with patch("os.path.exists") as mock_exists:
         mock_exists.side_effect = lambda p: p.endswith(".mp3")
         await library_data_service.get_library_items(db_session, str(user_id))
+        assert dl.file_path is not None
         assert dl.file_path.endswith(".mp3")
 
 

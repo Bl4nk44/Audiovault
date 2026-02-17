@@ -54,6 +54,7 @@ async def test_create_snapshot_with_tracks(db_session, sample_playlist, sample_t
     version = await playlist_version_service.create_snapshot(db_session, sample_playlist, "ADD_TRACK", admin_user.id)
 
     assert version.version_number == 1
+    assert version.tracks_snapshot is not None
     assert len(version.tracks_snapshot) == 1
     assert version.tracks_snapshot[0]["track_id"] == str(sample_track.id)
     assert version.tracks_snapshot[0]["order"] == 1

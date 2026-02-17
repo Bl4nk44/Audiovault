@@ -1,10 +1,12 @@
 import asyncio
 import uuid
+from typing import Any, Dict
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 from app.schemas.download import DownloadCreate
 from app.services.download_manager import DownloadManager
+import aiofiles
 
 
 @pytest.fixture
@@ -148,7 +150,7 @@ async def test_dm_user_semaphore(download_manager):
 @pytest.mark.asyncio
 async def test_dm_cache_resolution(download_manager):
     url = "ytsearch1:test query"
-    ydl_opts = {}
+    ydl_opts: dict[str, Any] = {}
     download_id = "dl1"
     loop = asyncio.get_event_loop()
 

@@ -2,7 +2,7 @@ import asyncio
 import hashlib
 import logging
 import time
-from typing import Any, Dict, List, Optional, cast
+from typing import Any, Coroutine, Dict, List, Optional, cast
 
 import httpx
 from app.core.config import settings
@@ -66,7 +66,7 @@ class LastfmService:
         sig_params = {k: v for k, v in params.items() if k not in ("format", "callback")}
         sorted_params = sorted(sig_params.items())
         sig_str = "".join(f"{k}{v}" for k, v in sorted_params)
-        sig_str += settings.LASTFM_API_SECRET
+        sig_str += str(settings.LASTFM_API_SECRET or "")
         return hashlib.md5(sig_str.encode("utf-8")).hexdigest()  # nosec B324
 
     async def _request(self, method: str, params: Dict[str, Any], signed: bool = False) -> Dict[str, Any]:
@@ -336,7 +336,7 @@ class LastfmService:
                 seed_tracks.append((name, artist))
 
         # Sources: Top, Recent, Top Artists, Recommended Artists
-        sources = [
+        sources: List[Coroutine[Any, Any, Any]] = [
             self.get_user_top_tracks(user_id, period="1month", limit=10),
             self.get_user_recent_tracks(user_id, limit=10),
             self.get_user_top_artists(user_id, limit=10),
@@ -344,7 +344,7 @@ class LastfmService:
         if session_key:
             sources.append(self.get_recommended_artists(session_key, limit=10))
 
-        results = await asyncio.gather(*[asyncio.create_task(s) for s in sources], return_exceptions=True)
+        results = cast(List[Any], await asyncio.gather(*[asyncio.create_task(s) for s in sources], return_exceptions=True))
 
         # Results indices match sources: 0=TopTracks, 1=RecentTracks, 2=TopArtists, 3=RecArtists
         if not isinstance(results[0], Exception):
@@ -362,17 +362,9 @@ class LastfmService:
                 if name:
                     seed_artists.add(name)
         if session_key and len(results) > 3 and not isinstance(results[3], Exception):
-            # The following lines are from a conftest.py fix and do not belong here.
-            # They are being removed to maintain syntactical correctness and logical flow.
-            # for route in app.routes:
-            # from fastapi.routing import APIRoute
-            # if isinstance(route, APIRoute) and route.dependencies:
-            #     for d in route.dependencies:
-            #         if type(d.dependency).__name__ == "RateLimiter":
-            #             app.dependency_overrides[d.dependency] = bypass_limiter
             res3 = cast(List[RecommendedArtist], results[3])
-            for a in res3:
-                name = self._parse_artist_name(a)
+            for artist_obj in res3:
+                name = self._parse_artist_name(artist_obj)
                 if name:
                     seed_artists.add(name)
 

@@ -3,7 +3,7 @@ import logging
 import os
 import uuid
 from datetime import UTC, datetime
-from typing import List, Optional
+from typing import List, Optional, Sequence
 
 import aiofiles
 import yt_dlp
@@ -811,7 +811,7 @@ class DownloadManager:
         result = await db.execute(select(Track).where(Track.id == track_id))
         return result.scalar_one_or_none()
 
-    async def _write_m3u_file(self, downloads: List[Download], target_dir: str, playlist_file_path: str):
+    async def _write_m3u_file(self, downloads: Sequence[Download], target_dir: str, playlist_file_path: str):
         """Helper to write M3U8 file."""
         async with aiofiles.open(playlist_file_path, "w", encoding="utf-8") as f:
             await f.write("#EXTM3U\n")
@@ -825,7 +825,7 @@ class DownloadManager:
                         await f.write(f"#EXTINF:-1,{d.track.artist} - {d.track.title}\n")
                         await f.write(f"{d.file_path}\n")
 
-    async def _sync_playlist_to_db(self, db: AsyncSession, user_id: str, playlist_name: str, downloads: List[Download]):
+    async def _sync_playlist_to_db(self, db: AsyncSession, user_id: uuid.UUID, playlist_name: str, downloads: Sequence[Download]):
         """Helper to sync playlist tracks to database."""
         from app.models.playlist import Playlist, PlaylistTrack
         from sqlalchemy import delete
@@ -894,7 +894,7 @@ class DownloadManager:
             logger.info(f"Updated playlist file {playlist_file_path}")
 
             try:
-                await self._sync_playlist_to_db(db, user_id, playlist_name, downloads)
+                await self._sync_playlist_to_db(db, uuid.UUID(str(user_id)), playlist_name, downloads)
             except Exception as e_db:
                 logger.error(f"Failed to sync playlist to DB: {e_db}")
 

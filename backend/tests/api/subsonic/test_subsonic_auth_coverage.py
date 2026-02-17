@@ -53,7 +53,8 @@ async def test_subsonic_auth_disabled_user():
             await subsonic_auth(u="disabled", p=None, t=None, s=None, c="test", db=db)
 
         assert excinfo.value.status_code == 403
-        assert excinfo.value.detail["subsonic-response"]["error"]["code"] == 50
+        detail: dict[str, Any] = excinfo.value.detail  # type: ignore
+        assert detail["subsonic-response"]["error"]["code"] == 50
 
 
 @pytest.mark.asyncio
@@ -69,7 +70,8 @@ async def test_subsonic_auth_wrong_password():
             await subsonic_auth(u="user", p="wrong", t=None, s=None, c="test", db=db)
 
         assert excinfo.value.status_code == 401
-        assert excinfo.value.detail["subsonic-response"]["error"]["code"] == 40
+        detail: dict[str, Any] = excinfo.value.detail  # type: ignore
+        assert detail["subsonic-response"]["error"]["code"] == 40
 
 
 @pytest.mark.asyncio

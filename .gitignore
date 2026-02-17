@@ -36,7 +36,7 @@ backend/.cache
 logs.txt
 logs_full.txt
 backend/logs/
-deploy.ps1
+
 
 # SonarQube
 .scannerwork/
@@ -54,10 +54,12 @@ coverage/
 junit.xml
 *.xml
 debug.log
+
 # Security Scan Results
 trivy-*.json
 .trivy-cache/
 .security-reports/
+.venv-test/
 
 
 # Temporary Maintenance & Debug Scripts

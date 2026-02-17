@@ -98,7 +98,7 @@ def test_extract_art_strategies():
     class MockCov(bytes):
         pass
 
-    MockCov.imageformat = mutagen.mp4.MP4Cover.FORMAT_JPEG
+    MockCov.imageformat = mutagen.mp4.MP4Cover.FORMAT_JPEG  # type: ignore
     m.tags = {"covr": [MockCov(b"m")]}
     assert _extract_art_mp4(m) == (b"m", "image/jpeg")
 

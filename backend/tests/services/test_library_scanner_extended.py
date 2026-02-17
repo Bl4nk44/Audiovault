@@ -5,6 +5,7 @@ Covers: path validation, metadata parsing, scan operations, playlist imports.
 
 import os
 import uuid
+from typing import Any, List, Tuple
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
@@ -324,7 +325,7 @@ async def test_scan_directory_with_files(scanner):
     mock_result.all.return_value = []
     db_mock.execute.return_value = mock_result
 
-    files_list = [(scanner.base_dir, [], ["song1.mp3", "song2.mp3", "readme.txt"])]
+    files_list: list[tuple[str, list[str], list[str]]] = [(scanner.base_dir, [], ["song1.mp3", "song2.mp3", "readme.txt"])]
 
     with (
         patch("os.path.exists", return_value=True),

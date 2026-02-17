@@ -6,7 +6,7 @@ from typing import List, Optional
 
 from app.core.cache import cache_manager
 from app.models.user import User
-from app.schemas.recommendation import RecommendationResponse, RecommendedPlaylist, RecommendedTrack
+from app.schemas.recommendation import RecommendationResponse, RecommendedArtist, RecommendedPlaylist, RecommendedTrack
 from app.services.lastfm_service import LastfmError, LastfmService
 from app.services.spotify_service import SpotifyService
 
@@ -184,7 +184,7 @@ class HybridRecommendationEngine:
             logger.error(f"Failed to fetch playlist recommendations: {e}")
             return []
 
-    async def _fetch_artists(self, user: User) -> List[RecommendedTrack]:
+    async def _fetch_artists(self, user: User) -> List[RecommendedArtist]:
         """Fetch recommended artists with Spotify image fallback."""
         artists = []
         target_user = user.lastfm_username or user.username

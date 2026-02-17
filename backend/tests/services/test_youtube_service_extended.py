@@ -3,7 +3,8 @@ Extended tests for YouTubeService to increase code coverage.
 Covers: search with URLs, video/playlist/channel lookup, format mappings.
 """
 
-from unittest.mock import MagicMock, patch
+from typing import Any, Dict, List, Tuple
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 from app.services.youtube_service import YouTubeService
@@ -383,7 +384,7 @@ def test_get_artist_tracks_success(youtube_service):
 
 def test_get_artist_tracks_no_songs(youtube_service):
     """Test artist with no songs browse ID."""
-    mock_artist = {"songs": {}}
+    mock_artist: Dict[str, Any] = {"songs": {}}
     youtube_service.yt.get_artist.return_value = mock_artist
 
     tracks = youtube_service.get_artist_tracks("UC123")
@@ -470,7 +471,7 @@ def test_format_track_full(youtube_service):
 
 def test_format_track_duration_seconds(youtube_service):
     """Test formatting track with duration_seconds."""
-    item = {"videoId": "s1", "title": "Track", "artists": [], "thumbnails": [], "duration_seconds": 180}
+    item: Dict[str, Any] = {"videoId": "s1", "title": "Track", "artists": [], "thumbnails": [], "duration_seconds": 180}
 
     result = youtube_service._format_track(item)
 

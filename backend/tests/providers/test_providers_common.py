@@ -9,7 +9,7 @@ from app.providers.youtube_provider import YouTubeProvider
 @pytest.fixture
 def spotify_provider():
     p = SpotifyProvider()
-    p.client = MagicMock()
+    p.client = MagicMock()  # type: ignore
     return p
 
 

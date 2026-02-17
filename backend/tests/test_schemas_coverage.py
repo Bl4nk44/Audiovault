@@ -1,3 +1,5 @@
+import uuid
+from datetime import datetime
 from app.models import schemas
 from app.schemas.subsonic.base import SubsonicResponseWrapper
 
@@ -9,16 +11,16 @@ def test_base_schemas_coverage():
 
     # User
     u = schemas.UserResponse(
-        id="123e4567-e89b-12d3-a456-426614174000",  # Must be valid UUID
+        id=uuid.UUID("123e4567-e89b-12d3-a456-426614174000"),  # Must be valid UUID
         username="u",
         email="e@e.com",
         is_active=True,
-        created_at="2024-01-01T00:00:00",
+        created_at=datetime(2024, 1, 1),
     )
     assert u.username == "u"
 
     # Track
-    tr = schemas.TrackResponse(title="t", artist="a", id="123e4567-e89b-12d3-a456-426614174000")
+    tr = schemas.TrackResponse(title="t", artist="a", id=uuid.UUID("123e4567-e89b-12d3-a456-426614174000"))
     assert tr.title == "t"
 
 

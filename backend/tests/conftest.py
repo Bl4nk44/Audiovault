@@ -8,8 +8,7 @@ from app.db.base import Base
 from app.db.database import get_db
 from app.main import app
 from httpx import ASGITransport, AsyncClient
-from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
-from sqlalchemy.orm import sessionmaker
+from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 from sqlalchemy.pool import StaticPool
 
 # Use in-memory SQLite for tests
@@ -21,9 +20,8 @@ engine = create_async_engine(
     pool_pre_ping=True,
     poolclass=StaticPool,
 )
-TestingSessionLocal = sessionmaker(
+TestingSessionLocal = async_sessionmaker(
     bind=engine,
-    class_=AsyncSession,
     expire_on_commit=False,
 )
 
@@ -150,7 +148,7 @@ async def client(
 
         if isinstance(route, APIRoute) and route.dependencies:
             for d in route.dependencies:
-                if type(d.dependency).__name__ == "RateLimiter":
+                if d.dependency and type(d.dependency).__name__ == "RateLimiter":
                     app.dependency_overrides[d.dependency] = bypass_limiter
 
     # Mock download_dir to use a temp dir

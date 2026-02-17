@@ -16,7 +16,7 @@ def subsonic_auth_params(admin_user):
 @pytest.fixture
 async def sample_media(db_session, admin_user):
     # We will mock file operations, so no physical file is needed
-    file_path = "C:\\fake\\music\\test.mp3"
+    file_path = "/fake/music/test.mp3"
 
     track = Track(id=uuid.uuid4(), title="Stream Track", artist="Stream Artist")
     db_session.add(track)

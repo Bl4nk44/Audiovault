@@ -432,7 +432,7 @@ async def scrobble(
                 await scrobbler_service.scrobble_track(
                     user=current_user,
                     track=track_obj.title,
-                    artist=track_obj.artist,
+                    artist=track_obj.artist or "Unknown",
                     album=track_obj.album,
                     timestamp=int(played_at.timestamp()),
                 )
@@ -459,10 +459,10 @@ async def scrobble(
         db.add(now_playing)
 
     # Last.fm Now Playing
-    if not submission and track_obj:
+    if not submission and track_obj and track_obj.artist:
         try:
             await scrobbler_service.update_now_playing(
-                user=current_user, track=track_obj.title, artist=track_obj.artist, album=track_obj.album
+                user=current_user, track=track_obj.title, artist=track_obj.artist or "Unknown", album=track_obj.album
             )
         except Exception:  # nosec B110
             pass

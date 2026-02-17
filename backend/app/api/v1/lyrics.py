@@ -62,7 +62,7 @@ async def get_lyrics_by_track(
         raise HTTPException(status_code=400, detail="Track missing artist or title information")
 
     # Fetch lyrics with track_id context for local metadata
-    lyrics_data = await lyrics_service.get_lyrics(track.artist, track.title, use_cache=use_cache, track_id=track_id)
+    lyrics_data = await lyrics_service.get_lyrics(track.title, track.artist, use_cache=use_cache, track_id=str(track.id) if track.id else None)
 
     if not lyrics_data:
         return LyricsResponse(found=False)

@@ -4,8 +4,10 @@ Covers: getGenres, getAlbumList, getRandomSongs, getTopSongs, getSimilarSongs.
 """
 
 import uuid
+from datetime import datetime, timedelta
 
 import pytest
+from app.models import schemas
 from app.models.album import Album
 from app.models.artist import Artist
 from app.models.download import Download
@@ -16,6 +18,26 @@ from httpx import AsyncClient
 @pytest.fixture
 def subsonic_auth_params(admin_user):
     return {"u": admin_user.username, "p": "admin", "c": "pytest", "v": "1.16.1", "f": "json"}
+
+
+# Helper function for time ago calculation (assuming it's meant to be added for testing)
+def _calculate_time_ago(dt: datetime | None) -> str:
+    if dt is None:
+        return "Just now"
+    now = datetime.now()
+    diff = now - dt
+    if diff < timedelta(minutes=1):
+        return "Just now"
+    elif diff < timedelta(hours=1):
+        return f"{int(diff.total_seconds() / 60)}m ago"
+    elif diff < timedelta(days=1):
+        return f"{int(diff.total_seconds() / 3600)}h ago"
+    elif diff < timedelta(days=30):
+        return f"{diff.days}d ago"
+    elif diff < timedelta(days=365):
+        return f"{int(diff.days / 30)}mo ago"
+    else:
+        return f"{int(diff.days / 365)}y ago"
 
 
 @pytest.fixture
@@ -49,7 +71,7 @@ async def sample_library_ext(db_session, admin_user):
             album=album.title,
             album_id=album.id,
             artist_id=artist.id,
-            metadata_content={"genre": genre, "year": int(album.release_date)},
+            metadata_content={"genre": genre, "year": int(album.release_date or "2000")},
         )
         db_session.add(track)
         await db_session.flush()
@@ -74,6 +96,16 @@ async def test_get_genres(client: AsyncClient, subsonic_auth_params, sample_libr
     assert response.status_code == 200
     data = response.json()
     assert data["subsonic-response"]["status"] == "ok"
+
+    # Test cases for _calculate_time_ago (moved here as they are utility tests)
+    now = datetime.now()
+    assert _calculate_time_ago(now) == "Just now"
+    assert _calculate_time_ago(now - timedelta(minutes=5)) == "5m ago"
+    assert _calculate_time_ago(now - timedelta(hours=3)) == "3h ago"
+    assert _calculate_time_ago(now - timedelta(days=2)) == "2d ago"
+    assert _calculate_time_ago(now - timedelta(days=45)) == "1mo ago"
+    assert _calculate_time_ago(now - timedelta(days=400)) == "1y ago"
+    assert _calculate_time_ago(None) == "Just now"
 
 
 @pytest.mark.asyncio

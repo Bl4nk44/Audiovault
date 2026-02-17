@@ -1,5 +1,6 @@
 import json
-from datetime import datetime as dt
+import logging
+from datetime import datetime as dt, timezone
 from typing import Optional
 from uuid import UUID
 
@@ -23,9 +24,11 @@ from fastapi.responses import Response
 from pydantic import BaseModel
 from sqlalchemy import delete, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import selectinload
 
 router = APIRouter()
+logger = logging.getLogger(__name__)
 
 PLAYLIST_NOT_FOUND = "Playlist not found"
 
@@ -95,6 +98,8 @@ async def get_playlists(
 
     responses = []
     for pl in playlists:
+        if pl is None:
+            continue
         # Construct response with tracks
         pl_tracks_resp = []
         for pt in pl.tracks:
@@ -145,8 +150,10 @@ async def get_playlist(
     )
     result = await db.execute(query)
     playlist = result.scalar_one_or_none()
+    if playlist is None:
+        raise HTTPException(status_code=404, detail=PLAYLIST_NOT_FOUND)
 
-    if not playlist:
+    if playlist is None:
         raise HTTPException(status_code=404, detail=PLAYLIST_NOT_FOUND)
 
     pl_tracks_resp = []
@@ -234,11 +241,18 @@ async def delete_playlist(
     if not playlist:
         raise HTTPException(status_code=404, detail=PLAYLIST_NOT_FOUND)
 
+    if not playlist:
+        raise HTTPException(status_code=404, detail=PLAYLIST_NOT_FOUND)
+    
+    # playlist is guaranteed not None here
+    assert playlist is not None
+    if playlist is None:
+        raise HTTPException(status_code=404, detail=PLAYLIST_NOT_FOUND)
+
     await db.delete(playlist)
     await db.commit()
 
 
-@router.post("/{playlist_id}/tracks", status_code=status.HTTP_201_CREATED)
 async def _resolve_track_ids(
     db: AsyncSession, track_ids: list[str], user_id: UUID, playlist_id: UUID, playlist_name: str
 ) -> list[UUID]:
@@ -312,7 +326,7 @@ async def add_tracks_to_playlist(
     result = await db.execute(query)
     playlist = result.scalar_one_or_none()
 
-    if not playlist:
+    if playlist is None:
         raise HTTPException(status_code=404, detail=PLAYLIST_NOT_FOUND)
 
     # 2. Get current max order
@@ -355,6 +369,9 @@ async def add_tracks_to_playlist(
 
     try:
         await db.commit()
+    except IntegrityError:
+        await db.rollback()
+        raise HTTPException(status_code=400, detail="Database integrity error.")
     except Exception as e:
         await db.rollback()
         raise HTTPException(status_code=500, detail=f"Database error: {str(e)}")
@@ -379,7 +396,7 @@ async def remove_tracks_from_playlist(
     result = await db.execute(query)
     playlist = result.scalar_one_or_none()
 
-    if not playlist:
+    if playlist is None:
         raise HTTPException(status_code=404, detail=PLAYLIST_NOT_FOUND)
 
     target_ids = []
@@ -415,7 +432,7 @@ async def export_playlist(
     result = await db.execute(query)
     playlist = result.scalar_one_or_none()
 
-    if not playlist:
+    if playlist is None:
         raise HTTPException(status_code=404, detail=PLAYLIST_NOT_FOUND)
 
     # Build export data
@@ -445,7 +462,7 @@ async def export_playlist(
         },
         "tracks_count": len(tracks_data),
         "tracks": tracks_data,
-        "exported_at": dt.now(tz=__import__("datetime").timezone.utc).isoformat(),
+        "exported_at": dt.now(tz=timezone.utc).isoformat(),
         "export_version": "1.0",
     }
 
