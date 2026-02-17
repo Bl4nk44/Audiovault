@@ -14,7 +14,7 @@ class AudiovaultScrobbler:
 
     async def update_now_playing(self, user: User, track: str, artist: str, album: Optional[str] = None) -> None:
         """Update "Now Playing" status on Last.fm if enabled."""
-        if not self._should_scrobble(user):
+        if not user.lastfm_session_key:
             return
 
         try:
@@ -29,11 +29,8 @@ class AudiovaultScrobbler:
         self, user: User, track: str, artist: str, timestamp: Optional[int] = None, album: Optional[str] = None
     ) -> bool:
         """Scrobble a track to Last.fm."""
-        if not self._should_scrobble(user):
+        if not user.lastfm_session_key:
             return False
-
-        if timestamp is None:
-            timestamp = int(time.time())
 
         try:
             await self.lastfm.scrobble(

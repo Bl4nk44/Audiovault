@@ -2,7 +2,7 @@ import asyncio
 import hashlib
 import logging
 import time
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, cast
 
 import httpx
 from app.core.config import settings
@@ -98,7 +98,10 @@ class LastfmService:
             raise LastfmAPIError(f"HTTP request failed: {str(e)}")
 
     def get_auth_url(self) -> str:
-        callback_url = f"{settings.BACKEND_CORS_ORIGINS[0]}/recommendations"  # MVP Assumption: frontend is first origin
+        # Use first origin if available, otherwise localhost
+        origins = list(settings.BACKEND_CORS_ORIGINS)
+        callback_base = origins[0] if origins else "http://localhost:3000"
+        callback_url = f"{callback_base}/recommendations"
         return f"http://www.last.fm/api/auth/?api_key={settings.LASTFM_API_KEY}&cb={callback_url}"
 
     async def get_session(self, token: str) -> Dict[str, Any]:
@@ -342,18 +345,30 @@ class LastfmService:
 
         # Results indices match sources: 0=TopTracks, 1=RecentTracks, 2=TopArtists, 3=RecArtists
         if not isinstance(results[0], Exception):
-            for t in results[0]:
+            res0 = cast(List[Dict[str, Any]], results[0])
+            for t in res0:
                 add_track(t.get("name"), t.get("artist"))
         if not isinstance(results[1], Exception):
-            for t in results[1]:
+            res1 = cast(List[Dict[str, Any]], results[1])
+            for t in res1:
                 add_track(t.get("name"), t.get("artist"))
         if not isinstance(results[2], Exception):
-            for a in results[2]:
+            res2 = cast(List[Dict[str, Any]], results[2])
+            for a in res2:
                 name = self._parse_artist_name(a)
                 if name:
                     seed_artists.add(name)
         if session_key and len(results) > 3 and not isinstance(results[3], Exception):
-            for a in results[3]:
+            # The following lines are from a conftest.py fix and do not belong here.
+            # They are being removed to maintain syntactical correctness and logical flow.
+            # for route in app.routes:
+            # from fastapi.routing import APIRoute
+            # if isinstance(route, APIRoute) and route.dependencies:
+            #     for d in route.dependencies:
+            #         if type(d.dependency).__name__ == "RateLimiter":
+            #             app.dependency_overrides[d.dependency] = bypass_limiter
+            res3 = cast(List[RecommendedArtist], results[3])
+            for a in res3:
                 name = self._parse_artist_name(a)
                 if name:
                     seed_artists.add(name)
@@ -361,8 +376,6 @@ class LastfmService:
         return seed_tracks, seed_artists
 
     async def get_recommendations(self, user_id: str, session_key: Optional[str] = None) -> List[RecommendedTrack]:
-        candidates: Dict[str, RecommendedTrack] = {}
-        logger.info(f"Fetching seeds for recommendations: user={user_id}, auth={bool(session_key)}")
 
         seed_tracks, seed_artists = await self._gather_seeds(user_id, session_key)
 
@@ -403,9 +416,9 @@ class LastfmService:
 
         await asyncio.gather(*tasks)
 
-        results = list(candidates.values())
-        results.sort(key=lambda x: x.score, reverse=True)
-        final_results = [r for r in results if f"{r.artist} - {r.name}" not in seen_tracks]
+        final_track_list = list(candidates.values())
+        final_track_list.sort(key=lambda x: x.score, reverse=True)
+        final_results = [r for r in final_track_list if f"{r.artist} - {r.name}" not in seen_tracks]
 
         logger.info(f"Generated {len(final_results)} recommendations for {user_id}")
         return final_results[:40]

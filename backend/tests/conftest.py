@@ -22,8 +22,6 @@ engine = create_async_engine(
     poolclass=StaticPool,
 )
 TestingSessionLocal = sessionmaker(
-    autocommit=False,
-    autoflush=False,
     bind=engine,
     class_=AsyncSession,
     expire_on_commit=False,
@@ -148,7 +146,8 @@ async def client(
         return
 
     for route in app.routes:
-        if hasattr(route, "dependencies") and route.dependencies:
+        from fastapi.routing import APIRoute
+        if isinstance(route, APIRoute) and route.dependencies:
             for d in route.dependencies:
                 if type(d.dependency).__name__ == "RateLimiter":
                     app.dependency_overrides[d.dependency] = bypass_limiter
