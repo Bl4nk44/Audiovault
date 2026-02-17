@@ -1,5 +1,11 @@
-# Dependabot configuration for Audiovault
+# ==============================================
+# Dependabot Configuration for Audiovault
+# ==============================================
 # Documentation: https://docs.github.com/code-security/dependabot/dependabot-version-updates/configuration-options-for-the-dependabot.yml-file
+#
+# This configuration disables automatic PR creation.
+# You will receive security alerts and can view available updates
+# in the Security > Dependabot alerts tab.
 
 version: 2
 updates:
@@ -9,15 +15,16 @@ updates:
     schedule:
       interval: "weekly"
       day: "monday"
-    open-pull-requests-limit: 10
-    # Group all non-major updates together to reduce PR noise
-    groups:
-      frontend-dependencies:
-        patterns:
-          - "*"
-        update-types:
-          - "minor"
-          - "patch"
+      time: "09:00"
+      timezone: "Europe/Berlin"
+    # Disable automatic PRs - only show alerts
+    open-pull-requests-limit: 0
+    # Still check for updates but don't create PRs
+    labels:
+      - "dependencies"
+      - "frontend"
+    reviewers:
+      - "Bl4nk44"
 
   # Backend Dependencies (PIP)
   - package-ecosystem: "pip"
@@ -25,14 +32,15 @@ updates:
     schedule:
       interval: "weekly"
       day: "monday"
-    open-pull-requests-limit: 10
-    groups:
-      backend-dependencies:
-        patterns:
-          - "*"
-        update-types:
-          - "minor"
-          - "patch"
+      time: "09:00"
+      timezone: "Europe/Berlin"
+    # Disable automatic PRs - only show alerts
+    open-pull-requests-limit: 0
+    labels:
+      - "dependencies"
+      - "backend"
+    reviewers:
+      - "Bl4nk44"
 
   # Backend Docker Base Image
   - package-ecosystem: "docker"
@@ -40,6 +48,12 @@ updates:
     schedule:
       interval: "weekly"
       day: "monday"
+      time: "09:00"
+      timezone: "Europe/Berlin"
+    open-pull-requests-limit: 0
+    labels:
+      - "dependencies"
+      - "docker"
 
   # Frontend Docker Base Image
   - package-ecosystem: "docker"
@@ -47,3 +61,22 @@ updates:
     schedule:
       interval: "weekly"
       day: "monday"
+      time: "09:00"
+      timezone: "Europe/Berlin"
+    open-pull-requests-limit: 0
+    labels:
+      - "dependencies"
+      - "docker"
+
+  # GitHub Actions
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "09:00"
+      timezone: "Europe/Berlin"
+    open-pull-requests-limit: 0
+    labels:
+      - "dependencies"
+      - "github-actions"
