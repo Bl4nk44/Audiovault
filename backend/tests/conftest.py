@@ -147,6 +147,7 @@ async def client(
 
     for route in app.routes:
         from fastapi.routing import APIRoute
+
         if isinstance(route, APIRoute) and route.dependencies:
             for d in route.dependencies:
                 if type(d.dependency).__name__ == "RateLimiter":
