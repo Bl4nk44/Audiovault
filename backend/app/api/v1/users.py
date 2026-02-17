@@ -1,17 +1,16 @@
 import os
 import shutil
 import time
+from typing import Annotated
 
 import aiofiles
-from typing import Annotated
 from app.core.config import settings
 from app.core.dependencies import get_current_active_user
-from app.utils.sanitization import sanitize_filename
-
 from app.core.security import get_password_hash, verify_password
 from app.db.database import get_db
 from app.models.schemas import UserResponse
 from app.models.user import User
+from app.utils.sanitization import sanitize_filename
 from fastapi import APIRouter, Depends, File, HTTPException, UploadFile
 from pydantic import BaseModel
 from sqlalchemy.ext.asyncio import AsyncSession

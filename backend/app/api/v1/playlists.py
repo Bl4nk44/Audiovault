@@ -321,9 +321,7 @@ async def add_tracks_to_playlist(
     current_max_order = max_order_res.scalar() or 0
 
     # 3. Resolve track IDs
-    resolved_track_ids = await _resolve_track_ids(
-        db, tracks_in.track_ids, current_user.id, playlist.id, playlist.name
-    )
+    resolved_track_ids = await _resolve_track_ids(db, tracks_in.track_ids, current_user.id, playlist.id, playlist.name)
 
     # 4. Filter existing tracks
     if resolved_track_ids:
