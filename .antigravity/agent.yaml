@@ -83,18 +83,18 @@ guardrails:
   
   # Prevent common mistakes
   checks:
-    - no_blocking_in_async: true
-    - type_hints_required: true
-    - test_coverage_required: true
-    - no_hardcoded_secrets: true
-    - no_console_logs: true
+    no_blocking_in_async: true
+    type_hints_required: true
+    test_coverage_required: true
+    no_hardcoded_secrets: true
+    no_console_logs: true
   
   # Code quality gates
   quality_gates:
-    - backend_tests_pass: true
-    - frontend_tests_pass: true
-    - linting_pass: true
-    - security_scan_pass: true
+    backend_tests_pass: true
+    frontend_tests_pass: true
+    linting_pass: true
+    security_scan_pass: true
 
 # Communication Style
 communication:
@@ -106,10 +106,10 @@ communication:
   
   # Response format
   response_style:
-    - concise_explanations: true
-    - code_examples: true
-    - step_by_step: true
-    - context_aware: true
+    concise_explanations: true
+    code_examples: true
+    step_by_step: true
+    context_aware: true
   
   # Avoid meta-commentary
   no_tool_mentions: true
