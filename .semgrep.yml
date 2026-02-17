@@ -1,0 +1,190 @@
+# ==============================================
+# Semgrep Configuration
+# ==============================================
+# Static analysis tool for finding bugs, detecting
+# security vulnerabilities, and enforcing code standards
+
+rules:
+  # Python FastAPI Security Rules
+  - id: fastapi-missing-rate-limit
+    patterns:
+      - pattern: |
+          @app.$METHOD(...)
+          def $FUNC(...):
+            ...
+      - pattern-not: |
+          @limiter.limit(...)
+          @app.$METHOD(...)
+          def $FUNC(...):
+            ...
+    message: FastAPI endpoint missing rate limiting. Consider adding @limiter.limit()
+    languages: [python]
+    severity: WARNING
+    metadata:
+      category: security
+      technology:
+        - fastapi
+
+  - id: fastapi-sql-injection
+    patterns:
+      - pattern: |
+          $DB.execute(f"...{$VAR}...")
+      - pattern: |
+          $DB.execute("..." + $VAR + "...")
+    message: Possible SQL injection vulnerability. Use parameterized queries.
+    languages: [python]
+    severity: ERROR
+    metadata:
+      category: security
+      cwe:
+        - "CWE-89: SQL Injection"
+      owasp:
+        - A03:2021 - Injection
+
+  - id: hardcoded-secret
+    patterns:
+      - pattern-either:
+          - pattern: $VAR = "$VALUE"
+          - pattern: $VAR = '$VALUE'
+      - metavariable-regex:
+          metavariable: $VALUE
+          regex: (password|secret|token|api[_-]?key|private[_-]?key).*[a-zA-Z0-9]{16,}
+    message: Possible hardcoded secret detected. Use environment variables.
+    languages: [python, javascript, typescript]
+    severity: ERROR
+    metadata:
+      category: security
+      cwe:
+        - "CWE-798: Hard-coded Credentials"
+
+  - id: unsafe-yaml-load
+    pattern: yaml.load($X, ...)
+    message: Use yaml.safe_load() instead of yaml.load() to prevent code execution
+    languages: [python]
+    severity: ERROR
+    metadata:
+      category: security
+      cwe:
+        - "CWE-502: Deserialization of Untrusted Data"
+
+  - id: missing-jwt-verification
+    patterns:
+      - pattern: jwt.decode($TOKEN, ...)
+      - pattern-not: jwt.decode($TOKEN, ..., verify=True, ...)
+      - pattern-not: jwt.decode($TOKEN, ..., options={..., "verify_signature": True, ...}, ...)
+    message: JWT token decoded without signature verification
+    languages: [python]
+    severity: ERROR
+    metadata:
+      category: security
+
+  # TypeScript/React Security Rules
+  - id: react-dangerouslysetinnerhtml
+    pattern: dangerouslySetInnerHTML={{__html: $X}}
+    message: Avoid dangerouslySetInnerHTML to prevent XSS attacks
+    languages: [typescript, javascript]
+    severity: WARNING
+    metadata:
+      category: security
+      cwe:
+        - "CWE-79: Cross-site Scripting (XSS)"
+      owasp:
+        - A03:2021 - Injection
+
+  - id: axios-no-timeout
+    patterns:
+      - pattern: axios.$METHOD($URL, ...)
+      - pattern-not: axios.$METHOD($URL, {..., timeout: $TIMEOUT, ...})
+    message: Axios request without timeout. Add timeout to prevent hanging requests.
+    languages: [typescript, javascript]
+    severity: WARNING
+    metadata:
+      category: best-practice
+
+  - id: localstorage-sensitive-data
+    patterns:
+      - pattern-either:
+          - pattern: localStorage.setItem($KEY, ...)
+          - pattern: sessionStorage.setItem($KEY, ...)
+      - metavariable-regex:
+          metavariable: $KEY
+          regex: .*(token|password|secret|key|auth).*
+    message: Avoid storing sensitive data in localStorage/sessionStorage
+    languages: [typescript, javascript]
+    severity: WARNING
+    metadata:
+      category: security
+
+  # Code Quality Rules
+  - id: console-log-production
+    pattern-either:
+      - pattern: console.log(...)
+      - pattern: console.debug(...)
+      - pattern: console.info(...)
+    message: Remove console statements before production
+    languages: [typescript, javascript]
+    severity: INFO
+    metadata:
+      category: best-practice
+
+  - id: python-print-statement
+    pattern: print(...)
+    message: Use proper logging instead of print() statements
+    languages: [python]
+    severity: INFO
+    metadata:
+      category: best-practice
+
+  - id: todo-comment
+    pattern-regex: "(TODO|FIXME|XXX|HACK|NOTE):.*"
+    message: Found TODO/FIXME comment - track in issue tracker
+    languages: [python, javascript, typescript]
+    severity: INFO
+    metadata:
+      category: maintainability
+
+  # Path Traversal
+  - id: path-traversal
+    patterns:
+      - pattern-either:
+          - pattern: open($PATH, ...)
+          - pattern: os.path.join(..., $PATH, ...)
+      - pattern-inside: |
+          def $FUNC(..., $PARAM, ...):
+            ...
+      - metavariable-pattern:
+          metavariable: $PATH
+          patterns:
+            - pattern: $PARAM
+    message: Possible path traversal vulnerability. Validate and sanitize user input.
+    languages: [python]
+    severity: ERROR
+    metadata:
+      category: security
+      cwe:
+        - "CWE-22: Path Traversal"
+
+  # Command Injection
+  - id: command-injection
+    patterns:
+      - pattern-either:
+          - pattern: os.system($CMD)
+          - pattern: subprocess.$METHOD($CMD, shell=True, ...)
+      - pattern-inside: |
+          def $FUNC(..., $PARAM, ...):
+            ...
+      - metavariable-pattern:
+          metavariable: $CMD
+          patterns:
+            - pattern-either:
+                - pattern: f"...{$PARAM}..."
+                - pattern: "..." + $PARAM + "..."
+    message: Possible command injection. Avoid shell=True and validate input.
+    languages: [python]
+    severity: ERROR
+    metadata:
+      category: security
+      cwe:
+        - "CWE-78: Command Injection"
+      owasp:
+        - A03:2021 - Injection
