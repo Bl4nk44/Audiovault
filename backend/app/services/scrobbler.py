@@ -20,8 +20,7 @@ class AudiovaultScrobbler:
             return
 
         try:
-            # Ensure artist is always a string, even if input artist could theoretically be None (though typed as str)
-            # The instruction implies ensuring non-optional types are passed to the underlying service.
+            # Ensure artist is always a string
             artist_to_scrobble = artist or "Unknown Artist"
             await self.lastfm.update_now_playing(
                 track=track,
@@ -30,7 +29,8 @@ class AudiovaultScrobbler:
                 album=album,
             )
             logger.debug(
-                f"Updated Now Playing for {user.username}: {artist_to_scrobble} - {track}"
+                f"Updated Now Playing for {user.username}: "
+                f"{artist_to_scrobble} - {track}"
             )
         except LastfmError as e:
             logger.error(f"Failed to update now playing for {user.username}: {e}")
@@ -48,8 +48,7 @@ class AudiovaultScrobbler:
             return False
 
         try:
-            # Ensure artist is always a string, even if input artist could theoretically be None (though typed as str)
-            # The instruction implies ensuring non-optional types are passed to the underlying service.
+            # Ensure artist is always a string
             artist_to_scrobble = artist or "Unknown Artist"
             await self.lastfm.scrobble(
                 track=track,
