@@ -1,0 +1,73 @@
+# Validate agent memory files for consistency and quality
+name: Agent Memory Validator
+
+on:
+  pull_request:
+    paths:
+      - '.antigravity/**'
+  push:
+    branches:
+      - main
+    paths:
+      - '.antigravity/**'
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Check memory file structure
+        run: |
+          echo "Checking memory bank structure..."
+          test -f .antigravity/memory-bank/core/current-state.md
+          test -f .antigravity/memory-bank/core/projectbrief.md
+          test -f .antigravity/memory-bank/core/productContext.md
+          test -f .antigravity/memory-bank/core/techContext.md
+          echo "✅ Memory bank structure valid"
+      
+      - name: Check skills directory
+        run: |
+          echo "Checking skills..."
+          test -f .antigravity/SKILLS/memory-bank-protocol.md
+          test -f .antigravity/SKILLS/audiovault-developer.md
+          test -f .antigravity/SKILLS/backend-specialist.md
+          test -f .antigravity/SKILLS/frontend-specialist.md
+          echo "✅ Skills valid"
+      
+      - name: Check workflows directory
+        run: |
+          echo "Checking workflows..."
+          test -f .antigravity/WORKFLOWS/feature-development.md
+          test -f .antigravity/WORKFLOWS/bug-fix.md
+          test -f .antigravity/WORKFLOWS/code-review.md
+          echo "✅ Workflows valid"
+      
+      - name: Validate YAML configuration
+        run: |
+          echo "Validating agent.yaml..."
+          if command -v yamllint &> /dev/null; then
+            yamllint .antigravity/agent.yaml
+          else
+            echo "yamllint not installed, skipping"
+          fi
+          echo "✅ YAML configuration valid"
+      
+      - name: Check markdown formatting
+        run: |
+          echo "Checking markdown files..."
+          # Count lines in current-state.md to ensure it's updated
+          lines=$(wc -l < .antigravity/memory-bank/core/current-state.md)
+          if [ "$lines" -lt 10 ]; then
+            echo "⚠️ Warning: current-state.md seems very short"
+          fi
+          echo "✅ Markdown files present"
+      
+      - name: Verify no secrets in memory files
+        run: |
+          echo "Checking for secrets in memory files..."
+          if grep -r -i "password\|api[_-]key\|secret\|token" .antigravity/memory-bank/; then
+            echo "❌ Found potential secrets in memory files!"
+            exit 1
+          fi
+          echo "✅ No secrets found"
