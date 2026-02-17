@@ -46,6 +46,23 @@ jobs:
           sarif_file: 'trivy-results.sarif'
           category: 'trivy-filesystem'
 
+      - name: Run Trivy vulnerability scanner (filesystem JSON)
+        uses: aquasecurity/trivy-action@master
+        with:
+          scan-type: 'fs'
+          scan-ref: '.'
+          format: 'json'
+          output: 'trivy-results.json'
+          severity: 'CRITICAL,HIGH,MEDIUM'
+          exit-code: '0'
+
+      - name: Upload Trivy FS JSON results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: trivy-fs-results
+          path: trivy-results.json
+
       - name: Run Trivy vulnerability scanner (dependencies)
         uses: aquasecurity/trivy-action@master
         with:
@@ -102,6 +119,22 @@ jobs:
         with:
           sarif_file: 'trivy-docker-${{ matrix.image.name }}.sarif'
           category: 'trivy-docker-${{ matrix.image.name }}'
+
+      - name: Run Trivy on Docker image (JSON)
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: 'audiovault-${{ matrix.image.name }}:test'
+          format: 'json'
+          output: 'trivy-docker-${{ matrix.image.name }}.json'
+          severity: 'CRITICAL,HIGH,MEDIUM'
+          exit-code: '0'
+
+      - name: Upload Docker JSON results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: trivy-docker-${{ matrix.image.name }}
+          path: trivy-docker-${{ matrix.image.name }}.json
 
   # ==============================================
   # Semgrep Static Analysis

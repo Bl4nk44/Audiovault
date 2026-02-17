@@ -7,29 +7,29 @@
 # Scan settings
 scan:
   # Scan for vulnerabilities in dependencies
-  security-checks:
+  scanners:
     - vuln
     - secret
-    - config
+    - misconfig
     - license
 
-  # File patterns to scan
+  # File patterns to scan (using correct format fileType:pattern)
   file-patterns:
-    - "*.py"
-    - "*.js"
-    - "*.jsx"
-    - "*.ts"
-    - "*.tsx"
-    - "*.json"
-    - "*.yaml"
-    - "*.yml"
-    - "Dockerfile*"
-    - "requirements*.txt"
-    - "package*.json"
+    - python: "*.py"
+    - javascript: "*.js"
+    - javascript: "*.jsx"
+    - typescript: "*.ts"
+    - typescript: "*.tsx"
+    - json: "*.json"
+    - yaml: "*.yaml"
+    - yaml: "*.yml"
+    - dockerfile: "Dockerfile*"
+    - pip: "requirements*.txt"
+    - npm: "package*.json"
 
 # Vulnerability settings
 vulnerability:
-  type:
+  pkg-types:
     - os
     - library
 
@@ -65,7 +65,7 @@ db:
   download-db-only: false
 
 # Output settings
-format: table
+format: json
 
 # Cache settings
 cache:
