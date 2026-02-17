@@ -5,6 +5,7 @@
 # Virtual environment — external packages (yt-dlp extractors contain
 # hardcoded JWT tokens and AWS keys used as API constants, not secrets)
 .venv/
+venv/
 
 # Node modules
 node_modules/
@@ -14,16 +15,70 @@ frontend/node_modules/
 dist/
 build/
 .next/
+*.whl
+*.egg-info/
 
 # Python cache
 __pycache__/
 *.pyc
+*.pyo
+*.pyd
+.Python
+.mypy_cache/
+.ruff_cache/
+.pytest_cache/
 
 # Tests (no security scanning needed)
 backend/tests/
+frontend/src/__tests__/
+**/*.test.ts
+**/*.test.tsx
+**/*.test.py
+**/*.spec.ts
+**/*.spec.tsx
 
 # Coverage reports
 coverage/
+.coverage
+htmlcov/
+*.cover
+.hypothesis/
 
 # Downloaded media files
 downloads/
+music/
+audio/
+
+# IDE and editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+logs/
+
+# Database files
+*.db
+*.sqlite
+*.sqlite3
+
+# Docker
+.dockerignore
+
+# Git
+.git/
+.gitignore
+
+# Documentation
+docs/
+*.md
+README*
+CHANGELOG*
+LICENSE*
