@@ -18,6 +18,7 @@ const API_URL = import.meta.env.VITE_API_URL || "/api/v1";
 
 const api = axios.create({
   baseURL: API_URL,
+  timeout: 30000,
   headers: {
     "Content-Type": "application/json",
   },
@@ -82,7 +83,8 @@ api.interceptors.response.use(
       try {
         const response = await axios.post(
           `${import.meta.env.VITE_API_URL || "/api/v1"}/auth/refresh`,
-          { refresh_token: refreshToken }
+          { refresh_token: refreshToken },
+          { timeout: 30000 }
         );
 
         const { access_token, refresh_token: newRefreshToken } = response.data;

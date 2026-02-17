@@ -71,7 +71,8 @@ rules:
     patterns:
       - pattern: jwt.decode($TOKEN, ...)
       - pattern-not: jwt.decode($TOKEN, ..., verify=True, ...)
-      - pattern-not: jwt.decode($TOKEN, ..., options={..., "verify_signature": True, ...}, ...)
+      - pattern-not: |
+          jwt.decode($TOKEN, ..., options={..., "verify_signature": True, ...}, ...)
     message: JWT token decoded without signature verification
     languages: [python]
     severity: ERROR
@@ -80,7 +81,8 @@ rules:
 
   # TypeScript/React Security Rules
   - id: react-dangerouslysetinnerhtml
-    pattern: dangerouslySetInnerHTML={{__html: $X}}
+    pattern: |
+      <$TAG dangerouslySetInnerHTML={{__html: $X}} />
     message: Avoid dangerouslySetInnerHTML to prevent XSS attacks
     languages: [typescript, javascript]
     severity: WARNING
@@ -94,7 +96,8 @@ rules:
   - id: axios-no-timeout
     patterns:
       - pattern: axios.$METHOD($URL, ...)
-      - pattern-not: axios.$METHOD($URL, {..., timeout: $TIMEOUT, ...})
+      - pattern-not: |
+          axios.$METHOD($URL, {..., timeout: $TIMEOUT, ...})
     message: Axios request without timeout. Add timeout to prevent hanging requests.
     languages: [typescript, javascript]
     severity: WARNING
@@ -178,7 +181,8 @@ rules:
           patterns:
             - pattern-either:
                 - pattern: f"...{$PARAM}..."
-                - pattern: "..." + $PARAM + "..."
+                - pattern: |
+                    "..." + $PARAM + "..."
     message: Possible command injection. Avoid shell=True and validate input.
     languages: [python]
     severity: ERROR

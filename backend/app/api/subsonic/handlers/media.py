@@ -370,6 +370,13 @@ async def _resolve_local_file_path(db: AsyncSession, item_type: str, item_id_str
 
 
 async def _check_local_cover_files(directory: str) -> Response | None:
+    if not directory or ".." in directory:
+        return None
+
+    # Defense in depth: Verify directory is absolute (as it should be from DB)
+    if not os.path.isabs(directory):
+        return None
+
     for name in ["cover.jpg", "cover.png", "cover.jpeg", "folder.jpg", "front.jpg", "album.jpg"]:
         local_path = os.path.join(directory, name)
         if os.path.exists(local_path):

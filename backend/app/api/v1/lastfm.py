@@ -1,6 +1,7 @@
 import logging
 from datetime import UTC, datetime
 
+from typing import Annotated, Any, Dict, List, Optional, cast
 from app.core.dependencies import get_current_user
 from app.db.database import get_db
 from app.models.user import User
@@ -21,7 +22,8 @@ def get_lastfm_service() -> LastfmService:
 
 @router.get("/connect")
 async def connect_lastfm(
-    service: LastfmService = Depends(get_lastfm_service), current_user: User = Depends(get_current_user)
+    service: Annotated[LastfmService, Depends(get_lastfm_service)],
+    current_user: Annotated[User, Depends(get_current_user)],
 ):
     """
     Generate Last.fm auth URL.
@@ -33,9 +35,9 @@ async def connect_lastfm(
 @router.get("/callback")
 async def lastfm_callback(
     token: str,
-    db: AsyncSession = Depends(get_db),
-    service: LastfmService = Depends(get_lastfm_service),
-    current_user: User = Depends(get_current_user),
+    db: Annotated[AsyncSession, Depends(get_db)],
+    service: Annotated[LastfmService, Depends(get_lastfm_service)],
+    current_user: Annotated[User, Depends(get_current_user)],
 ):
     """
     Exchange token for session key and save to user profile.
@@ -67,9 +69,9 @@ async def lastfm_callback(
 async def get_recommendations(
     force_refresh: bool = False,
     source: str = "auto",
-    db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user),
-    service: LastfmService = Depends(get_lastfm_service),
+    db: Annotated[AsyncSession, Depends(get_db)],
+    current_user: Annotated[User, Depends(get_current_user)],
+    service: Annotated[LastfmService, Depends(get_lastfm_service)],
 ):
     """
     Get personalized recommendations.
@@ -86,8 +88,8 @@ async def get_recommendations(
 @router.post("/scrobble/now_playing")
 async def update_now_playing(
     request: NowPlayingRequest,
-    current_user: User = Depends(get_current_user),
-    service: LastfmService = Depends(get_lastfm_service),
+    current_user: Annotated[User, Depends(get_current_user)],
+    service: Annotated[LastfmService, Depends(get_lastfm_service)],
 ):
     """Update Now Playing status."""
     from app.services.scrobbler import AudiovaultScrobbler
@@ -101,8 +103,8 @@ async def update_now_playing(
 @router.post("/scrobble")
 async def scrobble_track(
     request: ScrobbleRequest,
-    current_user: User = Depends(get_current_user),
-    service: LastfmService = Depends(get_lastfm_service),
+    current_user: Annotated[User, Depends(get_current_user)],
+    service: Annotated[LastfmService, Depends(get_lastfm_service)],
 ):
     """Scrobble a track."""
     from app.services.scrobbler import AudiovaultScrobbler
@@ -121,7 +123,9 @@ async def scrobble_track(
 
 
 @router.post("/disconnect")
-async def disconnect_lastfm(db: AsyncSession = Depends(get_db), current_user: User = Depends(get_current_user)):
+async def disconnect_lastfm(
+    db: Annotated[AsyncSession, Depends(get_db)], current_user: Annotated[User, Depends(get_current_user)]
+):
     """Remove Last.fm connection."""
     current_user.lastfm_session_key = None
     current_user.lastfm_username = None
@@ -135,14 +139,15 @@ async def disconnect_lastfm(db: AsyncSession = Depends(get_db), current_user: Us
 
 
 @router.get("/status")
-async def lastfm_status(current_user: User = Depends(get_current_user)):
+async def lastfm_status(current_user: Annotated[User, Depends(get_current_user)]):
     """Check connection status."""
     return {"connected": current_user.lastfm_session_key is not None, "username": current_user.lastfm_username}
 
 
 @router.get("/profile")
 async def get_lastfm_profile(
-    current_user: User = Depends(get_current_user), service: LastfmService = Depends(get_lastfm_service)
+    current_user: Annotated[User, Depends(get_current_user)],
+    service: Annotated[LastfmService, Depends(get_lastfm_service)],
 ):
     """Get Last.fm user profile info and friends."""
     if not current_user.lastfm_username:

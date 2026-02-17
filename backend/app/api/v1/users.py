@@ -3,8 +3,11 @@ import shutil
 import time
 
 import aiofiles
+from typing import Annotated
 from app.core.config import settings
 from app.core.dependencies import get_current_active_user
+from app.utils.sanitization import sanitize_filename
+
 from app.core.security import get_password_hash, verify_password
 from app.db.database import get_db
 from app.models.schemas import UserResponse
@@ -19,8 +22,8 @@ router = APIRouter()
 @router.delete("/me", response_model=dict)
 async def delete_user_me(
     delete_library: bool = False,
-    current_user: User = Depends(get_current_active_user),
-    db: AsyncSession = Depends(get_db),
+    current_user: Annotated[User, Depends(get_current_active_user)],
+    db: Annotated[AsyncSession, Depends(get_db)],
 ):
     """
     Delete current user account.
@@ -31,7 +34,8 @@ async def delete_user_me(
     if delete_library:
         # Determine user's library path
         # Default strategy: DOWNLOAD_DIR / username
-        user_lib_path = os.path.join(settings.DOWNLOAD_DIR, current_user.username)
+        sanitized_username = sanitize_filename(current_user.username)
+        user_lib_path = os.path.join(settings.DOWNLOAD_DIR, sanitized_username)
 
         if current_user.preferences and "downloadPath" in current_user.preferences:
             # TODO: Handle custom download paths securely.
@@ -62,7 +66,7 @@ class PasswordUpdate(BaseModel):
 
 
 @router.get("/me", response_model=UserResponse)
-async def read_user_me(current_user: User = Depends(get_current_active_user)):
+async def read_user_me(current_user: Annotated[User, Depends(get_current_active_user)]):
     """
     Get current user.
     """
@@ -72,8 +76,8 @@ async def read_user_me(current_user: User = Depends(get_current_active_user)):
 @router.put("/me", response_model=dict)
 async def update_user_me(
     user_update: UserUpdate,
-    current_user: User = Depends(get_current_active_user),
-    db: AsyncSession = Depends(get_db),
+    current_user: Annotated[User, Depends(get_current_active_user)],
+    db: Annotated[AsyncSession, Depends(get_db)],
 ):
     if user_update.username:
         # Check if username exists
@@ -93,8 +97,8 @@ async def update_user_me(
 @router.put("/me/password", response_model=dict)
 async def update_password_me(
     password_update: PasswordUpdate,
-    current_user: User = Depends(get_current_active_user),
-    db: AsyncSession = Depends(get_db),
+    current_user: Annotated[User, Depends(get_current_active_user)],
+    db: Annotated[AsyncSession, Depends(get_db)],
 ):
     if not verify_password(password_update.current_password, current_user.hashed_password):
         raise HTTPException(status_code=400, detail="Incorrect password")
@@ -115,8 +119,8 @@ async def update_password_me(
 @router.post("/me/avatar", response_model=dict)
 async def upload_user_avatar(
     file: UploadFile = File(...),
-    current_user: User = Depends(get_current_active_user),
-    db: AsyncSession = Depends(get_db),
+    current_user: Annotated[User, Depends(get_current_active_user)],
+    db: Annotated[AsyncSession, Depends(get_db)],
 ):
     # Create avatars directory if not exists
     # Create avatars directory if not exists

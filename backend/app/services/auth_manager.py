@@ -61,7 +61,7 @@ class AuthManager:
         from jwt import InvalidTokenError
 
         try:
-            payload = jwt.decode(refresh_token, settings.JWT_SECRET_KEY, algorithms=[settings.JWT_ALGORITHM])
+            payload = jwt.decode(refresh_token, settings.JWT_SECRET_KEY, algorithms=[settings.JWT_ALGORITHM], options={"verify_signature": True})
             token_type = payload.get("type")
             user_id = payload.get("sub")
 

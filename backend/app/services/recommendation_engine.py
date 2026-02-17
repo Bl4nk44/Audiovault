@@ -184,6 +184,48 @@ class HybridRecommendationEngine:
             logger.error(f"Failed to fetch playlist recommendations: {e}")
             return []
 
+    async def _fetch_artists(self, user: User) -> List[RecommendedTrack]:
+        """Fetch recommended artists with Spotify image fallback."""
+        artists = []
+        target_user = user.lastfm_username or user.username
+        session_key = user.lastfm_session_key
+
+        if not target_user:
+            logger.info(f"User {user.id} has no Last.fm username or session for artist recommendations")
+            return []
+
+        try:
+            logger.info(f"Fetching recommended artists for user {user.id} (lastfm_user: {target_user})")
+            artists = await self.lastfm.get_recommended_artists(session_key, limit=20, user_name=target_user)
+            logger.info(f"Fetched {len(artists)} recommended artists")
+
+            # FORCE SPOTIFY IMAGES: Last.fm images are unreliable/deprecated for artists.
+            for a in artists:
+                a.image_url = None
+
+            if artists:
+                logger.info(f"Forcing Spotify image search for {len(artists)} artists...")
+                spotify = SpotifyService()
+
+                async def fetch_artist_image(artist):
+                    try:
+                        results = await asyncio.to_thread(spotify.search, artist.name, limit=1, type="artist")
+                        if results and len(results) > 0:
+                            img = results[0].get("image_url")
+                            if img:
+                                artist.image_url = img
+                                return
+                        logger.warning(f"✗ No image on Spotify for artist: {artist.name}")
+                    except Exception as e:
+                        logger.error(f"Spotify artist search error for {artist.name}: {e}")
+
+                # Process all artists (up to 20)
+                await asyncio.gather(*[fetch_artist_image(a) for a in artists[:20]])
+            return artists
+        except Exception as e:
+            logger.warning(f"Failed to fetch artists for user {user.id}: {e}")
+            return []
+
     async def get_recommendations(
         self, user: User, source: str = "auto", force_refresh: bool = False
     ) -> RecommendationResponse:
@@ -201,49 +243,7 @@ class HybridRecommendationEngine:
         tracks = await self._fetch_lastfm_recommendations(user, source)
 
         # 2. Fetch Artists
-        artists = []
-        target_user = user.lastfm_username or user.username
-        session_key = user.lastfm_session_key
-
-        if target_user:
-            try:
-                logger.info(f"Fetching recommended artists for user {user.id} (lastfm_user: {target_user})")
-                # Update service method to handle username even if session_key is None
-                artists = await self.lastfm.get_recommended_artists(session_key, limit=20, user_name=target_user)
-                logger.info(f"Fetched {len(artists)} recommended artists")
-
-                # FORCE SPOTIFY IMAGES: Last.fm images are unreliable/deprecated for artists.
-                # We intentionally clear any image provided by Last.fm and force a new search.
-                for a in artists:
-                    a.image_url = None
-
-                artists_missing_images = artists  # All of them
-
-                if artists_missing_images:
-                    logger.info(f"Forcing Spotify image search for {len(artists_missing_images)} artists...")
-                    spotify = SpotifyService()
-
-                    async def fetch_artist_image(artist):
-                        try:
-                            results = await asyncio.to_thread(spotify.search, artist.name, limit=1, type="artist")
-                            if results and len(results) > 0:
-                                img = results[0].get("image_url")
-                                if img:
-                                    artist.image_url = img
-                                    # logger.info(f"✓ Artist image found for: {artist.name}")
-                                    return
-                            logger.warning(f"✗ No image on Spotify for artist: {artist.name}")
-                        except Exception as e:
-                            logger.error(f"Spotify artist search error for {artist.name}: {e}")
-
-                    # Process all artists (up to 20)
-                    await asyncio.gather(*[fetch_artist_image(a) for a in artists_missing_images[:20]])
-
-            except Exception as e:
-                logger.warning(f"Failed to fetch artists for user {user.id}: {e}")
-
-        else:
-            logger.info(f"User {user.id} has no Last.fm username or session for artist recommendations")
+        artists = await self._fetch_artists(user)
 
         # 3. Fetch Playlists
         playlists = await self._fetch_playlists(user)

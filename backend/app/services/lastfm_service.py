@@ -27,6 +27,9 @@ class LastfmRateLimitError(LastfmAPIError):
     pass
 
 
+LASTFM_TEXT_KEY = "#text"
+
+
 class LastfmService:
     BASE_URL = "http://ws.audioscrobbler.com/2.0/"
 
@@ -316,7 +319,7 @@ class LastfmService:
         if isinstance(artist_data, str):
             return artist_data
         if isinstance(artist_data, dict):
-            return artist_data.get("name") or artist_data.get("#text")
+            return artist_data.get("name") or artist_data.get(LASTFM_TEXT_KEY)
         if hasattr(artist_data, "name"):
             return artist_data.name
         return None
@@ -460,7 +463,7 @@ class LastfmService:
         sizes = ["mega", "extralarge", "large", "medium", "small"]
 
         # Build a map for easy lookup
-        image_map = {img.get("size"): img.get("#text") for img in images if img.get("#text")}
+        image_map = {img.get("size"): img.get(LASTFM_TEXT_KEY) for img in images if img.get(LASTFM_TEXT_KEY)}
 
         for size in sizes:
             url = image_map.get(size)

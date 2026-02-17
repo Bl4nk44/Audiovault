@@ -3,7 +3,7 @@ import logging
 import os
 import uuid
 from datetime import UTC, datetime
-from typing import Optional
+from typing import List, Optional
 
 import aiofiles
 import yt_dlp
@@ -325,7 +325,8 @@ class DownloadManager:
                 download_path = download.user.preferences.get("downloadPath")
 
             if not download_path:
-                download_path = os.path.join(settings.DOWNLOAD_DIR, download.user.username)
+                sanitized_username = sanitize_filename(download.user.username)
+                download_path = os.path.join(settings.DOWNLOAD_DIR, sanitized_username)
 
             if not os.path.exists(download_path):
                 os.makedirs(download_path, exist_ok=True)
@@ -732,7 +733,8 @@ class DownloadManager:
             if filename_schema.strip().startswith("{user}") or root_ends_with_user:
                 download_path = settings.DOWNLOAD_DIR
             else:
-                download_path = os.path.join(settings.DOWNLOAD_DIR, download.user.username)
+                sanitized_username = sanitize_filename(download.user.username)
+                download_path = os.path.join(settings.DOWNLOAD_DIR, sanitized_username)
 
         logger.info(f"Resolved base download path: {download_path}")
 
@@ -809,119 +811,92 @@ class DownloadManager:
         result = await db.execute(select(Track).where(Track.id == track_id))
         return result.scalar_one_or_none()
 
+    async def _write_m3u_file(self, downloads: List[Download], target_dir: str, playlist_file_path: str):
+        """Helper to write M3U8 file."""
+        async with aiofiles.open(playlist_file_path, "w", encoding="utf-8") as f:
+            await f.write("#EXTM3U\n")
+            for d in downloads:
+                if d.file_path:
+                    try:
+                        rel_path = os.path.relpath(d.file_path, target_dir)
+                        await f.write(f"#EXTINF:-1,{d.track.artist} - {d.track.title}\n")
+                        await f.write(f"{rel_path}\n")
+                    except ValueError:
+                        await f.write(f"#EXTINF:-1,{d.track.artist} - {d.track.title}\n")
+                        await f.write(f"{d.file_path}\n")
+
+    async def _sync_playlist_to_db(self, db: AsyncSession, user_id: str, playlist_name: str, downloads: List[Download]):
+        """Helper to sync playlist tracks to database."""
+        from app.models.playlist import Playlist, PlaylistTrack
+        from sqlalchemy import delete
+
+        # 1. Resolve which playlist to update
+        playlist = None
+        playlist_id = next((d.playlist_id for d in downloads if d.playlist_id), None)
+        if playlist_id:
+            pl_result = await db.execute(select(Playlist).where(Playlist.id == playlist_id))
+            playlist = pl_result.scalar_one_or_none()
+
+        if not playlist:
+            pl_result = await db.execute(
+                select(Playlist).where(Playlist.owner_id == user_id, Playlist.name == playlist_name)
+            )
+            playlist = pl_result.scalar_one_or_none()
+
+        if not playlist:
+            playlist = Playlist(
+                name=playlist_name, owner_id=user_id, public=False, comment="Auto-created from downloads"
+            )
+            db.add(playlist)
+            await db.flush()
+            logger.info(f"Created new DB playlist: {playlist_name}")
+
+        # 2. Collect valid track IDs
+        valid_track_ids = [d.track.id for d in downloads if d.track] or [d.track_id for d in downloads if d.track_id]
+        valid_track_ids = [tid for tid in valid_track_ids if tid]
+
+        if valid_track_ids:
+            await db.execute(delete(PlaylistTrack).where(PlaylistTrack.playlist_id == playlist.id))
+            for idx, track_id in enumerate(valid_track_ids):
+                try:
+                    pt = PlaylistTrack(playlist_id=playlist.id, track_id=track_id, order=idx)
+                    db.add(pt)
+                except Exception as e:
+                    logger.error(f"Failed to add track {track_id} to playlist {playlist.name}: {e}")
+            await db.commit()
+            logger.info(f"Synced '{playlist_name}' to DB with {len(valid_track_ids)} tracks")
+
     async def update_playlist_m3u(self, db: AsyncSession, user_id: str, playlist_name: str):
         try:
-            # Get all completed downloads for this playlist
             result = await db.execute(
                 select(Download)
                 .options(selectinload(Download.user), selectinload(Download.track))
                 .where(
                     Download.user_id == user_id, Download.playlist_name == playlist_name, Download.status == "completed"
                 )
-                .order_by(Download.created_at)  # Preserve order of addition
+                .order_by(Download.created_at)
             )
             downloads = result.scalars().all()
 
             if not downloads:
                 return
 
-            # Determine playlist file path
-            # Put it in the same directory as the first track
             if downloads[0].file_path:
                 target_dir = os.path.dirname(downloads[0].file_path)
             else:
-                # Fallback
                 target_dir = os.path.join(settings.DOWNLOAD_DIR, downloads[0].user.username)
-                if not os.path.exists(target_dir):
-                    os.makedirs(target_dir, exist_ok=True)
+                os.makedirs(target_dir, exist_ok=True)
 
-            # Simple heuristic: Use the playlist name as filename
             safe_playlist_name = sanitize_filename(playlist_name)
             playlist_file_path = os.path.join(target_dir, f"{safe_playlist_name}.m3u8")
 
-            async with aiofiles.open(playlist_file_path, "w", encoding="utf-8") as f:
-                await f.write("#EXTM3U\n")
-                for d in downloads:
-                    if d.file_path:
-                        try:
-                            # Write path relative to the playlist file location
-                            # This makes the playlist portable within the folder
-                            rel_path = os.path.relpath(d.file_path, target_dir)
-                            await f.write(f"#EXTINF:-1,{d.track.artist} - {d.track.title}\n")
-                            await f.write(f"{rel_path}\n")
-                        except ValueError:
-                            # Fallback for different drives etc
-                            await f.write(f"#EXTINF:-1,{d.track.artist} - {d.track.title}\n")
-                            await f.write(f"{d.file_path}\n")
-
+            await self._write_m3u_file(downloads, target_dir, playlist_file_path)
             logger.info(f"Updated playlist file {playlist_file_path}")
 
-            # --- SYNC TO DB START ---
             try:
-                from app.models.playlist import Playlist, PlaylistTrack
-
-                # 1. Resolve which playlist to update
-                playlist = None
-
-                # Try by ID first if we have it in any download record
-                playlist_id = next((d.playlist_id for d in downloads if d.playlist_id), None)
-                if playlist_id:
-                    pl_result = await db.execute(select(Playlist).where(Playlist.id == playlist_id))
-                    playlist = pl_result.scalar_one_or_none()
-
-                # Fallback to name if not found by ID
-                if not playlist:
-                    pl_result = await db.execute(
-                        select(Playlist).where(Playlist.owner_id == user_id, Playlist.name == playlist_name)
-                    )
-                    playlist = pl_result.scalar_one_or_none()
-
-                if not playlist:
-                    playlist = Playlist(
-                        name=playlist_name, owner_id=user_id, public=False, comment="Auto-created from downloads"
-                    )
-                    db.add(playlist)
-                    await db.flush()  # Get ID
-                    logger.info(f"Created new DB playlist: {playlist_name}")
-
-                # Collect valid track IDs first
-                valid_track_ids = []
-                for d in downloads:
-                    track_id_to_use = None
-                    if d.track:
-                        track_id_to_use = d.track.id
-                    elif d.track_id:
-                        track_id_to_use = d.track_id
-
-                    if track_id_to_use:
-                        valid_track_ids.append(track_id_to_use)
-                    else:
-                        logger.warning(f"Download {d.id} has no track info, skipping for playlist {playlist.name}")
-
-                # Only update if we have tracks to add
-                if valid_track_ids:
-                    # Correct deletion:
-                    from sqlalchemy import delete
-
-                    await db.execute(delete(PlaylistTrack).where(PlaylistTrack.playlist_id == playlist.id))
-
-                    # Add current tracks
-                    for idx, track_id in enumerate(valid_track_ids):
-                        try:
-                            pt = PlaylistTrack(playlist_id=playlist.id, track_id=track_id, order=idx)
-                            db.add(pt)
-                        except Exception as e:
-                            logger.error(f"Failed to add track {track_id} to playlist {playlist.name}: {e}")
-
-                    await db.commit()
-                    logger.info(f"Synced playlist '{playlist_name}' to DB with {len(valid_track_ids)} tracks")
-                else:
-                    logger.info(f"Playlist '{playlist_name}': No valid tracks found, keeping existing data")
-
+                await self._sync_playlist_to_db(db, user_id, playlist_name, downloads)
             except Exception as e_db:
                 logger.error(f"Failed to sync playlist to DB: {e_db}")
-                # Don't fail the whole operation if DB sync fails, but log it
-            # --- SYNC TO DB END ---
 
         except Exception as e:
             logger.error(f"Failed to update playlist m3u: {e}")
@@ -1010,7 +985,8 @@ class DownloadManager:
                 if downloads[0].user and downloads[0].user.preferences:
                     user_download_dir = downloads[0].user.preferences.get("downloadPath")
                 if not user_download_dir:
-                    user_download_dir = os.path.join(settings.DOWNLOAD_DIR, downloads[0].user.username)
+                    sanitized_username = sanitize_filename(downloads[0].user.username)
+                    user_download_dir = os.path.join(settings.DOWNLOAD_DIR, sanitized_username)
 
             safe_playlist_name = sanitize_filename(playlist_name)
             m3u8_path = os.path.join(user_download_dir, f"{safe_playlist_name}.m3u8")

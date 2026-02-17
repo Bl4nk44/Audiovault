@@ -17,8 +17,6 @@ dist/
 # System
 .DS_Store
 Thumbs.db
-# Agent
-.agent
 
 # IDE
 .vscode/
@@ -56,12 +54,10 @@ coverage/
 junit.xml
 *.xml
 debug.log
-
-backend/tests/services/test_watchlist_engine.py
-
-# Helper Scripts (Local Dev)
-dev.ps1
-prod.ps1
+# Security Scan Results
+trivy-*.json
+.trivy-cache/
+.security-reports/
 
 
 # Temporary Maintenance & Debug Scripts
@@ -79,6 +75,5 @@ backend/app/debug_genres.py
 
 
 # Agentic AI
-AGENTS.md
 .agent/
-pre_commit_log.txt
+

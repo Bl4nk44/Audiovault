@@ -20,15 +20,13 @@ const PlaylistRecommendationCard: React.FC<PlaylistRecommendationCardProps> = ({
   };
 
   return (
-    <div
-      role="button"
-      tabIndex={0}
+    <button
       onClick={handleEnterPlaylist}
       onKeyDown={(e) => {
         if (e.key === "Enter" || e.key === " ")
           handleEnterPlaylist(e as unknown as React.MouseEvent);
       }}
-      className="cursor-pointer group relative bg-zinc-900/50 hover:bg-zinc-800 transition-all duration-300 rounded-xl overflow-hidden border border-white/5 hover:border-primary/30 focus:outline-none focus:ring-2 focus:ring-primary"
+      className="text-left w-full cursor-pointer group relative bg-zinc-900/50 hover:bg-zinc-800 transition-all duration-300 rounded-xl overflow-hidden border border-white/5 hover:border-primary/30 focus:outline-none focus:ring-2 focus:ring-primary"
     >
       <div className="relative aspect-square w-full bg-zinc-800 overflow-hidden">
         {playlist.image_url ? (
@@ -69,7 +67,7 @@ const PlaylistRecommendationCard: React.FC<PlaylistRecommendationCardProps> = ({
           {playlist.track_count} {t("common.tracks", "tracks")}
         </p>
       </div>
-    </div>
+    </button>
   );
 };
 

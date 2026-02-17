@@ -78,9 +78,9 @@ export default function WatchlistItem({
 
   if (viewMode === "grid") {
     return (
-      <div
+      <button
         onClick={handleCardClick}
-        className="group relative bg-card border border-border rounded-xl overflow-hidden hover:border-primary/50 transition-all hover:shadow-lg hover:shadow-primary/5 aspect-square cursor-pointer"
+        className="text-left w-full group relative bg-card border border-border rounded-xl overflow-hidden hover:border-primary/50 transition-all hover:shadow-lg hover:shadow-primary/5 aspect-square cursor-pointer focus:outline-hidden focus:ring-2 focus:ring-primary"
       >
         <div className="absolute inset-0">
           {imageUrl && !imageError ? (
@@ -153,16 +153,17 @@ export default function WatchlistItem({
             <AutoDownloadSwitch autoDownload={autoDownload} onToggle={toggleAutoDownload} />
           </div>
         </div>
-      </div>
+      </button>
     );
   }
 
   return (
     <div className="bg-card border border-border rounded-lg p-4 flex items-center justify-between group hover:border-primary/50 transition-colors">
       <div className="flex items-center gap-4 min-w-0">
-        <div
+        <button
           onClick={handleCardClick}
-          className="w-12 h-12 rounded overflow-hidden bg-secondary shrink-0 cursor-pointer"
+          className="w-12 h-12 rounded overflow-hidden bg-secondary shrink-0 cursor-pointer focus:outline-hidden focus:ring-2 focus:ring-primary"
+          title={t("watchlist.viewDetails", "View details")}
         >
           {imageUrl && !imageError ? (
             <img
@@ -176,16 +177,16 @@ export default function WatchlistItem({
               {item.source?.[0] || "?"}
             </div>
           )}
-        </div>
+        </button>
 
         <div className="min-w-0">
-          <h4
+          <button
             onClick={handleCardClick}
-            className="font-medium truncate cursor-pointer hover:text-primary hover:underline"
+            className="font-medium truncate cursor-pointer hover:text-primary hover:underline focus:outline-hidden focus:ring-1 focus:ring-primary text-left"
             title={item.source_name}
           >
             {item.source_name}
-          </h4>
+          </button>
           <p className="text-sm text-muted-foreground capitalize">
             {item.source} • {item.watch_type}
           </p>
