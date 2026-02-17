@@ -12,7 +12,9 @@ class AudiovaultScrobbler:
     def __init__(self, lastfm_service: LastfmService):
         self.lastfm = lastfm_service
 
-    async def update_now_playing(self, user: User, track: str, artist: str, album: Optional[str] = None) -> None:
+    async def update_now_playing(
+        self, user: User, track: str, artist: str, album: Optional[str] = None
+    ) -> None:
         """Update "Now Playing" status on Last.fm if enabled."""
         if not user.lastfm_session_key:
             return
@@ -22,14 +24,24 @@ class AudiovaultScrobbler:
             # The instruction implies ensuring non-optional types are passed to the underlying service.
             artist_to_scrobble = artist or "Unknown Artist"
             await self.lastfm.update_now_playing(
-                track=track, artist=artist_to_scrobble, session_key=user.lastfm_session_key, album=album
+                track=track,
+                artist=artist_to_scrobble,
+                session_key=user.lastfm_session_key,
+                album=album,
             )
-            logger.debug(f"Updated Now Playing for {user.username}: {artist_to_scrobble} - {track}")
+            logger.debug(
+                f"Updated Now Playing for {user.username}: {artist_to_scrobble} - {track}"
+            )
         except LastfmError as e:
             logger.error(f"Failed to update now playing for {user.username}: {e}")
 
     async def scrobble_track(
-        self, user: User, track: str, artist: str, timestamp: Optional[int] = None, album: Optional[str] = None
+        self,
+        user: User,
+        track: str,
+        artist: str,
+        timestamp: Optional[int] = None,
+        album: Optional[str] = None,
     ) -> bool:
         """Scrobble a track to Last.fm."""
         if not user.lastfm_session_key:
@@ -44,9 +56,11 @@ class AudiovaultScrobbler:
                 artist=artist_to_scrobble,
                 session_key=user.lastfm_session_key,
                 timestamp=timestamp or int(time.time()),
-                album=album
+                album=album,
             )
-            logger.info(f"Scrobbled for {user.username}: {artist_to_scrobble} - {track}")
+            logger.info(
+                f"Scrobbled for {user.username}: {artist_to_scrobble} - {track}"
+            )
             return True
         except LastfmError as e:
             logger.error(f"Failed to scrobble for {user.username}: {e}")
