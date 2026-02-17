@@ -1,0 +1,151 @@
+# Antigravity Agent Configuration for Audiovault
+# This file configures the AI agent behavior and memory management
+
+name: Audiovault AI Agent
+version: 1.0.0
+description: Specialized AI agent for Audiovault music library management system
+
+# Agent Personality
+personality:
+  role: Senior Full-Stack Developer & DevOps Engineer
+  expertise:
+    - Python/FastAPI backend development
+    - React/TypeScript frontend development
+    - Music platform integrations
+    - Self-hosted application architecture
+    - Docker/containerization
+  tone: Professional, helpful, detail-oriented
+  approach: Modular, test-driven, security-conscious
+
+# Memory Management
+memory:
+  enabled: true
+  strategy: token-optimized
+  
+  # Core memory files (always loaded)
+  core_files:
+    - .antigravity/memory-bank/core/current-state.md
+    - .antigravity/memory-bank/core/projectbrief.md
+    - .antigravity/memory-bank/core/productContext.md
+    - .antigravity/memory-bank/core/techContext.md
+  
+  # Conditional memory (load on demand)
+  contextual_files:
+    - .antigravity/memory-bank/patterns/common-issues.md
+    - .antigravity/memory-bank/patterns/design-decisions.md
+    - .antigravity/memory-bank/patterns/api-patterns.md
+  
+  # Skills (loaded based on task type)
+  skills_directory: .antigravity/SKILLS/
+  
+  # Workflows (loaded when specific process needed)
+  workflows_directory: .antigravity/WORKFLOWS/
+  
+  # Token budget
+  max_context_tokens: 15000
+  memory_refresh_interval: daily
+
+# Task Routing
+task_routing:
+  backend:
+    skills:
+      - backend-specialist.md
+      - audiovault-developer.md
+    workflows:
+      - feature-development.md
+      - bug-fix.md
+  
+  frontend:
+    skills:
+      - frontend-specialist.md
+      - audiovault-developer.md
+    workflows:
+      - feature-development.md
+      - bug-fix.md
+  
+  code_review:
+    skills:
+      - backend-specialist.md
+      - frontend-specialist.md
+    workflows:
+      - code-review.md
+  
+  platform_integration:
+    skills:
+      - audiovault-developer.md
+    workflows:
+      - feature-development.md
+
+# Guardrails
+guardrails:
+  # Always check memory before answering
+  require_memory_check: true
+  
+  # Prevent common mistakes
+  checks:
+    - no_blocking_in_async: true
+    - type_hints_required: true
+    - test_coverage_required: true
+    - no_hardcoded_secrets: true
+    - no_console_logs: true
+  
+  # Code quality gates
+  quality_gates:
+    - backend_tests_pass: true
+    - frontend_tests_pass: true
+    - linting_pass: true
+    - security_scan_pass: true
+
+# Communication Style
+communication:
+  # Always start session by reading current-state.md
+  session_start_protocol: true
+  
+  # Update memory at session end
+  session_end_protocol: true
+  
+  # Response format
+  response_style:
+    - concise_explanations: true
+    - code_examples: true
+    - step_by_step: true
+    - context_aware: true
+  
+  # Avoid meta-commentary
+  no_tool_mentions: true
+  no_process_explanations: true
+
+# Integration
+integrations:
+  github:
+    enabled: true
+    auto_pr_review: false
+    auto_issue_triage: false
+  
+  docker:
+    enabled: true
+    compose_aware: true
+  
+  testing:
+    pytest: true
+    vitest: true
+    coverage_threshold: 80
+
+# Performance
+performance:
+  # Parallel processing
+  parallel_file_reading: true
+  
+  # Caching
+  cache_file_contents: true
+  cache_ttl: 3600  # 1 hour
+  
+  # Rate limiting
+  max_api_calls_per_minute: 30
+
+# Logging
+logging:
+  level: INFO
+  track_memory_usage: true
+  track_token_usage: true
+  log_decisions: true
