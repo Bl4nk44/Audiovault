@@ -1,12 +1,11 @@
 import asyncio
 import uuid
-from typing import Any, Dict
+from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 from app.schemas.download import DownloadCreate
 from app.services.download_manager import DownloadManager
-import aiofiles
 
 
 @pytest.fixture

@@ -3,7 +3,7 @@ import logging
 import os
 import uuid
 from datetime import UTC, datetime
-from typing import List, Optional, Sequence
+from typing import Optional, Sequence
 
 import aiofiles
 import yt_dlp
@@ -825,7 +825,9 @@ class DownloadManager:
                         await f.write(f"#EXTINF:-1,{d.track.artist} - {d.track.title}\n")
                         await f.write(f"{d.file_path}\n")
 
-    async def _sync_playlist_to_db(self, db: AsyncSession, user_id: uuid.UUID, playlist_name: str, downloads: Sequence[Download]):
+    async def _sync_playlist_to_db(
+        self, db: AsyncSession, user_id: uuid.UUID, playlist_name: str, downloads: Sequence[Download]
+    ):
         """Helper to sync playlist tracks to database."""
         from app.models.playlist import Playlist, PlaylistTrack
         from sqlalchemy import delete

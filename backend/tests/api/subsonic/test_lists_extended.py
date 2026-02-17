@@ -7,7 +7,6 @@ import uuid
 from datetime import datetime, timedelta
 
 import pytest
-from app.models import schemas
 from app.models.album import Album
 from app.models.artist import Artist
 from app.models.download import Download

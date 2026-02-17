@@ -3,8 +3,8 @@ Extended tests for YouTubeService to increase code coverage.
 Covers: search with URLs, video/playlist/channel lookup, format mappings.
 """
 
-from typing import Any, Dict, List, Tuple
-from unittest.mock import AsyncMock, MagicMock, patch
+from typing import Any, Dict
+from unittest.mock import MagicMock, patch
 
 import pytest
 from app.services.youtube_service import YouTubeService

@@ -344,7 +344,9 @@ class LastfmService:
         if session_key:
             sources.append(self.get_recommended_artists(session_key, limit=10))
 
-        results = cast(List[Any], await asyncio.gather(*[asyncio.create_task(s) for s in sources], return_exceptions=True))
+        results = cast(
+            List[Any], await asyncio.gather(*[asyncio.create_task(s) for s in sources], return_exceptions=True)
+        )
 
         # Results indices match sources: 0=TopTracks, 1=RecentTracks, 2=TopArtists, 3=RecArtists
         if not isinstance(results[0], Exception):

@@ -1,6 +1,7 @@
 import json
 import logging
-from datetime import datetime as dt, timezone
+from datetime import datetime as dt
+from datetime import timezone
 from typing import Optional
 from uuid import UUID
 
@@ -23,8 +24,8 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.responses import Response
 from pydantic import BaseModel
 from sqlalchemy import delete, func, select
-from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.exc import IntegrityError
+from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
 router = APIRouter()
@@ -243,7 +244,7 @@ async def delete_playlist(
 
     if not playlist:
         raise HTTPException(status_code=404, detail=PLAYLIST_NOT_FOUND)
-    
+
     # playlist is guaranteed not None here
     assert playlist is not None
     if playlist is None:

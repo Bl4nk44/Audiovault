@@ -3,7 +3,7 @@ Extended tests for SpotifyService to increase code coverage to 80%+.
 Covers: search with different types, URL parsing, pagination, error handling, album/artist details.
 """
 
-from typing import Any, Dict
+from typing import Any
 from unittest.mock import MagicMock, patch
 
 import pytest
