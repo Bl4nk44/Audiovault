@@ -24,7 +24,7 @@ jobs:
       - name: Install Linting Tools
         run: |
           python -m pip install --upgrade pip
-          pip install ruff mypy httpx sqlalchemy pydantic[email] pydantic-settings pytest aiosqlite types-setuptools
+          pip install ruff mypy httpx sqlalchemy pydantic[email] pydantic-settings pytest aiosqlite types-setuptools types-requests types-aiofiles
 
       - name: Run Ruff Check
         run: |
