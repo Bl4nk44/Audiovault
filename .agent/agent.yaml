@@ -1,5 +1,5 @@
 name: Audiovault AI Agent
-version: 1.1.0
+version: 1.2.0
 description: Specialized AI agent for Audiovault music library management system
 
 personality:
@@ -17,6 +17,7 @@ memory:
   enabled: true
   strategy: token-optimized
 
+  # Local memory-bank files (fast, loaded every session)
   core_files:
     - .agent/memory-bank/core/current-state.md
     - .agent/memory-bank/core/projectbrief.md
@@ -33,6 +34,19 @@ memory:
 
   max_context_tokens: 15000
   memory_refresh_interval: daily
+
+  # OpenMemory – persistent semantic memory via MCP (http://localhost:8080)
+  openmemory:
+    enabled: true
+    endpoint: "http://localhost:8080/mcp"
+    user_id: "audiovault-agent"
+    auto_store: true       # agent saves key decisions after each session
+    auto_query: true       # agent queries OpenMemory at session start
+    query_limit: 10
+    sectors:
+      - semantic           # timeless facts: techContext, projectbrief
+      - procedural         # patterns: api-patterns, design-decisions
+      - episodic           # time-bound: current-state, recent changes
 
 task_routing:
   backend:
@@ -77,6 +91,7 @@ integrations:
   github: { enabled: true, auto_pr_review: false }
   docker: { enabled: true, compose_aware: true }
   testing: { pytest: true, vitest: true, coverage_threshold: 80 }
+  openmemory: { enabled: true, transport: "http", port: 8080 }
 
 performance:
   parallel_file_reading: true
