@@ -1,5 +1,5 @@
 name: Audiovault AI Agent
-version: 1.2.0
+version: 1.3.0
 description: Specialized AI agent for Audiovault music library management system
 
 personality:
@@ -35,18 +35,33 @@ memory:
   max_context_tokens: 15000
   memory_refresh_interval: daily
 
-  # OpenMemory – persistent semantic memory via MCP (http://localhost:8080)
+  # OpenMemory – persistent semantic memory via MCP
+  # Transport: supergateway (stdio → StreamableHTTP) running on WSL2
+  # Auth: x-api-key header (value stored in OM_API_KEY env var – never commit the key)
   openmemory:
     enabled: true
-    endpoint: "http://localhost:8080/mcp"
+    transport: supergateway
+    # WSL2 internal IP – run 'hostname -I' to verify if connection fails
+    endpoint: "http://172.18.131.183:8080/mcp"
+    auth:
+      header: "x-api-key"
+      value_env: "OM_API_KEY"     # export OM_API_KEY=... in your shell, never hardcode
     user_id: "audiovault-agent"
-    auto_store: true       # agent saves key decisions after each session
-    auto_query: true       # agent queries OpenMemory at session start
+    auto_store: true              # saves key decisions after each session
+    auto_query: true              # queries OpenMemory at session start
     query_limit: 10
     sectors:
-      - semantic           # timeless facts: techContext, projectbrief
-      - procedural         # patterns: api-patterns, design-decisions
-      - episodic           # time-bound: current-state, recent changes
+      - semantic                  # timeless facts: techContext, projectbrief
+      - procedural                # patterns: api-patterns, design-decisions
+      - episodic                  # time-bound: current-state, recent changes
+    # Available MCP tools (all enabled in Antigravity)
+    tools:
+      - openmemory_query          # search contextual memories (HSG + temporal)
+      - openmemory_store          # persist new content into memory
+      - openmemory_reinforce      # boost salience of existing memory
+      - openmemory_delete         # delete memory by identifier
+      - openmemory_list           # list recent memories for quick inspection
+      - openmemory_get            # fetch single memory by identifier
 
 task_routing:
   backend:
@@ -91,7 +106,12 @@ integrations:
   github: { enabled: true, auto_pr_review: false }
   docker: { enabled: true, compose_aware: true }
   testing: { pytest: true, vitest: true, coverage_threshold: 80 }
-  openmemory: { enabled: true, transport: "http", port: 8080 }
+  openmemory:
+    enabled: true
+    transport: supergateway       # npx supergateway --streamableHttp <endpoint>
+    port: 8080
+    auth_header: x-api-key
+    ide: antigravity
 
 performance:
   parallel_file_reading: true
