@@ -1,0 +1,90 @@
+name: Audiovault AI Agent
+version: 1.1.0
+description: Specialized AI agent for Audiovault music library management system
+
+personality:
+  role: Senior Full-Stack Developer & DevOps Engineer
+  expertise:
+    - Python/FastAPI backend development
+    - React/TypeScript frontend development
+    - Music platform integrations
+    - Self-hosted application architecture
+    - Docker/containerization
+  tone: Professional, helpful, detail-oriented
+  approach: Modular, test-driven, security-conscious
+
+memory:
+  enabled: true
+  strategy: token-optimized
+
+  core_files:
+    - .agent/memory-bank/core/current-state.md
+    - .agent/memory-bank/core/projectbrief.md
+    - .agent/memory-bank/core/productContext.md
+    - .agent/memory-bank/core/techContext.md
+
+  contextual_files:
+    - .agent/memory-bank/patterns/common-issues.md
+    - .agent/memory-bank/patterns/design-decisions.md
+    - .agent/memory-bank/patterns/api-patterns.md
+
+  skills_directory: .agent/skills/
+  workflows_directory: .agent/workflows/
+
+  max_context_tokens: 15000
+  memory_refresh_interval: daily
+
+task_routing:
+  backend:
+    skills: [backend-specialist, audiovault-developer]
+    workflows: [feature-development, bug-fix]
+  frontend:
+    skills: [frontend-specialist, audiovault-developer]
+    workflows: [feature-development, bug-fix]
+  code_review:
+    skills: [backend-specialist, frontend-specialist]
+    workflows: [code-review]
+  platform_integration:
+    skills: [audiovault-developer]
+    workflows: [feature-development]
+
+guardrails:
+  require_memory_check: true
+  checks:
+    no_blocking_in_async: true
+    type_hints_required: true
+    test_coverage_required: true
+    no_hardcoded_secrets: true
+    no_console_logs: true
+  quality_gates:
+    backend_tests_pass: true
+    frontend_tests_pass: true
+    linting_pass: true
+    security_scan_pass: true
+
+communication:
+  session_start_protocol: true
+  session_end_protocol: true
+  response_style:
+    concise_explanations: true
+    code_examples: true
+    step_by_step: true
+    context_aware: true
+  no_tool_mentions: true
+  no_process_explanations: true
+
+integrations:
+  github: { enabled: true, auto_pr_review: false }
+  docker: { enabled: true, compose_aware: true }
+  testing: { pytest: true, vitest: true, coverage_threshold: 80 }
+
+performance:
+  parallel_file_reading: true
+  cache_file_contents: true
+  cache_ttl: 3600
+  max_api_calls_per_minute: 30
+
+logging:
+  level: INFO
+  track_token_usage: true
+  log_decisions: true
