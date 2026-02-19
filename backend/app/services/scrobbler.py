@@ -12,9 +12,7 @@ class AudiovaultScrobbler:
     def __init__(self, lastfm_service: LastfmService):
         self.lastfm = lastfm_service
 
-    async def update_now_playing(
-        self, user: User, track: str, artist: str, album: Optional[str] = None
-    ) -> None:
+    async def update_now_playing(self, user: User, track: str, artist: str, album: Optional[str] = None) -> None:
         """Update "Now Playing" status on Last.fm if enabled."""
         if not user.lastfm_session_key:
             return
@@ -28,10 +26,7 @@ class AudiovaultScrobbler:
                 session_key=user.lastfm_session_key,
                 album=album,
             )
-            logger.debug(
-                f"Updated Now Playing for {user.username}: "
-                f"{artist_to_scrobble} - {track}"
-            )
+            logger.debug(f"Updated Now Playing for {user.username}: {artist_to_scrobble} - {track}")
         except LastfmError as e:
             logger.error(f"Failed to update now playing for {user.username}: {e}")
 
@@ -57,9 +52,7 @@ class AudiovaultScrobbler:
                 timestamp=timestamp or int(time.time()),
                 album=album,
             )
-            logger.info(
-                f"Scrobbled for {user.username}: {artist_to_scrobble} - {track}"
-            )
+            logger.info(f"Scrobbled for {user.username}: {artist_to_scrobble} - {track}")
             return True
         except LastfmError as e:
             logger.error(f"Failed to scrobble for {user.username}: {e}")
