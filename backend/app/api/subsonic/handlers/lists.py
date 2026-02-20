@@ -33,7 +33,7 @@ router = APIRouter()
 @router.get("/getGenres.view")
 @router.post("/getGenres.view")
 async def get_genres(
-    f: str = "xml",
+    f: str = Query("xml", description="Response format"),
     current_user: User = Depends(subsonic_auth),
     db: AsyncSession = Depends(get_db),
 ):
@@ -107,7 +107,7 @@ async def get_album_list(
     toYear: int = Query(None, description="Filter to year"),
     genre: str = Query(None, description="Filter by genre"),
     musicFolderId: str = Query(None, description="Music folder ID"),
-    f: str = "xml",
+    f: str = Query("xml", description="Response format"),
     current_user: User = Depends(subsonic_auth),
     db: AsyncSession = Depends(get_db),
 ):
@@ -198,7 +198,7 @@ async def get_random_songs(
     fromYear: int = Query(None, description="From year"),
     toYear: int = Query(None, description="To year"),
     musicFolderId: str = Query(None, description="Folder ID"),
-    f: str = "xml",
+    f: str = Query("xml", description="Response format"),
     current_user: User = Depends(subsonic_auth),
     db: AsyncSession = Depends(get_db),
 ):
@@ -229,7 +229,7 @@ async def get_random_songs(
 async def get_top_songs(
     artist: str = Query(None, description="Artist name"),
     count: int = Query(50, description="Count"),
-    f: str = "xml",
+    f: str = Query("xml", description="Response format"),
     current_user: User = Depends(subsonic_auth),
     db: AsyncSession = Depends(get_db),
 ):
@@ -261,7 +261,7 @@ async def get_top_songs(
 async def get_similar_songs(
     id: str = Query(..., description="Song ID"),
     count: int = Query(50, description="Count"),
-    f: str = "xml",
+    f: str = Query("xml", description="Response format"),
     current_user: User = Depends(subsonic_auth),
     db: AsyncSession = Depends(get_db),
 ):

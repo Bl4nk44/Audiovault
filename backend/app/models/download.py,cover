@@ -1,0 +1,51 @@
+> from datetime import UTC, datetime
+> from typing import TYPE_CHECKING
+> from uuid import UUID, uuid4
+  
+> from sqlalchemy import Boolean, DateTime, ForeignKey, Integer, String, Uuid
+> from sqlalchemy.orm import Mapped, mapped_column, relationship
+  
+> from app.db.base import Base
+  
+- if TYPE_CHECKING:
+-     from app.models.track import Track
+-     from app.models.user import User
+  
+  
+> class Download(Base):
+>     __tablename__ = "downloads"
+  
+>     id: Mapped[UUID] = mapped_column(Uuid(as_uuid=True), primary_key=True, default=uuid4)
+>     user_id: Mapped[UUID] = mapped_column(Uuid(as_uuid=True), ForeignKey("users.id"), index=True)
+>     track_id: Mapped[UUID] = mapped_column(Uuid(as_uuid=True), ForeignKey("tracks.id"))
+  
+      # Download details
+>     source: Mapped[str | None] = mapped_column(String(20), nullable=True)  # spotify, youtube, deezer
+>     playlist_id: Mapped[UUID | None] = mapped_column(Uuid(as_uuid=True), ForeignKey("playlists.id"), nullable=True)
+>     playlist_name: Mapped[str | None] = mapped_column(String(255), nullable=True)  # Name of the playlist if part of one
+>     status: Mapped[str | None] = mapped_column(String(20), default="pending", nullable=True)
+      # pending, downloading, processing, completed, failed
+  
+      # Progress
+>     progress: Mapped[int] = mapped_column(Integer, default=0)  # 0-100
+>     file_path: Mapped[str | None] = mapped_column(String(500), nullable=True)
+>     file_size: Mapped[int] = mapped_column(Integer, default=0)  # bytes
+  
+      # Priority & Scheduling
+>     priority: Mapped[int] = mapped_column(Integer, default=5)  # 1-10
+  
+      # Error tracking
+>     error_message: Mapped[str | None] = mapped_column(String(1000), nullable=True)
+>     retry_count: Mapped[int] = mapped_column(Integer, default=0)
+  
+      # UI State
+>     archived: Mapped[bool] = mapped_column(Boolean, default=False)  # If true, hidden from queue but visible in library
+  
+      # Timestamps
+>     created_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(UTC))
+>     started_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+>     completed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+  
+      # Relationships
+>     user: Mapped["User"] = relationship("User", back_populates="downloads")
+>     track: Mapped["Track"] = relationship("Track", back_populates="downloads")

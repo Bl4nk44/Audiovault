@@ -28,7 +28,7 @@ router = APIRouter()
 @router.get("/ping.view")
 @router.post("/ping.view")
 async def ping(
-    f: str = "xml",
+    f: str = Query("xml", description="Response format"),
     current_user: User = Depends(subsonic_auth),
 ):
     """
@@ -45,7 +45,7 @@ async def ping(
 @router.get("/getLicense.view")
 @router.post("/getLicense.view")
 async def get_license(
-    f: str = "xml",
+    f: str = Query("xml", description="Response format"),
     current_user: User = Depends(subsonic_auth),
 ):
     """
@@ -72,7 +72,7 @@ async def get_license(
 @router.post("/getUser.view")
 async def get_user(
     username: str = Query(None, description="Username to get info for"),
-    f: str = "xml",
+    f: str = Query("xml", description="Response format"),
     current_user: User = Depends(subsonic_auth),
     db: AsyncSession = Depends(get_db),
 ):
@@ -135,7 +135,7 @@ async def get_token(
     p: str = Query(..., description="Password"),
     c: str = Query(..., description="Client name"),
     v: str = Query("1.16.1", description="API version"),
-    f: str = "xml",
+    f: str = Query("xml", description="Response format"),
     db: AsyncSession = Depends(get_db),
 ):
     """
@@ -197,7 +197,7 @@ async def get_token(
 @router.get("/getScanStatus.view")
 @router.post("/getScanStatus.view")
 async def get_scan_status(
-    f: str = "xml",
+    f: str = Query("xml", description="Response format"),
     current_user: User = Depends(subsonic_auth),
 ):
     """
@@ -225,7 +225,7 @@ async def get_scan_status(
 @router.get("/getOpenSubsonicExtensions.view")
 @router.post("/getOpenSubsonicExtensions.view")
 async def get_open_subsonic_extensions(
-    f: str = "xml",
+    f: str = Query("xml", description="Response format"),
     current_user: User = Depends(subsonic_auth),
 ):
     """

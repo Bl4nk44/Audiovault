@@ -8,6 +8,9 @@ from datetime import datetime
 from typing import Any
 from uuid import UUID
 
+UNKNOWN_ARTIST = "Unknown Artist"
+DEFAULT_AUDIO_MIME = "audio/mpeg"
+
 
 def format_subsonic_date(dt: datetime | None) -> str | None:
     """
@@ -174,7 +177,7 @@ def build_song_response(
     song = {
         "id": str(track.id),
         "title": track.title or "Unknown",
-        "artist": track.artist or "Unknown Artist",
+        "artist": track.artist or UNKNOWN_ARTIST,
         "album": track.album or "Unknown Album",
         "duration": format_duration(track.duration_ms),
         "isDir": False,
@@ -183,7 +186,6 @@ def build_song_response(
         "created": format_subsonic_date(track.created_at),
     }
 
-    # Optional fields
     # Optional fields
     if track.artist_id:
         song["artistId"] = str(track.artist_id)
@@ -240,7 +242,7 @@ def build_song_response(
         song["size"] = file_size
 
         song["bitRate"] = 320  # Default, could be detected
-        song["contentType"] = get_content_type(download.file_path) if download.file_path else "audio/mpeg"
+        song["contentType"] = get_content_type(download.file_path) if download.file_path else DEFAULT_AUDIO_MIME
 
         if include_path:
             song["path"] = download.file_path
@@ -249,7 +251,7 @@ def build_song_response(
         song["suffix"] = "mp3"
         song["size"] = 0
         song["bitRate"] = 128
-        song["contentType"] = "audio/mpeg"
+        song["contentType"] = DEFAULT_AUDIO_MIME
         song["path"] = ""  # Explicit empty path
 
     return song
@@ -270,7 +272,7 @@ def build_album_response(album: Any, song_count: int = 0) -> dict:
     return {
         "id": str(album.id),
         "name": album.title or "Unknown Album",
-        "artist": album.artist.name if album.artist else "Unknown Artist",
+        "artist": album.artist.name if album.artist else UNKNOWN_ARTIST,
         "artistId": str(album.artist_id) if album.artist_id else None,
         "coverArt": f"al-{album.id}",
         "songCount": song_count,
@@ -296,7 +298,7 @@ def build_artist_response(artist: Any, album_count: int = 0) -> dict:
 
     return {
         "id": str(artist.id),
-        "name": artist.name or "Unknown Artist",
+        "name": artist.name or UNKNOWN_ARTIST,
         "albumCount": album_count,
         "coverArt": f"ar-{artist.id}" if images else None,
     }

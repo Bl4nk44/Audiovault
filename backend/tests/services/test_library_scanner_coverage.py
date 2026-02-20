@@ -67,7 +67,8 @@ async def test_find_track_filename_fallback(scanner):
     db_mock = AsyncMock()
     user_id = str(uuid.uuid4())
     base_dir = "/downloads"
-    line = "../other/path/song.mp3"
+    # Use a safe path that stays within /downloads to avoid traversal block
+    line = "other/path/song.mp3"
 
     # Exact and relative fail, filename match succeeds
     mock_result_none = MagicMock()

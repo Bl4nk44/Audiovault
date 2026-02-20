@@ -192,9 +192,9 @@ async def get_playlist(
 @router.get("/createPlaylist.view")
 @router.post("/createPlaylist.view")
 async def create_playlist(
-    playlistId: str = Query(None, description="Playlist ID (for update)"),
+    playlist_id_param: str = Query(None, alias="playlistId", description="Playlist ID (for update)"),
     name: str = Query(None, description="Playlist name"),
-    songId: list[str] = Query(None, description="Song IDs to add"),
+    song_id: list[str] = Query(None, alias="songId", description="Song IDs to add"),
     f: str = "xml",
     current_user: User = Depends(subsonic_auth),
     db: AsyncSession = Depends(get_db),
@@ -213,10 +213,10 @@ async def create_playlist(
     Returns:
         Created/updated playlist
     """
-    if playlistId:
+    if playlist_id_param:
         # Update existing playlist
         try:
-            playlist_id = UUID(playlistId)
+            playlist_id = UUID(playlist_id_param)
         except ValueError:
             return subsonic_error(10, ERR_INVALID_PLAYLIST_ID, f=f)
 
@@ -234,14 +234,14 @@ async def create_playlist(
             playlist.name = name
 
         # Replace songs if provided
-        if songId:
+        if song_id:
             # Delete existing tracks
             await db.execute(delete(PlaylistTrack).where(PlaylistTrack.playlist_id == playlist_id))
 
             # Add new tracks
-            for i, song_id in enumerate(songId):
+            for i, song_id_val in enumerate(song_id):
                 try:
-                    track_id = UUID(song_id)
+                    track_id = UUID(song_id_val)
                     playlist_track = PlaylistTrack(
                         playlist_id=playlist_id,
                         track_id=track_id,
@@ -268,10 +268,10 @@ async def create_playlist(
         await db.flush()
 
         # Add songs if provided
-        if songId:
-            for i, song_id in enumerate(songId):
+        if song_id:
+            for i, song_id_val in enumerate(song_id):
                 try:
-                    track_id = UUID(song_id)
+                    track_id = UUID(song_id_val)
                     playlist_track = PlaylistTrack(
                         playlist_id=playlist.id,
                         track_id=track_id,
@@ -290,12 +290,12 @@ async def create_playlist(
 @router.get("/updatePlaylist.view")
 @router.post("/updatePlaylist.view")
 async def update_playlist(
-    playlistId: str = Query(..., description="Playlist ID"),
+    playlist_id_param: str = Query(..., alias="playlistId", description="Playlist ID"),
     name: str = Query(None, description="New name"),
     comment: str = Query(None, description="New comment"),
     public: bool = Query(None, description="Public flag"),
-    songIdToAdd: list[str] = Query(None, description="Songs to add"),
-    songIndexToRemove: list[int] = Query(None, description="Song indices to remove"),
+    song_id_to_add: list[str] = Query(None, alias="songIdToAdd", description="Songs to add"),
+    song_index_to_remove: list[int] = Query(None, alias="songIndexToRemove", description="Song indices to remove"),
     f: str = "xml",
     current_user: User = Depends(subsonic_auth),
     db: AsyncSession = Depends(get_db),
@@ -315,7 +315,7 @@ async def update_playlist(
         Empty success response
     """
     try:
-        playlist_id = UUID(playlistId)
+        playlist_id = UUID(playlist_id_param)
     except ValueError:
         return subsonic_error(10, ERR_INVALID_PLAYLIST_ID, f=f)
 
@@ -338,7 +338,7 @@ async def update_playlist(
         playlist.public = public
 
     # Remove songs by index
-    if songIndexToRemove:
+    if song_index_to_remove:
         # Get current tracks ordered
         pl_tracks_res = await db.execute(
             select(PlaylistTrack).where(PlaylistTrack.playlist_id == playlist_id).order_by(PlaylistTrack.order)
@@ -346,7 +346,7 @@ async def update_playlist(
         tracks = list(pl_tracks_res.scalars().all())
 
         # Remove by index (reverse order to preserve indices)
-        for idx in sorted(songIndexToRemove, reverse=True):
+        for idx in sorted(song_index_to_remove, reverse=True):
             if 0 <= idx < len(tracks):
                 await db.delete(tracks[idx])
 
@@ -359,13 +359,13 @@ async def update_playlist(
             track.order = i
 
     # Add songs
-    if songIdToAdd:
+    if song_id_to_add:
         # Get current max order
         result = await db.execute(select(func.max(PlaylistTrack.order)).where(PlaylistTrack.playlist_id == playlist_id))
         max_order_val = result.scalar()
         max_order: int = int(max_order_val) if isinstance(max_order_val, (int, float, str)) else -1
 
-        for song_id in songIdToAdd:
+        for song_id in song_id_to_add:
             try:
                 track_id = UUID(song_id)
                 max_order += 1

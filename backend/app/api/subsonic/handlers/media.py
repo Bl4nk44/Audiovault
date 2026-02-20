@@ -142,11 +142,11 @@ def parse_range_header(range_header: str | None, file_size: int) -> tuple[int, i
         range_spec = range_header.replace("bytes=", "")
         if range_spec.startswith("-"):
             # Suffix range: -500 means last 500 bytes
-            suffix_length = int(range_spec[1:])
+            suffix_length = int(range_spec.replace("-", "", 1))
             return max(0, file_size - suffix_length), file_size - 1
         elif range_spec.endswith("-"):
             # Open-ended range: 500- means from byte 500 to end
-            start = int(range_spec[:-1])
+            start = int(range_spec.replace("-", "", 1))
             return start, file_size - 1
         else:
             # Explicit range: 0-499
@@ -202,7 +202,7 @@ async def stream(
     range_header = request.headers.get("range")
     start, end = parse_range_header(range_header, file_size)
 
-    content_length = end - start + 1
+    content_length: int = int(end - start + 1)
 
     headers = {
         "Accept-Ranges": "bytes",
@@ -223,13 +223,13 @@ async def stream(
         try:
             async with aiofiles.open(file_path, "rb") as f:
                 await f.seek(start)
-                remaining = content_length
+                remaining: int = content_length
                 while remaining > 0:
                     read_size = min(chunk_size, remaining)
                     chunk = await f.read(read_size)
                     if not chunk:
                         break
-                    remaining -= len(chunk)
+                    remaining = remaining - len(chunk)
                     yield chunk
         except Exception as e:
             logger.error(f"Error streaming file {file_path}: {e}")
@@ -378,7 +378,7 @@ async def _check_local_cover_files(directory: str) -> Response | None:
         return None
 
     for name in ["cover.jpg", "cover.png", "cover.jpeg", "folder.jpg", "front.jpg", "album.jpg"]:
-        local_path = os.path.join(directory, name)
+        local_path = os.path.join(directory, name)  # nosemgrep: path-traversal  # directory validated above, name is hardcoded
         if os.path.exists(local_path):
             async with aiofiles.open(local_path, "rb") as f:
                 content = await f.read()
@@ -408,8 +408,8 @@ def _try_extract_id3_art(audio_file) -> Response | None:
     # Helper for other formats or older mutagen versions
     if hasattr(audio_file.tags, "values"):
         for tag in audio_file.tags.values():
-            if hasattr(tag, "frameid") and tag.frameid == "APIC":
-                return Response(content=tag.data, media_type=tag.mime)
+            if getattr(tag, "frameid", None) == "APIC":
+                return Response(content=getattr(tag, "data", b""), media_type=getattr(tag, "mime", "image/jpeg"))
     return None
 
 
@@ -523,10 +523,12 @@ async def get_cover_art(
         # 3b. Check embedded art (running in thread pool to avoid blocking)
         import asyncio
 
+        import functools
+
         from app.core.executors import stream_executor
 
         loop = asyncio.get_event_loop()
-        resp = await loop.run_in_executor(stream_executor, lambda: _extract_embedded_art(file_path))
+        resp = await loop.run_in_executor(stream_executor, functools.partial(_extract_embedded_art, file_path))
         if resp:
             return resp
 

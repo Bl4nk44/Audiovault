@@ -31,7 +31,7 @@ async def get_artist_info(
     id: str = Query(..., description="Artist ID"),
     count: int = Query(20, description="Max similar artists"),
     include_not_present: bool = Query(False, alias="includeNotPresent", description="Include non-present artists"),
-    f: str = "xml",
+    f: str = Query("xml", description="Response format"),
     current_user: User = Depends(subsonic_auth),
     db: AsyncSession = Depends(get_db),
 ):
@@ -74,7 +74,7 @@ async def get_artist_info2(
     id: str = Query(..., description="Artist ID"),
     count: int = Query(20, description="Max similar artists"),
     include_not_present: bool = Query(False, alias="includeNotPresent", description="Include non-present artists"),
-    f: str = "xml",
+    f: str = Query("xml", description="Response format"),
     current_user: User = Depends(subsonic_auth),
     db: AsyncSession = Depends(get_db),
 ):
@@ -116,7 +116,7 @@ async def get_artist_info2(
 async def get_similar_songs2(
     id: str = Query(..., description="Song or Artist ID"),
     count: int = Query(50, description="Number of songs"),
-    f: str = "xml",
+    f: str = Query("xml", description="Response format"),
     current_user: User = Depends(subsonic_auth),
     db: AsyncSession = Depends(get_db),
 ):
@@ -170,7 +170,7 @@ async def get_similar_songs2(
 async def get_podcasts(
     include_episodes: bool = Query(True, alias="includeEpisodes", description="Include episodes"),
     id: str = Query(None, description="Podcast ID"),
-    f: str = "xml",
+    f: str = Query("xml", description="Response format"),
     current_user: User = Depends(subsonic_auth),
     db: AsyncSession = Depends(get_db),
 ):
@@ -186,7 +186,7 @@ async def get_podcasts(
 @router.post("/getNewestPodcasts.view")
 async def get_newest_podcasts(
     count: int = Query(20, description="Count"),
-    f: str = "xml",
+    f: str = Query("xml", description="Response format"),
     current_user: User = Depends(subsonic_auth),
     db: AsyncSession = Depends(get_db),
 ):
@@ -201,7 +201,7 @@ async def get_newest_podcasts(
 @router.get("/getBookmarks.view")
 @router.post("/getBookmarks.view")
 async def get_bookmarks(
-    f: str = "xml",
+    f: str = Query("xml", description="Response format"),
     current_user: User = Depends(subsonic_auth),
     db: AsyncSession = Depends(get_db),
 ):
@@ -216,7 +216,7 @@ async def get_bookmarks(
 @router.get("/getInternetRadioStations.view")
 @router.post("/getInternetRadioStations.view")
 async def get_internet_radio_stations(
-    f: str = "xml",
+    f: str = Query("xml", description="Response format"),
     current_user: User = Depends(subsonic_auth),
     db: AsyncSession = Depends(get_db),
 ):

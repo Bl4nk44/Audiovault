@@ -35,8 +35,8 @@ async def search_legacy(
     any: str = Query(None, description="Search any field"),
     count: int = Query(20, description="Max results"),
     offset: int = Query(0, description="Result offset"),
-    newerThan: int = Query(None, description="Only return newer than timestamp"),
-    f: str = "xml",
+    newer_than: int = Query(None, alias="newerThan", description="Only return newer than timestamp"),
+    f: str = Query("xml", description="Response format"),
     current_user: User = Depends(subsonic_auth),
     db: AsyncSession = Depends(get_db),
 ):
@@ -83,14 +83,14 @@ async def search_legacy(
 @router.post("/search2.view")
 async def search2(
     query: str = Query(..., description="Search query"),
-    artistCount: int = Query(20, description="Max artists to return"),
-    artistOffset: int = Query(0, description="Artist offset"),
-    albumCount: int = Query(20, description="Max albums to return"),
-    albumOffset: int = Query(0, description="Album offset"),
-    songCount: int = Query(20, description="Max songs to return"),
-    songOffset: int = Query(0, description="Song offset"),
-    musicFolderId: str = Query(None, description="Music folder ID"),
-    f: str = "xml",
+    artist_count: int = Query(20, alias="artistCount", description="Max artists to return"),
+    artist_offset: int = Query(0, alias="artistOffset", description="Artist offset"),
+    album_count: int = Query(20, alias="albumCount", description="Max albums to return"),
+    album_offset: int = Query(0, alias="albumOffset", description="Album offset"),
+    song_count: int = Query(20, alias="songCount", description="Max songs to return"),
+    song_offset: int = Query(0, alias="songOffset", description="Song offset"),
+    music_folder_id: str = Query(None, alias="musicFolderId", description="Music folder ID"),
+    f: str = Query("xml", description="Response format"),
     current_user: User = Depends(subsonic_auth),
     db: AsyncSession = Depends(get_db),
 ):
@@ -113,7 +113,7 @@ async def search2(
 
     # Search artists
     artists_result = []
-    if artistCount > 0:
+    if artist_count > 0:
         result = await db.execute(
             select(Artist)
             .join(Track, Track.artist_id == Artist.id)
@@ -125,8 +125,8 @@ async def search2(
             )
             .group_by(Artist.id)
             .order_by(Artist.name)
-            .offset(artistOffset)
-            .limit(artistCount)
+            .offset(artist_offset)
+            .limit(artist_count)
         )
 
         for artist_obj in result.scalars():
@@ -147,7 +147,7 @@ async def search2(
 
     # Search albums
     albums_result = []
-    if albumCount > 0:
+    if album_count > 0:
         albums_result_db = await db.execute(
             select(Album)
             .join(Track, Track.album_id == Album.id)
@@ -157,8 +157,8 @@ async def search2(
             )
             .group_by(Album.id)
             .order_by(Album.title)
-            .offset(albumOffset)
-            .limit(albumCount)
+            .offset(album_offset)
+            .limit(album_count)
         )
 
         for album_obj in albums_result_db.scalars():
@@ -197,7 +197,7 @@ async def search2(
 
     # Search songs
     songs_result = []
-    if songCount > 0:
+    if song_count > 0:
         songs_result_db = await db.execute(
             select(Track, Download)
             .join(Download, Download.track_id == Track.id)
@@ -210,8 +210,8 @@ async def search2(
                     func.lower(Track.album).like(search_term),
                 ),
             )
-            .offset(songOffset)
-            .limit(songCount)
+            .offset(song_offset)
+            .limit(song_count)
         )
 
         for track, download in songs_result_db.all():
@@ -235,14 +235,14 @@ async def search2(
 @router.post("/search3.view")
 async def search3(
     query: str = Query(..., description="Search query"),
-    artistCount: int = Query(20, description="Max artists to return"),
-    artistOffset: int = Query(0, description="Artist offset"),
-    albumCount: int = Query(20, description="Max albums to return"),
-    albumOffset: int = Query(0, description="Album offset"),
-    songCount: int = Query(20, description="Max songs to return"),
-    songOffset: int = Query(0, description="Song offset"),
-    musicFolderId: str = Query(None, description="Music folder ID"),
-    f: str = "xml",
+    artist_count: int = Query(20, alias="artistCount", description="Max artists to return"),
+    artist_offset: int = Query(0, alias="artistOffset", description="Artist offset"),
+    album_count: int = Query(20, alias="albumCount", description="Max albums to return"),
+    album_offset: int = Query(0, alias="albumOffset", description="Album offset"),
+    song_count: int = Query(20, alias="songCount", description="Max songs to return"),
+    song_offset: int = Query(0, alias="songOffset", description="Song offset"),
+    music_folder_id: str = Query(None, alias="musicFolderId", description="Music folder ID"),
+    f: str = Query("xml", description="Response format"),
     current_user: User = Depends(subsonic_auth),
     db: AsyncSession = Depends(get_db),
 ):
@@ -264,7 +264,7 @@ async def search3(
 
     # Search artists (ID3 format)
     artists_result = []
-    if artistCount > 0:
+    if artist_count > 0:
         artists_result_db = await db.execute(
             select(Artist)
             .join(Track, Track.artist_id == Artist.id)
@@ -276,8 +276,8 @@ async def search3(
             )
             .group_by(Artist.id)
             .order_by(Artist.name)
-            .offset(artistOffset)
-            .limit(artistCount)
+            .offset(artist_offset)
+            .limit(artist_count)
         )
 
         for artist_obj in artists_result_db.scalars():
@@ -297,7 +297,7 @@ async def search3(
 
     # Search albums (ID3 format)
     albums_result = []
-    if albumCount > 0:
+    if album_count > 0:
         albums_result_db = await db.execute(
             select(Album)
             .join(Track, Track.album_id == Album.id)
@@ -308,8 +308,8 @@ async def search3(
             )
             .group_by(Album.id)
             .order_by(Album.title)
-            .offset(albumOffset)
-            .limit(albumCount)
+            .offset(album_offset)
+            .limit(album_count)
         )
 
         for album_obj in albums_result_db.scalars():
@@ -357,7 +357,7 @@ async def search3(
 
     # Search songs (same as search2)
     songs_result = []
-    if songCount > 0:
+    if song_count > 0:
         songs_result_db = await db.execute(
             select(Track, Download)
             .outerjoin(Download, (Download.track_id == Track.id) & (Download.user_id == current_user.id))
@@ -369,8 +369,8 @@ async def search3(
                     func.lower(Track.album).like(search_term),
                 )
             )
-            .offset(songOffset)
-            .limit(songCount)
+            .offset(song_offset)
+            .limit(song_count)
         )
 
         for track, download in songs_result_db.all():

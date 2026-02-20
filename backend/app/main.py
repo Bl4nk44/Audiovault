@@ -124,7 +124,7 @@ async def get_version():
 if not os.path.exists(settings.DOWNLOAD_DIR):
     os.makedirs(settings.DOWNLOAD_DIR)
 try:
-    os.chmod(settings.DOWNLOAD_DIR, 0o755)  # nosec B103
+    os.chmod(settings.DOWNLOAD_DIR, 0o755)  # nosemgrep: insecure-file-permissions  # nosec B103 - shared download dir needs group/other read+exec
 except Exception as e:
     logger.warning(f"Could not set permissions on {settings.DOWNLOAD_DIR}: {e}")
 

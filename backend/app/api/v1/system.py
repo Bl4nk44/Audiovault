@@ -22,7 +22,7 @@ def _read_last_lines(file_path: Path, lines_count: int) -> list[str]:
     try:
         if not file_path.exists():
             return [f"Log file not found at: {file_path}"]
-        with open(file_path, encoding="utf-8", errors="replace") as f:
+        with open(file_path, encoding="utf-8", errors="replace") as f:  # nosemgrep: path-traversal
             return list(deque(f, lines_count))
     except Exception as e:
         logger.error(f"Error reading log file: {e}")
@@ -37,12 +37,13 @@ async def get_system_logs(lines: int = Query(500, ge=1, le=5000)):
     log_file = _get_log_file_path()
 
     try:
+        import functools
         loop = asyncio.get_event_loop()
         # Use run_in_executor to avoid blocking the event loop with file I/O
-        return await loop.run_in_executor(None, _read_last_lines, log_file, lines)
+        return await loop.run_in_executor(None, functools.partial(_read_last_lines, log_file, lines))
     except Exception as e:
-        # Rethrow as HTTP exception if it wasn't handled inside (though helper re-raises)
-        raise HTTPException(status_code=500, detail=f"Error reading logs: {str(e)}") from e
+        logger.error(f"Failed to read logs: {e}")
+        raise HTTPException(status_code=500, detail="Failed to read logs")
 
 
 @router.get("/logs/download")
@@ -99,6 +100,23 @@ async def _check_production_update(settings):
         return {"error": str(e)}
 
 
+def _get_local_git_sha(git_dir: Path) -> str:
+    """Read local Git HEAD SHA."""
+    try:
+        head_file = git_dir / "HEAD"
+        if head_file.exists():
+            ref = head_file.read_text().strip()
+            if ref.startswith("ref:"):
+                ref_path = git_dir / ref[5:].strip()
+                result = ref_path.read_text().strip() if ref_path.exists() else "unknown (packed)"
+                return result
+            # Detached HEAD
+            return ref
+    except Exception:
+        pass
+    return "unknown"
+
+
 async def _check_development_update():
     import aiohttp
 
@@ -109,38 +127,25 @@ async def _check_development_update():
         logger.warning("Development mode but .git not found. Cannot check for commit updates.")
         return {"update_available": False, "latest_version": "Unknown (No .git)"}
 
-    try:
-        # Read local HEAD SHA
-        head_file = git_dir / "HEAD"
-        if head_file.exists():
-            ref = head_file.read_text().strip()
-            if ref.startswith("ref:"):
-                # Handle direct refs
-                ref_path = git_dir / ref[5:].strip()
-                if ref_path.exists():
-                    local_sha = ref_path.read_text().strip()
-                else:
-                    # It might be packed-refs, which is harder to read without git command
-                    # For now, simple fallback
-                    local_sha = "unknown (packed)"
-            else:
-                local_sha = ref  # Detached HEAD
-        else:
-            local_sha = "unknown"
+    local_sha = _get_local_git_sha(git_dir)
 
+    try:
         # Check remote 'dev' branch
         github_url = "https://api.github.com/repos/Bl4nk44/Audiovault/commits/dev"
         async with aiohttp.ClientSession() as session:
             async with session.get(github_url) as response:
                 if response.status == 200:
                     data = await response.json()
+                    
+                    # Handling dictionary return typing securely
                     remote_sha = data.get("sha")
+                    remote_sha_str = str(remote_sha) if remote_sha else "unknown"
 
                     update_available = local_sha != remote_sha
 
                     return {
-                        "current_version": local_sha[:7],
-                        "latest_version": remote_sha[:7],
+                        "current_version": str(local_sha)[:7] if local_sha else "unknown",
+                        "latest_version": remote_sha_str[:7],
                         "update_available": update_available,
                         "release_url": data.get("html_url"),
                     }

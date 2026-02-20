@@ -65,7 +65,7 @@ def compute_md5_token(password: str, salt: str) -> str:
     """
     # MD5 is required by Subsonic API specification for token auth
     # This is NOT used for password storage - passwords use bcrypt
-    return hashlib.md5(f"{password}{salt}".encode()).hexdigest()  # nosec B303, B324
+    return hashlib.md5(f"{password}{salt}".encode()).hexdigest()  # nosemgrep: md5-used-as-password  # nosec B303, B324 - MD5 mandated by Subsonic API spec
 
 
 async def get_user_by_username(
@@ -176,8 +176,9 @@ def decode_hex_password(password: str) -> str:
     """
     if password.startswith("enc:"):
         try:
-            return bytes.fromhex(password[4:]).decode("utf-8")
-        except (ValueError, UnicodeDecodeError):
+            hex_part = password.replace("enc:", "", 1)
+            return bytes.fromhex(hex_part).decode("utf-8")
+        except ValueError:
             return password
     return password
 
@@ -187,9 +188,9 @@ async def subsonic_auth(
     p: str | None = Query(None, description="Password (plaintext or enc:hex)"),
     t: str | None = Query(None, description="MD5(password+salt) token"),
     s: str | None = Query(None, description="Salt for token auth"),
-    c: str = Query(..., description="Client name"),
-    v: str = Query("1.16.1", description="API version"),
-    f: str = Query("json", description="Response format (json/xml)"),
+    _c: str = Query(..., alias="c", description="Client name"),
+    _v: str = Query("1.16.1", alias="v", description="API version"),
+    _f: str = Query("json", alias="f", description="Response format (json/xml)"),
     db: AsyncSession = Depends(get_db),
 ) -> User:
     """

@@ -37,6 +37,7 @@ class DownloadManager:
         self.processing_task = None
         self.paused_downloads = set()  # Set of download IDs that are paused
         self.active_tasks = {}  # Map download_id -> asyncio.Task
+        self._background_tasks: set[asyncio.Task] = set()  # prevent GC of fire-and-forget tasks
         # Per-user semaphores for concurrent download limits
         self.user_semaphores: dict[str, asyncio.Semaphore] = {}
 
@@ -59,8 +60,8 @@ class DownloadManager:
         Dir: 777 (rwxrwxrwx), File: 666 (rw-rw-rw-)
         """
         try:
-            mode = 0o666 if is_file else 0o777
-            os.chmod(path, mode)
+            mode = 0o666 if is_file else 0o777  # nosemgrep: insecure-file-permissions  # nosec B103 - intentional for Docker interop with Jellyfin/Plex
+            os.chmod(path, mode)  # nosemgrep: insecure-file-permissions
         except Exception as e:
             # On Windows this might fail or have limited effect, but we log warning only
             logger.debug(f"Could not set permissions on {path}: {e}")
@@ -76,9 +77,10 @@ class DownloadManager:
                 self.queue.task_done()
                 continue
 
-            # Don't await - start task and let it run concurrently
-            # Semaphore controls concurrency limit inside the wrapper
-            asyncio.create_task(self._process_with_semaphore(download_id))
+            # Store task reference to prevent premature garbage collection
+            task = asyncio.create_task(self._process_with_semaphore(download_id))
+            self._background_tasks.add(task)
+            task.add_done_callback(self._background_tasks.discard)
 
     async def _process_with_semaphore(self, download_id: str):
         """Wrapper that acquires per-user semaphore before processing download."""
@@ -119,6 +121,7 @@ class DownloadManager:
                 await task
             except asyncio.CancelledError:
                 logger.info(f"Download task {download_id} cancelled")
+                raise  # Re-raise CancelledError per asyncio contract
             except Exception as e:
                 logger.error(f"Error processing download {download_id}: {e}")
             finally:
@@ -324,6 +327,20 @@ class DownloadManager:
             if download.user and download.user.preferences:
                 download_path = download.user.preferences.get("downloadPath")
 
+            # Security: validate download_path stays within DOWNLOAD_DIR
+            if download_path:
+                abs_download_path = os.path.abspath(download_path)
+                abs_base_dir = os.path.abspath(settings.DOWNLOAD_DIR)
+                try:
+                    common = os.path.commonpath([abs_base_dir, abs_download_path])
+                except ValueError:
+                    common = ""
+                if common != abs_base_dir:
+                    logger.warning(
+                        f"User download path {download_path!r} escapes DOWNLOAD_DIR, falling back to default"
+                    )
+                    download_path = None
+
             if not download_path:
                 sanitized_username = sanitize_filename(download.user.username)
                 download_path = os.path.join(settings.DOWNLOAD_DIR, sanitized_username)
@@ -512,54 +529,49 @@ class DownloadManager:
         except Exception as e:
             logger.error(f"Progress hook error: {e}")
 
+    async def _resolve_url_cache_optimized(self, loop, ydl_opts, url: str) -> str:
+        cache_key = f"metadata_resolve:{url}"
+        cached_url = await cache_manager.get(cache_key)
+
+        if cached_url:
+            logger.info(f"Cache HIT for {url} -> {cached_url}")
+            return cached_url
+
+        logger.info(f"Cache MISS for {url}. Resolving via extract_info...")
+        try:
+            def resolve_info():
+                with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+                    return ydl.extract_info(url, download=False, process=True)
+
+            info = await loop.run_in_executor(None, resolve_info)
+            if info:
+                if "entries" in info and len(info["entries"]) > 0:
+                    entry = info["entries"][0]
+                    real_url = entry.get("webpage_url") or entry.get("url")
+                else:
+                    real_url = info.get("webpage_url") or info.get("url")
+
+                if real_url:
+                    logger.info(f"Resolved {url} to {real_url}. Caching for 24h.")
+                    await cache_manager.set(cache_key, real_url, expire=86400)
+                    return real_url
+        except Exception as e:
+            logger.warning(
+                f"Failed to resolve/cache metadata for {url}: {e}. Falling back to default download behavior."
+            )
+        return url
+
     async def _execute_download_task(self, loop, ydl_opts, url, download_id):
         logger.info(f"Starting download for {download_id} from URL: {url}")
 
         final_url = url
-
-        # Optimization: specific handling for search queries to cache resolution
         if url.startswith("ytsearch") or url.startswith("scsearch"):
-            cache_key = f"metadata_resolve:{url}"
-            cached_url = await cache_manager.get(cache_key)
+            final_url = await self._resolve_url_cache_optimized(loop, ydl_opts, url)
 
-            if cached_url:
-                logger.info(f"Cache HIT for {url} -> {cached_url}")
-                final_url = cached_url
-            else:
-                logger.info(f"Cache MISS for {url}. Resolving via extract_info...")
-                try:
-                    # Create a specific YDL for extraction (lighter options if needed, but reusing opts is fine)
-                    # We run extract_info in executor to not block loop
-                    def resolve_info():
-                        with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-                            # download=False returns the info dict
-                            return ydl.extract_info(url, download=False, process=True)
-
-                    info = await loop.run_in_executor(None, resolve_info)
-
-                    if info:
-                        # For search results, info is usually a playlist-like object with 'entries'
-                        if "entries" in info and len(info["entries"]) > 0:
-                            entry = info["entries"][0]
-                            # Use webpage_url as the stable direct link
-                            real_url = entry.get("webpage_url") or entry.get("url")
-                        else:
-                            # Direct result
-                            real_url = info.get("webpage_url") or info.get("url")
-
-                        if real_url:
-                            logger.info(f"Resolved {url} to {real_url}. Caching for 24h.")
-                            await cache_manager.set(cache_key, real_url, expire=86400)
-                            final_url = real_url
-                except Exception as e:
-                    logger.warning(
-                        f"Failed to resolve/cache metadata for {url}: {e}. Falling back to default download behavior."
-                    )
-                    # We continue with original URL (ydl will try to solve it again internally)
-                    final_url = url
-
-        # Run blocking download in executor with the (potentially resolved) URL
-        await loop.run_in_executor(None, lambda: yt_dlp.YoutubeDL(ydl_opts).download([final_url]))
+        def download_sync():
+            with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+                ydl.download([final_url])
+        await loop.run_in_executor(None, download_sync)
         logger.info(f"Download finished for {download_id}")
 
     async def pause_download_async(self, download_id: str):
@@ -722,6 +734,21 @@ class DownloadManager:
 
         # Correct key is 'download_path' (snake_case) as stored in DB settings.py
         download_path = download.user.preferences.get("download_path")
+
+        # Security: validate download_path stays within DOWNLOAD_DIR
+        if download_path:
+            abs_download_path = os.path.abspath(download_path)
+            abs_base_dir = os.path.abspath(settings.DOWNLOAD_DIR)
+            try:
+                common = os.path.commonpath([abs_base_dir, abs_download_path])
+            except ValueError:
+                common = ""
+            if common != abs_base_dir:
+                logger.warning(
+                    f"User download_path {download_path!r} escapes DOWNLOAD_DIR, falling back to default"
+                )
+                download_path = None
+
         if not download_path:
             # Smart logic: If user explicitly wants {user} in their schema at the start,
             # don't force a user subdirectory to avoid "admin/admin/..."

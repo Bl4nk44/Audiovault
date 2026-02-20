@@ -9,9 +9,10 @@ logger = logging.getLogger(__name__)
 
 class DeezerService:
     BASE_URL = "https://api.deezer.com"
+    UNKNOWN_ARTIST = "Unknown Artist"
 
     def __init__(self):
-        pass
+        """Initialize DeezerService — stateless, no configuration required."""
 
     async def search(self, query: str, limit: int = 20, offset: int = 0) -> list[dict[str, Any]]:
         # Resolve short links (deezer.page.link)
@@ -151,7 +152,7 @@ class DeezerService:
                                 "id": str(item["id"]),
                                 "title": item["title"],
                                 "image_url": item.get("cover_medium") or item.get("cover_big"),
-                                "year": item.get("release_date", "")[:4] if item.get("release_date") else None,
+                                "year": str(item.get("release_date"))[:4] if item.get("release_date") else None,
                                 "source": "deezer",
                             }
                         )
@@ -182,11 +183,11 @@ class DeezerService:
 
         # Sometimes 'artist' is just a name string in some simplified responses?
         # Usually it is an object
-        artist_name = "Unknown Artist"
+        artist_name = self.UNKNOWN_ARTIST
         if isinstance(item.get("artist"), dict):
-            artist_name = item["artist"].get("name", "Unknown Artist")
+            artist_name = item["artist"].get("name", self.UNKNOWN_ARTIST)
         elif isinstance(item.get("artist"), str):
-            artist_name = item.get("artist") or "Unknown Artist"
+            artist_name = item.get("artist") or self.UNKNOWN_ARTIST
 
         return {
             "id": str(item["id"]),

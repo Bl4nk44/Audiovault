@@ -1,0 +1,218 @@
+> """
+> Lyrics service using Genius API.
+> Provides lyrics fetching with Redis caching.
+> """
+  
+> import json
+> import logging
+> from typing import Optional
+  
+> from app.core.cache import cache_manager
+> from app.core.config import settings
+  
+> logger = logging.getLogger(__name__)
+  
+  # Cache TTL: 24 hours
+> LYRICS_CACHE_TTL = 86400
+  
+  
+> class LyricsService:
+>     """Service for fetching and caching song lyrics from Genius."""
+  
+>     def __init__(self):
+>         self._genius = None
+  
+>     def _get_genius_client(self):
+>         """Lazy initialization of Genius client."""
+!         if self._genius is None:
+!             genius_token = getattr(settings, "GENIUS_API_TOKEN", None)
+!             if not genius_token:
+!                 logger.warning("GENIUS_API_TOKEN not configured")
+!                 return None
+  
+!             try:
+!                 import lyricsgenius
+  
+!                 self._genius = lyricsgenius.Genius(
+!                     genius_token,
+!                     verbose=False,
+!                     remove_section_headers=True,
+!                     skip_non_songs=True,
+!                     excluded_terms=["(Remix)", "(Live)"],
+!                     timeout=10,
+!                 )
+!             except Exception as e:
+!                 logger.error(f"Failed to initialize Genius client: {e}")
+!                 return None
+  
+!         return self._genius
+  
+>     def _get_cache_key(self, artist: str, title: str) -> str:
+>         """Generate cache key for lyrics."""
+          # Normalize for cache key
+!         normalized = f"{artist.lower().strip()}:{title.lower().strip()}"
+!         return f"lyrics:{normalized}"
+  
+>     async def get_lyrics(
+>         self, artist: str, title: str, use_cache: bool = True, track_id: Optional[str] = None
+>     ) -> Optional[dict]:
+>         """
+>         Fetch lyrics for a song.
+>         Checks cache, then DB metadata (if track_id provided), then LRCLIB, then Genius.
+>         """
+!         if not artist or not title:
+!             return None
+  
+!         cache_key = self._get_cache_key(artist, title)
+  
+          # 1. Try cache first
+!         if use_cache:
+!             cached = await self._get_from_cache(cache_key, artist, title)
+!             if cached:
+!                 return cached
+  
+          # 2. Try DB metadata if track_id is provided
+!         db_lyrics = None
+!         if track_id:
+!             try:
+!                 from uuid import UUID
+  
+!                 from app.db.database import AsyncSessionLocal as SessionLocal
+!                 from app.models.track import Track
+!                 from sqlalchemy import select
+  
+!                 async with SessionLocal() as db:
+!                     result = await db.execute(select(Track).where(Track.id == UUID(str(track_id))))
+!                     track = result.scalar_one_or_none()
+!                     if track and track.metadata_content and track.metadata_content.get("lyrics"):
+                          # Check if it has synced lyrics format
+!                         lyrics_text = track.metadata_content["lyrics"]
+!                         is_synced = "[" in lyrics_text and "]" in lyrics_text
+  
+!                         db_lyrics = {
+!                             "found": True,
+!                             "lyrics": lyrics_text,
+!                             "synced_lyrics": lyrics_text if is_synced else None,
+!                             "source": "local",
+!                         }
+                          # Cache it for future use without DB lookup
+!                         await self._cache_result(cache_key, db_lyrics, LYRICS_CACHE_TTL)
+!                         return db_lyrics
+!             except Exception as e:
+!                 logger.warning(f"Failed to fetch lyrics from DB metadata: {e}")
+  
+          # 3. Try LRCLIB for synced lyrics (high priority)
+!         lrclib_data = await self._get_from_lrclib(artist, title)
+!         if lrclib_data and lrclib_data.get("found"):
+!             await self._cache_result(cache_key, lrclib_data, LYRICS_CACHE_TTL)
+!             return lrclib_data
+  
+          # 4. Fetch from Genius (fallback for plain lyrics)
+!         genius = self._get_genius_client()
+!         if not genius:
+!             return lrclib_data
+  
+!         return await self._fetch_and_cache_genius(genius, artist, title, cache_key)
+  
+>     async def _get_from_lrclib(self, artist: str, title: str) -> Optional[dict]:
+>         """
+>         Fetch lyrics from LRCLIB API.
+>         LRCLIB provides high-quality synced lyrics (LRC format).
+>         """
+!         import httpx
+  
+!         url = "https://lrclib.net/api/get"
+!         params = {
+!             "artist_name": artist,
+!             "track_name": title,
+!         }
+  
+!         try:
+!             async with httpx.AsyncClient(timeout=10.0) as client:
+!                 response = await client.get(url, params=params)
+!                 if response.status_code == 200:
+!                     data = response.json()
+!                     return {
+!                         "found": True,
+!                         "lyrics": data.get("plainLyrics") or data.get("syncedLyrics"),
+!                         "synced_lyrics": data.get("syncedLyrics"),
+!                         "title": data.get("trackName"),
+!                         "artist": data.get("artistName"),
+!                         "album": data.get("albumName"),
+!                         "source": "lrclib",
+!                     }
+!                 elif response.status_code == 404:
+!                     logger.info(f"LRCLIB: No lyrics found for {artist} - {title}")
+!                 else:
+!                     logger.warning(f"LRCLIB: API error {response.status_code} for {artist} - {title}")
+!         except Exception as e:
+!             logger.error(f"LRCLIB: Request failed for {artist} - {title}: {e}")
+  
+!         return {"found": False, "lyrics": None, "synced_lyrics": None}
+  
+>     async def _get_from_cache(self, cache_key: str, artist: str, title: str) -> Optional[dict]:
+>         """Try to retrieve lyrics from cache."""
+!         try:
+!             cached_str = await cache_manager.get(cache_key)
+!             if cached_str:
+!                 cached = json.loads(cached_str)
+!                 logger.debug(f"Lyrics cache hit for {artist} - {title}")
+!                 return cached
+!         except Exception as e:
+!             logger.warning(f"Cache read error: {e}")
+!         return None
+  
+>     async def _fetch_and_cache_genius(self, genius, artist: str, title: str, cache_key: str) -> Optional[dict]:
+>         """Fetch from Genius and update cache."""
+!         try:
+!             song = genius.search_song(title, artist)
+  
+!             if not song:
+!                 logger.info(f"No lyrics found for {artist} - {title}")
+                  # Cache negative result for shorter time (1 hour)
+!                 await self._cache_result(cache_key, {"found": False, "lyrics": None}, 3600)
+!                 return {"found": False, "lyrics": None}
+  
+!             result = {
+!                 "found": True,
+!                 "lyrics": song.lyrics,
+!                 "synced_lyrics": None,
+!                 "title": song.title,
+!                 "artist": song.artist,
+!                 "url": song.url,
+!                 "album": getattr(song, "album", None),
+!             }
+  
+              # Cache successful result
+!             await self._cache_result(cache_key, result, LYRICS_CACHE_TTL)
+!             logger.debug(f"Cached lyrics for {artist} - {title}")
+  
+!             return result
+  
+!         except Exception as e:
+!             logger.error(f"Failed to fetch lyrics for {artist} - {title}: {e}")
+!             return None
+  
+>     async def _cache_result(self, key: str, data: dict, ttl: int):
+>         """Helper to cache results safely."""
+!         try:
+!             await cache_manager.set(key, json.dumps(data), expire=ttl)
+!         except Exception as e:
+!             logger.warning(f"Cache write error: {e}")
+  
+>     async def clear_cache(self, artist: str, title: str) -> bool:
+>         """Clear cached lyrics for a specific song."""
+!         if not cache_manager.redis:
+!             return False
+  
+!         cache_key = self._get_cache_key(artist, title)
+!         try:
+!             await cache_manager.redis.delete(cache_key)
+!             return True
+!         except Exception as e:
+!             logger.error(f"Failed to clear lyrics cache: {e}")
+!             return False
+  
+  
+  # Singleton instance
+> lyrics_service = LyricsService()

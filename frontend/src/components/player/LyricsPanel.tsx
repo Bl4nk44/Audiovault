@@ -6,11 +6,11 @@ import { lyricsApi } from "../../api/lyrics";
 import { cn } from "../../lib/utils";
 import { useStore } from "../../store/useStore";
 
-interface LyricsPanelProps {
+type LyricsPanelProps = Readonly<{
   isOpen: boolean;
   onClose: () => void;
   currentTime: number;
-}
+}>;
 
 interface LrcLine {
   time: number;
@@ -25,19 +25,20 @@ export default function LyricsPanel({ isOpen, onClose, currentTime }: LyricsPane
   // Helper to clean artist/title for better search results
   const cleanSearchTerm = (term: string, counterpart?: string) => {
     let cleaned = term
-      .replaceAll(/\(Official.*?\)/gi, "")
-      .replaceAll(/\[Official.*?\]/gi, "")
-      .replaceAll(/\(Video.*?\)/gi, "")
-      .replaceAll(/\[Video.*?\]/gi, "")
-      .replaceAll(/\(Lyrics.*?\)/gi, "")
-      .replaceAll(/\[Lyrics.*?\]/gi, "")
-      .replaceAll(/\(feat\..*?\)/gi, "")
-      .replaceAll(/ft\..*?$/gi, "")
+      .replaceAll(/\(Official[^)]*\)/gi, "")
+      .replaceAll(/\[Official[^\]]*\]/gi, "")
+      .replaceAll(/\(Video[^)]*\)/gi, "")
+      .replaceAll(/\[Video[^\]]*\]/gi, "")
+      .replaceAll(/\(Lyrics[^)]*\)/gi, "")
+      .replaceAll(/\[Lyrics[^\]]*\]/gi, "")
+      .replaceAll(/\(feat\.[^)]*\)/gi, "")
+      .replaceAll(/ft\..*$/gi, "")
       .replaceAll(/\(HD\)/gi, "")
       .replaceAll(/\(HQ\)/gi, "");
 
     if (counterpart) {
       const escapedCounterpart = counterpart.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+      // nosemgrep: detect-non-literal-regexp — escapedCounterpart is sanitized via regex escaping above
       cleaned = cleaned
         .replace(new RegExp(`^${escapedCounterpart}\\s*-\\s*`, "i"), "")
         .replace(new RegExp(`\\s*-\\s*${escapedCounterpart}$`, "i"), "");

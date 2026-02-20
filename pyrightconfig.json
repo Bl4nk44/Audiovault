@@ -5,10 +5,9 @@
   "executionEnvironments": [
     {
       "root": "backend",
-      "extraPaths": ["backend"]
+      "extraPaths": ["app", "."]
     }
   ],
-  "pythonPath": "c:\\Users\\Mati\\DEV\\Audiovault\\.venv\\Scripts\\python.exe",
   "reportMissingImports": "warning",
   "reportMissingTypeStubs": "information"
 }

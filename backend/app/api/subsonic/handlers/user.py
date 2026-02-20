@@ -38,8 +38,8 @@ router = APIRouter()
 @router.post("/star.view")
 async def star(
     id: list[str] = Query(None, description="Song IDs to star"),
-    albumId: list[str] = Query(None, description="Album IDs to star"),
-    artistId: list[str] = Query(None, description="Artist IDs to star"),
+    album_id: list[str] = Query(None, alias="albumId", description="Album IDs to star"),
+    artist_id: list[str] = Query(None, alias="artistId", description="Artist IDs to star"),
     f: str = "xml",
     current_user: User = Depends(subsonic_auth),
     db: AsyncSession = Depends(get_db),
@@ -81,8 +81,8 @@ async def star(
                 continue
 
     # Star albums
-    if albumId:
-        for album_id_str in albumId:
+    if album_id:
+        for album_id_str in album_id:
             try:
                 album_id = UUID(album_id_str)
 
@@ -102,8 +102,8 @@ async def star(
                 continue
 
     # Star artists
-    if artistId:
-        for artist_id_str in artistId:
+    if artist_id:
+        for artist_id_str in artist_id:
             try:
                 artist_id = UUID(artist_id_str)
 
@@ -130,8 +130,8 @@ async def star(
 @router.post("/unstar.view")
 async def unstar(
     id: list[str] = Query(None, description="Song IDs to unstar"),
-    albumId: list[str] = Query(None, description="Album IDs to unstar"),
-    artistId: list[str] = Query(None, description="Artist IDs to unstar"),
+    album_id: list[str] = Query(None, alias="albumId", description="Album IDs to unstar"),
+    artist_id: list[str] = Query(None, alias="artistId", description="Artist IDs to unstar"),
     f: str = "xml",
     current_user: User = Depends(subsonic_auth),
     db: AsyncSession = Depends(get_db),
@@ -162,8 +162,8 @@ async def unstar(
                 continue
 
     # Unstar albums
-    if albumId:
-        for album_id_str in albumId:
+    if album_id:
+        for album_id_str in album_id:
             try:
                 album_id = UUID(album_id_str)
                 await db.execute(
@@ -176,8 +176,8 @@ async def unstar(
                 continue
 
     # Unstar artists
-    if artistId:
-        for artist_id_str in artistId:
+    if artist_id:
+        for artist_id_str in artist_id:
             try:
                 artist_id = UUID(artist_id_str)
                 await db.execute(
@@ -196,7 +196,7 @@ async def unstar(
 @router.get("/getStarred.view")
 @router.post("/getStarred.view")
 async def get_starred(
-    musicFolderId: str = Query(None, description="Music folder ID"),
+    music_folder_id: str = Query(None, alias="musicFolderId", description="Music folder ID"),
     f: str = "xml",
     current_user: User = Depends(subsonic_auth),
     db: AsyncSession = Depends(get_db),
@@ -287,7 +287,7 @@ async def get_starred(
 @router.get("/getStarred2.view")
 @router.post("/getStarred2.view")
 async def get_starred2(
-    musicFolderId: str = Query(None, description="Music folder ID"),
+    music_folder_id: str = Query(None, alias="musicFolderId", description="Music folder ID"),
     f: str = "xml",
     current_user: User = Depends(subsonic_auth),
     db: AsyncSession = Depends(get_db),
@@ -298,7 +298,7 @@ async def get_starred2(
     Same as getStarred but with ID3 album format.
     """
     # Get starred items using JSON format internally for manipulation
-    result = await get_starred(musicFolderId, "json", current_user, db)
+    result = await get_starred(music_folder_id, "json", current_user, db)
 
     # Rename to starred2
     if "subsonic-response" in result and "starred" in result["subsonic-response"]:
@@ -503,10 +503,17 @@ async def get_now_playing(
     )
 
     entries = []
+    now = datetime.now(UTC)
     for now_playing, track, user, download in result.all():
         song = build_song_response(track, download)
         song["username"] = user.username
-        song["minutesAgo"] = int((datetime.now(UTC) - now_playing.updated_at).total_seconds() / 60)
+        
+        # Ensure now_playing.updated_at is aware for subtraction
+        updated_at = now_playing.updated_at
+        if updated_at and updated_at.tzinfo is None:
+            updated_at = updated_at.replace(tzinfo=UTC)
+            
+        song["minutesAgo"] = int((now - updated_at).total_seconds() / 60)
         song["playerId"] = now_playing.player_id or "0"
         entries.append(song)
 
@@ -518,9 +525,9 @@ async def get_now_playing(
 async def get_random_songs(
     size: int = Query(10, description="Number of songs"),
     genre: str = Query(None, description="Filter by genre"),
-    fromYear: int = Query(None, description="Filter from year"),
-    toYear: int = Query(None, description="Filter to year"),
-    musicFolderId: str = Query(None, description="Music folder ID"),
+    from_year: int = Query(None, alias="fromYear", description="Filter from year"),
+    to_year: int = Query(None, alias="toYear", description="Filter to year"),
+    music_folder_id: str = Query(None, alias="musicFolderId", description="Music folder ID"),
     f: str = "xml",
     current_user: User = Depends(subsonic_auth),
     db: AsyncSession = Depends(get_db),
@@ -551,11 +558,19 @@ async def get_random_songs(
 
     from sqlalchemy import Integer
 
+    is_postgres = db.bind.dialect.name == "postgresql" if hasattr(db.bind, "dialect") else True
+
     # Apply filters
-    if fromYear:
-        query = query.where(Track.metadata_content["year"].astext.cast(Integer) >= fromYear)
-    if toYear:
-        query = query.where(Track.metadata_content["year"].astext.cast(Integer) <= toYear)
+    if from_year:
+        if is_postgres:
+            query = query.where(Track.metadata_content["year"].astext.cast(Integer) >= from_year)
+        else:
+            query = query.where(sqlfunc.cast(sqlfunc.json_extract(Track.metadata_content, "$.year"), Integer) >= from_year)
+    if to_year:
+        if is_postgres:
+            query = query.where(Track.metadata_content["year"].astext.cast(Integer) <= to_year)
+        else:
+            query = query.where(sqlfunc.cast(sqlfunc.json_extract(Track.metadata_content, "$.year"), Integer) <= to_year)
 
     # Random order
     query = query.order_by(sqlfunc.random()).limit(size)

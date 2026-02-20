@@ -83,6 +83,40 @@ class LibraryScannerService:
 
         return title, artist, album, genre
 
+    def _extract_lyrics_from_lrc_file(self, full_path: str) -> str | None:
+        base_path = os.path.splitext(full_path)[0]
+        lrc_path = base_path + ".lrc"
+        if os.path.exists(lrc_path):
+            try:
+                with open(lrc_path, "r", encoding="utf-8", errors="replace") as f:
+                    lrc_content = f.read().strip()
+                    if lrc_content:
+                        return lrc_content
+            except Exception as lrc_e:
+                pass
+        return None
+
+    def _extract_lyrics_from_tags(self, m) -> str | None:
+        if not hasattr(m, "tags"):
+            return None
+        
+        # ID3 (mp3)
+        if "USLT::eng" in m.tags:
+            return str(m.tags["USLT::eng"])
+        elif "USLT:" in m.tags:
+            return str(m.tags["USLT:"])
+            
+        # Generic lookup for frames starting with USLT
+        for tag in m.tags:
+            if tag.startswith("USLT"):
+                return str(m.tags[tag])
+                
+        # FLAC/Vorbis
+        if hasattr(m.tags, "__contains__") and "lyrics" in m.tags:
+            return m.tags["lyrics"][0]
+            
+        return None
+
     def _try_parse_mutagen_fallback(
         self, full_path: str, current_meta: tuple
     ) -> tuple[str, str, str, str | None, int, str | None]:
@@ -99,35 +133,15 @@ class LibraryScannerService:
 
                 title, artist, album, genre = self._update_meta_from_tags(m, (title, artist, album, genre), filename)
 
-                # Extract Lyrics (USLT for ID3, LYRICS for Flac/Vorbis)
-                if hasattr(m, "tags"):
-                    # ID3 (mp3)
-                    if "USLT::eng" in m.tags:
-                        lyrics = str(m.tags["USLT::eng"])
-                    elif "USLT:" in m.tags:
-                        lyrics = str(m.tags["USLT:"])
-                # FLAC/Vorbis
-                elif "lyrics" in m.tags:
-                    lyrics = m.tags["lyrics"][0]
-                # Generic lookup for frames starting with USLT
-                else:
-                    for tag in m.tags:
-                        if tag.startswith("USLT"):
-                            lyrics = str(m.tags[tag])
-                            break
+                # Extract Lyrics
+                tag_lyrics = self._extract_lyrics_from_tags(m)
+                if tag_lyrics:
+                    lyrics = tag_lyrics
 
             # 3. Check for external .lrc file (prioritize over tags as it's likely better/synced)
-            base_path = os.path.splitext(full_path)[0]
-            lrc_path = base_path + ".lrc"
-            if os.path.exists(lrc_path):
-                try:
-                    with open(lrc_path, "r", encoding="utf-8", errors="replace") as f:
-                        lrc_content = f.read().strip()
-                        if lrc_content:
-                            lyrics = lrc_content
-                            logger.info(f"Found external lyrics for {filename} in {os.path.basename(lrc_path)}")
-                except Exception as lrc_e:
-                    logger.warning(f"Failed to read .lrc file {lrc_path}: {lrc_e}")
+            external_lyrics = self._extract_lyrics_from_lrc_file(full_path)
+            if external_lyrics:
+                lyrics = external_lyrics
 
         except Exception as e:
             logger.debug(f"Mutagen fallback failed for {filename}: {e}")
@@ -272,11 +286,20 @@ class LibraryScannerService:
             logger.error(f"Failed to import playlist {full_path}: {e}")
 
     async def _find_track_for_playlist_line(self, db: AsyncSession, line: str, base_dir: str, user_id: str):
-        # Resolve track path
+        # Resolve track path with path traversal protection
         if os.path.isabs(line):
-            track_path = line
+            track_path = os.path.abspath(line)
         else:
-            track_path = os.path.normpath(os.path.join(base_dir, line))
+            track_path = os.path.abspath(os.path.join(base_dir, line))
+
+        # Security: ensure resolved path stays within the allowed download directory
+        try:
+            common = os.path.commonpath([self.base_dir, track_path])
+        except ValueError:
+            common = ""
+        if common != self.base_dir:
+            logger.warning(f"Path traversal blocked in playlist: {line!r}")
+            return None
 
         download = None
 
@@ -324,12 +347,12 @@ class LibraryScannerService:
     ) -> bool:
         try:
             # Parse metadata in executor to avoid blocking event loop
+            import functools
             loop = asyncio.get_event_loop()
 
-            def parse_sync(p: str = full_path):
-                return self._parse_audio_metadata_sync(p)
-
-            title, artist, album, genre, duration_ms, lyrics = await loop.run_in_executor(stream_executor, parse_sync)
+            title, artist, album, genre, duration_ms, lyrics = await loop.run_in_executor(
+                stream_executor, functools.partial(self._parse_audio_metadata_sync, full_path)
+            )
 
             source, playlist_name = self._infer_source_info(full_path, root_dir)
 

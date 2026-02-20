@@ -4,6 +4,9 @@ from app.services.spotify_service import SpotifyService
 
 
 class SpotifyProvider(MusicProvider):
+    SPOTIFY_URI_PREFIX = "spotify:"
+    SPOTIFY_DOMAIN = "spotify.com"
+
     def __init__(self):
         self.service = SpotifyService()
 
@@ -13,10 +16,10 @@ class SpotifyProvider(MusicProvider):
 
     @property
     def domains(self) -> list[str]:
-        return ["open.spotify.com", "spotify.com"]
+        return ["open.spotify.com", self.SPOTIFY_DOMAIN]
 
     def can_handle(self, url: str) -> bool:
-        return any(domain in url for domain in self.domains) or url.startswith("spotify:")
+        return any(domain in url for domain in self.domains) or url.startswith(self.SPOTIFY_URI_PREFIX)
 
     async def extract_playlist(self, url: str) -> PlaylistMetadata | None:
         # Handle both URL and direct ID if passed
@@ -31,7 +34,7 @@ class SpotifyProvider(MusicProvider):
 
         playlist_id = url
         # Simple extraction if it looks like a URL
-        if "spotify.com" in url or "spotify:" in url:
+        if self.SPOTIFY_DOMAIN in url or self.SPOTIFY_URI_PREFIX in url:
             match = re.search(r"(?:playlist[:/])([a-zA-Z0-9_-]+)", url)
             if match:
                 playlist_id = match.group(1)
@@ -96,7 +99,7 @@ class SpotifyProvider(MusicProvider):
         import re
 
         track_id = url
-        if "spotify.com" in url or "spotify:" in url:
+        if self.SPOTIFY_DOMAIN in url or self.SPOTIFY_URI_PREFIX in url:
             match = re.search(r"(?:track[:/])([a-zA-Z0-9_-]+)", url)
             if match:
                 track_id = match.group(1)

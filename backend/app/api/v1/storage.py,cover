@@ -1,0 +1,179 @@
+> """
+> Storage statistics API endpoint.
+> Provides disk usage, library stats, and growth trends.
+> """
+  
+> import os
+> from datetime import UTC, datetime, timedelta
+  
+> from app.core.config import settings
+> from app.core.dependencies import get_current_active_user
+> from app.db.database import get_db
+> from app.models.download import Download
+> from app.models.user import User
+> from fastapi import APIRouter, Depends
+> from pydantic import BaseModel
+> from sqlalchemy import func, select
+> from sqlalchemy.ext.asyncio import AsyncSession
+  
+> router = APIRouter()
+  
+  
+> class StorageStats(BaseModel):
+>     """Storage statistics response."""
+  
+>     total_files: int
+>     total_size_bytes: int
+>     total_size_formatted: str
+>     disk_free_bytes: int
+>     disk_total_bytes: int
+>     disk_used_percent: float
+>     by_source: dict[str, dict]
+>     by_playlist: dict[str, dict]
+>     recent_growth: list[dict]
+  
+  
+> def format_bytes(size_bytes: int) -> str:
+>     """Format bytes to human-readable string."""
+!     current: float = float(size_bytes)
+!     for unit in ["B", "KB", "MB", "GB", "TB"]:
+!         if current < 1024.0:
+!             return f"{current:.2f} {unit}"
+!         current /= 1024.0
+!     return f"{current:.2f} PB"
+  
+  
+> def get_file_size(file_path: str) -> int:
+>     """Safely get file size, returns 0 if file doesn't exist."""
+!     try:
+!         if file_path and os.path.exists(file_path):
+!             return os.path.getsize(file_path)
+!     except (OSError, PermissionError):
+!         pass
+!     return 0
+  
+  
+> @router.get("/stats", response_model=StorageStats)
+> async def get_storage_stats(
+>     current_user: User = Depends(get_current_active_user),
+>     db: AsyncSession = Depends(get_db),
+> ):
+>     """
+>     Get storage statistics for the current user.
+>     Includes total size, breakdown by source/playlist, and growth trends.
+>     """
+      # Get all completed downloads for user
+!     result = await db.execute(
+!         select(Download).where(
+!             Download.user_id == current_user.id,
+!             Download.status == "completed",
+!         )
+!     )
+!     downloads = result.scalars().all()
+  
+      # Calculate total size by iterating through files
+!     total_size = 0
+!     by_source: dict[str, dict] = {}
+!     by_playlist: dict[str, dict] = {}
+  
+!     for d in downloads:
+!         file_size = get_file_size(d.file_path) if d.file_path else 0
+!         total_size += file_size
+  
+          # Group by source
+!         source = d.source or "unknown"
+!         if source not in by_source:
+!             by_source[source] = {"count": 0, "size_bytes": 0}
+!         by_source[source]["count"] += 1
+!         by_source[source]["size_bytes"] += file_size
+  
+          # Group by playlist
+!         playlist = d.playlist_name or "(No Playlist)"
+!         if playlist not in by_playlist:
+!             by_playlist[playlist] = {"count": 0, "size_bytes": 0}
+!         by_playlist[playlist]["count"] += 1
+!         by_playlist[playlist]["size_bytes"] += file_size
+  
+      # Format sizes
+!     for source_data in by_source.values():
+!         source_data["size_formatted"] = format_bytes(source_data["size_bytes"])
+!     for playlist_data in by_playlist.values():
+!         playlist_data["size_formatted"] = format_bytes(playlist_data["size_bytes"])
+  
+      # Get disk usage
+!     download_dir = settings.DOWNLOAD_DIR
+!     try:
+!         disk_stat = os.statvfs(download_dir) if hasattr(os, "statvfs") else None
+!         if disk_stat:
+!             disk_total = disk_stat.f_blocks * disk_stat.f_frsize
+!             disk_free = disk_stat.f_bavail * disk_stat.f_frsize
+!         else:
+              # Windows fallback
+!             import shutil
+  
+!             disk_usage = shutil.disk_usage(download_dir)
+!             disk_total = disk_usage.total
+!             disk_free = disk_usage.free
+!         disk_used_percent = ((disk_total - disk_free) / disk_total * 100) if disk_total > 0 else 0
+!     except (OSError, PermissionError):
+!         disk_total = 0
+!         disk_free = 0
+!         disk_used_percent = 0
+  
+      # Get recent growth (downloads per day for last 30 days)
+!     thirty_days_ago = datetime.now(UTC) - timedelta(days=30)
+!     growth_result = await db.execute(
+!         select(
+!             func.date(Download.created_at).label("date"),
+!             func.count(Download.id).label("count"),
+!         )
+!         .where(
+!             Download.user_id == current_user.id,
+!             Download.status == "completed",
+!             Download.created_at >= thirty_days_ago,
+!         )
+!         .group_by(func.date(Download.created_at))
+!         .order_by(func.date(Download.created_at))
+!     )
+!     growth_data = [{"date": str(row.date), "count": row.count} for row in growth_result.fetchall()]
+  
+!     return StorageStats(
+!         total_files=len(downloads),
+!         total_size_bytes=total_size,
+!         total_size_formatted=format_bytes(total_size),
+!         disk_free_bytes=disk_free,
+!         disk_total_bytes=disk_total,
+!         disk_used_percent=round(disk_used_percent, 1),
+!         by_source=by_source,
+!         by_playlist=by_playlist,
+!         recent_growth=growth_data,
+!     )
+  
+  
+> @router.get("/summary")
+> async def get_storage_summary(
+>     current_user: User = Depends(get_current_active_user),
+>     db: AsyncSession = Depends(get_db),
+> ):
+>     """
+>     Get a quick summary of storage usage.
+>     Lighter endpoint for dashboard widgets.
+>     """
+      # Count downloads by status
+!     result = await db.execute(
+!         select(
+!             Download.status,
+!             func.count(Download.id).label("count"),
+!         )
+!         .where(Download.user_id == current_user.id)
+!         .group_by(Download.status)
+!     )
+!     status_counts = {row.status: row.count for row in result.fetchall()}
+  
+!     return {
+!         "completed": status_counts.get("completed", 0),
+!         "pending": status_counts.get("pending", 0),
+!         "downloading": status_counts.get("downloading", 0),
+!         "failed": status_counts.get("failed", 0),
+!         "total": sum(status_counts.values()),
+!     }

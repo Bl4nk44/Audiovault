@@ -8,7 +8,7 @@ services:
     command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload --proxy-headers --forwarded-allow-ips '*'
     volumes:
       - ./backend:/app
-      - ./downloads:/downloads
+      - audiovault-downloads:/downloads
       - ../../.git:/app/.git:ro
       - ./VERSION:/app/VERSION
     ports:
@@ -91,3 +91,4 @@ networks:
 
 volumes:
   audiovault-db-data:
+  audiovault-downloads:

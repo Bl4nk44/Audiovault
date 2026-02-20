@@ -1,0 +1,340 @@
+============================= test session starts ==============================
+platform linux -- Python 3.12.3, pytest-9.0.2, pluggy-1.6.0
+rootdir: /home/mati/Dev/Audiovault/backend
+configfile: pytest.ini
+plugins: asyncio-1.3.0, cov-7.0.0, anyio-4.12.1
+asyncio: mode=Mode.AUTO, debug=False, asyncio_default_fixture_loop_scope=None, asyncio_default_test_loop_scope=function
+collected 1004 items
+
+tests/api/subsonic/test_amperfy_compat.py .....                          [  0%]
+tests/api/subsonic/test_auth.py ....                                     [  0%]
+tests/api/subsonic/test_auth_system_additional_coverage.py .......       [  1%]
+tests/api/subsonic/test_browse.py .......                                [  2%]
+tests/api/subsonic/test_browse_additional_coverage.py ..............     [  3%]
+tests/api/subsonic/test_browse_coverage_boost.py .....                   [  4%]
+tests/api/subsonic/test_browse_extended.py .................             [  5%]
+tests/api/subsonic/test_browse_final_boost.py ....                       [  6%]
+tests/api/subsonic/test_info.py ...                                      [  6%]
+tests/api/subsonic/test_lists.py ...                                     [  6%]
+tests/api/subsonic/test_lists_extended.py ...................            [  8%]
+tests/api/subsonic/test_lists_info_additional_coverage.py .........      [  9%]
+tests/api/subsonic/test_media.py ......                                  [ 10%]
+tests/api/subsonic/test_media_additional_coverage.py ........            [ 11%]
+tests/api/subsonic/test_media_coverage.py ......                         [ 11%]
+tests/api/subsonic/test_media_extended.py ...................            [ 13%]
+tests/api/subsonic/test_playlist.py ....                                 [ 13%]
+tests/api/subsonic/test_playlist_additional_coverage.py ........         [ 14%]
+tests/api/subsonic/test_playlist_coverage_boost.py .....                 [ 15%]
+tests/api/subsonic/test_playlist_extended.py ....................        [ 17%]
+tests/api/subsonic/test_search.py ..                                     [ 17%]
+tests/api/subsonic/test_search_additional_coverage.py ....               [ 17%]
+tests/api/subsonic/test_search_coverage_boost.py ...                     [ 18%]
+tests/api/subsonic/test_song_attributes.py ..                            [ 18%]
+tests/api/subsonic/test_stream.py ...                                    [ 18%]
+tests/api/subsonic/test_subsonic_auth_coverage.py .....                  [ 19%]
+tests/api/subsonic/test_subsonic_utils_coverage.py .........             [ 20%]
+tests/api/subsonic/test_system.py ...                                    [ 20%]
+tests/api/subsonic/test_user.py .....                                    [ 20%]
+tests/api/subsonic/test_user_coverage_boost.py ....                      [ 21%]
+tests/api/subsonic/test_user_ext2.py ....................                [ 23%]
+tests/api/subsonic/test_user_extended.py ..................              [ 25%]
+tests/api/subsonic/test_xml_compat.py ...                                [ 25%]
+tests/api/test_auth_proxy.py ..                                          [ 25%]
+tests/api/test_downloads.py ..ss                                         [ 25%]
+tests/api/test_lastfm.py ...                                             [ 26%]
+tests/api/test_system_version.py .                                       [ 26%]
+tests/api/v1/test_audit.py .....                                         [ 26%]
+tests/api/v1/test_auth.py .....                                          [ 27%]
+tests/api/v1/test_dashboard.py ........                                  [ 28%]
+tests/api/v1/test_deezer.py ...                                          [ 28%]
+tests/api/v1/test_downloads.py ....                                      [ 28%]
+tests/api/v1/test_downloads_coverage.py ...                              [ 29%]
+tests/api/v1/test_downloads_extended.py ....                             [ 29%]
+tests/api/v1/test_downloads_extended_v2.py .....                         [ 29%]
+tests/api/v1/test_external.py ...                                        [ 30%]
+tests/api/v1/test_lyrics.py ..                                           [ 30%]
+tests/api/v1/test_misc.py ......                                         [ 31%]
+tests/api/v1/test_playlists.py ........s                                 [ 31%]
+tests/api/v1/test_playlists_coverage.py ................                 [ 33%]
+tests/api/v1/test_playlists_coverage_boost.py ....                       [ 33%]
+tests/api/v1/test_playlists_duplicate.py .                               [ 34%]
+tests/api/v1/test_playlists_external.py .                                [ 34%]
+tests/api/v1/test_playlists_no_duplication.py .                          [ 34%]
+tests/api/v1/test_playlists_v1.py ......                                 [ 34%]
+tests/api/v1/test_settings.py ...                                        [ 35%]
+tests/api/v1/test_spotify.py ......                                      [ 35%]
+tests/api/v1/test_storage.py .                                           [ 35%]
+tests/api/v1/test_storage_coverage_boost.py ..                           [ 36%]
+tests/api/v1/test_stream.py ...............                              [ 37%]
+tests/api/v1/test_stream_coverage.py ......                              [ 38%]
+tests/api/v1/test_stream_extended.py .......                             [ 38%]
+tests/api/v1/test_stream_extended_v2.py ....                             [ 39%]
+tests/api/v1/test_system.py .......                                      [ 39%]
+tests/api/v1/test_system_coverage.py ....                                [ 40%]
+tests/api/v1/test_tidal_coverage.py ...                                  [ 40%]
+tests/api/v1/test_users.py .........                                     [ 41%]
+tests/api/v1/test_watchlist.py .......                                   [ 42%]
+tests/api/v1/test_youtube.py ....                                        [ 42%]
+tests/core/test_cache.py ....                                            [ 43%]
+tests/core/test_dependencies_coverage.py ......                          [ 43%]
+tests/db/test_init_data_coverage.py ....                                 [ 44%]
+tests/providers/test_apple_music_provider.py ....                        [ 44%]
+tests/providers/test_deezer_provider.py ....                             [ 44%]
+tests/providers/test_generic.py .....                                    [ 45%]
+tests/providers/test_provider_manager.py .........                       [ 46%]
+tests/providers/test_providers_common.py .....                           [ 46%]
+tests/providers/test_soundcloud_provider.py ...                          [ 47%]
+tests/providers/test_spotify_provider.py ...                             [ 47%]
+tests/providers/test_youtube_provider.py ....                            [ 47%]
+tests/services/test_base_music_service_extended.py .................     [ 49%]
+tests/services/test_deezer_service.py ....                               [ 49%]
+tests/services/test_deezer_service_extended.py ......................    [ 51%]
+tests/services/test_download_manager.py .........                        [ 52%]
+tests/services/test_download_manager_coverage.py ......                  [ 53%]
+tests/services/test_download_manager_coverage_boost.py ...........       [ 54%]
+tests/services/test_download_manager_extended.py ......                  [ 55%]
+tests/services/test_fallback_service.py ....................             [ 57%]
+tests/services/test_lastfm_service.py .......                            [ 57%]
+tests/services/test_lastfm_service_coverage.py ........                  [ 58%]
+tests/services/test_lastfm_service_coverage_boost.py .....               [ 59%]
+tests/services/test_library_data.py ..........                           [ 60%]
+tests/services/test_library_maintenance.py .........                     [ 61%]
+tests/services/test_library_scanner.py ..................                [ 62%]
+tests/services/test_library_scanner_coverage.py ........                 [ 63%]
+tests/services/test_library_scanner_extended.py ........................ [ 66%]
+.........                                                                [ 66%]
+tests/services/test_lyrics_service.py .....                              [ 67%]
+tests/services/test_lyrics_service_coverage_boost.py .......             [ 68%]
+tests/services/test_playlist_version_service.py .........                [ 69%]
+tests/services/test_recommendation_engine.py .....                       [ 69%]
+tests/services/test_recommendation_engine_coverage.py .........          [ 70%]
+tests/services/test_scheduler_extended.py ......                         [ 71%]
+tests/services/test_scrobbler.py ....                                    [ 71%]
+tests/services/test_soundcloud_service_extended.py ................      [ 73%]
+tests/services/test_spotify_service.py .......                           [ 73%]
+tests/services/test_spotify_service_coverage.py .........                [ 74%]
+tests/services/test_spotify_service_extended.py ........................ [ 76%]
+.............................                                            [ 79%]
+tests/services/test_sync_manager.py ...                                  [ 80%]
+tests/services/test_sync_manager_coverage.py ..........                  [ 81%]
+tests/services/test_sync_manager_extended.py .......                     [ 81%]
+tests/services/test_sync_manager_match_logic.py ....                     [ 82%]
+tests/services/test_watchlist_engine_extended.py ....s....               [ 83%]
+tests/services/test_youtube_service.py ....                              [ 83%]
+tests/services/test_youtube_service_extended.py ........................ [ 85%]
+.............                                                            [ 87%]
+tests/services/watchlist/test_processor.py .........                     [ 88%]
+tests/services/watchlist/test_storage.py .......                         [ 88%]
+tests/test_auth_manager_coverage.py ....                                 [ 89%]
+tests/test_coverage_boost.py ....                                        [ 89%]
+tests/test_db_smoke.py .                                                 [ 89%]
+tests/test_main_coverage.py ....                                         [ 90%]
+tests/test_models_coverage.py .............                              [ 91%]
+tests/test_music_services.py ....                                        [ 91%]
+tests/test_sanitization.py ......                                        [ 92%]
+tests/test_schemas_coverage.py ..                                        [ 92%]
+tests/test_security.py ..                                                [ 92%]
+tests/test_stream_fix.py .                                               [ 92%]
+tests/test_url_validation.py ......................                      [ 95%]
+tests/utils/test_sanitization.py .......                                 [ 95%]
+tests/utils/test_url_helper.py ..................                        [ 97%]
+tests/utils/test_url_helper_coverage.py ........................         [100%]
+
+=============================== warnings summary ===============================
+tests/api/subsonic/test_subsonic_auth_coverage.py::test_create_auth_token_coverage
+  /home/mati/Dev/Audiovault/backend/app/api/subsonic/auth.py:158: RuntimeWarning: coroutine 'AsyncMockMixin._execute_mock_call' was never awaited
+    db.add(auth_token)
+  Enable tracemalloc to get traceback where the object was allocated.
+  See https://docs.pytest.org/en/stable/how-to/capture-warnings.html#resource-warnings for more info.
+
+tests/db/test_init_data_coverage.py::test_init_db_creates_admin
+tests/db/test_init_data_coverage.py::test_init_db_generates_password
+  /home/mati/Dev/Audiovault/backend/app/db/init_data.py:39: RuntimeWarning: coroutine 'AsyncMockMixin._execute_mock_call' was never awaited
+    db.add(user)
+  Enable tracemalloc to get traceback where the object was allocated.
+  See https://docs.pytest.org/en/stable/how-to/capture-warnings.html#resource-warnings for more info.
+
+tests/services/test_download_manager.py::test_dm_handle_completion_metadata
+  /home/mati/Dev/Audiovault/backend/app/services/download_manager.py:936: RuntimeWarning: coroutine 'AsyncMockMixin._execute_mock_call' was never awaited
+    logger.error(f"Failed to update playlist m3u: {e}")
+  Enable tracemalloc to get traceback where the object was allocated.
+  See https://docs.pytest.org/en/stable/how-to/capture-warnings.html#resource-warnings for more info.
+
+tests/services/test_download_manager_coverage.py::test_dm_add_download
+  /home/mati/Dev/Audiovault/backend/app/services/download_manager.py:209: RuntimeWarning: coroutine 'AsyncMockMixin._execute_mock_call' was never awaited
+    db.add(download)
+  Enable tracemalloc to get traceback where the object was allocated.
+  See https://docs.pytest.org/en/stable/how-to/capture-warnings.html#resource-warnings for more info.
+
+tests/services/test_download_manager_coverage_boost.py::test_dm_set_download_file_path
+  /usr/lib/python3.12/unittest/mock.py:2188: RuntimeWarning: coroutine 'AsyncMockMixin._execute_mock_call' was never awaited
+    def __init__(self, name, parent):
+  Enable tracemalloc to get traceback where the object was allocated.
+  See https://docs.pytest.org/en/stable/how-to/capture-warnings.html#resource-warnings for more info.
+
+tests/services/test_download_manager_coverage_boost.py::test_dm_set_download_file_path
+  /usr/lib/python3.12/unittest/mock.py:2188: RuntimeWarning: coroutine 'DownloadManager.update_progress_db' was never awaited
+    def __init__(self, name, parent):
+  Enable tracemalloc to get traceback where the object was allocated.
+  See https://docs.pytest.org/en/stable/how-to/capture-warnings.html#resource-warnings for more info.
+
+tests/services/test_download_manager_extended.py::test_dm_delete_playlist
+  /usr/lib/python3.12/unittest/mock.py:655: RuntimeWarning: coroutine 'AsyncMockMixin._execute_mock_call' was never awaited
+    raise AttributeError(name)
+  Enable tracemalloc to get traceback where the object was allocated.
+  See https://docs.pytest.org/en/stable/how-to/capture-warnings.html#resource-warnings for more info.
+
+tests/services/test_download_manager_extended.py::test_dm_process_queue_paused_item
+  /home/mati/Dev/Audiovault/backend/app/services/download_manager.py:77: RuntimeWarning: coroutine 'AsyncMockMixin._execute_mock_call' was never awaited
+    self.queue.task_done()
+  Enable tracemalloc to get traceback where the object was allocated.
+  See https://docs.pytest.org/en/stable/how-to/capture-warnings.html#resource-warnings for more info.
+
+tests/services/test_download_manager_extended.py::test_dm_process_with_semaphore_invalid_uuid
+  /home/mati/Dev/Audiovault/backend/app/services/download_manager.py:91: RuntimeWarning: coroutine 'AsyncMockMixin._execute_mock_call' was never awaited
+    self.queue.task_done()
+  Enable tracemalloc to get traceback where the object was allocated.
+  See https://docs.pytest.org/en/stable/how-to/capture-warnings.html#resource-warnings for more info.
+
+tests/services/test_download_manager_extended.py::test_dm_process_with_semaphore_no_download
+  /home/mati/Dev/Audiovault/backend/app/services/download_manager.py:102: RuntimeWarning: coroutine 'AsyncMockMixin._execute_mock_call' was never awaited
+    self.queue.task_done()
+  Enable tracemalloc to get traceback where the object was allocated.
+  See https://docs.pytest.org/en/stable/how-to/capture-warnings.html#resource-warnings for more info.
+
+tests/services/test_library_scanner_coverage.py::test_process_audio_file_invalid_user_id
+tests/services/test_library_scanner_coverage.py::test_process_audio_file_os_error_size
+  /home/mati/Dev/Audiovault/backend/app/services/library_scanner.py:369: RuntimeWarning: coroutine 'AsyncMockMixin._execute_mock_call' was never awaited
+    db.add(new_track)
+  Enable tracemalloc to get traceback where the object was allocated.
+  See https://docs.pytest.org/en/stable/how-to/capture-warnings.html#resource-warnings for more info.
+
+tests/services/test_library_scanner_coverage.py::test_process_audio_file_os_error_size
+  /home/mati/Dev/Audiovault/backend/app/services/library_scanner.py:390: RuntimeWarning: coroutine 'AsyncMockMixin._execute_mock_call' was never awaited
+    db.add(new_download)
+  Enable tracemalloc to get traceback where the object was allocated.
+  See https://docs.pytest.org/en/stable/how-to/capture-warnings.html#resource-warnings for more info.
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+================================ tests coverage ================================
+_______________ coverage: platform linux, python 3.12.3-final-0 ________________
+
+Name                                       Stmts   Miss  Cover   Missing
+------------------------------------------------------------------------
+app/__init__.py                                0      0   100%
+app/api/subsonic/__init__.py                   2      0   100%
+app/api/subsonic/auth.py                      74     11    85%   38-40, 77, 223, 251, 272, 286-289
+app/api/subsonic/handlers/__init__.py          0      0   100%
+app/api/subsonic/handlers/browse.py          172    112    35%   87-128, 166-205, 240-303, 341-384, 435-443, 482-496, 515-622
+app/api/subsonic/handlers/info.py             81     32    60%   49-68, 88-89, 92-111, 130-131, 135-165, 198
+app/api/subsonic/handlers/lists.py           102     37    64%   51, 66-93, 157-190, 208-224, 252-256, 278, 293-297
+app/api/subsonic/handlers/lyrics.py           28      8    71%   32-35, 43, 61-64
+app/api/subsonic/handlers/media.py           287    112    61%   61, 124, 189-221, 231, 234-238, 256-257, 261-271, 274-281, 306, 310, 315-332, 339-340, 345-347, 354-356, 363-369, 374, 378, 400, 409-413, 421, 435-438, 443-454, 459-465, 472-473, 481, 505-519, 524-528, 531
+app/api/subsonic/handlers/playlist.py        168    109    35%   62-99, 126-173, 224-255, 271-287, 324-384, 411-423
+app/api/subsonic/handlers/search.py           90     52    42%   73-79, 132-139, 164-222, 283-379
+app/api/subsonic/handlers/system.py           55     18    67%   98-100, 103, 162-188
+app/api/subsonic/handlers/user.py            207    103    50%   74-79, 95-102, 116-123, 126, 161-162, 175-176, 189-193, 217-275, 304-314, 351-371, 410-471, 505-520, 563, 565, 572-576
+app/api/subsonic/router.py                    36      9    75%   34, 61-68
+app/api/subsonic/utils.py                     92     12    87%   77, 198, 215-216, 222-223, 239-241, 248, 297-299
+app/api/v1/__init__.py                        24      0   100%
+app/api/v1/amazon_music.py                    14      7    50%   17-24
+app/api/v1/apple_music.py                     14      7    50%   17-26
+app/api/v1/artists.py                         20      5    75%   17, 25-30
+app/api/v1/audit.py                           67     10    85%   89-98, 119-120, 135-136
+app/api/v1/auth.py                            27      3    89%   38-44
+app/api/v1/dashboard.py                       95     22    77%   27-34, 49, 58, 84-100, 112-138, 143
+app/api/v1/deezer.py                          25      6    76%   33-39
+app/api/v1/downloads.py                      253    112    56%   30-84, 123-124, 133-134, 155-175, 186-187, 217, 222, 239-274, 301, 305, 311, 313-315, 325-367, 380-383, 391-394, 416-442, 497, 515-516, 533-541
+app/api/v1/history.py                         22      2    91%   29, 38
+app/api/v1/import_routes.py                   40     12    70%   50-51, 67-82
+app/api/v1/lastfm.py                          86     44    49%   20, 51, 60-65, 81-85, 95-100, 110-122, 130-138, 153-184
+app/api/v1/lyrics.py                          49     15    69%   55-72, 94-99, 124
+app/api/v1/playlists.py                      222    134    40%   54-56, 87-134, 153-175, 200-216, 240-254, 277-308, 312-313, 328-380, 398-415, 434-455, 472-476, 514-524, 551-573
+app/api/v1/settings.py                        89     37    58%   36-52, 57-70, 81-88, 119-122, 156-164
+app/api/v1/soundcloud.py                      14      7    50%   17-24
+app/api/v1/spotify.py                         55     11    80%   30-32, 39, 43, 52, 56, 65, 69, 79, 83
+app/api/v1/storage.py                         84     49    42%   43, 48-53, 72-140, 171-173
+app/api/v1/stream.py                         196     49    75%   40-41, 57, 67, 69, 77, 82, 88-90, 110-111, 115-135, 165-172, 182-183, 186-196, 206-208, 215, 237, 243, 273, 285, 296
+app/api/v1/sync.py                            32     20    38%   23-32, 48-60
+app/api/v1/system.py                         118     27    77%   27-29, 43-45, 56, 79-80, 95-99, 109-110, 125, 129, 148-153, 181-182, 211-213
+app/api/v1/tidal.py                           14      0   100%
+app/api/v1/users.py                           74      6    92%   42, 53-55, 87, 115, 152
+app/api/v1/watchlist.py                       44      0   100%
+app/api/v1/youtube.py                         19      0   100%
+app/core/cache.py                             26      4    85%   29-32
+app/core/config.py                            64     11    83%   23-25, 81-93
+app/core/dependencies.py                      38      2    95%   31, 53
+app/core/executors.py                          2      0   100%
+app/core/security.py                          24      1    96%   24
+app/db/base.py                                 3      0   100%
+app/db/database.py                            12      4    67%   15-19
+app/db/init_data.py                           32      0   100%
+app/main.py                                  108      6    94%   125, 128-129, 135-136, 142
+app/models/__init__.py                        15      0   100%
+app/models/album.py                           20      0   100%
+app/models/artist.py                          18      0   100%
+app/models/audit_log.py                       22      1    95%   54
+app/models/credentials.py                     17      0   100%
+app/models/download.py                        27      0   100%
+app/models/history.py                         15      0   100%
+app/models/playlist.py                        27      0   100%
+app/models/playlist_version.py                23      1    96%   60
+app/models/schemas.py                         36      0   100%
+app/models/starred.py                         32      0   100%
+app/models/subsonic.py                        45      1    98%   79
+app/models/track.py                           26      0   100%
+app/models/user.py                            33      0   100%
+app/models/watchlist.py                       23      0   100%
+app/models/watchlist_item.py                  16      0   100%
+app/providers/__init__.py                     18      0   100%
+app/providers/amazon_music_provider.py        31     20    35%   9, 13, 22, 25-53, 61-74
+app/providers/apple_music_provider.py         31      4    87%   9, 13, 57, 80
+app/providers/base.py                         20      5    75%   11, 17, 22, 27, 32
+app/providers/deezer_provider.py              42      9    79%   11, 15, 37-38, 46, 72-75
+app/providers/generic.py                      45      6    87%   18, 24, 48, 60, 67, 97
+app/providers/manager.py                      28      0   100%
+app/providers/soundcloud_provider.py          29      3    90%   13, 21, 68
+app/providers/spotify_provider.py             48      6    88%   15, 58, 92-96, 119
+app/providers/tidal_provider.py               31     20    35%   9, 13, 16, 19-47, 55-68
+app/providers/youtube_provider.py             29      1    97%   14
+app/schemas/artist.py                         27      0   100%
+app/schemas/download.py                        7      0   100%
+app/schemas/lastfm.py                         11      0   100%
+app/schemas/metadata.py                       28      0   100%
+app/schemas/playlist.py                       38      0   100%
+app/schemas/recommendation.py                 36      0   100%
+app/schemas/subsonic/__init__.py               2      0   100%
+app/schemas/subsonic/base.py                  64      7    89%   113-118, 169, 186-187
+app/services/amazon_music_service.py          10      0   100%
+app/services/apple_music_service.py           24     10    58%   23-29, 32-33, 36-37
+app/services/auth_manager.py                  57      0   100%
+app/services/base_music_service.py            51      0   100%
+app/services/deezer_service.py               118      1    99%   52
+app/services/download_manager.py             614    217    65%   81-83, 105-129, 181-182, 192-196, 257-258, 302-303, 326-352, 369, 378-379, 444, 463-473, 487-488, 498-499, 503, 529-530, 551-553, 565, 571-576, 591, 599-600, 616, 624-625, 639-658, 674-679, 720-729, 733, 749-750, 768-769, 775-780, 809-840, 848-858, 864-901, 915-933, 940-950, 958-959, 980-982, 987-988, 1001-1002, 1006-1007, 1019-1023, 1032-1033, 1039-1043
+app/services/fallback_service.py              41      0   100%
+app/services/lastfm_service.py               282     62    78%   80, 177-178, 182-187, 204, 206-207, 216, 218-219, 222-223, 230, 259-260, 263-267, 289-316, 320, 323-325, 345, 359, 367-371, 389-390, 408, 430, 435, 469-473
+app/services/library_data.py                 102      0   100%
+app/services/library_maintenance.py          103      0   100%
+app/services/library_scanner.py              307     48    84%   33-34, 106, 108-117, 123-130, 175-176, 233-236, 252, 257-267, 271-272, 284-285, 287-288, 305-306, 329, 352, 354, 393-395, 439-440
+app/services/lyrics_service.py               116     23    80%   33-48, 64, 101-102, 107-108, 147-149, 192-194, 200-201, 212-214
+app/services/playlist_version_service.py      48      0   100%
+app/services/recommendation_engine.py        171     10    94%   58, 133, 194-195, 218-220, 225-227
+app/services/scheduler.py                     79     20    75%   94-95, 99-100, 108-122, 129-130, 137
+app/services/scrobbler.py                     34      6    82%   30-31, 63-69
+app/services/socket_manager.py                17      3    82%   17, 22, 25
+app/services/soundcloud_service.py            63      0   100%
+app/services/spotify_service.py              218      3    99%   304-306
+app/services/sync_manager.py                 135      2    99%   49, 72
+app/services/tidal_service.py                 10      0   100%
+app/services/watchlist/__init__.py             2      0   100%
+app/services/watchlist/processor.py           41      0   100%
+app/services/watchlist/storage.py             79      3    96%   80, 85, 116
+app/services/watchlist_engine.py             130     42    68%   29, 55, 100-101, 118-122, 133, 150, 153-204
+app/services/youtube_service.py              120      0   100%
+app/utils/__init__.py                          0      0   100%
+app/utils/logger.py                           21      1    95%   12
+app/utils/sanitization.py                     11      0   100%
+app/utils/url_helper.py                       79     20    75%   78, 146-147, 150-170
+------------------------------------------------------------------------
+TOTAL                                       7443   1783    76%
+=========== 1000 passed, 4 skipped, 14 warnings in 163.87s (0:02:43) ===========

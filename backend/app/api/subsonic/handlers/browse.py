@@ -54,8 +54,8 @@ async def get_music_folders(
 @router.get("/getIndexes.view")
 @router.post("/getIndexes.view")
 async def get_indexes(
-    musicFolderId: str = Query("1", description="Music folder ID"),
-    ifModifiedSince: int = Query(0, description="Return if modified after this timestamp"),
+    music_folder_id: str = Query("1", alias="musicFolderId", description="Music folder ID"),
+    if_modified_since: int = Query(0, alias="ifModifiedSince", description="Return if modified after this timestamp"),
     f: str = "xml",
     current_user: User = Depends(subsonic_auth),
     db: AsyncSession = Depends(get_db),
@@ -140,7 +140,7 @@ async def get_indexes(
 @router.get("/getArtists.view")
 @router.post("/getArtists.view")
 async def get_artists(
-    musicFolderId: str = Query(None, description="Music folder ID"),
+    music_folder_id: str = Query(None, alias="musicFolderId", description="Music folder ID"),
     f: str = "xml",
     current_user: User = Depends(subsonic_auth),
     db: AsyncSession = Depends(get_db),

@@ -1,5 +1,5 @@
 # Build Stage
-FROM node:25-alpine AS build
+FROM node:24-alpine AS build
 
 ARG APP_VERSION=0.9.0
 ENV VITE_APP_VERSION=${APP_VERSION}
@@ -23,7 +23,7 @@ COPY frontend/ ./
 RUN npm run build
 
 # Production Stage
-FROM nginx:alpine AS production
+FROM nginx:stable-alpine AS production
 
 # Copy built assets from builder
 COPY --from=build /app/dist /usr/share/nginx/html

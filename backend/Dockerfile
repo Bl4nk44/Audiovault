@@ -1,4 +1,4 @@
-FROM python:3.14-slim
+FROM python:3.14-slim-bookworm
 
 WORKDIR /app
 
@@ -20,8 +20,11 @@ RUN pip install --upgrade pip && \
 COPY backend/ .
 COPY VERSION .
 
-# Create non-root user
-RUN useradd -m -u 1000 appuser && chown -R appuser:appuser /app
+# Create non-root user and downloads directory
+RUN useradd -m -u 1000 appuser && \
+    mkdir -p /downloads /cache && \
+    chown -R appuser:appuser /app /downloads /cache
+
 USER appuser
 
 # Expose port

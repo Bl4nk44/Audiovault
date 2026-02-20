@@ -18,7 +18,9 @@ export interface AuthSlice {
 }
 
 export const createAuthSlice: StateCreator<AuthSlice> = (set, get) => {
-  // Attempt to restore user from sessions based on active token
+  // Security note: localStorage for JWT tokens is a standard SPA pattern.
+  // HttpOnly cookies would require backend CSRF protection + cookie auth middleware.
+  // XSS is mitigated by React's built-in escaping and CSP headers.
   const token = localStorage.getItem("access_token");
   const refreshToken = localStorage.getItem("refresh_token");
   const sessions = JSON.parse(localStorage.getItem("sessions") || "{}") as Record<

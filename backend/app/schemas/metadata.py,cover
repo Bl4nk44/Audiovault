@@ -1,0 +1,36 @@
+> from pydantic import BaseModel
+  
+  
+> class ArtistMetadata(BaseModel):
+>     name: str
+>     id: str | None = None
+>     url: str | None = None
+  
+  
+> class AlbumMetadata(BaseModel):
+>     title: str
+>     artist: str
+>     year: int | None = None
+>     cover_url: str | None = None
+  
+  
+> class TrackMetadata(BaseModel):
+>     title: str
+>     artist: str
+>     album: str | None = None
+>     duration_ms: int | None = None
+>     source_id: str | None = None
+>     source_url: str | None = None
+>     image_url: str | None = None
+>     isrc: str | None = None
+>     source: str | None = None
+  
+  
+> class PlaylistMetadata(BaseModel):
+>     title: str
+>     description: str | None = None
+>     author: str | None = None
+>     tracks: list[TrackMetadata] = []
+>     image_url: str | None = None
+>     source: str | None = None
+>     source_id: str | None = None

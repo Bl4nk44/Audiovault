@@ -1,0 +1,15 @@
+> """Pydantic schemas for Subsonic API responses."""
+  
+> from app.schemas.subsonic.base import (
+>     SubsonicError,
+>     SubsonicResponseWrapper,
+>     subsonic_error,
+>     subsonic_response,
+> )
+  
+> __all__ = [
+>     "SubsonicError",
+>     "SubsonicResponseWrapper",
+>     "subsonic_response",
+>     "subsonic_error",
+> ]
