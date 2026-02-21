@@ -379,7 +379,8 @@ async def _check_local_cover_files(directory: str) -> Response | None:
 
     for name in ["cover.jpg", "cover.png", "cover.jpeg", "folder.jpg", "front.jpg", "album.jpg"]:
         # directory validated above, name is hardcoded
-        local_path = os.path.join(directory, name)  # nosemgrep: path-traversal
+        # nosemgrep: path-traversal
+        local_path = os.path.join(directory, name)
         if os.path.exists(local_path):
             async with aiofiles.open(local_path, "rb") as f:
                 content = await f.read()

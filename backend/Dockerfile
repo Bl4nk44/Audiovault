@@ -3,7 +3,7 @@ FROM python:3.14-slim-bookworm
 WORKDIR /app
 
 # Install system dependencies
-RUN apt-get update && apt-get install -y --no-install-recommends \
+RUN apt-get update && apt-get upgrade -y && apt-get install -y --no-install-recommends \
     ffmpeg \
     curl \
     aria2 \

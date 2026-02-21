@@ -67,6 +67,7 @@ class LastfmService:
         sorted_params = sorted(sig_params.items())
         sig_str = "".join(f"{k}{v}" for k, v in sorted_params)
         sig_str += str(settings.LASTFM_API_SECRET or "")
+        # nosemgrep: python.lang.security.audit.md5-used-as-password.md5-used-as-password, md5-used-as-password
         return hashlib.md5(sig_str.encode("utf-8")).hexdigest()  # nosec B324
 
     async def _request(self, method: str, params: Dict[str, Any], signed: bool = False) -> Dict[str, Any]:

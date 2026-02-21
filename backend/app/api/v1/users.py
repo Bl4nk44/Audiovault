@@ -111,7 +111,7 @@ async def update_password_me(
     # Sync Subsonic password (MD5)
     # nosec B303: MD5 required for Subsonic Legacy Auth
     md5_hash = hashlib.md5(password_update.new_password.encode("utf-8")).hexdigest()
-    # nosemgrep: md5-used-as-password  # nosec B303, B324 - MD5 required by Subsonic protocol for legacy client auth
+    # nosemgrep: python.lang.security.audit.md5-used-as-password.md5-used-as-password, md5-used-as-password
     current_user.subsonic_password = md5_hash
     await db.commit()
     return {"status": "success"}

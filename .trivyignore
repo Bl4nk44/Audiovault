@@ -69,6 +69,23 @@ logs/
 *.sqlite
 *.sqlite3
 
+# ==============================================
+# Disputed / Low-relevance CVEs (False Positives)
+# ==============================================
+
+# libtiff command line tools (tiffcmp, tiffcrop, tiff2pdf, tiffcp)
+# Not used by the application, vulnerabilities are mostly in CLI tools themselves
+CVE-2025-9165
+CVE-2025-8961
+CVE-2025-8851
+CVE-2024-13978
+CVE-2023-6228
+CVE-2023-3164
+CVE-2023-1916
+
+# ncurses-bin (not used in production backend logic)
+CVE-2023-50495
+
 # Docker
 .dockerignore
 
