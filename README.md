@@ -149,9 +149,11 @@ The recommended way to run Audiovault is via **Docker**.
 
 ### Reverse Proxy Configuration
 
-Audiovault supports running behind reverse proxies (Nginx, Traefik, etc.) out of the box.
+Audiovault supports running behind reverse proxies out of the box. For detailed examples covering **Nginx Proxy Manager, Traefik, Caddy, HAProxy, and Zoraxy**, please see our dedicated guide:
 
-1. **Environment Variables**:
+👉 **[Reverse Proxy Setup Guide](docs/REVERSE_PROXY.md)**
+
+1. **Environment Variables Configs**:
    Set `ALLOWED_HOSTS` and `BACKEND_CORS_ORIGINS` in your `.env` file to match your domain:
 
    ```bash
@@ -159,16 +161,6 @@ Audiovault supports running behind reverse proxies (Nginx, Traefik, etc.) out of
    BACKEND_CORS_ORIGINS=https://audiovault.example.com
    ```
 
-   **Docker Configuration**:
-   If running behind a proxy or in a custom Docker network, ensure the Frontend container knows how to reach the Backend:
-
-   ```bash
-   # In docker-compose.yml or env:
-   BACKEND_URL=http://audiovault-backend:8000
-   ```
-
-2. **Docker Setup**:
-   The Docker image is already configured to trust `X-Forwarded-*` headers from any proxy via `uvicorn.middleware.proxy_headers`. Ensure your proxy passes these headers correctly.
 
 ## 📚 Documentation
 

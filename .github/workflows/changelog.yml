@@ -34,3 +34,18 @@ jobs:
           git add CHANGELOG.md
           git diff --staged --quiet || git commit -m "chore(release): update CHANGELOG.md for ${{ github.ref_name }}"
           git push origin HEAD:main
+
+      - name: Generate release notes
+        uses: orhun/git-cliff-action@v4
+        id: git-cliff-release
+        with:
+          config: cliff.toml
+          args: --latest --strip header
+        env:
+          OUTPUT: release_notes.md
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          body_path: release_notes.md
+          token: ${{ secrets.GITHUB_TOKEN }}
