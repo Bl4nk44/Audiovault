@@ -263,7 +263,7 @@ server {
 
 ✅ **Do**:
 
-- Set strong passwords for admin and database
+- **Set a strong `ADMIN_PASSWORD` in `.env` before first start** (generated passwords are not logged)
 - Use PostgreSQL for production
 - Enable Redis for caching
 - Use HTTPS with valid certificate

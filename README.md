@@ -138,8 +138,13 @@ The recommended way to run Audiovault is via **Docker**.
    - **Frontend**: `http://localhost:2137`
    - **Backend API**: `http://localhost:8000/docs`
 
-   > **Note:** On first launch, a random admin password will be generated and printed to the container logs (`docker compose logs backend`).
-   > To set a custom password, add `ADMIN_PASSWORD=yourpassword` to your `.env` file before starting.
+   > **Important Security Note:** For the first launch, it is **highly recommended** to set your own `ADMIN_PASSWORD` in the `.env` file. 
+   > If not provided, a random password will be generated for the `admin` account, but for security reasons, it will **no longer be printed to the logs**.
+   >
+   > To set your password, add this to your `.env` before starting:
+   > ```bash
+   > ADMIN_PASSWORD=your_secure_password
+   > ```
    > Default username: `admin`
 
 ### Reverse Proxy Configuration

@@ -84,20 +84,20 @@ docker compose logs -f frontend
 - **API Documentation**: http://localhost:8000/docs
 - **API Redoc**: http://localhost:8000/redoc
 
-### 6. Get Admin Password
+### 6. Admin Login
 
-If you didn't set `ADMIN_PASSWORD`, check the logs:
+Once the containers are up, use the default credentials if you didn't change them in `.env`:
+- **Username**: `admin`
+- **Password**: The value of `ADMIN_PASSWORD` in your `.env` (Default: `admin` if not set).
 
-```bash
-docker compose logs backend | grep "password"
-```
+**Note:** For security reasons, generated passwords are **no longer printed to the logs**. Always set a strong password in your `.env` file.
 
 ## First Login
 
 1. Open http://localhost:2137 in your browser
 2. Click "Login" and use:
-   - **Email**: `admin@example.com`
-   - **Password**: The one you set or generated
+   - **Username**: `admin`
+   - **Password**: The one you set in `.env` (Default: `admin`)
 3. You'll see the setup wizard for service integrations
 
 ## Getting Streaming Service Credentials

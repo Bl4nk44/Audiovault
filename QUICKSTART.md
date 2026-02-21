@@ -22,8 +22,8 @@ cd Audiovault
 # Create .env file
 cp .env.example .env
 
-# Edit with your favorite editor (or just skip - defaults work fine)
-nano .env
+# REQUIRED: Set your admin password in .env
+# nano .env -> ADMIN_PASSWORD=your_secure_password
 ```
 
 ## Step 3: Start
@@ -42,8 +42,8 @@ docker compose ps
 
 1. **Web Interface**: http://localhost:2137
 2. **API Docs**: http://localhost:8000/docs
-3. **Email**: `admin@example.com`
-4. **Password**: Check with: `docker compose logs backend | grep "password"`
+3. **Username**: `admin`
+4. **Password**: The one you set in `.env` (Default: `admin` if not changed)
 
 ## 🎵 First Download
 
@@ -85,9 +85,9 @@ docker compose restart
 
 **Password issues?**
 
+If you forgot your password or it's not working, ensure `ADMIN_PASSWORD` is correctly set in your `.env` and restart:
 ```bash
-# Get generated password
-docker compose logs backend | grep "Initial"
+docker compose up -d --force-recreate backend
 ```
 
 **Free up space?**
