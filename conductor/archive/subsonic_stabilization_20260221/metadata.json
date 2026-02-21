@@ -1,8 +1,0 @@
-{
-  "track_id": "subsonic_stabilization_20260221",
-  "type": "feature",
-  "status": "new",
-  "created_at": "2026-02-21T10:00:00Z",
-  "updated_at": "2026-02-21T10:00:00Z",
-  "description": "Stabilizacja i weryfikacja API Subsonic oraz zwiększenie pokrycia testami"
-}
