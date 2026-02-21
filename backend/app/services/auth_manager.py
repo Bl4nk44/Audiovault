@@ -106,12 +106,13 @@ class AuthManager:
                     headers={"WWW-Authenticate": "Bearer"},
                 )
 
-            # Create new access token
+            # Create new access and refresh tokens (Rotation)
             access_token = create_access_token(user.id)
+            new_refresh_token = create_refresh_token(user.id)
 
             return {
                 "access_token": access_token,
-                "refresh_token": refresh_token,  # Return same refresh token or rotate? For now return same.
+                "refresh_token": new_refresh_token,
                 "token_type": "bearer",
                 "expires_in": settings.ACCESS_TOKEN_EXPIRE_MINUTES * 60,
             }
