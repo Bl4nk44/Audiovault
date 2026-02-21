@@ -34,9 +34,11 @@ def mock_db():
     db.delete = MagicMock()
     return db
 
+
 @pytest.fixture
 def test_user():
     return User(id=uuid.uuid4(), username="test_user", is_active=True, email="test@test.com")
+
 
 @pytest.mark.asyncio
 async def test_search_master(mock_db, test_user):
@@ -57,10 +59,12 @@ async def test_search_master(mock_db, test_user):
     await search2("q", 1, 0, 1, 0, 1, 0, None, "json", test_user, mock_db)
     await search3("q", 1, 0, 1, 0, 1, 0, None, "json", test_user, mock_db)
 
+
 @pytest.mark.asyncio
 async def test_user_starred_master(mock_db, test_user):
     mock_db.execute.side_effect = [MagicMock(all=lambda: []), MagicMock(all=lambda: []), MagicMock(all=lambda: [])]
     await get_starred(None, "json", test_user, mock_db)
+
 
 @pytest.mark.asyncio
 async def test_user_actions_master(mock_db, test_user):
@@ -70,12 +74,14 @@ async def test_user_actions_master(mock_db, test_user):
     await unstar([tid], [], [], "json", test_user, mock_db)
     await set_rating(tid, 5, "json", test_user, mock_db)
 
+
 @pytest.mark.asyncio
 async def test_info_master(mock_db, test_user):
     aid = uuid.uuid4()
     artist = Artist(id=aid, name="A", bio="B", images={"300": "u"})
     mock_db.execute.return_value = MagicMock(scalar_one_or_none=lambda: artist)
     await get_artist_info(str(aid), 1, False, "json", test_user, mock_db)
+
 
 @pytest.mark.asyncio
 async def test_lists_master(mock_db, test_user):
@@ -84,6 +90,7 @@ async def test_lists_master(mock_db, test_user):
     mock_db.scalar.return_value = 1
     mock_db.get.return_value = Artist(name="Art")
     await get_album_list("newest", 1, 0, None, None, None, None, "json", test_user, mock_db)
+
 
 @pytest.mark.asyncio
 async def test_system_master(mock_db, test_user):
