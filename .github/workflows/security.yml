@@ -40,7 +40,7 @@ jobs:
           exit-code: '0'  # Don't fail the build
 
       - name: Upload Trivy results to GitHub Security
-        uses: github/codeql-action/upload-sarif@v3
+        uses: github/codeql-action/upload-sarif@v4
         if: always()
         with:
           sarif_file: 'trivy-results.sarif'
@@ -114,7 +114,7 @@ jobs:
           exit-code: '0'
 
       - name: Upload Docker scan results
-        uses: github/codeql-action/upload-sarif@v3
+        uses: github/codeql-action/upload-sarif@v4
         if: always()
         with:
           sarif_file: 'trivy-docker-${{ matrix.image.name }}.sarif'
@@ -182,7 +182,7 @@ jobs:
           path: semgrep-results.json
 
       - name: Upload Semgrep results to GitHub Security
-        uses: github/codeql-action/upload-sarif@v3
+        uses: github/codeql-action/upload-sarif@v4
         if: always()
         with:
           sarif_file: 'semgrep-results.sarif'
@@ -223,7 +223,7 @@ jobs:
           exit-code: '1'  # Fail on secrets
 
       - name: Upload secret scan results
-        uses: github/codeql-action/upload-sarif@v3
+        uses: github/codeql-action/upload-sarif@v4
         if: always()
         with:
           sarif_file: 'trivy-secrets.sarif'
