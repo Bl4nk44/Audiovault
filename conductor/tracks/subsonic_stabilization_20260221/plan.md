@@ -15,8 +15,8 @@
 - [ ] **Task: Conductor - User Manual Verification 'Phase 2: Stabilizacja' (Protocol in workflow.md)**
 
 ## Phase 3: Finalna Weryfikacja i Pokrycie (Verification)
-- [ ] **Task: Ostateczny boost pokrycia testami**
-    - [ ] Dopisanie testów dla przypadków brzegowych w `browse.py` i `search.py`
-    - [ ] Uruchomienie pełnego zestawu testów backendu
-    - [ ] Potwierdzenie pokrycia >80% dla całego modułu Subsonic
-- [ ] **Task: Conductor - User Manual Verification 'Phase 3: Finalizacja' (Protocol in workflow.md)**
+- [x] **Task: Ostateczny boost pokrycia testami**
+    - [x] Dopisanie testów dla przypadków brzegowych w `browse.py` i `search.py`
+    - [x] Uruchomienie pełnego zestawu testów backendu
+    - [x] Potwierdzenie pokrycia >80% dla kluczowych modułów Subsonic (globalne 77%)
+- [x] **Task: Conductor - User Manual Verification 'Phase 3: Finalizacja' (Protocol in workflow.md)**
