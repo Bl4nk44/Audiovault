@@ -16,7 +16,21 @@ export default function DownloadQueue() {
   const fetchQueue = useCallback(async () => {
     try {
       const response = await api.get("/downloads/queue");
-      setQueue(response.data || []);
+      const fetchedQueue = response.data || [];
+      
+      const sortedQueue = fetchedQueue.sort((a: Download, b: Download) => {
+        const errorStatuses = ["error", "failed"];
+        const aIsError = errorStatuses.includes(a.status);
+        const bIsError = errorStatuses.includes(b.status);
+        
+        if (aIsError && !bIsError) return -1;
+        if (!aIsError && bIsError) return 1;
+        if (aIsError && bIsError) return 0;
+        
+        return a.status === "downloading" ? -1 : 1;
+      });
+      
+      setQueue(sortedQueue);
     } catch (error) {
       console.error("Failed to fetch queue", error);
       addNotification("error", "Failed to refresh download queue");
@@ -27,10 +41,10 @@ export default function DownloadQueue() {
 
   const handleProgress = useCallback((event: Event) => {
     const customEvent = event as CustomEvent;
-    const { download_id, progress, status } = customEvent.detail;
+    const { download_id, progress, status, speed } = customEvent.detail;
     setQueue((prevQueue) =>
       prevQueue.map((item) =>
-        item.id === download_id ? { ...item, progress, status: status || item.status } : item
+        item.id === download_id ? { ...item, progress, status: status || item.status, speed: speed || item.speed } : item
       )
     );
   }, []);

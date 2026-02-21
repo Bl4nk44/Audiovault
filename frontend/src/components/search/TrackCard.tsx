@@ -193,7 +193,11 @@ export default function TrackCard({ track, queue, onRemove }: Readonly<TrackCard
       <AddToPlaylistModal
         isOpen={showPlaylistModal}
         onClose={() => setShowPlaylistModal(false)}
-        trackIds={[track.id || track.spotify_id || track.youtube_id || ""]}
+        trackIds={
+          track.id
+            ? [track.id]
+            : [`external:${track.artist}:${track.title}`]
+        }
       />
     </>
   );

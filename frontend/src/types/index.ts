@@ -39,6 +39,7 @@ export interface Download {
   error?: string;
   retry_count?: number;
   playlist_name?: string;
+  speed?: string;
 }
 
 export interface WatchlistItem {

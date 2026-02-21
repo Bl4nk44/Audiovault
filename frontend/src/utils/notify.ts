@@ -25,6 +25,9 @@ export const notify = {
     addNotification("warning", message);
     toast(message, { icon: "⚠️" });
   },
+  dismiss: () => {
+    toast.dismiss();
+  },
   // Keep raw toast access if needed
   custom: toast,
 };

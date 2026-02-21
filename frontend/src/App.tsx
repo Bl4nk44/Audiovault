@@ -63,7 +63,7 @@ function App() {
           <Route path="*" element={<NotFound />} />
         </Routes>
         <Toaster
-          position="top-right"
+          position="bottom-right"
           toastOptions={{
             style: {
               background: "hsl(var(--card) / 0.8)",

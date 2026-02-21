@@ -54,15 +54,22 @@ class WatchlistItemProcessor:
 
     async def _fetch_artist_or_channel_tracks(self, item) -> list:
         tracks = []
+        target_artist = item.source_name.lower() if item.source_name else ""
+
         if item.source == "spotify":
             # Run sync method in executor if it blocks, but here we just wrap it
             albums = self.spotify_service.get_artist_albums(item.source_id)
             for album in albums:
                 # Potentially strictly sync, might block loop but ok for now
                 album_tracks = self.spotify_service.get_album_tracks(album["id"])
-                tracks.extend(album_tracks)
+                for t in album_tracks:
+                    if target_artist and target_artist in t.get("artist", "").lower():
+                        tracks.append(t)
         elif item.source == "youtube":
-            tracks = self.youtube_service.get_artist_tracks(item.source_id)
+            raw_tracks = self.youtube_service.get_artist_tracks(item.source_id)
+            for t in raw_tracks:
+                if target_artist and target_artist in t.get("artist", "").lower():
+                    tracks.append(t)
         elif item.source == "deezer":
             logger.warning(f"Deezer artist fetching not implemented for {item.source_id}")
         return tracks

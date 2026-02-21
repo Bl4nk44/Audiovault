@@ -503,6 +503,8 @@ class DownloadManager:
             if progress >= 100:
                 progress = 99.9
 
+            speed_str = d.get("_speed_str", "").strip()
+
             asyncio.run_coroutine_threadsafe(
                 socket_manager.emit(
                     "download:progress",
@@ -510,6 +512,7 @@ class DownloadManager:
                         "download_id": str(download_id),
                         "progress": progress,
                         "status": "downloading",
+                        "speed": speed_str,
                         "track": {
                             "title": download.track.title,
                             "artist": download.track.artist,

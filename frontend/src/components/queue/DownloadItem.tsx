@@ -33,6 +33,7 @@ interface DownloadItemProps {
     status: string;
     progress: number;
     error_message?: string;
+    speed?: string;
   };
   queue?: Track[]; // Allow queue context
 }
@@ -142,8 +143,9 @@ export default function DownloadItem({ item, queue }: Readonly<DownloadItemProps
 
         {/* Progress Overlay for Image */}
         {isDownloading && (
-          <div className="absolute inset-0 bg-black/60 flex items-center justify-center backdrop-blur-[1px]">
+          <div className="absolute inset-0 bg-black/60 flex flex-col items-center justify-center backdrop-blur-[1px]">
             <span className="text-xs font-bold text-primary">{Math.round(item.progress)}%</span>
+            {item.speed && <span className="text-[10px] text-gray-400 mt-1">{item.speed}</span>}
           </div>
         )}
       </div>
@@ -233,7 +235,7 @@ export default function DownloadItem({ item, queue }: Readonly<DownloadItemProps
           </button>
         )}
 
-        {(item.status === "completed" || item.status === "failed" || item.status === "paused") && (
+        {(item.status === "completed" || item.status === "failed" || item.status === "paused" || item.status === "pending") && (
           <div className="opacity-0 group-hover:opacity-100 transition-opacity">
             <button
               onClick={(e) => {
