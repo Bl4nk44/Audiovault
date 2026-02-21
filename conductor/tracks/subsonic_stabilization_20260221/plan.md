@@ -8,10 +8,10 @@
 - [ ] **Task: Conductor - User Manual Verification 'Phase 1: Analiza' (Protocol in workflow.md)**
 
 ## Phase 2: Stabilizacja i Naprawy (Stabilization)
-- [~] **Task: Poprawa błędnych testów i handlerów**
-    - [ ] Naprawa handlerów w `backend/app/api/subsonic/handlers/` na podstawie błędów z Fazy 1
-    - [ ] Implementacja brakujących testów jednostkowych dla `auth.py` i `media.py`
-    - [ ] Weryfikacja mechanizmu Legacy Auth
+- [x] **Task: Poprawa błędnych testów i handlerów**
+    - [x] Naprawa handlerów w `backend/app/api/subsonic/handlers/` na podstawie błędów z Fazy 1
+    - [x] Implementacja brakujących testów jednostkowych dla `auth.py` i `media.py`
+    - [x] Weryfikacja mechanizmu Legacy Auth
 - [ ] **Task: Conductor - User Manual Verification 'Phase 2: Stabilizacja' (Protocol in workflow.md)**
 
 ## Phase 3: Finalna Weryfikacja i Pokrycie (Verification)
