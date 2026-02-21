@@ -60,7 +60,7 @@ class DownloadManager:
         Dir: 777 (rwxrwxrwx), File: 666 (rw-rw-rw-)
         """
         try:
-            mode = 0o666 if is_file else 0o777            # nosemgrep: insecure-file-permissions
+            mode = 0o666 if is_file else 0o777  # nosemgrep: insecure-file-permissions
             mode = 0o666 if is_file else 0o777  # nosec B103 - intentional for Docker interop with Jellyfin/Plex
             os.chmod(path, mode)  # nosemgrep: insecure-file-permissions
         except Exception as e:
@@ -540,6 +540,7 @@ class DownloadManager:
 
         logger.info(f"Cache MISS for {url}. Resolving via extract_info...")
         try:
+
             def resolve_info():
                 with yt_dlp.YoutubeDL(ydl_opts) as ydl:
                     return ydl.extract_info(url, download=False, process=True)
@@ -572,6 +573,7 @@ class DownloadManager:
         def download_sync():
             with yt_dlp.YoutubeDL(ydl_opts) as ydl:
                 ydl.download([final_url])
+
         await loop.run_in_executor(None, download_sync)
         logger.info(f"Download finished for {download_id}")
 
@@ -745,9 +747,7 @@ class DownloadManager:
             except ValueError:
                 common = ""
             if common != abs_base_dir:
-                logger.warning(
-                    f"User download_path {download_path!r} escapes DOWNLOAD_DIR, falling back to default"
-                )
+                logger.warning(f"User download_path {download_path!r} escapes DOWNLOAD_DIR, falling back to default")
                 download_path = None
 
         if not download_path:

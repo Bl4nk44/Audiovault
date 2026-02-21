@@ -15,6 +15,7 @@ from httpx import AsyncClient
 def subsonic_auth_params(admin_user):
     return {"u": admin_user.username, "p": "admin", "c": "pytest", "v": "1.16.1", "f": "json"}
 
+
 @pytest.mark.asyncio
 async def test_star_unstar_subsonic(client: AsyncClient, subsonic_auth_params, db_session):
     # Setup track
@@ -37,6 +38,7 @@ async def test_star_unstar_subsonic(client: AsyncClient, subsonic_auth_params, d
     response = await client.get("/rest/unstar.view", params=params)
     assert response.json()["subsonic-response"]["status"] == "ok"
 
+
 @pytest.mark.asyncio
 async def test_set_rating_subsonic(client: AsyncClient, subsonic_auth_params, db_session):
     track = Track(id=uuid.uuid4(), title="Rate Me")
@@ -52,6 +54,7 @@ async def test_set_rating_subsonic(client: AsyncClient, subsonic_auth_params, db
     params["rating"] = 10
     response = await client.get("/rest/setRating.view", params=params)
     assert response.json()["subsonic-response"]["status"] == "failed"
+
 
 @pytest.mark.asyncio
 async def test_scrobble_now_playing(client: AsyncClient, subsonic_auth_params, db_session):
@@ -69,6 +72,7 @@ async def test_scrobble_now_playing(client: AsyncClient, subsonic_auth_params, d
     # But for now, just checking endpoint response is enough
     response = await client.get("/rest/getNowPlaying.view", params=subsonic_auth_params)
     assert response.status_code == 200
+
 
 @pytest.mark.asyncio
 async def test_get_random_songs_subsonic(client: AsyncClient, subsonic_auth_params, db_session, admin_user):

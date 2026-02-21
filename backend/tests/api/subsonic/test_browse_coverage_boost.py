@@ -19,6 +19,7 @@ def subsonic_auth_params(admin_user):
     # Use XML for some tests to boost coverage in subsonic_response
     return {"u": admin_user.username, "p": "admin", "c": "pytest", "v": "1.16.1", "f": "xml"}
 
+
 @pytest.mark.asyncio
 async def test_get_indexes_xml_and_edge_cases(client: AsyncClient, subsonic_auth_params, db_session, admin_user):
     """Test getIndexes with XML, non-alpha artist, and artist with empty name."""
@@ -45,6 +46,7 @@ async def test_get_indexes_xml_and_edge_cases(client: AsyncClient, subsonic_auth
     assert "<?xml" in response.text
     assert "!!!" in response.text
 
+
 @pytest.mark.asyncio
 async def test_get_artist_no_release_date(client: AsyncClient, subsonic_auth_params, db_session, admin_user):
     """Test getArtist with album having no release date."""
@@ -70,6 +72,7 @@ async def test_get_artist_no_release_date(client: AsyncClient, subsonic_auth_par
     data = response.json()
     assert data["subsonic-response"]["artist"]["album"][0]["year"] is None
 
+
 @pytest.mark.asyncio
 async def test_get_album_unknown_artist(client: AsyncClient, subsonic_auth_params, db_session, admin_user):
     """Test getAlbum where artist_id is None or artist not found."""
@@ -91,6 +94,7 @@ async def test_get_album_unknown_artist(client: AsyncClient, subsonic_auth_param
     data = response.json()
     assert data["subsonic-response"]["album"]["artist"] == "Unknown Artist"
 
+
 @pytest.mark.asyncio
 async def test_get_music_directory_album_orphan(client: AsyncClient, subsonic_auth_params, db_session, admin_user):
     """Test getMusicDirectory for an album with no artist."""
@@ -111,6 +115,7 @@ async def test_get_music_directory_album_orphan(client: AsyncClient, subsonic_au
     assert response.status_code == 200
     data = response.json()
     assert data["subsonic-response"]["directory"]["artist"] == "Unknown Artist"
+
 
 @pytest.mark.asyncio
 async def test_get_music_directory_root_all_path(client: AsyncClient, subsonic_auth_params, db_session, admin_user):

@@ -21,12 +21,7 @@ async def test_add_external_tracks_to_playlist(client, admin_token_headers, admi
     await db_session.refresh(pl)
 
     # 2. Add tracks with external: format
-    data = {
-        "track_ids": [
-            "external:Beatles:Yesterday",
-            "external:Queen:Bohemian Rhapsody"
-        ]
-    }
+    data = {"track_ids": ["external:Beatles:Yesterday", "external:Queen:Bohemian Rhapsody"]}
 
     with patch("app.services.download_manager.download_manager.add_download", new_callable=AsyncMock) as mock_dl:
         response = await client.post(f"/api/v1/playlists/{pl.id}/tracks", json=data, headers=admin_token_headers)
@@ -35,12 +30,11 @@ async def test_add_external_tracks_to_playlist(client, admin_token_headers, admi
         assert mock_dl.call_count == 2
 
     # 3. Verify tracks were created in DB
-    result = await db_session.execute(
-        sa.select(Track).where(Track.title == "Yesterday")
-    )
+    result = await db_session.execute(sa.select(Track).where(Track.title == "Yesterday"))
     track = result.scalar_one_or_none()
     assert track is not None
     assert track.artist == "Beatles"
+
 
 @pytest.mark.asyncio
 async def test_add_external_track_existing(client, admin_token_headers, admin_user, db_session):
@@ -52,11 +46,7 @@ async def test_add_external_track_existing(client, admin_token_headers, admin_us
     await db_session.refresh(pl)
 
     # 2. Add track using external: format but it already exists in DB
-    data = {
-        "track_ids": [
-            "external:Existing Artist:Existing Song"
-        ]
-    }
+    data = {"track_ids": ["external:Existing Artist:Existing Song"]}
 
     with patch("app.services.download_manager.download_manager.add_download", new_callable=AsyncMock) as mock_dl:
         response = await client.post(f"/api/v1/playlists/{pl.id}/tracks", json=data, headers=admin_token_headers)
@@ -64,6 +54,7 @@ async def test_add_external_track_existing(client, admin_token_headers, admin_us
         assert response.json()["added_count"] == 1
         # Should NOT trigger new download as it's already there
         assert mock_dl.call_count == 0
+
 
 @pytest.mark.asyncio
 async def test_remove_tracks_invalid_uuids(client, admin_token_headers, admin_user, db_session):
@@ -74,9 +65,11 @@ async def test_remove_tracks_invalid_uuids(client, admin_token_headers, admin_us
 
     # Send invalid UUID strings
     data = {"track_ids": ["not-a-uuid", "another-bad-one"]}
-    response = await client.request("DELETE", f"/api/v1/playlists/{pl.id}/tracks",
-                                    json=data, headers=admin_token_headers)
+    response = await client.request(
+        "DELETE", f"/api/v1/playlists/{pl.id}/tracks", json=data, headers=admin_token_headers
+    )
     assert response.status_code == 204
+
 
 @pytest.mark.asyncio
 async def test_export_playlist_empty_name(client, admin_token_headers, admin_user, db_session):

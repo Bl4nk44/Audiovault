@@ -1,7 +1,7 @@
 # Implementation Plan: Subsonic Stabilization
 
 ## Phase 1: Analiza i przygotowanie (Analysis)
-- [ ] **Task: Analiza obecnego stanu testów i API**
+- [~] **Task: Analiza obecnego stanu testów i API**
     - [ ] Uruchomienie istniejących testów Subsonic i identyfikacja błędów
     - [ ] Przegląd niezatwierdzonych zmian w `backend/app/api/subsonic/`
     - [ ] Wygenerowanie raportu pokrycia dla modułu Subsonic

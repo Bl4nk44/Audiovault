@@ -13,12 +13,14 @@ from app.services.lyrics_service import LyricsService
 def service():
     return LyricsService()
 
+
 @pytest.mark.asyncio
 async def test_lyrics_genius_client_init_no_token(service):
     with patch("app.services.lyrics_service.settings") as mock_settings:
         mock_settings.GENIUS_API_TOKEN = None
         client = service._get_genius_client()
         assert client is None
+
 
 @pytest.mark.asyncio
 async def test_lyrics_get_from_lrclib_success(service):
@@ -27,7 +29,7 @@ async def test_lyrics_get_from_lrclib_success(service):
         "syncedLyrics": "[00:10.00] Synced lyrics",
         "trackName": "Song",
         "artistName": "Artist",
-        "albumName": "Album"
+        "albumName": "Album",
     }
 
     with patch("httpx.AsyncClient.get") as mock_get:
@@ -42,6 +44,7 @@ async def test_lyrics_get_from_lrclib_success(service):
         assert res["synced_lyrics"] == "[00:10.00] Synced lyrics"
         assert res["source"] == "lrclib"
 
+
 @pytest.mark.asyncio
 async def test_lyrics_get_from_lrclib_not_found(service):
     with patch("httpx.AsyncClient.get") as mock_get:
@@ -51,6 +54,7 @@ async def test_lyrics_get_from_lrclib_not_found(service):
 
         res = await service._get_from_lrclib("Artist", "Unknown")
         assert res["found"] is False
+
 
 @pytest.mark.asyncio
 async def test_lyrics_get_from_db_metadata(service):
@@ -66,13 +70,14 @@ async def test_lyrics_get_from_db_metadata(service):
     db_mock.__aenter__.return_value = db_mock
 
     with patch("app.services.lyrics_service.cache_manager", new_callable=AsyncMock) as mock_cache:
-        mock_cache.get.return_value = None # Cache miss
+        mock_cache.get.return_value = None  # Cache miss
         # Patching where it's imported from since it's a local import inside the function
         with patch("app.db.database.AsyncSessionLocal", return_value=db_mock):
             res = await service.get_lyrics("Artist", "Song", track_id=track_id)
             assert res["found"] is True
             assert res["source"] == "local"
             assert res["synced_lyrics"] == "[00:01.00] Line 1"
+
 
 @pytest.mark.asyncio
 async def test_lyrics_cache_read_error(service):
@@ -81,12 +86,14 @@ async def test_lyrics_cache_read_error(service):
         res = await service._get_from_cache("key", "Artist", "Song")
         assert res is None
 
+
 @pytest.mark.asyncio
 async def test_lyrics_clear_cache_no_redis(service):
     with patch("app.services.lyrics_service.cache_manager") as mock_cache:
         mock_cache.redis = None
         res = await service.clear_cache("Artist", "Song")
         assert res is False
+
 
 @pytest.mark.asyncio
 async def test_lyrics_fetch_genius_no_song(service):

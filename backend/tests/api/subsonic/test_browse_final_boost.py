@@ -19,6 +19,7 @@ def subsonic_auth_params(admin_user):
     # Use XML to trigger XML serialization logic
     return {"u": admin_user.username, "p": "admin", "c": "pytest", "v": "1.16.1", "f": "xml"}
 
+
 @pytest.mark.asyncio
 async def test_get_indexes_xml_variations(client: AsyncClient, subsonic_auth_params, db_session, admin_user):
     """Test getIndexes with XML and various artist name types."""
@@ -45,6 +46,7 @@ async def test_get_indexes_xml_variations(client: AsyncClient, subsonic_auth_par
     assert 'name="123 Numeric"' in response.text or 'name="Numeric"' in response.text
     assert "The Beatles" in response.text
 
+
 @pytest.mark.asyncio
 async def test_get_artist_details_with_and_without_dates(
     client: AsyncClient, subsonic_auth_params, db_session, admin_user
@@ -55,7 +57,7 @@ async def test_get_artist_details_with_and_without_dates(
     await db_session.flush()
 
     # Album 1: Short release date
-    alb1 = Album(id=uuid.uuid4(), title="Oldie", artist_id=artist.id, release_date="199") # Too short for year
+    alb1 = Album(id=uuid.uuid4(), title="Oldie", artist_id=artist.id, release_date="199")  # Too short for year
     # Album 2: No release date
     alb2 = Album(id=uuid.uuid4(), title="Unknown Date", artist_id=artist.id, release_date=None)
 
@@ -80,6 +82,7 @@ async def test_get_artist_details_with_and_without_dates(
     years = [a.get("year") for a in data["album"]]
     assert None in years
 
+
 @pytest.mark.asyncio
 async def test_get_album_with_track_indices(client: AsyncClient, subsonic_auth_params, db_session, admin_user):
     """Test getAlbum ensures track numbers are generated if missing."""
@@ -100,7 +103,8 @@ async def test_get_album_with_track_indices(client: AsyncClient, subsonic_auth_p
     params = {**subsonic_auth_params, "id": str(album.id), "f": "json"}
     response = await client.get("/rest/getAlbum.view", params=params)
     songs = response.json()["subsonic-response"]["album"]["song"]
-    assert songs[0]["track"] == 1 # Fallback to index + 1
+    assert songs[0]["track"] == 1  # Fallback to index + 1
+
 
 @pytest.mark.asyncio
 async def test_get_music_directory_root_all_paths(client: AsyncClient, subsonic_auth_params, db_session, admin_user):

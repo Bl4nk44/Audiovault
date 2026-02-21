@@ -14,6 +14,7 @@ from httpx import AsyncClient
 def subsonic_auth_params(admin_user):
     return {"u": admin_user.username, "p": "admin", "c": "pytest", "v": "1.16.1", "f": "json"}
 
+
 @pytest.mark.asyncio
 async def test_stream_success_and_range(client: AsyncClient, subsonic_auth_params, db_session, admin_user, tmp_path):
     """Test successful streaming and Range requests using real temp file."""
@@ -45,6 +46,7 @@ async def test_stream_success_and_range(client: AsyncClient, subsonic_auth_param
     assert response.status_code == 206
     assert "bytes 0-499/1000" in response.headers.get("Content-Range", "")
 
+
 @pytest.mark.asyncio
 async def test_download_file_success(client: AsyncClient, subsonic_auth_params, db_session, admin_user, tmp_path):
     """Test successful download_file.view using real temp file."""
@@ -66,6 +68,7 @@ async def test_download_file_success(client: AsyncClient, subsonic_auth_params, 
     response = await client.get("/rest/download.view", params=params)
     assert response.status_code == 200
     assert response.headers["Content-Disposition"].startswith("attachment;")
+
 
 @pytest.mark.asyncio
 async def test_get_cover_art_local_and_artist(
@@ -105,17 +108,17 @@ async def test_get_cover_art_local_and_artist(
     response = await client.get("/rest/getCoverArt.view", params=params)
     # The handler uses os.path.exists and FileResponse.
     # If the logic is correct, it should find cover.jpg.
-    assert response.status_code == 200 or response.status_code == 404 # 404 if it fails to find
+    assert response.status_code == 200 or response.status_code == 404  # 404 if it fails to find
 
     # 2. Test artist image from DB
     params = {**subsonic_auth_params, "id": f"ar-{artist_id}"}
     # Mock remote image
     with patch(
-        "app.api.subsonic.handlers.media._get_remote_image",
-        return_value=Response(status_code=200, content=b"img")
+        "app.api.subsonic.handlers.media._get_remote_image", return_value=Response(status_code=200, content=b"img")
     ):
         response = await client.get("/rest/getCoverArt.view", params=params)
         assert response.status_code == 200
+
 
 @pytest.mark.asyncio
 async def test_extract_embedded_art_flac():
@@ -130,12 +133,15 @@ async def test_extract_embedded_art_flac():
     mock_audio = MagicMock()
     mock_audio.pictures = [mock_pic]
 
-    with patch("os.path.exists", return_value=True), \
-         patch("app.api.subsonic.handlers.media.MutagenFile", return_value=mock_audio):
+    with (
+        patch("os.path.exists", return_value=True),
+        patch("app.api.subsonic.handlers.media.MutagenFile", return_value=mock_audio),
+    ):
         # NOTE: _extract_embedded_art is synchronous
         res = _extract_embedded_art("/tmp/f.flac")
         assert res is not None
         assert res.media_type == "image/png"
+
 
 @pytest.mark.asyncio
 async def test_extract_embedded_art_id3():
@@ -147,14 +153,17 @@ async def test_extract_embedded_art_id3():
     mock_apic.mime = "image/jpeg"
 
     mock_audio = MagicMock()
-    del mock_audio.pictures # Ensure it's not FLAC logic
+    del mock_audio.pictures  # Ensure it's not FLAC logic
     mock_audio.tags.getall.return_value = [mock_apic]
 
-    with patch("os.path.exists", return_value=True), \
-         patch("app.api.subsonic.handlers.media.MutagenFile", return_value=mock_audio):
+    with (
+        patch("os.path.exists", return_value=True),
+        patch("app.api.subsonic.handlers.media.MutagenFile", return_value=mock_audio),
+    ):
         res = _extract_embedded_art("/tmp/t.mp3")
         assert res is not None
         assert res.media_type == "image/jpeg"
+
 
 @pytest.mark.asyncio
 async def test_get_remote_image_cache_hit(tmp_path):
@@ -164,9 +173,7 @@ async def test_get_remote_image_cache_hit(tmp_path):
     # Mock cache dir to tmp_path
     with patch("app.api.subsonic.handlers.media.COVER_ART_CACHE_DIR", str(tmp_path)):
         # Create a "cached" file. Hash of "http://cached.com/img.jpg" is needed or we mock os.path.exists
-        with patch("os.path.exists", return_value=True), \
-             patch("aiofiles.open", new_callable=MagicMock) as mock_open:
-
+        with patch("os.path.exists", return_value=True), patch("aiofiles.open", new_callable=MagicMock) as mock_open:
             mock_file = AsyncMock()
             mock_file.__aenter__.return_value = mock_file
             mock_file.read.return_value = b"cached-data"
@@ -176,6 +183,7 @@ async def test_get_remote_image_cache_hit(tmp_path):
             assert res is not None
             assert res.status_code == 200
             assert res.headers["X-Cache"] == "HIT"
+
 
 @pytest.mark.asyncio
 async def test_check_local_cover_files_variety(tmp_path):
@@ -190,12 +198,15 @@ async def test_check_local_cover_files_variety(tmp_path):
     assert res is not None
     assert res.media_type == "image/png"
 
+
 @pytest.mark.asyncio
 async def test_extract_embedded_art_exception():
     """Test _extract_embedded_art handling Mutagen exception (synchronic)."""
     from app.api.subsonic.handlers.media import _extract_embedded_art
 
-    with patch("os.path.exists", return_value=True), \
-         patch("app.api.subsonic.handlers.media.MutagenFile", side_effect=Exception("Mutagen Boom")):
+    with (
+        patch("os.path.exists", return_value=True),
+        patch("app.api.subsonic.handlers.media.MutagenFile", side_effect=Exception("Mutagen Boom")),
+    ):
         res = _extract_embedded_art("/tmp/boom.mp3")
         assert res is None

@@ -12,6 +12,7 @@ from httpx import AsyncClient
 def subsonic_auth_params(admin_user):
     return {"u": admin_user.username, "p": "admin", "c": "pytest", "v": "1.16.1", "f": "json"}
 
+
 @pytest.mark.asyncio
 async def test_search2_comprehensive(client: AsyncClient, subsonic_auth_params, db_session, admin_user):
     """Test search2 with all types of matches."""
@@ -55,6 +56,7 @@ async def test_search2_comprehensive(client: AsyncClient, subsonic_auth_params, 
     # search2 albums: func.lower(Album.title).like(search_term) -> No artist name check!
     assert len(data["album"]) == 0
 
+
 @pytest.mark.asyncio
 async def test_search3_comprehensive(client: AsyncClient, subsonic_auth_params, db_session, admin_user):
     """Test search3 with all types of matches and duration."""
@@ -75,7 +77,8 @@ async def test_search3_comprehensive(client: AsyncClient, subsonic_auth_params, 
     assert len(data["artist"]) == 1
     assert len(data["album"]) == 1
     assert len(data["song"]) == 1
-    assert data["album"][0]["duration"] == 120 # 120000 / 1000
+    assert data["album"][0]["duration"] == 120  # 120000 / 1000
+
 
 @pytest.mark.asyncio
 async def test_search_legacy_newer_than(client: AsyncClient, subsonic_auth_params, db_session, admin_user):
@@ -96,6 +99,7 @@ async def test_search_legacy_newer_than(client: AsyncClient, subsonic_auth_param
     params = {**subsonic_auth_params, "title": "Legacy", "newerThan": 123456789}
     resp = await client.get("/rest/search.view", params=params)
     assert len(resp.json()["subsonic-response"]["searchResult"]["match"]) == 1
+
 
 @pytest.mark.asyncio
 async def test_search_no_results(client: AsyncClient, subsonic_auth_params):

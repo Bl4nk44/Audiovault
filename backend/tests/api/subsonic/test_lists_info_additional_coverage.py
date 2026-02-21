@@ -13,15 +13,12 @@ from httpx import AsyncClient
 def subsonic_auth_params(admin_user):
     return {"u": admin_user.username, "p": "admin", "c": "pytest", "v": "1.16.1", "f": "json"}
 
+
 @pytest.mark.asyncio
 async def test_get_genres_full(client: AsyncClient, subsonic_auth_params, db_session, admin_user):
     """Test getGenres.view with metadata extraction."""
     # Setup track with genre in metadata
-    track = Track(
-        id=uuid.uuid4(),
-        title="GenreSong",
-        metadata_content={"genre": "Synthwave"}
-    )
+    track = Track(id=uuid.uuid4(), title="GenreSong", metadata_content={"genre": "Synthwave"})
     db_session.add(track)
     await db_session.flush()
     dl = Download(track_id=track.id, user_id=admin_user.id, status="completed", file_path="/tmp/g.mp3")
@@ -33,6 +30,7 @@ async def test_get_genres_full(client: AsyncClient, subsonic_auth_params, db_ses
     data = resp.json()["subsonic-response"]["genres"]
     genres = data["genre"]
     assert any(g["value"] == "Synthwave" for g in genres)
+
 
 @pytest.mark.asyncio
 async def test_get_album_list_sorting(client: AsyncClient, subsonic_auth_params, db_session, admin_user):
@@ -89,6 +87,7 @@ async def test_get_album_list_sorting(client: AsyncClient, subsonic_auth_params,
     resp = await client.get("/rest/getAlbumList.view", params=params)
     assert resp.status_code == 200
 
+
 @pytest.mark.asyncio
 async def test_get_top_similar_random_songs(client: AsyncClient, subsonic_auth_params, db_session, admin_user):
     """Test getTopSongs, getSimilarSongs and getRandomSongs."""
@@ -117,6 +116,7 @@ async def test_get_top_similar_random_songs(client: AsyncClient, subsonic_auth_p
     resp = await client.get("/rest/getRandomSongs.view", params=subsonic_auth_params)
     assert len(resp.json()["subsonic-response"]["randomSongs"]["song"]) >= 1
 
+
 @pytest.mark.asyncio
 async def test_get_artist_info_full(client: AsyncClient, subsonic_auth_params, db_session):
     """Test getArtistInfo and getArtistInfo2."""
@@ -135,6 +135,7 @@ async def test_get_artist_info_full(client: AsyncClient, subsonic_auth_params, d
     resp = await client.get("/rest/getArtistInfo2.view", params=params)
     data = resp.json()["subsonic-response"]["artistInfo2"]
     assert data["biography"] == "Best artist ever"
+
 
 @pytest.mark.asyncio
 async def test_get_similar_songs2(client: AsyncClient, subsonic_auth_params, db_session, admin_user):
@@ -159,6 +160,7 @@ async def test_get_similar_songs2(client: AsyncClient, subsonic_auth_params, db_
     resp = await client.get("/rest/getSimilarSongs2.view", params=params)
     assert len(resp.json()["subsonic-response"]["similarSongs2"]["song"]) >= 2
 
+
 @pytest.mark.asyncio
 async def test_info_errors(client: AsyncClient, subsonic_auth_params):
     """Test error handling in info endpoints."""
@@ -172,6 +174,7 @@ async def test_info_errors(client: AsyncClient, subsonic_auth_params):
     params["id"] = str(uuid.uuid4())
     resp = await client.get("/rest/getArtistInfo.view", params=params)
     assert resp.json()["subsonic-response"]["error"]["code"] == 70
+
 
 @pytest.mark.asyncio
 async def test_get_album_list_extended(client: AsyncClient, subsonic_auth_params, db_session, admin_user):
@@ -197,6 +200,7 @@ async def test_get_album_list_extended(client: AsyncClient, subsonic_auth_params
     resp = await client.get("/rest/getAlbumList2.view", params=params)
     assert resp.status_code == 200
 
+
 @pytest.mark.asyncio
 async def test_get_similar_songs_errors(client: AsyncClient, subsonic_auth_params):
     """Test errors in getSimilarSongs."""
@@ -209,6 +213,7 @@ async def test_get_similar_songs_errors(client: AsyncClient, subsonic_auth_param
     params["id"] = str(uuid.uuid4())
     resp = await client.get("/rest/getSimilarSongs.view", params=params)
     assert resp.json()["subsonic-response"]["error"]["code"] == 70
+
 
 @pytest.mark.asyncio
 async def test_stubbed_endpoints(client: AsyncClient, subsonic_auth_params):

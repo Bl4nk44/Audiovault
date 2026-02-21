@@ -98,6 +98,7 @@ def _extract_art_sync(path: str) -> tuple[Optional[bytes], Optional[str]]:
 async def _extract_embedded_cover_art(file_path: str) -> tuple[Optional[bytes], Optional[str]]:
     """Run mutagen extraction in executor."""
     import functools
+
     loop = asyncio.get_event_loop()
     return await loop.run_in_executor(stream_executor, functools.partial(_extract_art_sync, file_path))
 
@@ -230,6 +231,7 @@ async def _resolve_stream_url(track_id: str) -> str:
     else:
         # Spotify -> YouTube resolution
         import functools
+
         loop = asyncio.get_event_loop()
 
         # 1. Get Spotify Metadata
@@ -257,6 +259,7 @@ async def _extract_direct_url(youtube_url: str) -> tuple[str, dict]:
     }
 
     import functools
+
     loop = asyncio.get_event_loop()
     with yt_dlp.YoutubeDL(ydl_opts) as ydl:
         # Note: extract_info can still block significantly, so executor is crucial

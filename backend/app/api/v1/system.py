@@ -38,6 +38,7 @@ async def get_system_logs(lines: int = Query(500, ge=1, le=5000)):
 
     try:
         import functools
+
         loop = asyncio.get_event_loop()
         # Use run_in_executor to avoid blocking the event loop with file I/O
         return await loop.run_in_executor(None, functools.partial(_read_last_lines, log_file, lines))

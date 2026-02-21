@@ -11,6 +11,7 @@ from httpx import AsyncClient
 def subsonic_auth(admin_user):
     return {"u": admin_user.username, "p": "admin", "c": "pytest", "v": "1.16.1", "f": "json"}
 
+
 @pytest.mark.asyncio
 async def test_album_list_types(client: AsyncClient, subsonic_auth, db_session):
     for type_param in ["frequent", "recent", "alphabetical", "byYear", "byGenre"]:
@@ -18,6 +19,7 @@ async def test_album_list_types(client: AsyncClient, subsonic_auth, db_session):
         response = await client.get("/rest/getAlbumList.view", params=params)
         assert response.status_code == 200
         assert response.json()["subsonic-response"]["status"] == "ok"
+
 
 @pytest.mark.asyncio
 async def test_album_list2_types(client: AsyncClient, subsonic_auth, db_session):
@@ -27,12 +29,14 @@ async def test_album_list2_types(client: AsyncClient, subsonic_auth, db_session)
         assert response.status_code == 200
         assert response.json()["subsonic-response"]["status"] == "ok"
 
+
 @pytest.mark.asyncio
 async def test_random_songs_filters(client: AsyncClient, subsonic_auth, db_session):
     params = {**subsonic_auth, "fromYear": "2000", "toYear": "2020", "genre": "Rock"}
     response = await client.get("/rest/getRandomSongs.view", params=params)
     assert response.status_code == 200
     assert response.json()["subsonic-response"]["status"] == "ok"
+
 
 @pytest.mark.asyncio
 async def test_top_songs_with_artist(client: AsyncClient, subsonic_auth, db_session):
@@ -41,6 +45,7 @@ async def test_top_songs_with_artist(client: AsyncClient, subsonic_auth, db_sess
     assert response.status_code == 200
     assert response.json()["subsonic-response"]["status"] == "ok"
 
+
 @pytest.mark.asyncio
 async def test_similar_songs_invalid_id(client: AsyncClient, subsonic_auth):
     params = {**subsonic_auth, "id": "invalid-uuid"}
@@ -48,12 +53,14 @@ async def test_similar_songs_invalid_id(client: AsyncClient, subsonic_auth):
     assert response.status_code == 200
     assert response.json()["subsonic-response"]["error"]["code"] == 10
 
+
 @pytest.mark.asyncio
 async def test_similar_songs_not_found(client: AsyncClient, subsonic_auth):
     params = {**subsonic_auth, "id": str(uuid.uuid4())}
     response = await client.get("/rest/getSimilarSongs.view", params=params)
     assert response.status_code == 200
     assert response.json()["subsonic-response"]["error"]["code"] == 70
+
 
 @pytest.mark.asyncio
 async def test_similar_songs_found(client: AsyncClient, subsonic_auth, db_session, admin_user):

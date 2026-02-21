@@ -11,6 +11,7 @@ from httpx import AsyncClient
 def subsonic_auth_params(admin_user):
     return {"u": admin_user.username, "p": "admin", "c": "pytest", "v": "1.16.1", "f": "json"}
 
+
 @pytest.fixture
 async def other_user(db_session):
     user = User(
@@ -24,6 +25,7 @@ async def other_user(db_session):
     db_session.add(user)
     await db_session.commit()
     return user
+
 
 @pytest.mark.asyncio
 async def test_get_playlist_invalid_id_and_denied(client: AsyncClient, subsonic_auth_params, db_session, other_user):
@@ -44,6 +46,7 @@ async def test_get_playlist_invalid_id_and_denied(client: AsyncClient, subsonic_
     assert response.status_code == 200
     assert response.json()["subsonic-response"]["error"]["code"] == 50
 
+
 @pytest.mark.asyncio
 async def test_create_playlist_edge_cases(client: AsyncClient, subsonic_auth_params, db_session, other_user):
     """Test createPlaylist error paths and validation."""
@@ -62,7 +65,7 @@ async def test_create_playlist_edge_cases(client: AsyncClient, subsonic_auth_par
     assert response.json()["subsonic-response"]["error"]["code"] == 10
 
     # 3. Create without name
-    params = {**subsonic_auth_params} # No name, no playlistId
+    params = {**subsonic_auth_params}  # No name, no playlistId
     response = await client.get("/rest/createPlaylist.view", params=params)
     assert response.json()["subsonic-response"]["error"]["code"] == 10
 
@@ -70,6 +73,7 @@ async def test_create_playlist_edge_cases(client: AsyncClient, subsonic_auth_par
     params = {**subsonic_auth_params, "name": "Skip Invalid", "songId": ["not-uuid-1", "not-uuid-2"]}
     response = await client.get("/rest/createPlaylist.view", params=params)
     assert response.json()["subsonic-response"]["status"] == "ok"
+
 
 @pytest.mark.asyncio
 async def test_update_playlist_complex(client: AsyncClient, subsonic_auth_params, db_session, admin_user):
@@ -94,12 +98,7 @@ async def test_update_playlist_complex(client: AsyncClient, subsonic_auth_params
     db_session.add(new_t)
     await db_session.commit()
 
-    params = {
-        **subsonic_auth_params,
-        "playlistId": str(pl.id),
-        "songIdToAdd": str(new_t.id),
-        "songIndexToRemove": [1]
-    }
+    params = {**subsonic_auth_params, "playlistId": str(pl.id), "songIdToAdd": str(new_t.id), "songIndexToRemove": [1]}
     response = await client.get("/rest/updatePlaylist.view", params=params)
     assert response.status_code == 200
 
@@ -108,10 +107,11 @@ async def test_update_playlist_complex(client: AsyncClient, subsonic_auth_params
     resp_get = await client.get("/rest/getPlaylist.view", params=params_get)
     data = resp_get.json()
     entries = data["subsonic-response"]["playlist"]["entry"]
-    assert len(entries) == 3 # 3 - 1 + 1 = 3
+    assert len(entries) == 3  # 3 - 1 + 1 = 3
     assert entries[0]["title"] == "T0"
     assert entries[1]["title"] == "T2"
     assert entries[2]["title"] == "New"
+
 
 @pytest.mark.asyncio
 async def test_get_playlists_visibility(client: AsyncClient, subsonic_auth_params, db_session, admin_user, other_user):
@@ -135,6 +135,7 @@ async def test_get_playlists_visibility(client: AsyncClient, subsonic_auth_param
     assert "Other Public" in pl_names
     assert "Other Private" not in pl_names
 
+
 @pytest.mark.asyncio
 async def test_update_playlist_visibility_change(client: AsyncClient, subsonic_auth_params, db_session, admin_user):
     """Test toggling public flag in updatePlaylist."""
@@ -150,6 +151,7 @@ async def test_update_playlist_visibility_change(client: AsyncClient, subsonic_a
     await db_session.refresh(pl)
     assert pl.public is True
 
+
 @pytest.mark.asyncio
 async def test_create_playlist_with_invalid_existing_id(client: AsyncClient, subsonic_auth_params):
     """Test createPlaylist with non-existent playlistId."""
@@ -157,12 +159,14 @@ async def test_create_playlist_with_invalid_existing_id(client: AsyncClient, sub
     response = await client.get("/rest/createPlaylist.view", params=params)
     assert response.json()["subsonic-response"]["error"]["code"] == 70
 
+
 @pytest.mark.asyncio
 async def test_delete_playlist_not_found_handled(client: AsyncClient, subsonic_auth_params):
     """Test deletePlaylist with non-existent ID."""
     params = {**subsonic_auth_params, "id": str(uuid.uuid4())}
     response = await client.get("/rest/deletePlaylist.view", params=params)
     assert response.json()["subsonic-response"]["error"]["code"] == 70
+
 
 @pytest.mark.asyncio
 async def test_delete_playlist_access_denied(client: AsyncClient, subsonic_auth_params, db_session, other_user):

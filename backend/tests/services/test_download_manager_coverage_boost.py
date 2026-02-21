@@ -15,6 +15,7 @@ from app.services.download_manager import DownloadManager, DownloadPausedError
 def dm():
     return DownloadManager()
 
+
 @pytest.mark.asyncio
 async def test_dm_handle_error_paused(dm):
     db = AsyncMock()
@@ -26,6 +27,7 @@ async def test_dm_handle_error_paused(dm):
         assert download.status == "paused"
         assert db.commit.called
         mock_emit.assert_called_with("download:paused", {"download_id": str(download.id)})
+
 
 @pytest.mark.asyncio
 async def test_dm_handle_error_generic(dm):
@@ -40,9 +42,9 @@ async def test_dm_handle_error_generic(dm):
         assert download.retry_count == 1
         assert db.commit.called
         mock_emit.assert_called_with(
-            "download:error",
-            {"download_id": str(download.id), "error": "Something went wrong"}
+            "download:error", {"download_id": str(download.id), "error": "Something went wrong"}
         )
+
 
 @pytest.mark.asyncio
 async def test_dm_restart_all_downloads(dm, db_session):
@@ -61,12 +63,14 @@ async def test_dm_restart_all_downloads(dm, db_session):
         assert d2.status == "pending"
         assert mock_put.call_count == 2
 
+
 @pytest.mark.asyncio
 async def test_dm_notify_processing(dm):
     download = MagicMock(id=uuid.uuid4())
     with patch("app.services.download_manager.socket_manager.emit", new_callable=AsyncMock) as mock_emit:
         await dm._notify_processing(download)
         mock_emit.assert_called_with("download:processing", {"download_id": str(download.id), "status": "processing"})
+
 
 @pytest.mark.asyncio
 async def test_dm_set_processing_status(dm):
@@ -89,6 +93,7 @@ async def test_dm_set_processing_status(dm):
             assert db_mock.commit.called
             mock_notify.assert_called_with(mock_download)
 
+
 @pytest.mark.asyncio
 async def test_dm_process_download_not_found(dm):
     download_id = str(uuid.uuid4())
@@ -104,6 +109,7 @@ async def test_dm_process_download_not_found(dm):
         await dm.process_download(download_id)
         # Should return early without error
         assert not db_mock.commit.called
+
 
 @pytest.mark.asyncio
 async def test_dm_process_download_flow(dm):
@@ -126,6 +132,7 @@ async def test_dm_process_download_flow(dm):
                         assert m1.called
                         assert m_comp.called
 
+
 @pytest.mark.asyncio
 async def test_dm_handle_progress_update(dm):
     download_id = str(uuid.uuid4())
@@ -144,6 +151,7 @@ async def test_dm_handle_progress_update(dm):
             # Verify progress calculation (50%)
             # Since we can't easily inspect the coroutine, we assume it's correct if called
 
+
 @pytest.mark.asyncio
 async def test_dm_set_download_file_path(dm):
     download = MagicMock()
@@ -158,6 +166,7 @@ async def test_dm_set_download_file_path(dm):
     dm._set_download_file_path(download, final_filename_container, output_template, "mp3")
     assert download.file_path == "/downloads/temp/song.mp3"
 
+
 @pytest.mark.asyncio
 async def test_dm_resolve_url_youtube(dm):
     db = AsyncMock()
@@ -170,6 +179,7 @@ async def test_dm_resolve_url_youtube(dm):
         mock_instr.return_value = {"type": "yt_search", "value": "Artist - Song"}
         url = await dm._resolve_url(db, download)
         assert url == "ytsearch1:Artist - Song"
+
 
 @pytest.mark.asyncio
 async def test_dm_fix_filename_artifacts(dm):

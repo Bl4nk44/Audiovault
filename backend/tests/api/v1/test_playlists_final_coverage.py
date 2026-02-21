@@ -37,6 +37,7 @@ async def test_get_playlists_with_tracks_and_owner(client, admin_token_headers, 
     assert response.json()["name"] == "Owner PL"
     assert len(response.json()["tracks"]) == 1
 
+
 @pytest.mark.asyncio
 async def test_update_playlist_mapping_coverage(client, admin_token_headers, admin_user, db_session):
     pl = Playlist(name="Update Me", owner_id=admin_user.id)

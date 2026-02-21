@@ -16,6 +16,7 @@ from httpx import AsyncClient
 def subsonic_auth_params(admin_user):
     return {"u": admin_user.username, "p": "admin", "c": "pytest", "v": "1.16.1", "f": "json"}
 
+
 @pytest.mark.asyncio
 async def test_get_playlists_with_public(client: AsyncClient, subsonic_auth_params, db_session, admin_user):
     # Create own and public playlist by other user
@@ -39,6 +40,7 @@ async def test_get_playlists_with_public(client: AsyncClient, subsonic_auth_para
     assert "Public Other" in names
     assert "Private Other" not in names
 
+
 @pytest.mark.asyncio
 async def test_get_playlist_errors_and_access(client: AsyncClient, subsonic_auth_params, db_session, admin_user):
     # Invalid UUID
@@ -61,6 +63,7 @@ async def test_get_playlist_errors_and_access(client: AsyncClient, subsonic_auth
     res = await client.get("/rest/getPlaylist.view", params=params)
     assert res.json()["subsonic-response"]["status"] == "failed"
 
+
 @pytest.mark.asyncio
 async def test_create_update_playlist_subsonic(client: AsyncClient, subsonic_auth_params, db_session, admin_user):
     # Create new
@@ -78,6 +81,7 @@ async def test_create_update_playlist_subsonic(client: AsyncClient, subsonic_aut
     res = await client.get("/rest/createPlaylist.view", params=params)
     assert res.json()["subsonic-response"]["playlist"]["name"] == "Renamed"
     assert res.json()["subsonic-response"]["playlist"]["songCount"] == 1
+
 
 @pytest.mark.asyncio
 async def test_update_playlist_remove_by_index(client: AsyncClient, subsonic_auth_params, db_session, admin_user):
@@ -103,6 +107,7 @@ async def test_update_playlist_remove_by_index(client: AsyncClient, subsonic_aut
     params = {**subsonic_auth_params, "id": str(pl.id)}
     res = await client.get("/rest/getPlaylist.view", params=params)
     assert res.json()["subsonic-response"]["playlist"]["songCount"] == 2
+
 
 @pytest.mark.asyncio
 async def test_delete_playlist_subsonic_errors(client: AsyncClient, subsonic_auth_params):

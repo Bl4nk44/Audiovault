@@ -348,6 +348,7 @@ class LibraryScannerService:
         try:
             # Parse metadata in executor to avoid blocking event loop
             import functools
+
             loop = asyncio.get_event_loop()
 
             title, artist, album, genre, duration_ms, lyrics = await loop.run_in_executor(

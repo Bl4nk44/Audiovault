@@ -15,6 +15,7 @@ from app.services.download_manager import DownloadManager
 def dm():
     return DownloadManager()
 
+
 @pytest.mark.asyncio
 async def test_dm_process_with_semaphore_full_flow(dm):
     download_id = uuid.uuid4()
@@ -36,13 +37,14 @@ async def test_dm_process_with_semaphore_full_flow(dm):
     ):
         # Add to queue first so task_done() doesn't fail
         await dm.queue.put(str(download_id))
-        await dm.queue.get() # Simulate worker picking it up
+        await dm.queue.get()  # Simulate worker picking it up
 
         # Trigger the semaphore wrapper
         await dm._process_with_semaphore(str(download_id))
 
         assert mock_proc.called
         assert str(dm.user_semaphores[str(mock_download.user_id)]._value) == "2"
+
 
 @pytest.mark.asyncio
 async def test_dm_resume_interrupted_downloads(dm, db_session):
@@ -64,6 +66,7 @@ async def test_dm_resume_interrupted_downloads(dm, db_session):
         assert d2.status == "pending"
         assert d2.progress == 0
         assert mock_put.call_count == 2
+
 
 @pytest.mark.asyncio
 async def test_dm_resume_no_pending(dm, db_session):

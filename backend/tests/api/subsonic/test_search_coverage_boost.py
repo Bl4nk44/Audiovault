@@ -17,6 +17,7 @@ from httpx import AsyncClient
 def subsonic_auth_params(admin_user):
     return {"u": admin_user.username, "p": "admin", "c": "pytest", "v": "1.16.1", "f": "json"}
 
+
 @pytest.mark.asyncio
 async def test_legacy_search_variants(client: AsyncClient, subsonic_auth_params, db_session, admin_user):
     # Setup data
@@ -45,6 +46,7 @@ async def test_legacy_search_variants(client: AsyncClient, subsonic_auth_params,
     # Empty query
     res = await client.get("/rest/search.view", params=subsonic_auth_params)
     assert res.json()["subsonic-response"]["searchResult"]["match"] == []
+
 
 @pytest.mark.asyncio
 async def test_search2_edge_cases(client: AsyncClient, subsonic_auth_params, db_session, admin_user):
@@ -77,6 +79,7 @@ async def test_search2_edge_cases(client: AsyncClient, subsonic_auth_params, db_
     data = res.json()["subsonic-response"]["searchResult2"]
     assert data["album"][0]["artist"] == "Unknown Artist"
 
+
 @pytest.mark.asyncio
 async def test_search3_variants(client: AsyncClient, subsonic_auth_params, db_session, admin_user):
     # Create track/album/artist
@@ -97,4 +100,4 @@ async def test_search3_variants(client: AsyncClient, subsonic_auth_params, db_se
     assert len(data["artist"]) == 1
     assert len(data["album"]) == 1
     assert len(data["song"]) == 1
-    assert data["album"][0]["duration"] == 300 # 300000ms / 1000
+    assert data["album"][0]["duration"] == 300  # 300000ms / 1000
