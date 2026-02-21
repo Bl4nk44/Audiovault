@@ -28,7 +28,7 @@ async def init_db(db: AsyncSession) -> None:
                 import secrets
 
                 admin_password = secrets.token_urlsafe(16)
-                # Password is NOT logged for security reasons. 
+                # Password is NOT logged for security reasons.
                 # User should set ADMIN_PASSWORD in .env for production.
 
             user = User(
@@ -42,7 +42,7 @@ async def init_db(db: AsyncSession) -> None:
             await db.refresh(user)
             logger.info("Default admin user created")
             logger.info(f"Admin username: {admin_username}")
-            
+
             # Mask email for privacy
             masked_email = f"{admin_email[0]}***@{admin_email.split('@')[-1]}" if "@" in admin_email else "***"
             logger.info(f"Admin email: {masked_email}")

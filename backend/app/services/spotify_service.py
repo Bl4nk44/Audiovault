@@ -275,7 +275,7 @@ class SpotifyService:
                 results = self.client.next(results)
                 albums.extend(results["items"])
                 page_count += 1
-            
+
             # Filter out compilations and "Various Artists" to avoid mass-fetching unrelated tracks
             filtered_albums = []
             for alb in albums:
@@ -284,7 +284,7 @@ class SpotifyService:
                 if any(artist.get("name", "").lower() == "various artists" for artist in alb.get("artists", [])):
                     continue
                 filtered_albums.append(alb)
-                
+
             return filtered_albums
         except Exception as e:
             logger.error(f"Error fetching albums for {artist_id}: {e}")

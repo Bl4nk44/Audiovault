@@ -79,3 +79,7 @@ backend/app/debug_genres.py
 # Agentic AI
 .agent/
 
+# Conductor temporary state and archives
+conductor/setup_state.json
+conductor/archive/
+

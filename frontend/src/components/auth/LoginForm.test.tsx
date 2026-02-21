@@ -28,6 +28,7 @@ vi.mock("../../utils/notify", () => ({
   notify: {
     success: (msg: string) => mockSuccessToast(msg),
     error: (msg: string) => mockErrorToast(msg),
+    dismiss: vi.fn(),
   },
 }));
 

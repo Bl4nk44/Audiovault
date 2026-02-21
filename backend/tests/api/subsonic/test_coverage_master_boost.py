@@ -4,20 +4,28 @@ Targets: >80% total coverage. All tests PASS.
 """
 
 import uuid
+from unittest.mock import AsyncMock, MagicMock
+
 import pytest
-from unittest.mock import AsyncMock, MagicMock, patch
-from app.api.subsonic.handlers.search import search2, search3
-from app.api.subsonic.handlers.user import (
-    star, unstar, set_rating, scrobble, get_starred, get_starred2, get_now_playing, get_random_songs as get_random_songs_user
+from app.api.subsonic.handlers.info import (
+    get_artist_info,
 )
-from app.api.subsonic.handlers.info import get_artist_info, get_artist_info2, get_similar_songs2, get_podcasts, get_newest_podcasts, get_bookmarks, get_internet_radio_stations
-from app.api.subsonic.handlers.lists import get_album_list, get_genres, get_top_songs, get_similar_songs, get_random_songs as get_random_songs_list
-from app.api.subsonic.handlers.system import ping, get_license, get_token, get_user as get_user_subsonic, get_scan_status, get_open_subsonic_extensions
-from app.models.user import User
-from app.models.artist import Artist
+from app.api.subsonic.handlers.lists import get_album_list
+from app.api.subsonic.handlers.search import search2, search3
+from app.api.subsonic.handlers.system import get_license, ping
+from app.api.subsonic.handlers.system import get_user as get_user_subsonic
+from app.api.subsonic.handlers.user import (
+    get_starred,
+    set_rating,
+    star,
+    unstar,
+)
 from app.models.album import Album
-from app.models.track import Track
+from app.models.artist import Artist
 from app.models.download import Download
+from app.models.track import Track
+from app.models.user import User
+
 
 @pytest.fixture
 def mock_db():
@@ -36,7 +44,7 @@ async def test_search_master(mock_db, test_user):
     album = Album(id=uuid.uuid4(), title="Alb", artist_id=artist.id)
     track = Track(id=uuid.uuid4(), title="Tra", album_id=album.id)
     dl = Download(id=1, status="completed")
-    
+
     mock_db.execute.side_effect = [
         MagicMock(scalars=lambda: MagicMock(all=lambda: [artist])),
         MagicMock(scalars=lambda: MagicMock(all=lambda: [album])),
@@ -45,7 +53,7 @@ async def test_search_master(mock_db, test_user):
         MagicMock(scalars=lambda: MagicMock(all=lambda: [album])),
         MagicMock(all=lambda: [(track, dl)]),
     ]
-    
+
     await search2("q", 1, 0, 1, 0, 1, 0, None, "json", test_user, mock_db)
     await search3("q", 1, 0, 1, 0, 1, 0, None, "json", test_user, mock_db)
 
@@ -68,7 +76,7 @@ async def test_info_master(mock_db, test_user):
     artist = Artist(id=aid, name="A", bio="B", images={"300": "u"})
     mock_db.execute.return_value = MagicMock(scalar_one_or_none=lambda: artist)
     await get_artist_info(str(aid), 1, False, "json", test_user, mock_db)
-    
+
 @pytest.mark.asyncio
 async def test_lists_master(mock_db, test_user):
     album = Album(id=uuid.uuid4(), title="Alb", artist_id=uuid.uuid4())
