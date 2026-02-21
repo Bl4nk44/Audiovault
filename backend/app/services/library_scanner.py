@@ -92,29 +92,29 @@ class LibraryScannerService:
                     lrc_content = f.read().strip()
                     if lrc_content:
                         return lrc_content
-            except Exception as lrc_e:
+            except Exception:
                 pass
         return None
 
     def _extract_lyrics_from_tags(self, m) -> str | None:
         if not hasattr(m, "tags"):
             return None
-        
+
         # ID3 (mp3)
         if "USLT::eng" in m.tags:
             return str(m.tags["USLT::eng"])
         elif "USLT:" in m.tags:
             return str(m.tags["USLT:"])
-            
+
         # Generic lookup for frames starting with USLT
         for tag in m.tags:
             if tag.startswith("USLT"):
                 return str(m.tags[tag])
-                
+
         # FLAC/Vorbis
         if hasattr(m.tags, "__contains__") and "lyrics" in m.tags:
             return m.tags["lyrics"][0]
-            
+
         return None
 
     def _try_parse_mutagen_fallback(

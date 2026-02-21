@@ -1,8 +1,9 @@
 import uuid
+
 import pytest
 from app.models.artist import Artist
-from app.models.track import Track
 from httpx import AsyncClient
+
 
 @pytest.fixture
 def subsonic_auth_params(admin_user):

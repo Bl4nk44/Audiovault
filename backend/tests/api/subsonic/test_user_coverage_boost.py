@@ -4,12 +4,12 @@ Targets: star, unstar, setRating, scrobble, getStarred, getRandomSongs.
 """
 
 import uuid
+
 import pytest
-from httpx import AsyncClient
-from app.models.track import Track
-from app.models.album import Album
-from app.models.artist import Artist
 from app.models.download import Download
+from app.models.track import Track
+from httpx import AsyncClient
+
 
 @pytest.fixture
 def subsonic_auth_params(admin_user):

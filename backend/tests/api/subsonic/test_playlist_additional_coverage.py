@@ -1,9 +1,11 @@
 import uuid
+
 import pytest
-from httpx import AsyncClient
 from app.models.playlist import Playlist, PlaylistTrack
 from app.models.track import Track
 from app.models.user import User
+from httpx import AsyncClient
+
 
 @pytest.fixture
 def subsonic_auth_params(admin_user):
@@ -93,14 +95,14 @@ async def test_update_playlist_complex(client: AsyncClient, subsonic_auth_params
     await db_session.commit()
 
     params = {
-        **subsonic_auth_params, 
-        "playlistId": str(pl.id), 
+        **subsonic_auth_params,
+        "playlistId": str(pl.id),
         "songIdToAdd": str(new_t.id),
         "songIndexToRemove": [1]
     }
     response = await client.get("/rest/updatePlaylist.view", params=params)
     assert response.status_code == 200
-    
+
     # Verify contents via getPlaylist
     params_get = {**subsonic_auth_params, "id": str(pl.id)}
     resp_get = await client.get("/rest/getPlaylist.view", params=params_get)
@@ -108,7 +110,7 @@ async def test_update_playlist_complex(client: AsyncClient, subsonic_auth_params
     entries = data["subsonic-response"]["playlist"]["entry"]
     assert len(entries) == 3 # 3 - 1 + 1 = 3
     assert entries[0]["title"] == "T0"
-    assert entries[1]["title"] == "T2" 
+    assert entries[1]["title"] == "T2"
     assert entries[2]["title"] == "New"
 
 @pytest.mark.asyncio
@@ -120,7 +122,7 @@ async def test_get_playlists_visibility(client: AsyncClient, subsonic_auth_param
     other_public = Playlist(id=uuid.uuid4(), name="Other Public", owner_id=other_user.id, public=True)
     # 3. Private by own (admin)
     own_private = Playlist(id=uuid.uuid4(), name="My Private", owner_id=admin_user.id, public=False)
-    
+
     db_session.add_all([other_private, other_public, own_private])
     await db_session.commit()
 
@@ -128,7 +130,7 @@ async def test_get_playlists_visibility(client: AsyncClient, subsonic_auth_param
     assert response.status_code == 200
     pls = response.json()["subsonic-response"]["playlists"]["playlist"]
     pl_names = [p["name"] for p in pls]
-    
+
     assert "My Private" in pl_names
     assert "Other Public" in pl_names
     assert "Other Private" not in pl_names
@@ -143,7 +145,7 @@ async def test_update_playlist_visibility_change(client: AsyncClient, subsonic_a
     # Change to public
     params = {**subsonic_auth_params, "playlistId": str(pl.id), "public": "true"}
     await client.get("/rest/updatePlaylist.view", params=params)
-    
+
     # Verify
     await db_session.refresh(pl)
     assert pl.public is True

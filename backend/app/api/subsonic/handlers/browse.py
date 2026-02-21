@@ -182,7 +182,6 @@ async def get_artists(
         album_result = await db.execute(select(func.count(distinct(Album.id))).where(Album.artist_id == artist.id))
         album_count = album_result.scalar() or 0
 
-        # artist_images = artist.images or {}
 
         indexes[first_char].append(
             {

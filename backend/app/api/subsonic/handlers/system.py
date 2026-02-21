@@ -167,7 +167,7 @@ async def get_token(
     if password.startswith("enc:"):
         try:
             password = bytes.fromhex(password[4:]).decode("utf-8")
-        except (ValueError, UnicodeDecodeError):
+        except ValueError:
             pass
 
     # Verify password

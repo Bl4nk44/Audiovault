@@ -1,16 +1,18 @@
 """
 Coverage boost for Subsonic browse handlers.
-Focuses on edge cases: XML format, missing names, non-alphabetical names, 
+Focuses on edge cases: XML format, missing names, non-alphabetical names,
 missing release dates, and unknown artists.
 """
 
 import uuid
+
 import pytest
 from app.models.album import Album
 from app.models.artist import Artist
 from app.models.download import Download
 from app.models.track import Track
 from httpx import AsyncClient
+
 
 @pytest.fixture
 def subsonic_auth_params(admin_user):
@@ -24,7 +26,7 @@ async def test_get_indexes_xml_and_edge_cases(client: AsyncClient, subsonic_auth
     artist_empty_name = Artist(id=uuid.uuid4(), name="")
     # Artist with non-alpha name (should go to #)
     artist_hash = Artist(id=uuid.uuid4(), name="!!! Hash")
-    
+
     db_session.add(artist_empty_name)
     db_session.add(artist_hash)
     await db_session.flush()
@@ -35,7 +37,7 @@ async def test_get_indexes_xml_and_edge_cases(client: AsyncClient, subsonic_auth
         await db_session.flush()
         download = Download(track_id=track.id, user_id=admin_user.id, status="completed", file_path=f"/tmp/{a.id}.mp3")
         db_session.add(download)
-    
+
     await db_session.commit()
 
     response = await client.get("/rest/getIndexes.view", params=subsonic_auth_params)
@@ -116,7 +118,7 @@ async def test_get_music_directory_root_all_path(client: AsyncClient, subsonic_a
     artist = Artist(id=uuid.uuid4(), name="Visual Artist", images={"url": "test"})
     db_session.add(artist)
     await db_session.flush()
-    
+
     # Must have a track to be visible
     track = Track(id=uuid.uuid4(), title="T", artist_id=artist.id)
     db_session.add(track)

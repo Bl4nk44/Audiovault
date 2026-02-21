@@ -4,12 +4,14 @@ Targets: search, search2, search3 with various parameters and edge cases.
 """
 
 import uuid
+
 import pytest
 from app.models.album import Album
 from app.models.artist import Artist
 from app.models.download import Download
 from app.models.track import Track
 from httpx import AsyncClient
+
 
 @pytest.fixture
 def subsonic_auth_params(admin_user):
@@ -49,16 +51,16 @@ async def test_search2_edge_cases(client: AsyncClient, subsonic_auth_params, db_
     # Artist with images
     artist = Artist(id=uuid.uuid4(), name="Visual Search", images={"url": "http://img.jpg"})
     db_session.add(artist)
-    
+
     # Album without artist
     album = Album(id=uuid.uuid4(), title="Orphan Search Album", artist_id=None)
     db_session.add(album)
-    
+
     # Track for artist to make them searchable in search2 (which joins tracks)
     t = Track(id=uuid.uuid4(), title="SearchTrack", artist_id=artist.id, album_id=album.id)
     db_session.add(t)
     await db_session.flush()
-    
+
     dl = Download(track_id=t.id, user_id=admin_user.id, status="completed", file_path="/tmp/s.mp3")
     db_session.add(dl)
     await db_session.commit()
@@ -83,7 +85,7 @@ async def test_search3_variants(client: AsyncClient, subsonic_auth_params, db_se
     track = Track(id=uuid.uuid4(), title="Search3 Song", artist_id=artist.id, album_id=album.id, duration_ms=300000)
     db_session.add_all([artist, album, track])
     await db_session.flush()
-    
+
     dl = Download(track_id=track.id, user_id=admin_user.id, status="completed", file_path="/tmp/s3.mp3")
     db_session.add(dl)
     await db_session.commit()

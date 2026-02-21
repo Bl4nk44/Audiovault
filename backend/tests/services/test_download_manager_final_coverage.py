@@ -4,11 +4,12 @@ Targets: process_with_semaphore logic, and interrupted download resumption.
 """
 
 import uuid
-import asyncio
-import pytest
 from unittest.mock import AsyncMock, MagicMock, patch
-from app.services.download_manager import DownloadManager
+
+import pytest
 from app.models.download import Download
+from app.services.download_manager import DownloadManager
+
 
 @pytest.fixture
 def dm():
@@ -19,11 +20,11 @@ async def test_dm_process_with_semaphore_full_flow(dm):
     download_id = uuid.uuid4()
     mock_download = MagicMock(id=download_id, user_id=uuid.uuid4())
     mock_download.user.preferences = {"max_parallel_downloads": 2}
-    
+
     # Mock DB result
     mock_res = MagicMock()
     mock_res.scalar_one_or_none.return_value = mock_download
-    
+
     db_mock = AsyncMock()
     db_mock.execute.return_value = mock_res
     db_mock.__aenter__.return_value = db_mock
@@ -36,10 +37,10 @@ async def test_dm_process_with_semaphore_full_flow(dm):
         # Add to queue first so task_done() doesn't fail
         await dm.queue.put(str(download_id))
         await dm.queue.get() # Simulate worker picking it up
-        
+
         # Trigger the semaphore wrapper
         await dm._process_with_semaphore(str(download_id))
-        
+
         assert mock_proc.called
         assert str(dm.user_semaphores[str(mock_download.user_id)]._value) == "2"
 
@@ -47,7 +48,7 @@ async def test_dm_process_with_semaphore_full_flow(dm):
 async def test_dm_resume_interrupted_downloads(dm, db_session):
     user_id = uuid.uuid4()
     track_id = uuid.uuid4()
-    
+
     # Create downloads in 'downloading' and 'processing' states (interrupted)
     d1 = Download(id=uuid.uuid4(), user_id=user_id, track_id=track_id, status="downloading", progress=50)
     d2 = Download(id=uuid.uuid4(), user_id=user_id, track_id=track_id, status="processing", progress=100)
@@ -56,7 +57,7 @@ async def test_dm_resume_interrupted_downloads(dm, db_session):
 
     with patch.object(dm.queue, "put", new_callable=AsyncMock) as mock_put:
         await dm.resume_pending_downloads(db_session)
-        
+
         # Verify status reset to pending
         assert d1.status == "pending"
         assert d1.progress == 0
@@ -69,7 +70,7 @@ async def test_dm_resume_no_pending(dm, db_session):
     # Ensure no pending downloads exist
     await db_session.execute(__import__("sqlalchemy").delete(Download))
     await db_session.commit()
-    
+
     with patch.object(dm.queue, "put", new_callable=AsyncMock) as mock_put:
         with patch("app.services.download_manager.logger.info") as mock_log:
             await dm.resume_pending_downloads(db_session)

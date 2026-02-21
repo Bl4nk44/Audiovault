@@ -5,12 +5,14 @@ album year parsing, and directory structure edge cases.
 """
 
 import uuid
+
 import pytest
 from app.models.album import Album
 from app.models.artist import Artist
 from app.models.download import Download
 from app.models.track import Track
 from httpx import AsyncClient
+
 
 @pytest.fixture
 def subsonic_auth_params(admin_user):
@@ -24,7 +26,7 @@ async def test_get_indexes_xml_variations(client: AsyncClient, subsonic_auth_par
     a1 = Artist(id=uuid.uuid4(), name="123 Numeric")
     # Artist with name starting with 'The' (logic might skip it or group it)
     a2 = Artist(id=uuid.uuid4(), name="The Beatles")
-    
+
     db_session.add_all([a1, a2])
     await db_session.flush()
 
@@ -34,7 +36,7 @@ async def test_get_indexes_xml_variations(client: AsyncClient, subsonic_auth_par
         await db_session.flush()
         dl = Download(track_id=t.id, user_id=admin_user.id, status="completed", file_path=f"/tmp/{a.id}.mp3")
         db_session.add(dl)
-    
+
     await db_session.commit()
 
     response = await client.get("/rest/getIndexes.view", params=subsonic_auth_params)
@@ -44,7 +46,9 @@ async def test_get_indexes_xml_variations(client: AsyncClient, subsonic_auth_par
     assert "The Beatles" in response.text
 
 @pytest.mark.asyncio
-async def test_get_artist_details_with_and_without_dates(client: AsyncClient, subsonic_auth_params, db_session, admin_user):
+async def test_get_artist_details_with_and_without_dates(
+    client: AsyncClient, subsonic_auth_params, db_session, admin_user
+):
     """Test getArtist with various album data."""
     artist = Artist(id=uuid.uuid4(), name="Data Artist", images={"url": "test"})
     db_session.add(artist)
@@ -54,7 +58,7 @@ async def test_get_artist_details_with_and_without_dates(client: AsyncClient, su
     alb1 = Album(id=uuid.uuid4(), title="Oldie", artist_id=artist.id, release_date="199") # Too short for year
     # Album 2: No release date
     alb2 = Album(id=uuid.uuid4(), title="Unknown Date", artist_id=artist.id, release_date=None)
-    
+
     db_session.add_all([alb1, alb2])
     await db_session.flush()
 
@@ -64,7 +68,7 @@ async def test_get_artist_details_with_and_without_dates(client: AsyncClient, su
         await db_session.flush()
         dl = Download(track_id=t.id, user_id=admin_user.id, status="completed", file_path=f"/tmp/{alb.id}.mp3")
         db_session.add(dl)
-    
+
     await db_session.commit()
 
     # Use JSON for easy assertion
@@ -88,7 +92,7 @@ async def test_get_album_with_track_indices(client: AsyncClient, subsonic_auth_p
     t = Track(id=uuid.uuid4(), title="No Meta Track", artist_id=artist.id, album_id=album.id, metadata_content={})
     db_session.add(t)
     await db_session.flush()
-    
+
     dl = Download(track_id=t.id, user_id=admin_user.id, status="completed", file_path="/tmp/nometa.mp3")
     db_session.add(dl)
     await db_session.commit()
@@ -105,10 +109,10 @@ async def test_get_music_directory_root_all_paths(client: AsyncClient, subsonic_
     a1 = Artist(id=uuid.uuid4(), name="Visual", images={"profile": "url"})
     # Artist without images
     a2 = Artist(id=uuid.uuid4(), name="Plain", images=None)
-    
+
     db_session.add_all([a1, a2])
     await db_session.flush()
-    
+
     for a in [a1, a2]:
         t = Track(id=uuid.uuid4(), title="T", artist_id=a.id)
         db_session.add(t)
@@ -121,7 +125,7 @@ async def test_get_music_directory_root_all_paths(client: AsyncClient, subsonic_
     params = {**subsonic_auth_params, "id": "1", "f": "json"}
     response = await client.get("/rest/getMusicDirectory.view", params=params)
     children = response.json()["subsonic-response"]["directory"]["child"]
-    
+
     v_art = next(c for c in children if c["title"] == "Visual")
     p_art = next(c for c in children if c["title"] == "Plain")
     assert v_art["coverArt"] is not None

@@ -65,7 +65,9 @@ def compute_md5_token(password: str, salt: str) -> str:
     """
     # MD5 is required by Subsonic API specification for token auth
     # This is NOT used for password storage - passwords use bcrypt
-    return hashlib.md5(f"{password}{salt}".encode()).hexdigest()  # nosemgrep: md5-used-as-password  # nosec B303, B324 - MD5 mandated by Subsonic API spec
+    result = hashlib.md5(f"{password}{salt}".encode()).hexdigest()
+    # nosemgrep: md5-used-as-password  # nosec B303, B324 - MD5 mandated by Subsonic API spec
+    return result
 
 
 async def get_user_by_username(

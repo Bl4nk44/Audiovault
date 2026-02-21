@@ -507,12 +507,12 @@ async def get_now_playing(
     for now_playing, track, user, download in result.all():
         song = build_song_response(track, download)
         song["username"] = user.username
-        
+
         # Ensure now_playing.updated_at is aware for subtraction
         updated_at = now_playing.updated_at
         if updated_at and updated_at.tzinfo is None:
             updated_at = updated_at.replace(tzinfo=UTC)
-            
+
         song["minutesAgo"] = int((now - updated_at).total_seconds() / 60)
         song["playerId"] = now_playing.player_id or "0"
         entries.append(song)
@@ -565,12 +565,16 @@ async def get_random_songs(
         if is_postgres:
             query = query.where(Track.metadata_content["year"].astext.cast(Integer) >= from_year)
         else:
-            query = query.where(sqlfunc.cast(sqlfunc.json_extract(Track.metadata_content, "$.year"), Integer) >= from_year)
+            query = query.where(
+                sqlfunc.cast(sqlfunc.json_extract(Track.metadata_content, "$.year"), Integer) >= from_year
+            )
     if to_year:
         if is_postgres:
             query = query.where(Track.metadata_content["year"].astext.cast(Integer) <= to_year)
         else:
-            query = query.where(sqlfunc.cast(sqlfunc.json_extract(Track.metadata_content, "$.year"), Integer) <= to_year)
+            query = query.where(
+                sqlfunc.cast(sqlfunc.json_extract(Track.metadata_content, "$.year"), Integer) <= to_year
+            )
 
     # Random order
     query = query.order_by(sqlfunc.random()).limit(size)

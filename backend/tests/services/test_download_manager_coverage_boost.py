@@ -4,11 +4,12 @@ Targets: process_download, error handling, notifications, and restart/resume log
 """
 
 import uuid
-import asyncio
+from unittest.mock import AsyncMock, MagicMock, patch
+
 import pytest
-from unittest.mock import AsyncMock, MagicMock, patch, ANY
-from app.services.download_manager import DownloadManager, DownloadPausedError
 from app.models.download import Download
+from app.services.download_manager import DownloadManager, DownloadPausedError
+
 
 @pytest.fixture
 def dm():
@@ -19,7 +20,7 @@ async def test_dm_handle_error_paused(dm):
     db = AsyncMock()
     download = MagicMock(id=uuid.uuid4())
     e = DownloadPausedError("DOWNLOAD_PAUSED")
-    
+
     with patch("app.services.download_manager.socket_manager.emit", new_callable=AsyncMock) as mock_emit:
         await dm._handle_error(db, download, e)
         assert download.status == "paused"
@@ -31,14 +32,17 @@ async def test_dm_handle_error_generic(dm):
     db = AsyncMock()
     download = MagicMock(id=uuid.uuid4(), retry_count=0)
     e = Exception("Something went wrong")
-    
+
     with patch("app.services.download_manager.socket_manager.emit", new_callable=AsyncMock) as mock_emit:
         await dm._handle_error(db, download, e)
         assert download.status == "failed"
         assert download.error_message == "Something went wrong"
         assert download.retry_count == 1
         assert db.commit.called
-        mock_emit.assert_called_with("download:error", {"download_id": str(download.id), "error": "Something went wrong"})
+        mock_emit.assert_called_with(
+            "download:error",
+            {"download_id": str(download.id), "error": "Something went wrong"}
+        )
 
 @pytest.mark.asyncio
 async def test_dm_restart_all_downloads(dm, db_session):
@@ -68,11 +72,11 @@ async def test_dm_notify_processing(dm):
 async def test_dm_set_processing_status(dm):
     download_id = uuid.uuid4()
     mock_download = MagicMock(id=download_id)
-    
+
     # Mock DB session and result
     mock_res = MagicMock()
     mock_res.scalar_one_or_none.return_value = mock_download
-    
+
     db_mock = AsyncMock()
     db_mock.execute.return_value = mock_res
     db_mock.__aenter__.return_value = db_mock
@@ -88,10 +92,10 @@ async def test_dm_set_processing_status(dm):
 @pytest.mark.asyncio
 async def test_dm_process_download_not_found(dm):
     download_id = str(uuid.uuid4())
-    
+
     mock_res = MagicMock()
     mock_res.scalar_one_or_none.return_value = None
-    
+
     db_mock = AsyncMock()
     db_mock.execute.return_value = mock_res
     db_mock.__aenter__.return_value = db_mock
@@ -105,10 +109,10 @@ async def test_dm_process_download_not_found(dm):
 async def test_dm_process_download_flow(dm):
     download_id = str(uuid.uuid4())
     mock_download = MagicMock(id=uuid.UUID(download_id))
-    
+
     mock_res = MagicMock()
     mock_res.scalar_one_or_none.return_value = mock_download
-    
+
     db_mock = AsyncMock()
     db_mock.execute.return_value = mock_res
     db_mock.__aenter__.return_value = db_mock
@@ -130,15 +134,14 @@ async def test_dm_handle_progress_update(dm):
     download.track.artist = "Test Artist"
     download.track.metadata_content = {"image_url": "http://img.png"}
     loop = MagicMock()
-    
+
     d = {"status": "downloading", "total_bytes": 1000, "downloaded_bytes": 500}
-    
-    with patch("app.services.download_manager.socket_manager.emit") as mock_emit:
+
+    with patch("app.services.download_manager.socket_manager.emit"):
         with patch("asyncio.run_coroutine_threadsafe") as mock_run:
             dm._handle_progress_update(d, download_id, download, loop)
             assert mock_run.called
             # Verify progress calculation (50%)
-            args = mock_run.call_args[0][0]
             # Since we can't easily inspect the coroutine, we assume it's correct if called
 
 @pytest.mark.asyncio
@@ -147,10 +150,10 @@ async def test_dm_set_download_file_path(dm):
     # Mock user preferences
     download.user.username = "testuser"
     download.user.preferences = {"downloadPath": "/downloads/testuser"}
-    
+
     final_filename_container = {"path": "/downloads/temp/song.mp4"}
     output_template = "output"
-    
+
     # Logic: final_filename_container["path"] -> base + target_ext
     dm._set_download_file_path(download, final_filename_container, output_template, "mp3")
     assert download.file_path == "/downloads/temp/song.mp3"
@@ -161,7 +164,7 @@ async def test_dm_resolve_url_youtube(dm):
     download = MagicMock(source="youtube", retry_count=0, track_id=uuid.uuid4())
     download.track.title = "Song"
     download.track.artist = "Artist"
-    
+
     # Mock fallback_service.get_fallback_instruction
     with patch("app.services.download_manager.fallback_service.get_fallback_instruction") as mock_instr:
         mock_instr.return_value = {"type": "yt_search", "value": "Artist - Song"}
@@ -173,7 +176,7 @@ async def test_dm_fix_filename_artifacts(dm):
     download = MagicMock()
     # Prefix "NA - " is one of the artifacts handled by _fix_filename_artifacts
     download.file_path = "/downloads/NA - Song.mp3"
-    
+
     with patch("os.path.exists", return_value=True):
         with patch("os.rename") as mock_rename:
             dm._fix_filename_artifacts(download)

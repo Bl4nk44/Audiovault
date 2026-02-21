@@ -3,9 +3,11 @@ Coverage boost for LastfmService.
 Targets: user info, similar tracks/artists, and recommendation fallbacks.
 """
 
+from unittest.mock import AsyncMock, patch
+
 import pytest
-from unittest.mock import MagicMock, AsyncMock, patch
-from app.services.lastfm_service import LastfmService, LastfmAPIError
+from app.services.lastfm_service import LastfmAPIError, LastfmService
+
 
 @pytest.fixture
 async def service():
@@ -46,7 +48,7 @@ async def test_lastfm_get_recommended_artists_fallback(service):
             {"recommendations": {"artist": []}},
             {"topartists": {"artist": [{"name": "Queen", "url": "url"}]}}
         ]
-        
+
         res = await service.get_recommended_artists(session_key="sk", user_name="user")
         assert len(res) == 1
         assert res[0].name == "Queen"

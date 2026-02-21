@@ -136,7 +136,7 @@ async def _check_development_update():
             async with session.get(github_url) as response:
                 if response.status == 200:
                     data = await response.json()
-                    
+
                     # Handling dictionary return typing securely
                     remote_sha = data.get("sha")
                     remote_sha_str = str(remote_sha) if remote_sha else "unknown"

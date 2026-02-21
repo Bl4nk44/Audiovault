@@ -3,10 +3,11 @@ Coverage boost for LyricsService.
 Targets: Genius client init, LRCLIB integration, DB metadata fetching, and cache errors.
 """
 
-import json
+from unittest.mock import AsyncMock, MagicMock, patch
+
 import pytest
-from unittest.mock import MagicMock, AsyncMock, patch
 from app.services.lyrics_service import LyricsService
+
 
 @pytest.fixture
 def service():
@@ -28,13 +29,13 @@ async def test_lyrics_get_from_lrclib_success(service):
         "artistName": "Artist",
         "albumName": "Album"
     }
-    
+
     with patch("httpx.AsyncClient.get") as mock_get:
         mock_resp = MagicMock()
         mock_resp.status_code = 200
         mock_resp.json.return_value = mock_data
         mock_get.return_value = mock_resp
-        
+
         res = await service._get_from_lrclib("Artist", "Song")
         assert res["found"] is True
         assert res["lyrics"] == "Plain lyrics text"
@@ -47,7 +48,7 @@ async def test_lyrics_get_from_lrclib_not_found(service):
         mock_resp = MagicMock()
         mock_resp.status_code = 404
         mock_get.return_value = mock_resp
-        
+
         res = await service._get_from_lrclib("Artist", "Unknown")
         assert res["found"] is False
 
@@ -56,7 +57,7 @@ async def test_lyrics_get_from_db_metadata(service):
     track_id = "00000000-0000-0000-0000-000000000001"
     mock_track = MagicMock()
     mock_track.metadata_content = {"lyrics": "[00:01.00] Line 1"}
-    
+
     # Mock DB session
     mock_res = MagicMock()
     mock_res.scalar_one_or_none.return_value = mock_track
@@ -91,7 +92,7 @@ async def test_lyrics_clear_cache_no_redis(service):
 async def test_lyrics_fetch_genius_no_song(service):
     mock_genius = MagicMock()
     mock_genius.search_song.return_value = None
-    
+
     with patch.object(service, "_cache_result", new_callable=AsyncMock) as mock_cache:
         res = await service._fetch_and_cache_genius(mock_genius, "Artist", "Unknown", "key")
         assert res["found"] is False

@@ -33,15 +33,15 @@ class DeezerService:
             query,
         )
         if url_match:
-            kind, id = url_match.groups()
-            logger.info(f"Detected Deezer URL: kind={kind}, id={id}")
+            kind, deezer_id = url_match.groups()
+            logger.info(f"Detected Deezer URL: kind={kind}, id={deezer_id}")
             if kind == "track":
-                track = await self.get_track(id)
+                track = await self.get_track(deezer_id)
                 return [track] if track else []
             elif kind == "album":
-                return await self.get_album_tracks(id)
+                return await self.get_album_tracks(deezer_id)
             elif kind == "playlist":
-                return await self.get_playlist_tracks(id)
+                return await self.get_playlist_tracks(deezer_id)
 
         async with aiohttp.ClientSession() as session:
             async with session.get(

@@ -6,6 +6,7 @@ Targets: storage stats and summary.
 import pytest
 from httpx import AsyncClient
 
+
 @pytest.mark.asyncio
 async def test_get_storage_stats(client: AsyncClient, admin_token_headers):
     response = await client.get("/api/v1/storage/stats", headers=admin_token_headers)

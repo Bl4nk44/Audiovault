@@ -1,10 +1,12 @@
-import pytest
 import uuid
-from httpx import AsyncClient
-from app.models.track import Track
-from app.models.download import Download
-from app.models.artist import Artist
+
+import pytest
 from app.models.album import Album
+from app.models.artist import Artist
+from app.models.download import Download
+from app.models.track import Track
+from httpx import AsyncClient
+
 
 @pytest.fixture
 def subsonic_auth_params(admin_user):
@@ -16,10 +18,17 @@ async def test_search2_comprehensive(client: AsyncClient, subsonic_auth_params, 
     # Setup Artist, Album, Track + Download
     artist = Artist(id=uuid.uuid4(), name="MatchedArtist", images={"url": "http://img.jpg"})
     album = Album(id=uuid.uuid4(), title="MatchedAlbum", artist_id=artist.id, release_date="2020-01-01")
-    track = Track(id=uuid.uuid4(), title="MatchedSong", artist_id=artist.id, album_id=album.id, artist="MatchedArtist", album="MatchedAlbum")
+    track = Track(
+        id=uuid.uuid4(),
+        title="MatchedSong",
+        artist_id=artist.id,
+        album_id=album.id,
+        artist="MatchedArtist",
+        album="MatchedAlbum",
+    )
     db_session.add_all([artist, album, track])
     await db_session.flush()
-    
+
     dl = Download(track_id=track.id, user_id=admin_user.id, status="completed", file_path="/tmp/m.mp3")
     db_session.add(dl)
     await db_session.commit()
@@ -54,7 +63,7 @@ async def test_search3_comprehensive(client: AsyncClient, subsonic_auth_params, 
     track = Track(id=uuid.uuid4(), title="Search3Song", artist_id=artist.id, album_id=album.id, duration_ms=120000)
     db_session.add_all([artist, album, track])
     await db_session.flush()
-    
+
     dl = Download(track_id=track.id, user_id=admin_user.id, status="completed", file_path="/tmp/s3.mp3")
     db_session.add(dl)
     await db_session.commit()
@@ -92,7 +101,7 @@ async def test_search_legacy_newer_than(client: AsyncClient, subsonic_auth_param
 async def test_search_no_results(client: AsyncClient, subsonic_auth_params):
     """Test search endpoints with no results."""
     params = {**subsonic_auth_params, "query": "NonExistent"}
-    
+
     # search2
     resp = await client.get("/rest/search2.view", params=params)
     data = resp.json()["subsonic-response"]["searchResult2"]

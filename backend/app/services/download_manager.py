@@ -60,7 +60,8 @@ class DownloadManager:
         Dir: 777 (rwxrwxrwx), File: 666 (rw-rw-rw-)
         """
         try:
-            mode = 0o666 if is_file else 0o777  # nosemgrep: insecure-file-permissions  # nosec B103 - intentional for Docker interop with Jellyfin/Plex
+            mode = 0o666 if is_file else 0o777            # nosemgrep: insecure-file-permissions
+            mode = 0o666 if is_file else 0o777  # nosec B103 - intentional for Docker interop with Jellyfin/Plex
             os.chmod(path, mode)  # nosemgrep: insecure-file-permissions
         except Exception as e:
             # On Windows this might fail or have limited effect, but we log warning only

@@ -1,11 +1,13 @@
-import pytest
 import uuid
-from httpx import AsyncClient
-from app.models.track import Track
-from app.models.download import Download
-from app.models.artist import Artist
+from datetime import UTC, datetime, timedelta
+
+import pytest
 from app.models.album import Album
-from datetime import datetime, timedelta, UTC
+from app.models.artist import Artist
+from app.models.download import Download
+from app.models.track import Track
+from httpx import AsyncClient
+
 
 @pytest.fixture
 def subsonic_auth_params(admin_user):
@@ -16,8 +18,8 @@ async def test_get_genres_full(client: AsyncClient, subsonic_auth_params, db_ses
     """Test getGenres.view with metadata extraction."""
     # Setup track with genre in metadata
     track = Track(
-        id=uuid.uuid4(), 
-        title="GenreSong", 
+        id=uuid.uuid4(),
+        title="GenreSong",
         metadata_content={"genre": "Synthwave"}
     )
     db_session.add(track)
@@ -37,17 +39,29 @@ async def test_get_album_list_sorting(client: AsyncClient, subsonic_auth_params,
     """Test getAlbumList.view with different sorting types."""
     # Setup albums with different titles and dates
     artist = Artist(id=uuid.uuid4(), name="Artist")
-    a1 = Album(id=uuid.uuid4(), title="A_Album", artist_id=artist.id, created_at=datetime.now(UTC) - timedelta(days=1), release_date="2020-01-01")
-    a2 = Album(id=uuid.uuid4(), title="B_Album", artist_id=artist.id, created_at=datetime.now(UTC), release_date="2021-01-01")
+    a1 = Album(
+        id=uuid.uuid4(),
+        title="A_Album",
+        artist_id=artist.id,
+        created_at=datetime.now(UTC) - timedelta(days=1),
+        release_date="2020-01-01",
+    )
+    a2 = Album(
+        id=uuid.uuid4(),
+        title="B_Album",
+        artist_id=artist.id,
+        created_at=datetime.now(UTC),
+        release_date="2021-01-01",
+    )
     db_session.add_all([artist, a1, a2])
     await db_session.flush()
-    
+
     # Needs tracks/downloads for get_album_list to find them (it joins Download)
     t1 = Track(id=uuid.uuid4(), album_id=a1.id, title="T1")
     t2 = Track(id=uuid.uuid4(), album_id=a2.id, title="T2")
     db_session.add_all([t1, t2])
     await db_session.flush()
-    
+
     dl1 = Download(track_id=t1.id, user_id=admin_user.id, status="completed", file_path="/tmp/t1.mp3")
     dl2 = Download(track_id=t2.id, user_id=admin_user.id, status="completed", file_path="/tmp/t2.mp3")
     db_session.add_all([dl1, dl2])
@@ -83,7 +97,7 @@ async def test_get_top_similar_random_songs(client: AsyncClient, subsonic_auth_p
     t2 = Track(id=uuid.uuid4(), title="Song2", artist_id=artist.id, artist="SimilarArt")
     db_session.add_all([artist, t1, t2])
     await db_session.flush()
-    
+
     dl1 = Download(track_id=t1.id, user_id=admin_user.id, status="completed", file_path="/tmp/s1.mp3")
     dl2 = Download(track_id=t2.id, user_id=admin_user.id, status="completed", file_path="/tmp/s2.mp3")
     db_session.add_all([dl1, dl2])

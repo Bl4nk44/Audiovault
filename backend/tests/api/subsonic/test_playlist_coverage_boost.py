@@ -4,11 +4,13 @@ Targets: error cases, public access, track manipulation by index, and XML respon
 """
 
 import uuid
+
 import pytest
 from app.models.playlist import Playlist, PlaylistTrack
 from app.models.track import Track
 from app.models.user import User
 from httpx import AsyncClient
+
 
 @pytest.fixture
 def subsonic_auth_params(admin_user):
@@ -24,14 +26,14 @@ async def test_get_playlists_with_public(client: AsyncClient, subsonic_auth_para
     p1 = Playlist(id=uuid.uuid4(), name="Own", owner_id=admin_user.id, public=False)
     p2 = Playlist(id=uuid.uuid4(), name="Public Other", owner_id=other_user.id, public=True)
     p3 = Playlist(id=uuid.uuid4(), name="Private Other", owner_id=other_user.id, public=False)
-    
+
     db_session.add_all([p1, p2, p3])
     await db_session.commit()
 
     response = await client.get("/rest/getPlaylists.view", params=subsonic_auth_params)
     data = response.json()
     playlists = data["subsonic-response"]["playlists"]["playlist"]
-    
+
     names = [p["name"] for p in playlists]
     assert "Own" in names
     assert "Public Other" in names

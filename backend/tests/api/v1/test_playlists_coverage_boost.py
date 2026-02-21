@@ -4,10 +4,13 @@ Targets: external track resolution, duplicate handling, and edge cases in export
 """
 
 import uuid
+from unittest.mock import AsyncMock, patch
+
 import pytest
-from unittest.mock import AsyncMock, patch, MagicMock
+import sqlalchemy as sa
 from app.models.playlist import Playlist
 from app.models.track import Track
+
 
 @pytest.mark.asyncio
 async def test_add_external_tracks_to_playlist(client, admin_token_headers, admin_user, db_session):
@@ -24,7 +27,7 @@ async def test_add_external_tracks_to_playlist(client, admin_token_headers, admi
             "external:Queen:Bohemian Rhapsody"
         ]
     }
-    
+
     with patch("app.services.download_manager.download_manager.add_download", new_callable=AsyncMock) as mock_dl:
         response = await client.post(f"/api/v1/playlists/{pl.id}/tracks", json=data, headers=admin_token_headers)
         assert response.status_code == 201
@@ -33,7 +36,7 @@ async def test_add_external_tracks_to_playlist(client, admin_token_headers, admi
 
     # 3. Verify tracks were created in DB
     result = await db_session.execute(
-        __import__("sqlalchemy").select(Track).where(Track.title == "Yesterday")
+        sa.select(Track).where(Track.title == "Yesterday")
     )
     track = result.scalar_one_or_none()
     assert track is not None
@@ -54,7 +57,7 @@ async def test_add_external_track_existing(client, admin_token_headers, admin_us
             "external:Existing Artist:Existing Song"
         ]
     }
-    
+
     with patch("app.services.download_manager.download_manager.add_download", new_callable=AsyncMock) as mock_dl:
         response = await client.post(f"/api/v1/playlists/{pl.id}/tracks", json=data, headers=admin_token_headers)
         assert response.status_code == 201
@@ -71,7 +74,8 @@ async def test_remove_tracks_invalid_uuids(client, admin_token_headers, admin_us
 
     # Send invalid UUID strings
     data = {"track_ids": ["not-a-uuid", "another-bad-one"]}
-    response = await client.request("DELETE", f"/api/v1/playlists/{pl.id}/tracks", json=data, headers=admin_token_headers)
+    response = await client.request("DELETE", f"/api/v1/playlists/{pl.id}/tracks",
+                                    json=data, headers=admin_token_headers)
     assert response.status_code == 204
 
 @pytest.mark.asyncio

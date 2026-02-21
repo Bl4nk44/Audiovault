@@ -378,7 +378,8 @@ async def _check_local_cover_files(directory: str) -> Response | None:
         return None
 
     for name in ["cover.jpg", "cover.png", "cover.jpeg", "folder.jpg", "front.jpg", "album.jpg"]:
-        local_path = os.path.join(directory, name)  # nosemgrep: path-traversal  # directory validated above, name is hardcoded
+        # directory validated above, name is hardcoded
+        local_path = os.path.join(directory, name)  # nosemgrep: path-traversal
         if os.path.exists(local_path):
             async with aiofiles.open(local_path, "rb") as f:
                 content = await f.read()
@@ -522,7 +523,6 @@ async def get_cover_art(
 
         # 3b. Check embedded art (running in thread pool to avoid blocking)
         import asyncio
-
         import functools
 
         from app.core.executors import stream_executor
