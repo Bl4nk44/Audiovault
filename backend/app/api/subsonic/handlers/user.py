@@ -84,18 +84,18 @@ async def star(
     if album_id:
         for album_id_str in album_id:
             try:
-                album_id = UUID(album_id_str)
+                album_uuid = UUID(album_id_str)
 
                 album_result = await db.execute(
                     select(StarredAlbum).where(
                         StarredAlbum.user_id == current_user.id,
-                        StarredAlbum.album_id == album_id,
+                        StarredAlbum.album_id == album_uuid,
                     )
                 )
                 if not album_result.scalar_one_or_none():
                     new_starred_album = StarredAlbum(
                         user_id=current_user.id,
-                        album_id=album_id,
+                        album_id=album_uuid,
                     )
                     db.add(new_starred_album)
             except ValueError:
@@ -105,18 +105,18 @@ async def star(
     if artist_id:
         for artist_id_str in artist_id:
             try:
-                artist_id = UUID(artist_id_str)
+                artist_uuid = UUID(artist_id_str)
 
                 artist_result = await db.execute(
                     select(StarredArtist).where(
                         StarredArtist.user_id == current_user.id,
-                        StarredArtist.artist_id == artist_id,
+                        StarredArtist.artist_id == artist_uuid,
                     )
                 )
                 if not artist_result.scalar_one_or_none():
                     new_starred_artist = StarredArtist(
                         user_id=current_user.id,
-                        artist_id=artist_id,
+                        artist_id=artist_uuid,
                     )
                     db.add(new_starred_artist)
             except ValueError:
@@ -165,11 +165,11 @@ async def unstar(
     if album_id:
         for album_id_str in album_id:
             try:
-                album_id = UUID(album_id_str)
+                album_uuid = UUID(album_id_str)
                 await db.execute(
                     delete(StarredAlbum).where(
                         StarredAlbum.user_id == current_user.id,
-                        StarredAlbum.album_id == album_id,
+                        StarredAlbum.album_id == album_uuid,
                     )
                 )
             except ValueError:
@@ -179,11 +179,11 @@ async def unstar(
     if artist_id:
         for artist_id_str in artist_id:
             try:
-                artist_id = UUID(artist_id_str)
+                artist_uuid = UUID(artist_id_str)
                 await db.execute(
                     delete(StarredArtist).where(
                         StarredArtist.user_id == current_user.id,
-                        StarredArtist.artist_id == artist_id,
+                        StarredArtist.artist_id == artist_uuid,
                     )
                 )
             except ValueError:

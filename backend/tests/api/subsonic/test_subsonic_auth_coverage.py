@@ -78,6 +78,8 @@ async def test_subsonic_auth_wrong_password():
 @pytest.mark.asyncio
 async def test_create_auth_token_coverage():
     db = AsyncMock()
+    # db.add is synchronous in SQLAlchemy AsyncSession
+    db.add = MagicMock()
     user = User(id=1)
 
     # Just to cover the function and db interactions
@@ -85,6 +87,6 @@ async def test_create_auth_token_coverage():
         token_obj = await create_auth_token(db, user, "client", "1.0")
         assert token_obj.token == "t"
         assert token_obj.salt == "s"
-        assert db.add.called
+        db.add.assert_called_once_with(token_obj)
         assert db.commit.called
         assert db.refresh.called

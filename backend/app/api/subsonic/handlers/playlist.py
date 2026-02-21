@@ -39,7 +39,7 @@ ERR_ACCESS_DENIED = "Access denied"
 @router.get("/getPlaylists.view")
 @router.post("/getPlaylists.view")
 async def get_playlists(
-    username: str = Query(None, description="Get playlists for specific user"),
+    username: str | None = Query(None, description="Get playlists for specific user"),
     f: str = "xml",
     current_user: User = Depends(subsonic_auth),
     db: AsyncSession = Depends(get_db),
@@ -192,9 +192,9 @@ async def get_playlist(
 @router.get("/createPlaylist.view")
 @router.post("/createPlaylist.view")
 async def create_playlist(
-    playlist_id_param: str = Query(None, alias="playlistId", description="Playlist ID (for update)"),
-    name: str = Query(None, description="Playlist name"),
-    song_id: list[str] = Query(None, alias="songId", description="Song IDs to add"),
+    playlist_id_param: str | None = Query(None, alias="playlistId", description="Playlist ID (for update)"),
+    name: str | None = Query(None, description="Playlist name"),
+    song_id: list[str] | None = Query(None, alias="songId", description="Song IDs to add"),
     f: str = "xml",
     current_user: User = Depends(subsonic_auth),
     db: AsyncSession = Depends(get_db),
@@ -291,11 +291,13 @@ async def create_playlist(
 @router.post("/updatePlaylist.view")
 async def update_playlist(
     playlist_id_param: str = Query(..., alias="playlistId", description="Playlist ID"),
-    name: str = Query(None, description="New name"),
-    comment: str = Query(None, description="New comment"),
-    public: bool = Query(None, description="Public flag"),
-    song_id_to_add: list[str] = Query(None, alias="songIdToAdd", description="Songs to add"),
-    song_index_to_remove: list[int] = Query(None, alias="songIndexToRemove", description="Song indices to remove"),
+    name: str | None = Query(None, description="New name"),
+    comment: str | None = Query(None, description="New comment"),
+    public: bool | None = Query(None, description="Public flag"),
+    song_id_to_add: list[str] | None = Query(None, alias="songIdToAdd", description="Songs to add"),
+    song_index_to_remove: list[int] | None = Query(
+        None, alias="songIndexToRemove", description="Song indices to remove"
+    ),
     f: str = "xml",
     current_user: User = Depends(subsonic_auth),
     db: AsyncSession = Depends(get_db),
