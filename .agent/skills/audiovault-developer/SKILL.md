@@ -58,7 +58,6 @@ Audiovault/
 │   │   ├── services/api/     # API clients
 │   │   └── hooks/            # Custom hooks
 │   └── package.json
-├── memory-bank/          # AI agent memory
 ├── .agent/               # AI agent config
 └── docker-compose.yml    # Deployment
 ```
@@ -201,38 +200,6 @@ ws.onmessage = (event) => {
 - **Docstrings**: Google style for public APIs
 - **Imports**: Absolute imports, sorted
 
-```python
-from typing import Optional
-
-from fastapi import APIRouter, Depends
-from sqlalchemy.ext.asyncio import AsyncSession
-
-from app.core.deps import get_db
-from app.schemas.playlist import PlaylistCreate, PlaylistResponse
-from app.services.playlist_service import PlaylistService
-
-
-router = APIRouter(prefix="/playlists", tags=["playlists"])
-
-
-@router.post("/", response_model=PlaylistResponse)
-async def create_playlist(
-    playlist: PlaylistCreate,
-    db: AsyncSession = Depends(get_db)
-) -> PlaylistResponse:
-    """Create a new playlist.
-    
-    Args:
-        playlist: Playlist data
-        db: Database session
-        
-    Returns:
-        Created playlist with ID
-    """
-    service = PlaylistService(db)
-    return await service.create(playlist)
-```
-
 ### Frontend (TypeScript)
 
 - **Formatting**: Prettier (2-space indentation)
@@ -240,31 +207,6 @@ async def create_playlist(
 - **Components**: Functional components with TypeScript
 - **Props**: Interface definitions
 - **Exports**: Named exports preferred
-
-```typescript
-import React from 'react';
-import { Playlist } from '@/types';
-
-interface PlaylistCardProps {
-  playlist: Playlist;
-  onPlay: (id: number) => void;
-  onDelete: (id: number) => void;
-}
-
-export const PlaylistCard: React.FC<PlaylistCardProps> = ({
-  playlist,
-  onPlay,
-  onDelete
-}) => {
-  return (
-    <div className="playlist-card">
-      <h3>{playlist.name}</h3>
-      <button onClick={() => onPlay(playlist.id)}>Play</button>
-      <button onClick={() => onDelete(playlist.id)}>Delete</button>
-    </div>
-  );
-};
-```
 
 ### Commit Messages
 
@@ -276,7 +218,7 @@ refactor(backend): improve service layer structure
 test(frontend): add PlaylistCard component tests
 ```
 
-## 🧑‍🔬 Testing Strategy
+## 🧛‍🔬 Testing Strategy
 
 ### Backend Tests
 
@@ -285,38 +227,11 @@ test(frontend): add PlaylistCard component tests
 - **Coverage**: Aim for 80%+
 - **Fixtures**: Reusable in `conftest.py`
 
-```python
-import pytest
-from httpx import AsyncClient
-
-@pytest.mark.asyncio
-async def test_create_playlist(client: AsyncClient, auth_headers):
-    response = await client.post(
-        "/api/playlists",
-        json={"name": "Test Playlist", "service": "spotify"},
-        headers=auth_headers
-    )
-    assert response.status_code == 200
-    assert response.json()["data"]["name"] == "Test Playlist"
-```
-
 ### Frontend Tests
 
 - **Location**: `frontend/src/__tests__/` or `Component.test.tsx`
-- **Framework**: Jest + React Testing Library
+- **Framework**: Vitest + React Testing Library
 - **Focus**: User interactions, not implementation
-
-```typescript
-import { render, screen, fireEvent } from '@testing-library/react';
-import { PlaylistCard } from './PlaylistCard';
-
-test('renders playlist name', () => {
-  const playlist = { id: 1, name: 'My Playlist', trackCount: 10 };
-  render(<PlaylistCard playlist={playlist} onPlay={jest.fn()} onDelete={jest.fn()} />);
-  
-  expect(screen.getByText('My Playlist')).toBeInTheDocument();
-});
-```
 
 ## 🔗 Integration Points
 
@@ -335,12 +250,6 @@ test('renders playlist name', () => {
 - **Endpoints**: `/rest/ping`, `/rest/getPlaylists`, `/rest/stream`
 - **Clients**: Verified with Sonixd, Amperfy
 
-### Last.fm API
-
-- **OAuth**: 3-legged authentication
-- **Scrobbling**: Track submission after 50% played
-- **Recommendations**: Based on user's listening history
-
 ## ⚡ Performance Tips
 
 1. **Database Queries**: Always use `selectinload()` for relationships to avoid N+1
@@ -351,12 +260,12 @@ test('renders playlist name', () => {
 
 ## 🐛 Common Pitfalls
 
-❌ **Forgetting to await async functions** → Returns coroutine object, not result  
-❌ **Not handling download failures** → Use try/except with fallback chain  
-❌ **Modifying database models without migration** → Database out of sync  
-❌ **Storing secrets in code** → Use .env file  
-❌ **Not validating user input** → Use Pydantic schemas  
-❌ **Mixing sync and async code** → Backend must be fully async  
+❌ **Forgetting to await async functions** → Returns coroutine object, not result
+❌ **Not handling download failures** → Use try/except with fallback chain
+❌ **Modifying database models without migration** → Database out of sync
+❌ **Storing secrets in code** → Use .env file
+❌ **Not validating user input** → Use Pydantic schemas
+❌ **Mixing sync and async code** → Backend must be fully async
 
 ## 📌 Quick Commands
 
@@ -384,14 +293,4 @@ cd backend && black . && ruff check --fix .
 cd frontend && npm run format && npm run lint --fix
 ```
 
-## 📄 Documentation
-
-- **Main README**: `README.md`
-- **Contributing**: `CONTRIBUTING.md`
-- **API Docs**: Auto-generated at `/docs` (FastAPI Swagger UI)
-- **Wiki**: GitHub Wiki (Getting Started, Configuration, Usage)
-- **Changelog**: `CHANGELOG.md` (maintained via cliff.toml)
-
----
-
-**Remember:** Always read `memory-bank/` files first to understand current project state before making changes.
+**Remember:** Always read `.agent/memory-bank/` files first to understand current project state before making changes.

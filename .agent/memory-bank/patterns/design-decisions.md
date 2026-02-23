@@ -14,7 +14,7 @@
 **Migration:** `DATABASE_URL=postgresql+asyncpg://user:pass@localhost/audiovault`
 
 ### FastAPI over Flask/Django
-**Decision:** Native async (krytyczne dla downloadsów), auto OpenAPI docs, Pydantic type safety, WebSocket built-in
+**Decision:** Native async (krytyczne dla downloadów), auto OpenAPI docs, Pydantic type safety, WebSocket built-in
 **Trade-offs:** Mniej dojrzały ekosystem niż Flask, learning curve dla async
 
 ### yt-dlp over custom downloaders
