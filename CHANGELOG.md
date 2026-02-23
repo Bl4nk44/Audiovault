@@ -1,7 +1,7 @@
 # Changelog
 
 All notable changes to Audiovault will be documented in this file.
-## [Unreleased]
+## [0.12.0] - 2026-02-21
 
 ### Bug Fixes
 
@@ -9,11 +9,115 @@ All notable changes to Audiovault will be documented in this file.
 - **ci**: Resolve pyright errors, bandit security warnings, and ruff linting issues
 - **ci**: Resolve remaining test failures and lint errors in lyrics/lastfm services
 - **ci**: Resolve all test failures and upgrade axios
+- **frontend**: Resolve TS error in lastfm.test.ts by using correct LastfmProfile structure
+- Resolve all CI type errors, update tests, and improve code quality
+- Correct YAML syntax in agent.yaml configuration
+- Remove trailing spaces from agent.yaml
+- Improve secret detection to avoid false positives in documentation
+- Resolve mypy errors and stylistic issues in playlist handlers
+- Resolve downloading issues, improve playlists & watchlist behavior
+
+### CI/CD
+
+- Optimize GitHub workflows and add SonarQube integration
+- Optimize workflows and fix backend type errors
+- Configure machine-readable Semgrep reporting (JSON/SARIF)
+- Modernize Trivy config and enable JSON reporting artifacts
+- Add types-requests and types-aiofiles stubs for mypy
+- Update github/codeql-action to v4
+
+### Dependencies
+
+- **deps**: Bump the frontend-dependencies group across 1 directory with 10 updates
+- **deps**: Bump the frontend-dependencies group
+
+### Documentation
+
+- Update password instructions and security recommendations
+
+### Features
+
+- Add Trivy configuration for security scanning
+- Add Semgrep configuration for static code analysis
+- Add consolidated security scanning workflow
+- Add weekly dependency update report workflow
+- **security**: Remediate SonarQube findings and improve accessibility
+- Add AI agent configuration files (Memory Bank, Skills, Workflows)
+- Add progress tracking and session handover files
+- Add AI agent Skills for specialized development assistance
+- Add AI agent memory bank structure
+- Add AI agent skills for specialized tasks
+- Add AI agent workflows for development processes
+- Add agent configuration and optimization tools
+- Add final agent configuration files and documentation
+
+### Miscellaneous
+
+- Sonarqube tuning, trivy config, git-cliff changelog, fix CI tests
+- Sonarqube tuning, trivy config, git-cliff changelog, fix CI tests
+- **deps-dev**: Bump jsdom from 27.4.0 to 28.1.0 in /frontend
+- Remove unused pre-commit configuration
+- Initialize root Node.js project with `package.json` and remove various temporary and debug files.
+- Optimize imports and fix formatting in backend
+- Fix formatting in backend tests
+- **agent**: Consolidate .antigravity into .agent, optimize token usage
+- Remove .antigravity (consolidated into .agent)
+- Remove .antigravity (consolidated into .agent)
+- Remove .antigravity (consolidated into .agent)
+- Remove .antigravity (consolidated into .agent)
+- Remove .antigravity (consolidated into .agent)
+- Remove .antigravity (consolidated into .agent)
+- Remove .antigravity (consolidated into .agent)
+- Remove .antigravity (consolidated into .agent)
+- Remove .antigravity (consolidated into .agent)
+- Remove .antigravity (consolidated into .agent)
+- Remove .antigravity (consolidated into .agent)
+- Remove .antigravity (consolidated into .agent)
+- Remove last .antigravity files
+- Remove orphaned root memory-bank folder
+- **agent**: Add OpenMemory MCP integration, bump to v1.2.0
+- **agent**: Update OpenMemory config – WSL2 IP, supergateway transport, 6 tools, v1.3.0
+- Code quality improvements, subsonic API parametery, reduce cognitive complexity, frontend lyrics fix
+- Fix ruff CI failures and IDE-reported errors in Subsonic API and tests
+- **conductor**: Mark track 'Stabilizacja i weryfikacja API Subsonic oraz zwiększenie pokrycia testami' as complete
+- **conductor**: Archive track 'Stabilizacja i weryfikacja API Subsonic oraz zwiększenie pokrycia testami'
+- Ignore conductor temporary state and archives in .gitignore
+- Fix formatting, imports, and test mocks
+- Bump version to 0.12.0
+
+### Refactor
+
+- Improve Trivy ignore patterns
+- Configure Dependabot for alerts only without auto PRs
+
+### Styling
+
+- Fix Ruff formatting in scrobbler.py
+- Apply strict Ruff formatting to scrobbler.py
+- Format scrobbler.py with ruff
+- Apply ruff format to 26 files
+
+### Testing
+
+- Improve code coverage to ~90% for core modules and fix test regressions
+
+### Conductor
+
+- **setup**: Add conductor setup files
+- **plan**: Mark task 'Analiza obecnego stanu testów i API' as complete
+- **plan**: Mark task 'Poprawa błędnych testów i handlerów' as complete and add coverage boost tests
+
+### Security
+
+- Finalize SonarQube remediation and fix linting errors
+- Fix vulnerabilities and handle false positives in code scanning
+- Enhance PII protection and implement refresh token rotation
 
 ## [0.11.0] - 2026-02-10
 
 ### Bug Fixes
 
+- Rozwiazanie problemow CI i poprawki stabilnosci
 - **tests**: Resolve ruff lint errors in smoke tests
 - Resolve all 34 MyPy type errors across backend
 - Lint errors and code formatting in Handlers and Utils
@@ -188,3 +292,5 @@ All notable changes to Audiovault will be documented in this file.
 - Add Amperfy iOS compatibility tests for Subsonic API
 
 ## [0.9.0] - 2026-01-11
+
+
