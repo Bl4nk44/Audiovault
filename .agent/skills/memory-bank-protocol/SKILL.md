@@ -1,207 +1,190 @@
 ---
 name: memory-bank-protocol
-description: Teaches the agent to use memory-bank/ as single source of truth and persist context between sessions
+description: Hybrid memory system combining OpenMemory MCP (semantic persistence) with .agent/memory-bank/ static files (structural context). OpenMemory is the primary dynamic memory; memory-bank files are the structural foundation.
 ---
 
-# Memory Bank Protocol Skill
+# Memory Protocol – Hybrid (OpenMemory + Memory Bank)
 
-## 🧠 Purpose
+## 🧠 Architecture Overview
 
-This skill makes you treat `memory-bank/` as your **only persistent memory**. You have NO other memory between sessions. Every session starts fresh unless you read these files.
+This project uses **two complementary memory layers**:
 
-## 📂 Memory Bank Architecture
+| Layer | Source | What it stores | When used |
+|-------|--------|----------------|-----------|
+| **OpenMemory** (primary) | MCP tools: `openmemory_*` | Decisions, bugs, progress, recent changes | Dynamic – updated every session |
+| **Memory Bank** (structural) | `.agent/memory-bank/` files | Project brief, product context, tech stack, patterns | Static – updated when architecture changes |
 
-### Location
-`memory-bank/` (root of the project)
+> ⚠️ **OpenMemory is the primary source of truth for recent context.**
+> Memory-bank files provide structural/architectural foundation that changes rarely.
 
-### Core Files (MANDATORY READING ORDER)
+---
 
-When starting ANY task or session, you MUST read these files IN THIS EXACT ORDER:
+## 📂 Memory Bank Files (Structural Layer)
 
-1. **`memory-bank/core/current-state.md`** – 🎯 **THE NOW**
-   - What is currently happening
-   - Active development phase
-   - Current sprint tasks
-   - Known issues
+### Location: `.agent/memory-bank/` (NOT `memory-bank/` at project root)
 
-2. **`memory-bank/core/projectbrief.md`** – 📋 **THE MISSION**
-   - What we're building and why
-   - Vision and goals
-   - Target users
-   - Success metrics
+#### Core Files (always load at session start)
 
-3. **`memory-bank/core/productContext.md`** – 👥 **THE USER**
-   - User personas
-   - Pain points and goals
-   - User journey
-   - Market context
+1. **`.agent/memory-bank/core/current-state.md`** – Active tasks, current phase, known issues
+2. **`.agent/memory-bank/core/projectbrief.md`** – Mission, vision, goals, success metrics
+3. **`.agent/memory-bank/core/productContext.md`** – User personas, pain points, user journey
+4. **`.agent/memory-bank/core/techContext.md`** – Tech stack, architecture, environment setup
 
-4. **`memory-bank/technical/techContext.md`** – 🔧 **THE TOOLS**
-   - Technology stack
-   - Architecture overview
-   - Configuration files
-   - Environment setup
+#### Pattern Files (load when relevant to the task)
 
-5. **`memory-bank/technical/systemPatterns.md`** – 🏗️ **THE PATTERNS**
-   - Architecture guidelines
-   - Code patterns
-   - Best practices
-   - Testing strategies
+5. **`.agent/memory-bank/patterns/api-patterns.md`** – API design patterns, endpoint conventions
+6. **`.agent/memory-bank/patterns/common-issues.md`** – Known recurring issues, debugging notes
+7. **`.agent/memory-bank/patterns/design-decisions.md`** – Architectural decisions and their rationale
 
-6. **`memory-bank/core/progress.md`** – 📊 **THE HISTORY**
-   - Completed milestones
-   - Recent work
-   - Metrics and achievements
-   - Timeline
+---
 
-7. **`memory-bank/NOTES_NEXT_SESSION.md`** – 📝 **THE HANDOVER**
-   - Specific instructions for THIS session
-   - Context from last session
-   - Pending tasks
-   - Important reminders
+## 🔌 OpenMemory MCP Tools
 
-## ✅ Mandatory Rules
+All six tools are enabled via the `openmemory` MCP server in Antigravity:
 
-### Rule 1: Boot Context
-**BEFORE doing ANYTHING, read all memory-bank files in the order listed above.**
+| Tool | Purpose |
+|------|---------|
+| `openmemory_query` | Search semantic/episodic memories by keyword |
+| `openmemory_store` | Persist a new memory (decision, fix, progress) |
+| `openmemory_reinforce` | Boost salience of an important existing memory |
+| `openmemory_delete` | Remove an outdated or incorrect memory |
+| `openmemory_list` | List the most recent memories |
+| `openmemory_get` | Fetch a single memory by its identifier |
 
-Example start of session:
+---
+
+## 🚀 Session Start Protocol (MANDATORY)
+
+**Execute this BEFORE responding to any user task:**
+
+### Step 1 – Query OpenMemory (dynamic context)
+
 ```
-User: "Add a new feature to import from Bandcamp"
-
-Your response:
-1. Read memory-bank/core/current-state.md
-2. Read memory-bank/core/projectbrief.md
-3. Read memory-bank/core/productContext.md
-4. Read memory-bank/technical/techContext.md
-5. Read memory-bank/technical/systemPatterns.md
-6. Read memory-bank/core/progress.md
-7. Read memory-bank/NOTES_NEXT_SESSION.md
-8. NOW understand the task and respond appropriately
+openmemory_query("Audiovault current state progress recent decisions")
+openmemory_query("active tasks blockers recent changes")
 ```
 
-### Rule 2: Date Verification
-**ALWAYS verify the current date before updating any memory-bank documents.**
+### Step 2 – Read core memory-bank files (structural context)
 
-Incorrect dates in documents cause context confusion.
+```
+Read: .agent/memory-bank/core/current-state.md
+Read: .agent/memory-bank/core/projectbrief.md
+Read: .agent/memory-bank/core/techContext.md
+```
 
-### Rule 3: Update Protocol
+Load pattern files only when the task touches API design, architecture, or known issues.
 
-**When making changes to the project:**
+### Step 3 – Synthesize
 
-1. **Update `current-state.md`** if:
-   - Starting a new task
-   - Changing development phase
-   - Discovering new issues
+Combine OpenMemory results (recent) with memory-bank context (structural) before responding.
+Do NOT ask the user for context that either source already provides.
 
-2. **Update `progress.md`** if:
-   - Completing a milestone
-   - Finishing a feature
-   - Recording metrics
+---
 
-3. **Update `NOTES_NEXT_SESSION.md`** if:
-   - Leaving context for next session
-   - Documenting decisions made
-   - Noting challenges encountered
+## 💾 During-Session Storage Protocol
 
-### Rule 4: Session Closing Protocol
+**Call `openmemory_store` immediately when:**
 
-When the user says "finish session", "end session", "done for today", or similar:
+- A significant architectural or design decision is made
+- A bug is identified or fixed
+- A new pattern or convention is established
+- A feature is completed or blocked
+- Important configuration detail is discovered
 
-1. **Update `current-state.md`**
-   - Reflect the latest status of tasks
-   - Add any new known issues
-   - Update active sprint items
+**Recommended memory format:**
 
-2. **Update `progress.md`**
-   - Log completed milestones from this session
-   - Update metrics if applicable
-   - Add timestamp for recent work
+```
+[YYYY-MM-DD] [CATEGORY]: <clear, searchable, self-contained description>
+```
 
-3. **Rewrite `NOTES_NEXT_SESSION.md`**
-   - Clear instructions for the "next you"
-   - Context about what was done this session
-   - What to continue working on
-   - Any important decisions or blockers
+**Categories:** `DECISION` · `BUG_FIX` · `FEATURE` · `BLOCKER` · `PATTERN` · `CONFIG` · `SESSION_SUMMARY`
 
-4. **Cleanup**
-   - Remove temporary files
-   - Clean up debug logs
-   - Ensure code is in working state
+**Example:**
 
-### Rule 5: Language Usage
+```
+openmemory_store(
+  content="[2026-02-23] DECISION: Switched download queue from threading to asyncio.Queue. Reason: eliminates blocking in FastAPI event loop. File: backend/services/download_service.py",
+  metadata={"sector": "procedural", "project": "audiovault"}
+)
+```
 
-- **Code, comments, and memory-bank files**: ALWAYS in English
-- **User-facing UI**: Polish (as per project i18n)
-- **Commit messages**: English
-- **Documentation**: English
+---
+
+## 🔚 Session End Protocol
+
+When user says "finish session", "end session", "done for today", or similar:
+
+### 1. Store session summary to OpenMemory
+
+```
+openmemory_store(
+  content="[DATE] SESSION_SUMMARY: <what was accomplished, key decisions, what to continue next session>",
+  metadata={"sector": "episodic", "project": "audiovault"}
+)
+```
+
+### 2. Update memory-bank ONLY if structural context changed
+
+Update these files only when the underlying architecture/context shifts – not after every session:
+
+- `.agent/memory-bank/core/current-state.md` – if active tasks or development phase changed
+- `.agent/memory-bank/core/techContext.md` – ONLY if tech stack changed
+- `.agent/memory-bank/patterns/design-decisions.md` – ONLY if a new architectural pattern was established
+- `.agent/memory-bank/patterns/common-issues.md` – if a new recurring issue was discovered
+
+---
+
+## ✅ Rules
+
+### Rule 1: OpenMemory First
+Always query OpenMemory **before** reading memory-bank files. OpenMemory has the most recent context.
+
+### Rule 2: Store Decisions Immediately
+Do not wait until session end. Store important decisions and bug fixes as they happen during the session.
+
+### Rule 3: Correct Paths
+Memory bank is at **`.agent/memory-bank/`** – never `memory-bank/` at the project root (that directory does not exist).
+
+### Rule 4: Language
+- Code, comments, memory-bank files, OpenMemory entries → **English**
+- User-facing UI text → **Polish** (project uses i18n)
+- Commit messages → **English**
+
+### Rule 5: Date Verification
+Always verify the current date before storing memories or updating any files to avoid temporal confusion.
+
+---
 
 ## 🚨 Anti-Patterns (DO NOT DO THIS)
 
-❌ **Don't assume context from previous conversations** – You don't remember them  
-❌ **Don't skip reading memory-bank files** – They are your only memory  
-❌ **Don't update files without verifying date** – Causes temporal confusion  
-❌ **Don't end session without updating handover notes** – Next session will be lost  
-❌ **Don't write code that contradicts systemPatterns.md** – Architectural consistency matters  
-❌ **Don't add features without checking projectbrief.md** – Stay aligned with mission  
-
-## 📝 Example Workflow
-
-### Starting a New Feature
-
-```markdown
-1. User requests: "Add Bandcamp integration"
-
-2. Agent reads memory-bank files (1-7 in order)
-
-3. Agent checks:
-   - Is this aligned with projectbrief.md mission? ✓
-   - Does current-state.md mention this? (check priority)
-   - What patterns from systemPatterns.md apply?
-   - Are there similar features in progress.md?
-
-4. Agent implements feature following patterns
-
-5. Agent updates:
-   - current-state.md: Add task to active list
-   - progress.md: Mark milestone when complete
-   - NOTES_NEXT_SESSION.md: Note next steps if unfinished
-```
-
-### Debugging an Issue
-
-```markdown
-1. User reports: "Download fails for Spotify playlists"
-
-2. Agent reads memory-bank files (especially current-state for known issues)
-
-3. Agent checks:
-   - Is this a known issue in current-state.md?
-   - What's the download architecture in techContext.md?
-   - What patterns apply from systemPatterns.md?
-
-4. Agent investigates and fixes
-
-5. Agent updates:
-   - current-state.md: Remove from known issues if fixed
-   - progress.md: Log the fix
-   - NOTES_NEXT_SESSION.md: Document root cause for future reference
-```
-
-## 📊 Success Indicators
-
-- Agent never asks "What is Audiovault?" after reading projectbrief.md
-- Agent follows architecture patterns from systemPatterns.md
-- Agent references current-state.md when prioritizing tasks
-- Context persists between sessions via NOTES_NEXT_SESSION.md
-- Agent updates memory-bank appropriately as work progresses
-
-## 🔗 Related Files
-
-- All files in `memory-bank/` directory
-- `.agent/skills/audiovault-developer/SKILL.md` for project-specific knowledge
-- `.agent/workflows/*.md` for procedural tasks
+❌ Skipping `openmemory_query` at session start – you will miss recent context  
+❌ Using path `memory-bank/` – correct path is `.agent/memory-bank/`  
+❌ Treating memory-bank files as the ONLY memory – OpenMemory is the primary dynamic layer  
+❌ Storing everything in memory-bank markdown instead of OpenMemory (wrong layer for dynamic data)  
+❌ Ending session without storing a summary to OpenMemory  
+❌ Asking the user for context that OpenMemory or memory-bank already contains  
+❌ Hardcoding the OpenMemory API key in any file – use `OM_API_KEY` env var  
 
 ---
 
-**Remember:** You are only as smart as the Memory Bank. Keep it updated, and it will keep you context-aware.
+## 📊 Memory Layer Decision Guide
+
+| Information type | Store where? |
+|-----------------|--------------|
+| What I decided in today's session | `openmemory_store` |
+| Bug found or fixed today | `openmemory_store` |
+| Current sprint/task progress | `openmemory_store` |
+| Project tech stack & architecture | `.agent/memory-bank/core/techContext.md` |
+| API design conventions | `.agent/memory-bank/patterns/api-patterns.md` |
+| Project mission and vision | `.agent/memory-bank/core/projectbrief.md` |
+| Recurring known issues | `.agent/memory-bank/patterns/common-issues.md` |
+
+**Principle:** OpenMemory remembers *what happened*. Memory-bank files remember *who we are*.
+
+---
+
+## 🔗 Related Files
+
+- `.agent/agent.yaml` – full agent configuration including OpenMemory MCP endpoint
+- `.agent/skills/audiovault-developer/SKILL.md` – project-specific knowledge
+- `.agent/workflows/` – procedural task workflows
