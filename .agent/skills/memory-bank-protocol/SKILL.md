@@ -157,13 +157,13 @@ Always verify the current date before storing memories or updating any files to 
 
 ## 🚨 Anti-Patterns (DO NOT DO THIS)
 
-❌ Skipping `openmemory_query` at session start – you will miss recent context  
-❌ Using path `memory-bank/` – correct path is `.agent/memory-bank/`  
-❌ Treating memory-bank files as the ONLY memory – OpenMemory is the primary dynamic layer  
-❌ Storing everything in memory-bank markdown instead of OpenMemory (wrong layer for dynamic data)  
-❌ Ending session without storing a summary to OpenMemory  
-❌ Asking the user for context that OpenMemory or memory-bank already contains  
-❌ Hardcoding the OpenMemory API key in any file – use `OM_API_KEY` env var  
+❌ Skipping `openmemory_query` at session start – you will miss recent context
+❌ Using path `memory-bank/` – correct path is `.agent/memory-bank/`
+❌ Treating memory-bank files as the ONLY memory – OpenMemory is the primary dynamic layer
+❌ Storing everything in memory-bank markdown instead of OpenMemory (wrong layer for dynamic data)
+❌ Ending session without storing a summary to OpenMemory
+❌ Asking the user for context that OpenMemory or memory-bank already contains
+❌ Hardcoding the OpenMemory API key in any file – use `OM_API_KEY` env var
 
 ---
 
