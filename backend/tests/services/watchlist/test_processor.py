@@ -82,9 +82,10 @@ async def test_fetch_spotify_artist_tracks(processor, mock_spotify_service):
     item.watch_type = "artist"
     item.source = "spotify"
     item.source_id = "artist_id"
+    item.source_name = "Test Artist"
 
     mock_spotify_service.get_artist_albums.return_value = [{"id": "a1"}]
-    mock_spotify_service.get_album_tracks.return_value = [{"id": "t1", "title": "S1"}]
+    mock_spotify_service.get_album_tracks.return_value = [{"id": "t1", "title": "S1", "artist": "test artist"}]
 
     tracks = await processor.fetch_tracks_for_item(item)
 
@@ -100,8 +101,9 @@ async def test_fetch_youtube_artist_tracks(processor, mock_youtube_service):
     item.watch_type = "channel"
     item.source = "youtube"
     item.source_id = "channel_id"
+    item.source_name = "Test Channel"
 
-    mock_youtube_service.get_artist_tracks.return_value = [{"id": "t1", "title": "S1"}]
+    mock_youtube_service.get_artist_tracks.return_value = [{"id": "t1", "title": "S1", "artist": "test channel"}]
 
     tracks = await processor.fetch_tracks_for_item(item)
 
@@ -185,9 +187,10 @@ async def test_fetch_artist_spotify_sync_mock(processor, mock_spotify_service):
     item.watch_type = "artist"
     item.source = "spotify"
     item.source_id = "a1"
+    item.source_name = "Test Artist"
 
     mock_spotify_service.get_artist_albums.return_value = [{"id": "alb1"}]
-    mock_spotify_service.get_album_tracks.return_value = [{"id": "t1", "title": "T1"}]
+    mock_spotify_service.get_album_tracks.return_value = [{"id": "t1", "title": "T1", "artist": "test artist"}]
 
     tracks = await processor.fetch_tracks_for_item(item)
     assert len(tracks) == 1
