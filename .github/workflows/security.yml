@@ -39,12 +39,12 @@ jobs:
           severity: 'CRITICAL,HIGH,MEDIUM'
           exit-code: '0'  # Don't fail the build
 
-      - name: Upload Trivy results to GitHub Security
-        uses: github/codeql-action/upload-sarif@v4
+      - name: Archive Trivy FS results
+        uses: actions/upload-artifact@v4
         if: always()
         with:
-          sarif_file: 'trivy-results.sarif'
-          category: 'trivy-filesystem'
+          name: trivy-fs-results-sarif
+          path: trivy-results.sarif
 
       - name: Run Trivy vulnerability scanner (filesystem JSON)
         uses: aquasecurity/trivy-action@master
@@ -113,12 +113,12 @@ jobs:
           severity: 'CRITICAL,HIGH,MEDIUM'
           exit-code: '0'
 
-      - name: Upload Docker scan results
-        uses: github/codeql-action/upload-sarif@v4
+      - name: Archive Trivy Docker results (${{ matrix.image.name }})
+        uses: actions/upload-artifact@v4
         if: always()
         with:
-          sarif_file: 'trivy-docker-${{ matrix.image.name }}.sarif'
-          category: 'trivy-docker-${{ matrix.image.name }}'
+          name: trivy-docker-${{ matrix.image.name }}-sarif
+          path: trivy-docker-${{ matrix.image.name }}.sarif
 
       - name: Run Trivy on Docker image (JSON)
         uses: aquasecurity/trivy-action@master
@@ -181,12 +181,12 @@ jobs:
           name: semgrep-results
           path: semgrep-results.json
 
-      - name: Upload Semgrep results to GitHub Security
-        uses: github/codeql-action/upload-sarif@v4
+      - name: Archive Semgrep SARIF results
+        uses: actions/upload-artifact@v4
         if: always()
         with:
-          sarif_file: 'semgrep-results.sarif'
-          category: 'semgrep'
+          name: semgrep-results-sarif
+          path: semgrep-results.sarif
 
       - name: Run Semgrep (console output)
         run: |
@@ -222,12 +222,12 @@ jobs:
           output: 'trivy-secrets.sarif'
           exit-code: '1'  # Fail on secrets
 
-      - name: Upload secret scan results
-        uses: github/codeql-action/upload-sarif@v4
+      - name: Archive secret scan results
+        uses: actions/upload-artifact@v4
         if: always()
         with:
-          sarif_file: 'trivy-secrets.sarif'
-          category: 'trivy-secrets'
+          name: trivy-secrets-sarif
+          path: trivy-secrets.sarif
 
   # ==============================================
   # License Compliance
@@ -263,16 +263,44 @@ jobs:
       contents: read
 
     steps:
-      - name: Check job status
+      - name: Prepare Email Body
+        if: always()
         run: |
-          echo "## Security Scan Results" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "- **Trivy Scan**: ${{ needs.trivy-scan.result }}" >> $GITHUB_STEP_SUMMARY
-          echo "- **Semgrep Analysis**: ${{ needs.semgrep.result }}" >> $GITHUB_STEP_SUMMARY
-          echo "- **Secret Scan**: ${{ needs.secret-scan.result }}" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
+          REPORT_FILE="security-report.txt"
+          echo "GitHub Security Scan Report" > $REPORT_FILE
+          echo "===========================" >> $REPORT_FILE
+          echo "Repository: ${{ github.repository }}" >> $REPORT_FILE
+          echo "Branch: ${{ github.ref_name }}" >> $REPORT_FILE
+          echo "Commit: ${{ github.sha }}" >> $REPORT_FILE
+          echo "" >> $REPORT_FILE
+          echo "## Job Statuses" >> $REPORT_FILE
+          echo "- Trivy Scan: ${{ needs.trivy-scan.result }}" >> $REPORT_FILE
+          echo "- Semgrep Analysis: ${{ needs.semgrep.result }}" >> $REPORT_FILE
+          echo "- Secret Scan: ${{ needs.secret-scan.result }}" >> $REPORT_FILE
+          echo "" >> $REPORT_FILE
           
           if [[ "${{ needs.secret-scan.result }}" == "failure" ]]; then
-            echo "⚠️ **WARNING**: Secrets detected in repository!" >> $GITHUB_STEP_SUMMARY
+            echo "⚠️ WARNING: Secrets detected in repository!" >> $REPORT_FILE
+          fi
+          
+          echo "Full results are available in the job artifacts." >> $REPORT_FILE
+
+      - name: Send Email Report
+        uses: dawidd6/action-send-mail@v4
+        if: always()
+        with:
+          server_address: ${{ secrets.MAIL_SERVER }}
+          server_port: 465
+          username: ${{ secrets.MAIL_USERNAME }}
+          password: ${{ secrets.MAIL_PASSWORD }}
+          subject: "GitHub Security Report: ${{ github.repository }} (${{ github.ref_name }})"
+          to: ${{ secrets.MAIL_DESTINATION }}
+          from: "GitHub Actions <${{ secrets.MAIL_USERNAME }}>"
+          body: file://security-report.txt
+
+      - name: Job Failure Guard
+        if: always()
+        run: |
+          if [[ "${{ needs.secret-scan.result }}" == "failure" ]]; then
             exit 1
           fi
