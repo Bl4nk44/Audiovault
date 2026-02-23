@@ -303,3 +303,4 @@ jobs:
         run: |
           if [[ "${{ needs.secret-scan.result }}" == "failure" ]]; then
             exit 1
+          fi
