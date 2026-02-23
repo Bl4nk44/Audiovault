@@ -40,14 +40,15 @@ async def test_search_master(mock_db, test_user):
     track = Track(id=uuid.uuid4(), title="Tra", album_id=album.id)
     dl = Download(id=1, status="completed")
 
-    mock_db.execute.side_effect = [
-        MagicMock(scalars=lambda: MagicMock(all=lambda: [artist])),
-        MagicMock(scalars=lambda: MagicMock(all=lambda: [album])),
-        MagicMock(all=lambda: [(track, dl)]),
-        MagicMock(scalars=lambda: MagicMock(all=lambda: [artist])),
-        MagicMock(scalars=lambda: MagicMock(all=lambda: [album])),
-        MagicMock(all=lambda: [(track, dl)]),
-    ]
+    # Mock scalars().all() for artists and albums, and all() for joined results
+    mock_scalars = MagicMock()
+    mock_scalars.all.side_effect = [[artist], [album], [artist], [album]]
+    
+    mock_result = MagicMock()
+    mock_result.scalars.return_value = mock_scalars
+    mock_result.all.return_value = [(track, dl)]
+
+    mock_db.execute.return_value = mock_result
 
     await search2("q", 1, 0, 1, 0, 1, 0, None, "json", test_user, mock_db)
     await search3("q", 1, 0, 1, 0, 1, 0, None, "json", test_user, mock_db)
