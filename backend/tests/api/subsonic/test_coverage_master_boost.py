@@ -7,19 +7,12 @@ import uuid
 from unittest.mock import AsyncMock, MagicMock
 
 import pytest
-from app.api.subsonic.handlers.info import (
-    get_artist_info,
-)
+from app.api.subsonic.handlers.info import get_artist_info
 from app.api.subsonic.handlers.lists import get_album_list
 from app.api.subsonic.handlers.search import search2, search3
 from app.api.subsonic.handlers.system import get_license, ping
 from app.api.subsonic.handlers.system import get_user as get_user_subsonic
-from app.api.subsonic.handlers.user import (
-    get_starred,
-    set_rating,
-    star,
-    unstar,
-)
+from app.api.subsonic.handlers.user import get_starred, set_rating, star, unstar
 from app.models.album import Album
 from app.models.artist import Artist
 from app.models.download import Download
