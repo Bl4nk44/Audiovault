@@ -43,7 +43,7 @@ async def test_search_master(mock_db, test_user):
     # Mock scalars().all() for artists and albums, and all() for joined results
     mock_scalars = MagicMock()
     mock_scalars.all.side_effect = [[artist], [album], [artist], [album]]
-    
+
     mock_result = MagicMock()
     mock_result.scalars.return_value = mock_scalars
     mock_result.all.return_value = [(track, dl)]
