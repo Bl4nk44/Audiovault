@@ -56,7 +56,7 @@ async def search_legacy(
     search_term = f"%{query_text.lower()}%"
 
     result = await db.execute(
-        select(Track, Download)
+        select(Track, Download)  # nosemgrep: python.fastapi.db.generic-sql-fastapi.generic-sql-fastapi
         .join(Download, Download.track_id == Track.id)
         .where(
             Download.user_id == current_user.id,
@@ -115,7 +115,7 @@ async def search2(
     artists_result = []
     if artist_count > 0:
         result = await db.execute(
-            select(Artist)
+            select(Artist)  # nosemgrep: python.fastapi.db.generic-sql-fastapi.generic-sql-fastapi
             .join(Track, Track.artist_id == Artist.id)
             .join(Download, Download.track_id == Track.id)
             .where(
@@ -149,7 +149,7 @@ async def search2(
     albums_result = []
     if album_count > 0:
         albums_result_db = await db.execute(
-            select(Album)
+            select(Album)  # nosemgrep: python.fastapi.db.generic-sql-fastapi.generic-sql-fastapi
             .join(Track, Track.album_id == Album.id)
             .outerjoin(Download, (Download.track_id == Track.id) & (Download.user_id == current_user.id))
             .where(
@@ -199,7 +199,7 @@ async def search2(
     songs_result = []
     if song_count > 0:
         songs_result_db = await db.execute(
-            select(Track, Download)
+            select(Track, Download)  # nosemgrep: python.fastapi.db.generic-sql-fastapi.generic-sql-fastapi
             .join(Download, Download.track_id == Track.id)
             .where(
                 Download.user_id == current_user.id,
@@ -266,7 +266,7 @@ async def search3(
     artists_result = []
     if artist_count > 0:
         artists_result_db = await db.execute(
-            select(Artist)
+            select(Artist)  # nosemgrep: python.fastapi.db.generic-sql-fastapi.generic-sql-fastapi
             .join(Track, Track.artist_id == Artist.id)
             .join(Download, Download.track_id == Track.id)
             .where(
@@ -299,7 +299,7 @@ async def search3(
     albums_result = []
     if album_count > 0:
         albums_result_db = await db.execute(
-            select(Album)
+            select(Album)  # nosemgrep: python.fastapi.db.generic-sql-fastapi.generic-sql-fastapi
             .join(Track, Track.album_id == Album.id)
             .join(Download, Download.track_id == Track.id)
             .where(
@@ -358,6 +358,7 @@ async def search3(
     # Search songs (same as search2)
     songs_result = []
     if song_count > 0:
+        # nosemgrep: python.fastapi.db.generic-sql-fastapi.generic-sql-fastapi
         songs_result_db = await db.execute(
             select(Track, Download)
             .outerjoin(Download, (Download.track_id == Track.id) & (Download.user_id == current_user.id))

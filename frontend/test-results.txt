@@ -1,0 +1,1313 @@
+
+[1m[46m RUN [49m[22m [36mv4.0.18 [39m[90m/home/mati/dev/Audiovault/frontend[39m
+
+[90mstdout[2m | src/components/sync/SyncModal.test.tsx
+[22m[39m--> Loading setupTests.ts with FakeAudioContext
+
+[90mstdout[2m | src/components/settings/SettingsPanel.test.tsx
+[22m[39m--> Loading setupTests.ts with FakeAudioContext
+
+[90mstdout[2m | src/pages/AlbumDetails.test.tsx
+[22m[39m--> Loading setupTests.ts with FakeAudioContext
+
+[90mstdout[2m | src/components/player/LyricsPanel.test.tsx
+[22m[39m--> Loading setupTests.ts with FakeAudioContext
+
+[90mstdout[2m | src/api/albums.test.ts
+[22m[39m--> Loading setupTests.ts with FakeAudioContext
+
+[90mstdout[2m | src/pages/Dashboard.test.tsx
+[22m[39m--> Loading setupTests.ts with FakeAudioContext
+
+[90mstdout[2m | src/components/player/ProgressBar.test.tsx
+[22m[39m--> Loading setupTests.ts with FakeAudioContext
+
+[90mstdout[2m | src/components/player/PlayerControls.test.tsx
+[22m[39m--> Loading setupTests.ts with FakeAudioContext
+
+[90mstdout[2m | src/components/player/VolumeControl.test.tsx
+[22m[39m--> Loading setupTests.ts with FakeAudioContext
+
+[90mstdout[2m | src/components/common/Navbar.test.tsx
+[22m[39m--> Loading setupTests.ts with FakeAudioContext
+
+[90mstdout[2m | src/components/search/PlaylistCard.test.tsx
+[22m[39m--> Loading setupTests.ts with FakeAudioContext
+
+[90mstdout[2m | src/pages/Search.test.tsx
+[22m[39m--> Loading setupTests.ts with FakeAudioContext
+
+[90mstdout[2m | src/pages/Library.test.tsx
+[22m[39m--> Loading setupTests.ts with FakeAudioContext
+
+[90mstdout[2m | src/pages/Register.test.tsx
+[22m[39m--> Loading setupTests.ts with FakeAudioContext
+
+[90mstdout[2m | src/pages/ArtistProfile.test.tsx
+[22m[39m--> Loading setupTests.ts with FakeAudioContext
+
+[90mstdout[2m | src/pages/Logs.test.tsx
+[22m[39m--> Loading setupTests.ts with FakeAudioContext
+
+[90mstdout[2m | src/components/ErrorBoundary.test.tsx
+[22m[39m--> Loading setupTests.ts with FakeAudioContext
+
+[90mstdout[2m | src/pages/Login.test.tsx
+[22m[39m--> Loading setupTests.ts with FakeAudioContext
+
+[90mstdout[2m | src/components/search/ArtistCard.test.tsx
+[22m[39m--> Loading setupTests.ts with FakeAudioContext
+
+[90mstdout[2m | src/components/search/SearchBar.test.tsx
+[22m[39m--> Loading setupTests.ts with FakeAudioContext
+
+[90mstdout[2m | src/pages/PlaylistDetails.test.tsx
+[22m[39m--> Loading setupTests.ts with FakeAudioContext
+
+[90mstdout[2m | src/components/queue/DownloadQueue.test.tsx
+[22m[39m--> Loading setupTests.ts with FakeAudioContext
+
+[90mstdout[2m | src/pages/NotFound.test.tsx
+[22m[39m--> Loading setupTests.ts with FakeAudioContext
+
+[90mstdout[2m | src/api/artists.test.ts
+[22m[39m--> Loading setupTests.ts with FakeAudioContext
+
+[90mstdout[2m | src/components/search/SearchResults.test.tsx
+[22m[39m--> Loading setupTests.ts with FakeAudioContext
+
+[90mstdout[2m | src/components/import/PlaylistImport.test.tsx
+[22m[39m--> Loading setupTests.ts with FakeAudioContext
+
+[90mstdout[2m | src/components/settings/AccountSettings.test.tsx
+[22m[39m--> Loading setupTests.ts with FakeAudioContext
+
+[90mstdout[2m | src/components/auth/LoginForm.test.tsx
+[22m[39m--> Loading setupTests.ts with FakeAudioContext
+
+[90mstdout[2m | src/api/playlists.test.ts
+[22m[39m--> Loading setupTests.ts with FakeAudioContext
+
+[90mstdout[2m | src/components/watchlist/WatchlistManager.test.tsx
+[22m[39m--> Loading setupTests.ts with FakeAudioContext
+
+[90mstdout[2m | src/components/search/TrackCard.test.tsx
+[22m[39m--> Loading setupTests.ts with FakeAudioContext
+
+ [31m❯[39m src/api/artists.test.ts [2m([22m[2m5 tests[22m[2m | [22m[31m3 failed[39m[2m)[22m[32m 17[2mms[22m[39m
+       [32m✓[39m should fetch artists with default pagination[32m 3[2mms[22m[39m
+       [32m✓[39m should fetch artists with custom pagination[32m 1[2mms[22m[39m
+[31m       [31m×[31m should fetch artist by id using local endpoint by default[39m[32m 8[2mms[22m[39m
+[31m       [31m×[31m should fetch artist from spotify endpoint when source is spotify[39m[32m 1[2mms[22m[39m
+[31m       [31m×[31m should use local endpoint for non-spotify sources[39m[32m 1[2mms[22m[39m
+ [31m❯[39m src/api/albums.test.ts [2m([22m[2m3 tests[22m[2m | [22m[31m3 failed[39m[2m)[22m[32m 18[2mms[22m[39m
+[31m       [31m×[31m should fetch album from spotify endpoint by default[39m[32m 10[2mms[22m[39m
+[31m       [31m×[31m should fetch album from spotify endpoint when source is spotify[39m[32m 2[2mms[22m[39m
+[31m       [31m×[31m should throw error for unsupported sources[39m[32m 4[2mms[22m[39m
+ [31m❯[39m src/api/playlists.test.ts [2m([22m[2m4 tests[22m[2m | [22m[31m3 failed[39m[2m)[22m[32m 22[2mms[22m[39m
+[31m       [31m×[31m should fetch playlist from spotify endpoint by default[39m[32m 16[2mms[22m[39m
+[31m       [31m×[31m should fetch playlist from spotify when source is spotify[39m[32m 1[2mms[22m[39m
+       [32m✓[39m should fetch playlist from youtube when source is youtube[32m 0[2mms[22m[39m
+[31m       [31m×[31m should throw error for unsupported sources[39m[32m 2[2mms[22m[39m
+[90mstderr[2m | src/components/search/SearchBar.test.tsx[2m > [22m[2mSearchBar[2m > [22m[2mrenders with initial values
+[22m[39mReact does not recognize the `whileHover` prop on a DOM element. If you intentionally want it to appear in the DOM as a custom attribute, spell it as lowercase `whilehover` instead. If you accidentally passed it from a parent component, remove it from the DOM element.
+React does not recognize the `whileTap` prop on a DOM element. If you intentionally want it to appear in the DOM as a custom attribute, spell it as lowercase `whiletap` instead. If you accidentally passed it from a parent component, remove it from the DOM element.
+
+ [32m✓[39m src/components/search/TrackCard.test.tsx [2m([22m[2m5 tests[22m[2m)[22m[32m 240[2mms[22m[39m
+[90mstderr[2m | src/pages/Dashboard.test.tsx[2m > [22m[2mDashboard Page[2m > [22m[2mrenders dashboard and fetches stats on mount
+[22m[39mReact does not recognize the `whileHover` prop on a DOM element. If you intentionally want it to appear in the DOM as a custom attribute, spell it as lowercase `whilehover` instead. If you accidentally passed it from a parent component, remove it from the DOM element.
+React does not recognize the `whileTap` prop on a DOM element. If you intentionally want it to appear in the DOM as a custom attribute, spell it as lowercase `whiletap` instead. If you accidentally passed it from a parent component, remove it from the DOM element.
+
+ [32m✓[39m src/components/search/SearchResults.test.tsx [2m([22m[2m3 tests[22m[2m)[22m[33m 351[2mms[22m[39m
+     [33m[2m✓[22m[39m renders loading skeletons [33m 330[2mms[22m[39m
+ [32m✓[39m src/components/ErrorBoundary.test.tsx [2m([22m[2m4 tests[22m[2m)[22m[33m 395[2mms[22m[39m
+     [33m[2m✓[22m[39m should display reload button [32m 300[2mms[22m[39m
+[90mstdout[2m | src/components/player/LyricsPanel.test.tsx[2m > [22m[2mLyricsPanel[2m > [22m[2mshould render and show loading state
+[22m[39mSearching lyrics for: "Test Artist" - "Test Song" (Refresh: false)
+
+ [32m✓[39m src/pages/Login.test.tsx [2m([22m[2m5 tests[22m[2m)[22m[33m 359[2mms[22m[39m
+ [32m✓[39m src/pages/Register.test.tsx [2m([22m[2m5 tests[22m[2m)[22m[33m 398[2mms[22m[39m
+     [33m[2m✓[22m[39m should render "Join Audiovault" heading [33m 325[2mms[22m[39m
+[90mstdout[2m | src/components/player/LyricsPanel.test.tsx[2m > [22m[2mLyricsPanel[2m > [22m[2mshould display lyrics when found
+[22m[39mSearching lyrics for: "Test Artist" - "Test Song" (Refresh: false)
+
+ [32m✓[39m src/pages/NotFound.test.tsx [2m([22m[2m5 tests[22m[2m)[22m[33m 406[2mms[22m[39m
+     [33m[2m✓[22m[39m should render home link [33m 324[2mms[22m[39m
+Not implemented: navigation to another Document
+ [32m✓[39m src/pages/Logs.test.tsx [2m([22m[2m6 tests[22m[2m)[22m[33m 316[2mms[22m[39m
+[90mstderr[2m | src/components/common/Navbar.test.tsx[2m > [22m[2mNavbar Component[2m > [22m[2mrenders navigation controls and user menu
+[22m[39mReact does not recognize the `whileHover` prop on a DOM element. If you intentionally want it to appear in the DOM as a custom attribute, spell it as lowercase `whilehover` instead. If you accidentally passed it from a parent component, remove it from the DOM element.
+React does not recognize the `whileTap` prop on a DOM element. If you intentionally want it to appear in the DOM as a custom attribute, spell it as lowercase `whiletap` instead. If you accidentally passed it from a parent component, remove it from the DOM element.
+
+[90mstdout[2m | src/components/player/LyricsPanel.test.tsx[2m > [22m[2mLyricsPanel[2m > [22m[2mshould display not found message
+[22m[39mSearching lyrics for: "Test Artist" - "Test Song" (Refresh: false)
+
+ [32m✓[39m src/components/player/ProgressBar.test.tsx [2m([22m[2m9 tests[22m[2m)[22m[33m 467[2mms[22m[39m
+     [33m[2m✓[22m[39m should render seek slider [33m 314[2mms[22m[39m
+[90mstdout[2m | src/components/player/LyricsPanel.test.tsx[2m > [22m[2mLyricsPanel[2m > [22m[2mshould display error state
+[22m[39mSearching lyrics for: "Test Artist" - "Test Song" (Refresh: false)
+
+ [32m✓[39m src/components/search/ArtistCard.test.tsx [2m([22m[2m9 tests[22m[2m)[22m[33m 517[2mms[22m[39m
+ [32m✓[39m src/components/search/PlaylistCard.test.tsx [2m([22m[2m11 tests[22m[2m)[22m[33m 473[2mms[22m[39m
+[90mstdout[2m | src/components/watchlist/WatchlistItem.test.tsx
+[22m[39m--> Loading setupTests.ts with FakeAudioContext
+
+[90mstdout[2m | src/components/player/Player.test.tsx
+[22m[39m--> Loading setupTests.ts with FakeAudioContext
+
+[90mstdout[2m | src/components/common/Sidebar.test.tsx
+[22m[39m--> Loading setupTests.ts with FakeAudioContext
+
+ [32m✓[39m src/components/watchlist/WatchlistManager.test.tsx [2m([22m[2m8 tests[22m[2m)[22m[33m 334[2mms[22m[39m
+[90mstderr[2m | src/components/queue/DownloadQueue.test.tsx[2m > [22m[2mDownloadQueue Component[2m > [22m[2mhandles error during fetch
+[22m[39mFailed to fetch queue Error: Fail
+    at [90m/home/mati/dev/Audiovault/frontend/[39msrc/components/queue/DownloadQueue.test.tsx:115:52
+    at [90mfile:///home/mati/dev/Audiovault/frontend/[39mnode_modules/[4m@vitest/runner[24m/dist/index.js:145:11
+    at [90mfile:///home/mati/dev/Audiovault/frontend/[39mnode_modules/[4m@vitest/runner[24m/dist/index.js:915:26
+    at [90mfile:///home/mati/dev/Audiovault/frontend/[39mnode_modules/[4m@vitest/runner[24m/dist/index.js:1243:20
+    at new Promise (<anonymous>)
+    at runWithTimeout [90m(file:///home/mati/dev/Audiovault/frontend/[39mnode_modules/[4m@vitest/runner[24m/dist/index.js:1209:10[90m)[39m
+    at [90mfile:///home/mati/dev/Audiovault/frontend/[39mnode_modules/[4m@vitest/runner[24m/dist/index.js:1653:37
+    at Traces.$ [90m(file:///home/mati/dev/Audiovault/frontend/[39mnode_modules/[4mvitest[24m/dist/chunks/traces.CCmnQaNT.js:142:27[90m)[39m
+    at trace [90m(file:///home/mati/dev/Audiovault/frontend/[39mnode_modules/[4mvitest[24m/dist/chunks/test.B8ej_ZHS.js:239:21[90m)[39m
+    at runTest [90m(file:///home/mati/dev/Audiovault/frontend/[39mnode_modules/[4m@vitest/runner[24m/dist/index.js:1653:12[90m)[39m
+
+ [32m✓[39m src/components/player/VolumeControl.test.tsx [2m([22m[2m10 tests[22m[2m)[22m[33m 585[2mms[22m[39m
+ [32m✓[39m src/components/queue/DownloadQueue.test.tsx [2m([22m[2m6 tests[22m[2m)[22m[32m 284[2mms[22m[39m
+ [32m✓[39m src/components/search/SearchBar.test.tsx [2m([22m[2m5 tests[22m[2m)[22m[33m 613[2mms[22m[39m
+     [33m[2m✓[22m[39m calls onSearch when form is submitted [33m 310[2mms[22m[39m
+ [32m✓[39m src/components/player/PlayerControls.test.tsx [2m([22m[2m8 tests[22m[2m)[22m[33m 697[2mms[22m[39m
+     [33m[2m✓[22m[39m should render all control buttons [33m 338[2mms[22m[39m
+[90mstderr[2m | src/components/settings/SettingsPanel.test.tsx[2m > [22m[2mSettingsPanel[2m > [22m[2mshows loading state initially
+[22m[39mAn update to SettingsPanel inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://react.dev/link/wrap-tests-with-act
+An update to SettingsPanel inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://react.dev/link/wrap-tests-with-act
+
+[90mstderr[2m | src/components/sync/SyncModal.test.tsx[2m > [22m[2mSyncModal[2m > [22m[2mshould handle errors during analysis
+[22m[39mError: Network error
+    at [90m/home/mati/dev/Audiovault/frontend/[39msrc/components/sync/SyncModal.test.tsx:159:48
+    at [90mfile:///home/mati/dev/Audiovault/frontend/[39mnode_modules/[4m@vitest/runner[24m/dist/index.js:145:11
+    at [90mfile:///home/mati/dev/Audiovault/frontend/[39mnode_modules/[4m@vitest/runner[24m/dist/index.js:915:26
+    at [90mfile:///home/mati/dev/Audiovault/frontend/[39mnode_modules/[4m@vitest/runner[24m/dist/index.js:1243:20
+    at new Promise (<anonymous>)
+    at runWithTimeout [90m(file:///home/mati/dev/Audiovault/frontend/[39mnode_modules/[4m@vitest/runner[24m/dist/index.js:1209:10[90m)[39m
+    at [90mfile:///home/mati/dev/Audiovault/frontend/[39mnode_modules/[4m@vitest/runner[24m/dist/index.js:1653:37
+    at Traces.$ [90m(file:///home/mati/dev/Audiovault/frontend/[39mnode_modules/[4mvitest[24m/dist/chunks/traces.CCmnQaNT.js:142:27[90m)[39m
+    at trace [90m(file:///home/mati/dev/Audiovault/frontend/[39mnode_modules/[4mvitest[24m/dist/chunks/test.B8ej_ZHS.js:239:21[90m)[39m
+    at runTest [90m(file:///home/mati/dev/Audiovault/frontend/[39mnode_modules/[4m@vitest/runner[24m/dist/index.js:1653:12[90m)[39m
+
+[90mstderr[2m | src/components/settings/SettingsPanel.test.tsx[2m > [22m[2mSettingsPanel[2m > [22m[2mhandles fetch settings error
+[22m[39mFailed to fetch settings: Error: Fetch failed
+    at [90m/home/mati/dev/Audiovault/frontend/[39msrc/components/settings/SettingsPanel.test.tsx:179:52
+    at [90mfile:///home/mati/dev/Audiovault/frontend/[39mnode_modules/[4m@vitest/runner[24m/dist/index.js:145:11
+    at [90mfile:///home/mati/dev/Audiovault/frontend/[39mnode_modules/[4m@vitest/runner[24m/dist/index.js:915:26
+    at [90mfile:///home/mati/dev/Audiovault/frontend/[39mnode_modules/[4m@vitest/runner[24m/dist/index.js:1243:20
+    at new Promise (<anonymous>)
+    at runWithTimeout [90m(file:///home/mati/dev/Audiovault/frontend/[39mnode_modules/[4m@vitest/runner[24m/dist/index.js:1209:10[90m)[39m
+    at [90mfile:///home/mati/dev/Audiovault/frontend/[39mnode_modules/[4m@vitest/runner[24m/dist/index.js:1653:37
+    at Traces.$ [90m(file:///home/mati/dev/Audiovault/frontend/[39mnode_modules/[4mvitest[24m/dist/chunks/traces.CCmnQaNT.js:142:27[90m)[39m
+    at trace [90m(file:///home/mati/dev/Audiovault/frontend/[39mnode_modules/[4mvitest[24m/dist/chunks/test.B8ej_ZHS.js:239:21[90m)[39m
+    at runTest [90m(file:///home/mati/dev/Audiovault/frontend/[39mnode_modules/[4m@vitest/runner[24m/dist/index.js:1653:12[90m)[39m
+
+[90mstderr[2m | src/components/settings/SettingsPanel.test.tsx[2m > [22m[2mSettingsPanel[2m > [22m[2mhandles save settings error
+[22m[39mFailed to save settings: Error: Save failed
+    at [90m/home/mati/dev/Audiovault/frontend/[39msrc/components/settings/SettingsPanel.test.tsx:191:53
+    at [90mfile:///home/mati/dev/Audiovault/frontend/[39mnode_modules/[4m@vitest/runner[24m/dist/index.js:915:20
+
+ [32m✓[39m src/components/import/PlaylistImport.test.tsx [2m([22m[2m5 tests[22m[2m)[22m[32m 208[2mms[22m[39m
+ [32m✓[39m src/components/common/Navbar.test.tsx [2m([22m[2m4 tests[22m[2m)[22m[33m 339[2mms[22m[39m
+ [32m✓[39m src/components/settings/AccountSettings.test.tsx [2m([22m[2m7 tests[22m[2m)[22m[33m 423[2mms[22m[39m
+[90mstdout[2m | src/pages/Dashboard.test.tsx[2m > [22m[2mDashboard Page[2m > [22m[2mupdates active download on 'download:progress' event
+[22m[39mDashboard received download:progress {
+  download_id: [32m'dl-123'[39m,
+  progress: [33m45[39m,
+  status: [32m'downloading'[39m,
+  track: {
+    title: [32m'Bohemian Rhapsody'[39m,
+    artist: [32m'Queen'[39m,
+    image_url: [32m'cover.jpg'[39m
+  }
+}
+
+[90mstdout[2m | src/pages/Dashboard.test.tsx[2m > [22m[2mDashboard Page[2m > [22m[2mupdates existing download progress without track info (fallback)
+[22m[39mDashboard received download:progress { download_id: [32m'dl-legacy'[39m, progress: [33m80[39m, status: [32m'downloading'[39m }
+
+ [32m✓[39m src/pages/Dashboard.test.tsx [2m([22m[2m7 tests[22m[2m)[22m[33m 573[2mms[22m[39m
+[90mstderr[2m | src/components/sync/SyncModal.test.tsx[2m > [22m[2mSyncModal[2m > [22m[2mshould handle errors during execution
+[22m[39mError: Exec error
+    at [90m/home/mati/dev/Audiovault/frontend/[39msrc/components/sync/SyncModal.test.tsx:173:48
+    at [90mfile:///home/mati/dev/Audiovault/frontend/[39mnode_modules/[4m@vitest/runner[24m/dist/index.js:145:11
+    at [90mfile:///home/mati/dev/Audiovault/frontend/[39mnode_modules/[4m@vitest/runner[24m/dist/index.js:915:26
+    at [90mfile:///home/mati/dev/Audiovault/frontend/[39mnode_modules/[4m@vitest/runner[24m/dist/index.js:1243:20
+    at new Promise (<anonymous>)
+    at runWithTimeout [90m(file:///home/mati/dev/Audiovault/frontend/[39mnode_modules/[4m@vitest/runner[24m/dist/index.js:1209:10[90m)[39m
+    at [90mfile:///home/mati/dev/Audiovault/frontend/[39mnode_modules/[4m@vitest/runner[24m/dist/index.js:1653:37
+    at Traces.$ [90m(file:///home/mati/dev/Audiovault/frontend/[39mnode_modules/[4mvitest[24m/dist/chunks/traces.CCmnQaNT.js:142:27[90m)[39m
+    at trace [90m(file:///home/mati/dev/Audiovault/frontend/[39mnode_modules/[4mvitest[24m/dist/chunks/test.B8ej_ZHS.js:239:21[90m)[39m
+    at runTest [90m(file:///home/mati/dev/Audiovault/frontend/[39mnode_modules/[4m@vitest/runner[24m/dist/index.js:1653:12[90m)[39m
+
+ [31m❯[39m src/pages/AlbumDetails.test.tsx [2m([22m[2m9 tests[22m[2m | [22m[31m1 failed[39m[2m)[22m[33m 482[2mms[22m[39m
+     [32m✓[39m renders loading state[32m 35[2mms[22m[39m
+     [32m✓[39m renders error state[32m 10[2mms[22m[39m
+     [32m✓[39m renders album details and tracks[32m 52[2mms[22m[39m
+     [32m✓[39m handles download all[32m 31[2mms[22m[39m
+     [32m✓[39m opens add to playlist modal[32m 260[2mms[22m[39m
+[31m     [31m×[31m handles navigation to artist profile[39m[32m 34[2mms[22m[39m
+     [32m✓[39m handles back navigation[32m 21[2mms[22m[39m
+     [32m✓[39m renders placeholder when cover image is invalid or missing[32m 18[2mms[22m[39m
+     [32m✓[39m renders gracefully without release date[32m 20[2mms[22m[39m
+[90mstderr[2m | src/pages/Library.test.tsx[2m > [22m[2mLibrary Page Integration[2m > [22m[2mhandles track deletion failure
+[22m[39mFailed to delete item Error: Failed
+    at [90m/home/mati/dev/Audiovault/frontend/[39msrc/pages/Library.test.tsx:172:43
+    at [90mfile:///home/mati/dev/Audiovault/frontend/[39mnode_modules/[4m@vitest/runner[24m/dist/index.js:145:11
+    at [90mfile:///home/mati/dev/Audiovault/frontend/[39mnode_modules/[4m@vitest/runner[24m/dist/index.js:915:26
+    at [90mfile:///home/mati/dev/Audiovault/frontend/[39mnode_modules/[4m@vitest/runner[24m/dist/index.js:1243:20
+    at new Promise (<anonymous>)
+    at runWithTimeout [90m(file:///home/mati/dev/Audiovault/frontend/[39mnode_modules/[4m@vitest/runner[24m/dist/index.js:1209:10[90m)[39m
+    at [90mfile:///home/mati/dev/Audiovault/frontend/[39mnode_modules/[4m@vitest/runner[24m/dist/index.js:1653:37
+    at Traces.$ [90m(file:///home/mati/dev/Audiovault/frontend/[39mnode_modules/[4mvitest[24m/dist/chunks/traces.CCmnQaNT.js:142:27[90m)[39m
+    at trace [90m(file:///home/mati/dev/Audiovault/frontend/[39mnode_modules/[4mvitest[24m/dist/chunks/test.B8ej_ZHS.js:239:21[90m)[39m
+    at runTest [90m(file:///home/mati/dev/Audiovault/frontend/[39mnode_modules/[4m@vitest/runner[24m/dist/index.js:1653:12[90m)[39m
+
+[90mstderr[2m | src/components/auth/LoginForm.test.tsx[2m > [22m[2mLoginForm[2m > [22m[2mshould handle login error
+[22m[39mLogin error: { response: { data: { detail: [32m'Invalid credentials'[39m } } }
+
+ [32m✓[39m src/components/settings/SettingsPanel.test.tsx [2m([22m[2m11 tests[22m[2m)[22m[33m 705[2mms[22m[39m
+ [32m✓[39m src/components/auth/LoginForm.test.tsx [2m([22m[2m4 tests[22m[2m)[22m[33m 530[2mms[22m[39m
+[90mstderr[2m | src/components/watchlist/WatchlistItem.test.tsx[2m > [22m[2mWatchlistItem Component[2m > [22m[2mrenders item details in grid view
+[22m[39mIn HTML, <button> cannot be a descendant of <button>.
+This will cause a hydration error.
+
+  <WatchlistItem item={{id:"1", ...}} onRemove={function Mock} viewMode="grid">
+>   <button
+>     onClick={function handleCardClick}
+>     className="text-left w-full group relative bg-card border border-border rounded-xl overflow-hidden hover:border-..."
+>   >
+      <div className="absolute i...">
+        <img>
+        <div>
+        <div>
+        <div className="absolute i...">
+>         <button
+>           onClick={function onClick}
+>           className="p-3 rounded-full bg-secondary/80 text-foreground hover:bg-destructive/80 hover:text-white trans..."
+>           title="watchlist.removeFromWatchlist"
+>         >
+      ...
+
+<button> cannot contain a nested <button>.
+See this log for the ancestor stack trace.
+
+[90mstderr[2m | src/components/common/Sidebar.test.tsx[2m > [22m[2mSidebar Component[2m > [22m[2mrenders all navigation links
+[22m[39mReact does not recognize the `whileHover` prop on a DOM element. If you intentionally want it to appear in the DOM as a custom attribute, spell it as lowercase `whilehover` instead. If you accidentally passed it from a parent component, remove it from the DOM element.
+React does not recognize the `layoutId` prop on a DOM element. If you intentionally want it to appear in the DOM as a custom attribute, spell it as lowercase `layoutid` instead. If you accidentally passed it from a parent component, remove it from the DOM element.
+
+[90mstderr[2m | src/components/sync/SyncModal.test.tsx[2m > [22m[2mSyncModal[2m > [22m[2mshould allow retry after execution failure
+[22m[39mError: Fail
+    at [90m/home/mati/dev/Audiovault/frontend/[39msrc/components/sync/SyncModal.test.tsx:227:30
+    at [90mfile:///home/mati/dev/Audiovault/frontend/[39mnode_modules/[4m@vitest/runner[24m/dist/index.js:145:11
+    at [90mfile:///home/mati/dev/Audiovault/frontend/[39mnode_modules/[4m@vitest/runner[24m/dist/index.js:915:26
+    at [90mfile:///home/mati/dev/Audiovault/frontend/[39mnode_modules/[4m@vitest/runner[24m/dist/index.js:1243:20
+    at new Promise (<anonymous>)
+    at runWithTimeout [90m(file:///home/mati/dev/Audiovault/frontend/[39mnode_modules/[4m@vitest/runner[24m/dist/index.js:1209:10[90m)[39m
+    at [90mfile:///home/mati/dev/Audiovault/frontend/[39mnode_modules/[4m@vitest/runner[24m/dist/index.js:1653:37
+    at Traces.$ [90m(file:///home/mati/dev/Audiovault/frontend/[39mnode_modules/[4mvitest[24m/dist/chunks/traces.CCmnQaNT.js:142:27[90m)[39m
+    at trace [90m(file:///home/mati/dev/Audiovault/frontend/[39mnode_modules/[4mvitest[24m/dist/chunks/test.B8ej_ZHS.js:239:21[90m)[39m
+    at runTest [90m(file:///home/mati/dev/Audiovault/frontend/[39mnode_modules/[4m@vitest/runner[24m/dist/index.js:1653:12[90m)[39m
+
+[90mstderr[2m | src/pages/Library.test.tsx[2m > [22m[2mLibrary Page Integration[2m > [22m[2mhandles playlist create failure
+[22m[39mFailed to create playlist Error: Fail
+    at [90m/home/mati/dev/Audiovault/frontend/[39msrc/pages/Library.test.tsx:203:45
+    at [90mfile:///home/mati/dev/Audiovault/frontend/[39mnode_modules/[4m@vitest/runner[24m/dist/index.js:145:11
+    at [90mfile:///home/mati/dev/Audiovault/frontend/[39mnode_modules/[4m@vitest/runner[24m/dist/index.js:915:26
+    at [90mfile:///home/mati/dev/Audiovault/frontend/[39mnode_modules/[4m@vitest/runner[24m/dist/index.js:1243:20
+    at new Promise (<anonymous>)
+    at runWithTimeout [90m(file:///home/mati/dev/Audiovault/frontend/[39mnode_modules/[4m@vitest/runner[24m/dist/index.js:1209:10[90m)[39m
+    at [90mfile:///home/mati/dev/Audiovault/frontend/[39mnode_modules/[4m@vitest/runner[24m/dist/index.js:1653:37
+    at Traces.$ [90m(file:///home/mati/dev/Audiovault/frontend/[39mnode_modules/[4mvitest[24m/dist/chunks/traces.CCmnQaNT.js:142:27[90m)[39m
+    at trace [90m(file:///home/mati/dev/Audiovault/frontend/[39mnode_modules/[4mvitest[24m/dist/chunks/test.B8ej_ZHS.js:239:21[90m)[39m
+    at runTest [90m(file:///home/mati/dev/Audiovault/frontend/[39mnode_modules/[4m@vitest/runner[24m/dist/index.js:1653:12[90m)[39m
+
+ [32m✓[39m src/components/common/Sidebar.test.tsx [2m([22m[2m3 tests[22m[2m)[22m[32m 131[2mms[22m[39m
+ [32m✓[39m src/components/sync/SyncModal.test.tsx [2m([22m[2m10 tests[22m[2m)[22m[33m 888[2mms[22m[39m
+     [33m[2m✓[22m[39m should handle selection of tracks to remove [33m 335[2mms[22m[39m
+ [32m✓[39m src/pages/PlaylistDetails.test.tsx [2m([22m[2m17 tests[22m[2m)[22m[33m 597[2mms[22m[39m
+[90mstderr[2m | src/pages/Library.test.tsx[2m > [22m[2mLibrary Page Integration[2m > [22m[2mhandles rescan failure
+[22m[39mRescan failed Error: Fail
+    at [90m/home/mati/dev/Audiovault/frontend/[39msrc/pages/Library.test.tsx:222:45
+    at [90mfile:///home/mati/dev/Audiovault/frontend/[39mnode_modules/[4m@vitest/runner[24m/dist/index.js:145:11
+    at [90mfile:///home/mati/dev/Audiovault/frontend/[39mnode_modules/[4m@vitest/runner[24m/dist/index.js:915:26
+    at [90mfile:///home/mati/dev/Audiovault/frontend/[39mnode_modules/[4m@vitest/runner[24m/dist/index.js:1243:20
+    at new Promise (<anonymous>)
+    at runWithTimeout [90m(file:///home/mati/dev/Audiovault/frontend/[39mnode_modules/[4m@vitest/runner[24m/dist/index.js:1209:10[90m)[39m
+    at [90mfile:///home/mati/dev/Audiovault/frontend/[39mnode_modules/[4m@vitest/runner[24m/dist/index.js:1653:37
+    at Traces.$ [90m(file:///home/mati/dev/Audiovault/frontend/[39mnode_modules/[4mvitest[24m/dist/chunks/traces.CCmnQaNT.js:142:27[90m)[39m
+    at trace [90m(file:///home/mati/dev/Audiovault/frontend/[39mnode_modules/[4mvitest[24m/dist/chunks/test.B8ej_ZHS.js:239:21[90m)[39m
+    at runTest [90m(file:///home/mati/dev/Audiovault/frontend/[39mnode_modules/[4m@vitest/runner[24m/dist/index.js:1653:12[90m)[39m
+
+ [32m✓[39m src/components/watchlist/WatchlistItem.test.tsx [2m([22m[2m7 tests[22m[2m)[22m[32m 174[2mms[22m[39m
+ [32m✓[39m src/components/player/Player.test.tsx [2m([22m[2m7 tests[22m[2m)[22m[32m 171[2mms[22m[39m
+[90mstdout[2m | src/components/common/UserMenu.test.tsx
+[22m[39m--> Loading setupTests.ts with FakeAudioContext
+
+[90mstdout[2m | src/components/common/MobileNav.test.tsx
+[22m[39m--> Loading setupTests.ts with FakeAudioContext
+
+[90mstdout[2m | src/components/common/SessionManager.test.tsx
+[22m[39m--> Loading setupTests.ts with FakeAudioContext
+
+[90mstdout[2m | src/components/common/Layout.test.tsx
+[22m[39m--> Loading setupTests.ts with FakeAudioContext
+
+[90mstdout[2m | src/components/queue/DownloadItem.test.tsx
+[22m[39m--> Loading setupTests.ts with FakeAudioContext
+
+[90mstdout[2m | src/components/player/VisualizerToggle.test.tsx
+[22m[39m--> Loading setupTests.ts with FakeAudioContext
+
+[90mstdout[2m | src/components/dashboard/SystemStats.test.tsx
+[22m[39m--> Loading setupTests.ts with FakeAudioContext
+
+[90mstdout[2m | src/components/player/TrackInfo.test.tsx
+[22m[39m--> Loading setupTests.ts with FakeAudioContext
+
+[90mstdout[2m | src/hooks/useAudioVisualizer.test.tsx
+[22m[39m--> Loading setupTests.ts with FakeAudioContext
+
+[90mstderr[2m | src/components/common/UserMenu.test.tsx[2m > [22m[2mUserMenu[2m > [22m[2mrenders user information correctly
+[22m[39mReact does not recognize the `whileHover` prop on a DOM element. If you intentionally want it to appear in the DOM as a custom attribute, spell it as lowercase `whilehover` instead. If you accidentally passed it from a parent component, remove it from the DOM element.
+React does not recognize the `whileTap` prop on a DOM element. If you intentionally want it to appear in the DOM as a custom attribute, spell it as lowercase `whiletap` instead. If you accidentally passed it from a parent component, remove it from the DOM element.
+
+[90mstdout[2m | src/pages/Settings.test.tsx
+[22m[39m--> Loading setupTests.ts with FakeAudioContext
+
+[90mstdout[2m | src/components/common/UpdateToast.test.tsx
+[22m[39m--> Loading setupTests.ts with FakeAudioContext
+
+[90mstdout[2m | src/hooks/useConfirmDialog.test.tsx
+[22m[39m--> Loading setupTests.ts with FakeAudioContext
+
+ [32m✓[39m src/components/player/VisualizerToggle.test.tsx [2m([22m[2m3 tests[22m[2m)[22m[32m 68[2mms[22m[39m
+ [32m✓[39m src/components/common/SessionManager.test.tsx [2m([22m[2m3 tests[22m[2m)[22m[32m 137[2mms[22m[39m
+[90mstdout[2m | src/pages/Watchlist.test.tsx
+[22m[39m--> Loading setupTests.ts with FakeAudioContext
+
+[90mstdout[2m | src/components/common/Logo.test.tsx
+[22m[39m--> Loading setupTests.ts with FakeAudioContext
+
+ [32m✓[39m src/components/player/TrackInfo.test.tsx [2m([22m[2m4 tests[22m[2m)[22m[32m 71[2mms[22m[39m
+[90mstderr[2m | src/components/common/MobileNav.test.tsx[2m > [22m[2mMobileNav[2m > [22m[2mrenders all navigation items
+[22m[39mReact does not recognize the `layoutId` prop on a DOM element. If you intentionally want it to appear in the DOM as a custom attribute, spell it as lowercase `layoutid` instead. If you accidentally passed it from a parent component, remove it from the DOM element.
+Received `false` for a non-boolean attribute `initial`.
+
+If you want to write it to the DOM, pass a string instead: initial="false" or initial={value.toString()}.
+
+If you used to conditionally omit it with initial={condition && value}, pass initial={condition ? value : undefined} instead.
+
+ [32m✓[39m src/components/common/MobileNav.test.tsx [2m([22m[2m2 tests[22m[2m)[22m[32m 89[2mms[22m[39m
+[90mstdout[2m | src/hooks/useAudioVisualizer.test.tsx[2m > [22m[2museAudioVisualizer - Modes[2m > [22m[2mrenders circle mode
+[22m[39mVisualizer: AudioContext initialized.
+Visualizer: Source connected to element.
+Visualizer: Signal detected, max amp: [33m128[39m
+
+[90mstdout[2m | src/hooks/useAudioVisualizer.test.tsx[2m > [22m[2museAudioVisualizer - Modes[2m > [22m[2mrenders particles mode
+[22m[39mVisualizer: AudioContext initialized.
+Visualizer: Source connected to element.
+Visualizer: Signal detected, max amp: [33m128[39m
+
+[90mstdout[2m | src/hooks/useAudioVisualizer.test.tsx[2m > [22m[2museAudioVisualizer - Modes[2m > [22m[2mrenders glow mode
+[22m[39mVisualizer: AudioContext initialized.
+Visualizer: Source connected to element.
+Visualizer: Signal detected, max amp: [33m128[39m
+
+[90mstdout[2m | src/hooks/useAudioVisualizer.test.tsx[2m > [22m[2museAudioVisualizer - Modes[2m > [22m[2mhandles track stop
+[22m[39mVisualizer: AudioContext initialized.
+Visualizer: Source connected to element.
+Visualizer: Signal detected, max amp: [33m128[39m
+
+ [32m✓[39m src/hooks/useAudioVisualizer.test.tsx [2m([22m[2m4 tests[22m[2m)[22m[32m 43[2mms[22m[39m
+[90mstdout[2m | src/components/player/LyricsPanel.test.tsx[2m > [22m[2mLyricsPanel[2m > [22m[2mshould display error state
+[22m[39mSearching lyrics for: "Test Artist" - "Test Song" (Refresh: false)
+
+ [32m✓[39m src/components/common/UserMenu.test.tsx [2m([22m[2m7 tests[22m[2m)[22m[32m 164[2mms[22m[39m
+[90mstdout[2m | src/hooks/useKeyboardShortcuts.test.ts
+[22m[39m--> Loading setupTests.ts with FakeAudioContext
+
+ [32m✓[39m src/components/player/LyricsPanel.test.tsx [2m([22m[2m5 tests[22m[2m)[22m[33m 1254[2mms[22m[39m
+     [33m[2m✓[22m[39m should display error state [33m 1033[2mms[22m[39m
+ [32m✓[39m src/components/common/UpdateToast.test.tsx [2m([22m[2m3 tests[22m[2m)[22m[32m 52[2mms[22m[39m
+[90mstdout[2m | src/smoke.test.tsx
+[22m[39m--> Loading setupTests.ts with FakeAudioContext
+
+ [32m✓[39m src/pages/Settings.test.tsx [2m([22m[2m1 test[22m[2m)[22m[32m 36[2mms[22m[39m
+[90mstdout[2m | src/hooks/useTranslation.test.ts
+[22m[39m--> Loading setupTests.ts with FakeAudioContext
+
+ [32m✓[39m src/hooks/useConfirmDialog.test.tsx [2m([22m[2m4 tests[22m[2m)[22m[32m 39[2mms[22m[39m
+ [32m✓[39m src/components/common/Layout.test.tsx [2m([22m[2m4 tests[22m[2m)[22m[32m 64[2mms[22m[39m
+[90mstdout[2m | src/components/common/ThemeInitializer.test.tsx
+[22m[39m--> Loading setupTests.ts with FakeAudioContext
+
+ [32m✓[39m src/components/common/Logo.test.tsx [2m([22m[2m3 tests[22m[2m)[22m[32m 62[2mms[22m[39m
+[90mstdout[2m | src/hooks/useSocketEvents.test.tsx
+[22m[39m--> Loading setupTests.ts with FakeAudioContext
+
+ [32m✓[39m src/pages/Watchlist.test.tsx [2m([22m[2m2 tests[22m[2m)[22m[32m 52[2mms[22m[39m
+ [32m✓[39m src/components/queue/DownloadItem.test.tsx [2m([22m[2m5 tests[22m[2m)[22m[32m 135[2mms[22m[39m
+[90mstdout[2m | src/pages/Queue.test.tsx
+[22m[39m--> Loading setupTests.ts with FakeAudioContext
+
+ [32m✓[39m src/hooks/useKeyboardShortcuts.test.ts [2m([22m[2m7 tests[22m[2m)[22m[32m 33[2mms[22m[39m
+[90mstdout[2m | src/hooks/useSocketEvents.test.tsx[2m > [22m[2museSocketEvents[2m > [22m[2minitializes socket connection
+[22m[39m[Socket.IO] Connecting to: http://localhost:3000
+
+[90mstdout[2m | src/hooks/useSocketEvents.test.tsx[2m > [22m[2museSocketEvents[2m > [22m[2minitializes socket connection
+[22m[39m[Socket.IO] Cleaning up connection
+
+[90mstdout[2m | src/hooks/useSocketEvents.test.tsx[2m > [22m[2museSocketEvents[2m > [22m[2mbridges download progress events
+[22m[39m[Socket.IO] Connecting to: http://localhost:3000
+
+ [32m✓[39m src/smoke.test.tsx [2m([22m[2m1 test[22m[2m)[22m[32m 34[2mms[22m[39m
+[90mstdout[2m | src/hooks/useSocketEvents.test.tsx[2m > [22m[2museSocketEvents[2m > [22m[2mbridges download progress events
+[22m[39m[Socket.IO] Cleaning up connection
+
+ [32m✓[39m src/components/common/ThemeInitializer.test.tsx [2m([22m[2m4 tests[22m[2m)[22m[32m 29[2mms[22m[39m
+ [32m✓[39m src/hooks/useTranslation.test.ts [2m([22m[2m7 tests[22m[2m)[22m[32m 42[2mms[22m[39m
+[90mstdout[2m | src/hooks/useSocketEvents.test.tsx[2m > [22m[2museSocketEvents[2m > [22m[2mbridges download completed events
+[22m[39m[Socket.IO] Connecting to: http://localhost:3000
+
+[90mstdout[2m | src/hooks/useSocketEvents.test.tsx[2m > [22m[2museSocketEvents[2m > [22m[2mbridges download completed events
+[22m[39m[Socket.IO] Cleaning up connection
+
+[90mstdout[2m | src/hooks/useSocketEvents.test.tsx[2m > [22m[2museSocketEvents[2m > [22m[2mdisconnects on unmount
+[22m[39m[Socket.IO] Connecting to: http://localhost:3000
+[Socket.IO] Cleaning up connection
+
+ [32m✓[39m src/hooks/useSocketEvents.test.tsx [2m([22m[2m4 tests[22m[2m)[22m[32m 44[2mms[22m[39m
+ [32m✓[39m src/components/dashboard/SystemStats.test.tsx [2m([22m[2m3 tests[22m[2m)[22m[32m 117[2mms[22m[39m
+[90mstdout[2m | src/components/common/NotificationCenter.test.tsx
+[22m[39m--> Loading setupTests.ts with FakeAudioContext
+
+[90mstdout[2m | src/pages/Import.test.tsx
+[22m[39m--> Loading setupTests.ts with FakeAudioContext
+
+[90mstderr[2m | src/pages/ArtistProfile.test.tsx[2m > [22m[2mArtistProfile[2m > [22m[2mhandles discography download failure
+[22m[39mFailed to download all: { response: { data: { detail: [32m'Download failed'[39m } } }
+
+[90mstdout[2m | src/store/slices/authSlice.test.ts
+[22m[39m--> Loading setupTests.ts with FakeAudioContext
+
+[90mstdout[2m | src/lib/utils.test.ts
+[22m[39m--> Loading setupTests.ts with FakeAudioContext
+
+ [32m✓[39m src/pages/Library.test.tsx [2m([22m[2m16 tests[22m[2m)[22m[33m 1329[2mms[22m[39m
+[90mstderr[2m | src/pages/ArtistProfile.test.tsx[2m > [22m[2mArtistProfile[2m > [22m[2mhandles single album download failure
+[22m[39mFailed to download album: { response: { data: { detail: [32m'Region blocked'[39m } } }
+
+ [32m✓[39m src/pages/Queue.test.tsx [2m([22m[2m1 test[22m[2m)[22m[32m 35[2mms[22m[39m
+[90mstdout[2m | src/components/ui/AnimatedBackground.test.tsx
+[22m[39m--> Loading setupTests.ts with FakeAudioContext
+
+[90mstdout[2m | src/store/slices/watchlistSlice.test.ts
+[22m[39m--> Loading setupTests.ts with FakeAudioContext
+
+ [32m✓[39m src/lib/utils.test.ts [2m([22m[2m9 tests[22m[2m)[22m[32m 12[2mms[22m[39m
+[90mstdout[2m | src/store/slices/queueSlice.test.ts
+[22m[39m--> Loading setupTests.ts with FakeAudioContext
+
+[90mstderr[2m | src/store/slices/authSlice.test.ts[2m > [22m[2mauthSlice[2m > [22m[2mcheckAuth[2m > [22m[2mshould logout on verification failure
+[22m[39mToken verification failed Error: Unauthorized
+    at [90m/home/mati/dev/Audiovault/frontend/[39msrc/store/slices/authSlice.test.ts:177:54
+    at [90mfile:///home/mati/dev/Audiovault/frontend/[39mnode_modules/[4m@vitest/runner[24m/dist/index.js:145:11
+    at [90mfile:///home/mati/dev/Audiovault/frontend/[39mnode_modules/[4m@vitest/runner[24m/dist/index.js:915:26
+    at [90mfile:///home/mati/dev/Audiovault/frontend/[39mnode_modules/[4m@vitest/runner[24m/dist/index.js:1243:20
+    at new Promise (<anonymous>)
+    at runWithTimeout [90m(file:///home/mati/dev/Audiovault/frontend/[39mnode_modules/[4m@vitest/runner[24m/dist/index.js:1209:10[90m)[39m
+    at [90mfile:///home/mati/dev/Audiovault/frontend/[39mnode_modules/[4m@vitest/runner[24m/dist/index.js:1653:37
+    at Traces.$ [90m(file:///home/mati/dev/Audiovault/frontend/[39mnode_modules/[4mvitest[24m/dist/chunks/traces.CCmnQaNT.js:142:27[90m)[39m
+    at trace [90m(file:///home/mati/dev/Audiovault/frontend/[39mnode_modules/[4mvitest[24m/dist/chunks/test.B8ej_ZHS.js:239:21[90m)[39m
+    at runTest [90m(file:///home/mati/dev/Audiovault/frontend/[39mnode_modules/[4m@vitest/runner[24m/dist/index.js:1653:12[90m)[39m
+
+[90mstderr[2m | src/pages/ArtistProfile.test.tsx[2m > [22m[2mArtistProfile[2m > [22m[2mhandles keyboard navigation for albums
+[22m[39mNo routes matched location "/album/a1" 
+
+ [32m✓[39m src/store/slices/authSlice.test.ts [2m([22m[2m15 tests[22m[2m)[22m[32m 21[2mms[22m[39m
+ [32m✓[39m src/pages/Import.test.tsx [2m([22m[2m1 test[22m[2m)[22m[32m 22[2mms[22m[39m
+ [32m✓[39m src/store/slices/watchlistSlice.test.ts [2m([22m[2m11 tests[22m[2m)[22m[32m 10[2mms[22m[39m
+ [31m❯[39m src/pages/ArtistProfile.test.tsx [2m([22m[2m12 tests[22m[2m | [22m[31m1 failed[39m[2m)[22m[33m 1524[2mms[22m[39m
+     [32m✓[39m renders loading state[32m 44[2mms[22m[39m
+     [32m✓[39m renders full artist profile[32m 108[2mms[22m[39m
+     [32m✓[39m handles watchlist toggle (Follow/Unfollow)[32m 44[2mms[22m[39m
+     [32m✓[39m handles unfollow logic[32m 45[2mms[22m[39m
+[31m     [31m×[31m handles discography download (Download All)[39m[33m 1040[2mms[22m[39m
+     [32m✓[39m handles single album download[32m 49[2mms[22m[39m
+     [32m✓[39m handles navigation back[32m 30[2mms[22m[39m
+     [32m✓[39m handles discography download failure[32m 52[2mms[22m[39m
+     [32m✓[39m handles single album download failure[32m 33[2mms[22m[39m
+     [32m✓[39m handles keyboard navigation for albums[32m 29[2mms[22m[39m
+     [32m✓[39m renders placeholder when image is invalid or missing[32m 28[2mms[22m[39m
+     [32m✓[39m renders artist with no content gracefully[32m 18[2mms[22m[39m
+ [32m✓[39m src/store/slices/queueSlice.test.ts [2m([22m[2m13 tests[22m[2m)[22m[32m 14[2mms[22m[39m
+ [32m✓[39m src/components/ui/AnimatedBackground.test.tsx [2m([22m[2m1 test[22m[2m)[22m[32m 19[2mms[22m[39m
+[90mstdout[2m | src/services/lastfm.test.ts
+[22m[39m--> Loading setupTests.ts with FakeAudioContext
+
+[90mstdout[2m | src/api/downloads.test.ts
+[22m[39m--> Loading setupTests.ts with FakeAudioContext
+
+[90mstdout[2m | src/api/watchlist.test.ts
+[22m[39m--> Loading setupTests.ts with FakeAudioContext
+
+ [32m✓[39m src/api/downloads.test.ts [2m([22m[2m10 tests[22m[2m)[22m[32m 5[2mms[22m[39m
+[90mstderr[2m | src/services/lastfm.test.ts[2m > [22m[2mlastfmService[2m > [22m[2mscrobbleTrack should handle success
+[22m[39mFailed to scrobble Error: API Error
+    at [90m/home/mati/dev/Audiovault/frontend/[39msrc/services/lastfm.test.ts:55:43
+    at [90mfile:///home/mati/dev/Audiovault/frontend/[39mnode_modules/[4m@vitest/runner[24m/dist/index.js:145:11
+    at [90mfile:///home/mati/dev/Audiovault/frontend/[39mnode_modules/[4m@vitest/runner[24m/dist/index.js:915:26
+    at [90mfile:///home/mati/dev/Audiovault/frontend/[39mnode_modules/[4m@vitest/runner[24m/dist/index.js:1243:20
+    at new Promise (<anonymous>)
+    at runWithTimeout [90m(file:///home/mati/dev/Audiovault/frontend/[39mnode_modules/[4m@vitest/runner[24m/dist/index.js:1209:10[90m)[39m
+    at [90mfile:///home/mati/dev/Audiovault/frontend/[39mnode_modules/[4m@vitest/runner[24m/dist/index.js:1653:37
+    at Traces.$ [90m(file:///home/mati/dev/Audiovault/frontend/[39mnode_modules/[4mvitest[24m/dist/chunks/traces.CCmnQaNT.js:142:27[90m)[39m
+    at trace [90m(file:///home/mati/dev/Audiovault/frontend/[39mnode_modules/[4mvitest[24m/dist/chunks/test.B8ej_ZHS.js:239:21[90m)[39m
+    at runTest [90m(file:///home/mati/dev/Audiovault/frontend/[39mnode_modules/[4m@vitest/runner[24m/dist/index.js:1653:12[90m)[39m
+
+ [32m✓[39m src/services/lastfm.test.ts [2m([22m[2m9 tests[22m[2m)[22m[32m 13[2mms[22m[39m
+[90mstdout[2m | src/store/slices/notificationSlice.test.ts
+[22m[39m--> Loading setupTests.ts with FakeAudioContext
+
+[90mstdout[2m | src/utils/notify.test.ts
+[22m[39m--> Loading setupTests.ts with FakeAudioContext
+
+ [32m✓[39m src/api/watchlist.test.ts [2m([22m[2m5 tests[22m[2m)[22m[32m 8[2mms[22m[39m
+ [32m✓[39m src/store/slices/notificationSlice.test.ts [2m([22m[2m7 tests[22m[2m)[22m[32m 7[2mms[22m[39m
+[90mstdout[2m | src/api/sync.test.ts
+[22m[39m--> Loading setupTests.ts with FakeAudioContext
+
+[90mstdout[2m | src/api/import.test.ts
+[22m[39m--> Loading setupTests.ts with FakeAudioContext
+
+[90mstdout[2m | src/services/auth.test.ts
+[22m[39m--> Loading setupTests.ts with FakeAudioContext
+
+ [32m✓[39m src/utils/notify.test.ts [2m([22m[2m5 tests[22m[2m)[22m[32m 7[2mms[22m[39m
+[90mstdout[2m | src/utils/validation.test.ts
+[22m[39m--> Loading setupTests.ts with FakeAudioContext
+
+[90mstdout[2m | src/api/lyrics.test.ts
+[22m[39m--> Loading setupTests.ts with FakeAudioContext
+
+ [32m✓[39m src/api/sync.test.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 7[2mms[22m[39m
+ [32m✓[39m src/api/import.test.ts [2m([22m[2m2 tests[22m[2m)[22m[32m 3[2mms[22m[39m
+[90mstdout[2m | src/store/slices/playerSlice.test.ts
+[22m[39m--> Loading setupTests.ts with FakeAudioContext
+
+ [32m✓[39m src/utils/validation.test.ts [2m([22m[2m14 tests[22m[2m)[22m[32m 3[2mms[22m[39m
+ [32m✓[39m src/services/auth.test.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 6[2mms[22m[39m
+[90mstdout[2m | src/utils/format.test.ts
+[22m[39m--> Loading setupTests.ts with FakeAudioContext
+
+[90mstdout[2m | src/services/api.test.ts
+[22m[39m--> Loading setupTests.ts with FakeAudioContext
+
+ [32m✓[39m src/store/slices/playerSlice.test.ts [2m([22m[2m12 tests[22m[2m)[22m[32m 4[2mms[22m[39m
+ [32m✓[39m src/utils/format.test.ts [2m([22m[2m8 tests[22m[2m)[22m[32m 2[2mms[22m[39m
+ [32m✓[39m src/api/lyrics.test.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 5[2mms[22m[39m
+ [31m❯[39m src/pages/Search.test.tsx [2m([22m[2m9 tests[22m[2m | [22m[31m2 failed[39m[2m)[22m[33m 2224[2mms[22m[39m
+     [32m✓[39m renders search page structure[32m 40[2mms[22m[39m
+     [32m✓[39m handles basic Spotify search[32m 43[2mms[22m[39m
+[31m     [31m×[31m handles 'All' source search (Multiple APIs)[39m[33m 1036[2mms[22m[39m
+     [32m✓[39m initializes from URL and performs auto-search[32m 22[2mms[22m[39m
+     [32m✓[39m handles pagination (Load More)[32m 41[2mms[22m[39m
+     [32m✓[39m handles search errors gracefully[32m 15[2mms[22m[39m
+[31m     [31m×[31m handles partial failure in 'All' search[39m[33m 1008[2mms[22m[39m
+     [32m✓[39m handles empty results and disables load more[32m 6[2mms[22m[39m
+     [32m✓[39m handles load more error[32m 11[2mms[22m[39m
+[90mstdout[2m | src/store/useStore.test.ts
+[22m[39m--> Loading setupTests.ts with FakeAudioContext
+
+ [32m✓[39m src/services/api.test.ts [2m([22m[2m5 tests[22m[2m)[22m[32m 5[2mms[22m[39m
+[90mstdout[2m | src/App.test.tsx
+[22m[39m--> Loading setupTests.ts with FakeAudioContext
+
+ [32m✓[39m src/App.test.tsx [2m([22m[2m1 test[22m[2m)[22m[32m 1[2mms[22m[39m
+ [32m✓[39m src/store/useStore.test.ts [2m([22m[2m2 tests[22m[2m)[22m[32m 2[2mms[22m[39m
+ [32m✓[39m src/components/common/NotificationCenter.test.tsx [2m([22m[2m3 tests[22m[2m)[22m[32m 31[2mms[22m[39m
+
+[31m⎯⎯⎯⎯⎯⎯[39m[1m[41m Failed Tests 13 [49m[22m[31m⎯⎯⎯⎯⎯⎯⎯[39m
+
+[41m[1m FAIL [22m[49m src/api/albums.test.ts[2m > [22malbumsApi[2m > [22mgetById[2m > [22mshould fetch album from spotify endpoint by default
+[31m[1mAssertionError[22m: expected "vi.fn()" to be called with arguments: [ '/spotify/album/album-1' ][90m
+
+Received: 
+
+[1m  1st vi.fn() call:
+
+[22m[2m  [[22m
+[32m-   "/spotify/album/album-1",[90m
+[31m+   "/browse/album/deezer/album-1",[90m
+[2m  ][22m
+[31m[90m
+
+Number of calls: [1m1[22m
+[31m[39m
+[36m [2m❯[22m src/api/albums.test.ts:[2m28:23[22m[39m
+    [90m 26| [39m      [35mconst[39m result [33m=[39m [35mawait[39m albumsApi[33m.[39m[34mgetById[39m([32m"album-1"[39m)[33m;[39m
+    [90m 27| [39m
+    [90m 28| [39m      [34mexpect[39m(api[33m.[39m[35mget[39m)[33m.[39m[34mtoHaveBeenCalledWith[39m([32m"/spotify/album/album-1"[39m)[33m;[39m
+    [90m   | [39m                      [31m^[39m
+    [90m 29| [39m      [34mexpect[39m(result)[33m.[39m[34mtoEqual[39m(mockAlbum)[33m;[39m
+    [90m 30| [39m    })[33m;[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/13]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m src/api/albums.test.ts[2m > [22malbumsApi[2m > [22mgetById[2m > [22mshould fetch album from spotify endpoint when source is spotify
+[31m[1mAssertionError[22m: expected "vi.fn()" to be called with arguments: [ '/spotify/album/album-1' ][90m
+
+Received: 
+
+[1m  1st vi.fn() call:
+
+[22m[2m  [[22m
+[32m-   "/spotify/album/album-1",[90m
+[31m+   "/browse/album/spotify/album-1",[90m
+[2m  ][22m
+[31m[90m
+
+Number of calls: [1m1[22m
+[31m[39m
+[36m [2m❯[22m src/api/albums.test.ts:[2m37:23[22m[39m
+    [90m 35| [39m      [35mawait[39m albumsApi[33m.[39m[34mgetById[39m([32m"album-1"[39m[33m,[39m [32m"spotify"[39m)[33m;[39m
+    [90m 36| [39m
+    [90m 37| [39m      [34mexpect[39m(api[33m.[39m[35mget[39m)[33m.[39m[34mtoHaveBeenCalledWith[39m([32m"/spotify/album/album-1"[39m)[33m;[39m
+    [90m   | [39m                      [31m^[39m
+    [90m 38| [39m    })[33m;[39m
+    [90m 39| [39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/13]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m src/api/albums.test.ts[2m > [22malbumsApi[2m > [22mgetById[2m > [22mshould throw error for unsupported sources
+[31m[1mAssertionError[22m: promise resolved "{ id: 'album-1' }" instead of rejecting[39m
+
+[32m- Expected[39m
+[31m+ Received[39m
+
+[32m- Error {[39m
+[32m-   "message": "rejected promise",[39m
+[31m+ {[39m
+[31m+   "id": "album-1",[39m
+[2m  }[22m
+
+[36m [2m❯[22m src/api/albums.test.ts:[2m41:63[22m[39m
+    [90m 39| [39m
+    [90m 40| [39m    [34mit[39m([32m"should throw error for unsupported sources"[39m[33m,[39m [35masync[39m () [33m=>[39m {
+    [90m 41| [39m      await expect(albumsApi.getById("album-1", "unsupported")).reject…
+    [90m   | [39m                                                              [31m^[39m
+    [90m 42| [39m        [32m"Unsupported source: unsupported"[39m
+    [90m 43| [39m      )[33m;[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/13]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m src/api/artists.test.ts[2m > [22martistsApi[2m > [22mgetById[2m > [22mshould fetch artist by id using local endpoint by default
+[31m[1mAssertionError[22m: expected "vi.fn()" to be called with arguments: [ '/artists/a-1' ][90m
+
+Received: 
+
+[1m  1st vi.fn() call:
+
+[22m[2m  [[22m
+[32m-   "/artists/a-1",[90m
+[31m+   "/browse/artist/deezer/a-1",[90m
+[2m  ][22m
+[31m[90m
+
+Number of calls: [1m1[22m
+[31m[39m
+[36m [2m❯[22m src/api/artists.test.ts:[2m43:23[22m[39m
+    [90m 41| [39m      [35mconst[39m result [33m=[39m [35mawait[39m artistsApi[33m.[39m[34mgetById[39m([32m"a-1"[39m)[33m;[39m
+    [90m 42| [39m
+    [90m 43| [39m      [34mexpect[39m(api[33m.[39m[35mget[39m)[33m.[39m[34mtoHaveBeenCalledWith[39m([32m"/artists/a-1"[39m)[33m;[39m
+    [90m   | [39m                      [31m^[39m
+    [90m 44| [39m      [34mexpect[39m(result)[33m.[39m[34mtoEqual[39m(mockArtist)[33m;[39m
+    [90m 45| [39m    })[33m;[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/13]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m src/api/artists.test.ts[2m > [22martistsApi[2m > [22mgetById[2m > [22mshould fetch artist from spotify endpoint when source is spotify
+[31m[1mAssertionError[22m: expected "vi.fn()" to be called with arguments: [ '/spotify/artist/sp-artist' ][90m
+
+Received: 
+
+[1m  1st vi.fn() call:
+
+[22m[2m  [[22m
+[32m-   "/spotify/artist/sp-artist",[90m
+[31m+   "/browse/artist/spotify/sp-artist",[90m
+[2m  ][22m
+[31m[90m
+
+Number of calls: [1m1[22m
+[31m[39m
+[36m [2m❯[22m src/api/artists.test.ts:[2m53:23[22m[39m
+    [90m 51| [39m      [35mconst[39m result [33m=[39m [35mawait[39m artistsApi[33m.[39m[34mgetById[39m([32m"sp-artist"[39m[33m,[39m [32m"spotify"[39m)[33m;[39m
+    [90m 52| [39m
+    [90m 53| [39m      expect(api.get).toHaveBeenCalledWith("/spotify/artist/sp-artist"…
+    [90m   | [39m                      [31m^[39m
+    [90m 54| [39m      [34mexpect[39m(result)[33m.[39m[34mtoEqual[39m(mockArtist)[33m;[39m
+    [90m 55| [39m    })[33m;[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[5/13]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m src/api/artists.test.ts[2m > [22martistsApi[2m > [22mgetById[2m > [22mshould use local endpoint for non-spotify sources
+[31m[1mAssertionError[22m: expected "vi.fn()" to be called with arguments: [ '/artists/yt-123' ][90m
+
+Received: 
+
+[1m  1st vi.fn() call:
+
+[22m[2m  [[22m
+[32m-   "/artists/yt-123",[90m
+[31m+   "/browse/artist/youtube/yt-123",[90m
+[2m  ][22m
+[31m[90m
+
+Number of calls: [1m1[22m
+[31m[39m
+[36m [2m❯[22m src/api/artists.test.ts:[2m62:23[22m[39m
+    [90m 60| [39m      [35mawait[39m artistsApi[33m.[39m[34mgetById[39m([32m"yt-123"[39m[33m,[39m [32m"youtube"[39m)[33m;[39m
+    [90m 61| [39m
+    [90m 62| [39m      [34mexpect[39m(api[33m.[39m[35mget[39m)[33m.[39m[34mtoHaveBeenCalledWith[39m([32m"/artists/yt-123"[39m)[33m;[39m
+    [90m   | [39m                      [31m^[39m
+    [90m 63| [39m    })[33m;[39m
+    [90m 64| [39m  })[33m;[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[6/13]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m src/api/playlists.test.ts[2m > [22mplaylistsApi[2m > [22mgetById[2m > [22mshould fetch playlist from spotify endpoint by default
+[31m[1mAssertionError[22m: expected "vi.fn()" to be called with arguments: [ '/spotify/playlist/pl-1' ][90m
+
+Received: 
+
+[1m  1st vi.fn() call:
+
+[22m[2m  [[22m
+[32m-   "/spotify/playlist/pl-1",[90m
+[31m+   "/browse/playlist/deezer/pl-1",[90m
+[2m  ][22m
+[31m[90m
+
+Number of calls: [1m1[22m
+[31m[39m
+[36m [2m❯[22m src/api/playlists.test.ts:[2m27:23[22m[39m
+    [90m 25| [39m      [35mconst[39m result [33m=[39m [35mawait[39m playlistsApi[33m.[39m[34mgetById[39m([32m"pl-1"[39m)[33m;[39m
+    [90m 26| [39m
+    [90m 27| [39m      [34mexpect[39m(api[33m.[39m[35mget[39m)[33m.[39m[34mtoHaveBeenCalledWith[39m([32m"/spotify/playlist/pl-1"[39m)[33m;[39m
+    [90m   | [39m                      [31m^[39m
+    [90m 28| [39m      [34mexpect[39m(result)[33m.[39m[34mtoEqual[39m(mockPlaylist)[33m;[39m
+    [90m 29| [39m    })[33m;[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[7/13]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m src/api/playlists.test.ts[2m > [22mplaylistsApi[2m > [22mgetById[2m > [22mshould fetch playlist from spotify when source is spotify
+[31m[1mAssertionError[22m: expected "vi.fn()" to be called with arguments: [ '/spotify/playlist/pl-1' ][90m
+
+Received: 
+
+[1m  1st vi.fn() call:
+
+[22m[2m  [[22m
+[32m-   "/spotify/playlist/pl-1",[90m
+[31m+   "/browse/playlist/spotify/pl-1",[90m
+[2m  ][22m
+[31m[90m
+
+Number of calls: [1m1[22m
+[31m[39m
+[36m [2m❯[22m src/api/playlists.test.ts:[2m36:23[22m[39m
+    [90m 34| [39m      [35mawait[39m playlistsApi[33m.[39m[34mgetById[39m([32m"pl-1"[39m[33m,[39m [32m"spotify"[39m)[33m;[39m
+    [90m 35| [39m
+    [90m 36| [39m      [34mexpect[39m(api[33m.[39m[35mget[39m)[33m.[39m[34mtoHaveBeenCalledWith[39m([32m"/spotify/playlist/pl-1"[39m)[33m;[39m
+    [90m   | [39m                      [31m^[39m
+    [90m 37| [39m    })[33m;[39m
+    [90m 38| [39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[8/13]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m src/api/playlists.test.ts[2m > [22mplaylistsApi[2m > [22mgetById[2m > [22mshould throw error for unsupported sources
+[31m[1mAssertionError[22m: promise resolved "{}" instead of rejecting[39m
+
+[32m- Expected[39m
+[31m+ Received[39m
+
+[32m- Error {[39m
+[32m-   "message": "rejected promise",[39m
+[32m- }[39m
+[31m+ {}[39m
+
+[36m [2m❯[22m src/api/playlists.test.ts:[2m48:58[22m[39m
+    [90m 46| [39m
+    [90m 47| [39m    [34mit[39m([32m"should throw error for unsupported sources"[39m[33m,[39m [35masync[39m () [33m=>[39m {
+    [90m 48| [39m      await expect(playlistsApi.getById("pl-1", "deezer")).rejects.toT…
+    [90m   | [39m                                                         [31m^[39m
+    [90m 49| [39m        [32m"Source deezer not supported yet for playlist details"[39m
+    [90m 50| [39m      )[33m;[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[9/13]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m src/pages/AlbumDetails.test.tsx[2m > [22mAlbumDetails Page[2m > [22mhandles navigation to artist profile
+[31m[1mAssertionError[22m: expected "vi.fn()" to be called with arguments: [ '/artist/artist-123', …(1) ][90m
+
+Received: 
+
+[1m  1st vi.fn() call:
+
+[22m[2m  [[22m
+[2m    "/artist/artist-123",[22m
+[32m-   ObjectContaining {[90m
+[31m+   {[90m
+[2m      "state": {[22m
+[32m-       "source": "spotify",[90m
+[31m+       "source": "deezer",[90m
+[2m      },[22m
+[2m    },[22m
+[2m  ][22m
+[31m[90m
+
+Number of calls: [1m1[22m
+[31m[39m
+[36m [2m❯[22m src/pages/AlbumDetails.test.tsx:[2m151:26[22m[39m
+    [90m149| [39m    fireEvent[33m.[39m[34mclick[39m(screen[33m.[39m[34mgetByText[39m([32m"Test Artist"[39m))[33m;[39m
+    [90m150| [39m
+    [90m151| [39m    [34mexpect[39m(mockNavigate)[33m.[39m[34mtoHaveBeenCalledWith[39m(
+    [90m   | [39m                         [31m^[39m
+    [90m152| [39m      [32m"/artist/artist-123"[39m[33m,[39m
+    [90m153| [39m      expect[33m.[39m[34mobjectContaining[39m({ state[33m:[39m { source[33m:[39m [32m"spotify"[39m } })
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[10/13]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m src/pages/ArtistProfile.test.tsx[2m > [22mArtistProfile[2m > [22mhandles discography download (Download All)
+[31m[1mAssertionError[22m[39m: expected "vi.fn()" to be called with arguments: [ …(2) ][90m
+
+Received: 
+
+[1m  1st vi.fn() call:
+
+[22m[2m  [[22m
+[32m-   StringContaining "/download-all",[90m
+[31m+   "/downloads/artist/spotify-123/download-all",[90m
+[2m    {[22m
+[32m-     "source": "spotify",[90m
+[31m+     "source": "deezer",[90m
+[2m    },[22m
+[2m  ][22m
+[39m[90m
+
+Number of calls: [1m1[22m
+[39m
+
+Ignored nodes: comments, script, style
+[36m<html>[39m
+  [36m<head />[39m
+  [36m<body>[39m
+    [36m<div>[39m
+      [36m<div[39m
+        [33mclass[39m=[32m"space-y-8 pb-10"[39m
+      [36m>[39m
+        [36m<div[39m
+          [33mclass[39m=[32m"relative h-64 md:h-80 rounded-3xl overflow-hidden group"[39m
+        [36m>[39m
+          [36m<img[39m
+            [33malt[39m=[32m"Test Artist"[39m
+            [33mclass[39m=[32m"w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"[39m
+            [33msrc[39m=[32m"http://example.com/img.jpg"[39m
+          [36m/>[39m
+          [36m<div[39m
+            [33mclass[39m=[32m"absolute inset-0 bg-linear-to-t from-black/90 via-black/40 to-transparent flex flex-col justify-end p-8"[39m
+          [36m>[39m
+            [36m<button[39m
+              [33mclass[39m=[32m"rounded-full font-bold transition-all duration-300 border focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:ring-offset-background disabled:opacity-50 disabled:pointer-events-none active:scale-95 cursor-pointer bg-transparent hover:text-foreground border-transparent h-10 w-10 p-2 flex items-center justify-center absolute top-4 left-4 text-white hover:bg-white/10"[39m
+              [33mtabindex[39m=[32m"0"[39m
+            [36m>[39m
+              [36m<span[39m
+                [33mclass[39m=[32m"relative z-10 flex items-center justify-center gap-2"[39m
+              [36m>[39m
+                [36m<span[39m
+                  [33mdata-testid[39m=[32m"icon-back"[39m
+                [36m>[39m
+                  [0mBack[0m
+                [36m</span>[39m
+              [36m</span>[39m
+            [36m</button>[39m
+            [36m<div[39m
+              [33mclass[39m=[32m"absolute top-4 right-4 flex gap-2"[39m
+            [36m>[39m
+              [36m<button[39m
+                [33mclass[39m=[32m"relative inline-flex items-center justify-center rounded-full font-bold transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:ring-offset-background disabled:opacity-50 disabled:pointer-events-none active:scale-95 cursor-pointer backdrop-blur-sm text-secondary-foreground h-10 px-6 text-sm gap-2 bg-black/50 hover:bg-black/70 border border-white/10"[39m
+                [33mtabindex[39m=[32m"0"[39m
+              [36m>[39m
+                [36m<span[39m
+                  [33mclass[39m=[32m"relative z-10 flex items-center justify-center gap-2"[39m
+                [36m>[39m
+                  [36m<svg[39m
+                    [33maria-hidden[39m=[32m"true"[39m
+                    [33mclass[39m=[32m"lucide lucide-plus"[39m
+                    [33mfill[39m=[32m"none"[39m
+                    [33mheight[39m=[32m"16"[39m
+                    [33mstroke[39m=[32m"currentColor"[39m
+                    [33mstroke-linecap[39m=[32m"round"[39m
+                    [33mstroke-linejoin[39m=[32m"round"[39m
+                    [33mstroke-width[39m=[32m"2"[39m
+                    [33mviewBox[39m=[32m"0 0 24 24"[39m
+                    [33mwidth[39m=[32m"16"[39m
+                    [33mxmlns[39m=[32m"http://www.w3.org/2000/svg"[39m
+                  [36m>[39m
+                    [36m<path[39m
+                      [33md[39m=[32m"M5 12h14"[39m
+                    [36m/>[39m
+                    [36m<path[39m
+                      [33md[39m=[32m"M12 5v14"[39m
+                    [36m/>[39m
+                  [36m</svg>[39m
+                  [0mFollow[0m
+                [36m</span>[39m
+              [36m</button>[39m
+              [36m<button[39m
+                [33mclass[39m=[32m"inline-flex items-center justify-center rounded-full font-bold transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:ring-offset-background disabled:opacity-50 disabled:pointer-events-none active:scale-95 cursor-pointer bg-primary/80 backdrop-blur-md text-primary-foreground hover:bg-primary/90 shadow-[0_0_20px_rgba(34,197,94,0.3)] hover:shadow-[0_0_30px_rgba(34,197,94,0.5)] border border-white/10 relative overflow-hidden group h-10 px-6 text-sm gap-2"[39m
+                [33mtabindex[39m=[32m"0"[39m
+              [36m>[39m
+                [36m<div[39m
+                  [33mclass[39m=[32m"absolute inset-0 -translate-x-full group-hover:animate-[shine_1.5s_ease-in-out_infinite] z-0 pointer-events-none"[39m
+                [36m>[39m
+                  [36m<div[39m
+                    [33mclass[39m=[32m"w-1/2 h-full bg-linear-to-r from-transparent via-white/20 to-transparent skew-x-[-20deg]"[39m
+                  [36m/>[39m
+                [36m</div>[39m
+                [36m<span[39m
+                  [33mclass[39m=[32m"relative z-10 flex items-center justify-center gap-2"[39m
+                [36m>[39m
+                  [36m<svg[39m
+                    [33mfill[39m=[32m"currentColor"[39m
+                    [33mheight[39m=[32m"16"[39m
+                    [33mstroke[39m=[32m"currentColor"[39m
+                    [33mstroke-width[39m=[32m"0"[39m
+                    [33mviewBox[39m=[32m"0 0 512 512"[39m
+                    [33mwidth[39m=[32m"16"[39m
+                    [33mxmlns[39m=[32m"http://www.w3.org/2000/svg"[39m
+                  [36m>[39m
+                    [36m<path[39m
+                      [33md[39m=[32m"M336 176h40a40 40 0 0 1 40 40v208a40 40 0 0 1-40 40H136a40 40 0 0 1-40-40V216a40 40 0 0 1 40-40h40"[39m
+                      [33mfill[39m=[32m"none"[39m
+                      [33mstroke-linecap[39m=[32m"round"[39m
+                      [33mstroke-linejoin[39m=[32m"round"[39m
+                      [33mstroke-width[39m=[32m"32"[39m
+                    [36m/>[39m
+                    [36m<path[39m
+                      [33md[39m=[32m"m176 272 80 80 80-80M256 48v288"[39m
+                      [33mfill[39m=[32m"none"[39m
+                      [33mstroke-linecap[39m=[32m"round"[39m
+                      [33mstroke-linejoin[39m=[32m"round"[39m
+                      [33mstroke-width[39m=[32m"32"[39m
+                    [36m/>[39m
+                  [36m</svg>[39m
+                  [0mDownload Discography[0m
+                [36m</span>[39m
+              [36m</button>[39m
+            [36m</div>[39m
+            [36m<h1[39m
+              [33mclass[39m=[32m"text-4xl md:text-6xl font-bold text-white mb-2"[39m
+              [33mstyle[39m=[32m"opacity: 1; transform: none;"[39m
+            [36m>[39m
+              [0mTest Artist[0m
+            [36m</h1>[39m
+            [36m<p[39m
+              [33mclass[39m=[32m"text-gray-300 max-w-2xl line-clamp-2"[39m
+              [33mstyle[39m=[32m"opacity: 1;"[39m
+            [36m>[39m
+              [0mA test bio[0m
+            [36m</p>[39m
+          [36m</div>[39m
+        [36m</div>[...
+[36m [2m❯[22m src/pages/ArtistProfile.test.tsx:[2m187:24[22m[39m
+    [90m185| [39m
+    [90m186| [39m    [35mawait[39m [34mwaitFor[39m(() [33m=>[39m {
+    [90m187| [39m      expect(api.post).toHaveBeenCalledWith(expect.stringContaining("/…
+    [90m   | [39m                       [31m^[39m
+    [90m188| [39m        source[33m:[39m [32m"spotify"[39m[33m,[39m
+    [90m189| [39m      })[33m;[39m
+[90m [2m❯[22m runWithExpensiveErrorDiagnosticsDisabled node_modules/@testing-library/dom/dist/config.js:[2m47:12[22m[39m
+[90m [2m❯[22m checkCallback node_modules/@testing-library/dom/dist/wait-for.js:[2m124:77[22m[39m
+[90m [2m❯[22m Timeout.checkRealTimersCallback node_modules/@testing-library/dom/dist/wait-for.js:[2m118:16[22m[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[11/13]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m src/pages/Search.test.tsx[2m > [22mSearch Page Integration[2m > [22mhandles 'All' source search (Multiple APIs)
+[31m[1mTestingLibraryElementError[22m: Unable to find an element with the text: Spotify Item. This could be because the text is broken up by multiple elements. In this case, you can provide a function for your text matcher to make your matcher more flexible.
+
+Ignored nodes: comments, script, style
+[36m<body>[31m
+  [36m<div>[31m
+    [36m<div[31m
+      [33mclass[31m=[32m"space-y-8"[31m
+    [36m>[31m
+      [36m<div[31m
+        [33mclass[31m=[32m"text-center space-y-4"[31m
+      [36m>[31m
+        [36m<h1[31m
+          [33mclass[31m=[32m"text-4xl font-bold tracking-tight"[31m
+        [36m>[31m
+          [0msearch.title[0m
+        [36m</h1>[31m
+        [36m<p[31m
+          [33mclass[31m=[32m"text-muted-foreground"[31m
+        [36m>[31m
+          [0msearch.subtitle[0m
+        [36m</p>[31m
+      [36m</div>[31m
+      [36m<div[31m
+        [33mdata-testid[31m=[32m"search-bar"[31m
+      [36m>[31m
+        [36m<input[31m
+          [33mdata-testid[31m=[32m"search-input"[31m
+          [33mvalue[31m=[32m"test query"[31m
+        [36m/>[31m
+        [36m<button[31m
+          [33mdata-testid[31m=[32m"search-btn"[31m
+        [36m>[31m
+          [0mSearch Spotify[0m
+        [36m</button>[31m
+        [36m<button[31m
+          [33mdata-testid[31m=[32m"search-all-btn"[31m
+        [36m>[31m
+          [0mSearch All[0m
+        [36m</button>[31m
+        [36m<button[31m
+          [33mdata-testid[31m=[32m"search-error-btn"[31m
+        [36m>[31m
+          [0mSearch Soundcloud[0m
+        [36m</button>[31m
+      [36m</div>[31m
+      [36m<div[31m
+        [33mclass[31m=[32m"mt-8 space-y-8"[31m
+      [36m>[31m
+        [36m<div[31m
+          [33mdata-testid[31m=[32m"search-results"[31m
+        [36m/>[31m
+      [36m</div>[31m
+    [36m</div>[31m
+  [36m</div>[31m
+[36m</body>[31m
+
+Ignored nodes: comments, script, style
+[36m<html>[31m
+  [36m<head />[31m
+  [36m<body>[31m
+    [36m<div>[31m
+      [36m<div[31m
+        [33mclass[31m=[32m"space-y-8"[31m
+      [36m>[31m
+        [36m<div[31m
+          [33mclass[31m=[32m"text-center space-y-4"[31m
+        [36m>[31m
+          [36m<h1[31m
+            [33mclass[31m=[32m"text-4xl font-bold tracking-tight"[31m
+          [36m>[31m
+            [0msearch.title[0m
+          [36m</h1>[31m
+          [36m<p[31m
+            [33mclass[31m=[32m"text-muted-foreground"[31m
+          [36m>[31m
+            [0msearch.subtitle[0m
+          [36m</p>[31m
+        [36m</div>[31m
+        [36m<div[31m
+          [33mdata-testid[31m=[32m"search-bar"[31m
+        [36m>[31m
+          [36m<input[31m
+            [33mdata-testid[31m=[32m"search-input"[31m
+            [33mvalue[31m=[32m"test query"[31m
+          [36m/>[31m
+          [36m<button[31m
+            [33mdata-testid[31m=[32m"search-btn"[31m
+          [36m>[31m
+            [0mSearch Spotify[0m
+          [36m</button>[31m
+          [36m<button[31m
+            [33mdata-testid[31m=[32m"search-all-btn"[31m
+          [36m>[31m
+            [0mSearch All[0m
+          [36m</button>[31m
+          [36m<button[31m
+            [33mdata-testid[31m=[32m"search-error-btn"[31m
+          [36m>[31m
+            [0mSearch Soundcloud[0m
+          [36m</button>[31m
+        [36m</div>[31m
+        [36m<div[31m
+          [33mclass[31m=[32m"mt-8 space-y-8"[31m
+        [36m>[31m
+          [36m<div[31m
+            [33mdata-testid[31m=[32m"search-results"[31m
+          [36m/>[31m
+        [36m</div>[31m
+      [36m</div>[31m
+    [36m</div>[31m
+  [36m</body>[31m
+[36m</html>[31m[39m
+[90m [2m❯[22m Proxy.waitForWrapper node_modules/@testing-library/dom/dist/wait-for.js:[2m163:27[22m[39m
+[36m [2m❯[22m src/pages/Search.test.tsx:[2m109:11[22m[39m
+    [90m107| [39m    fireEvent[33m.[39m[34mclick[39m(screen[33m.[39m[34mgetByTestId[39m([32m"search-all-btn"[39m))[33m;[39m
+    [90m108| [39m
+    [90m109| [39m    [35mawait[39m [34mwaitFor[39m(() [33m=>[39m {
+    [90m   | [39m          [31m^[39m
+    [90m110| [39m      [34mexpect[39m(screen[33m.[39m[34mgetByText[39m([32m"Spotify Item"[39m))[33m.[39m[34mtoBeInTheDocument[39m()[33m;[39m
+    [90m111| [39m      expect(screen.getAllByText("YouTube Item").length).toBeGreaterTh…
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[12/13]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m src/pages/Search.test.tsx[2m > [22mSearch Page Integration[2m > [22mhandles partial failure in 'All' search
+[31m[1mTestingLibraryElementError[22m: Unable to find an element with the text: Spotify. This could be because the text is broken up by multiple elements. In this case, you can provide a function for your text matcher to make your matcher more flexible.
+
+Ignored nodes: comments, script, style
+[36m<body>[31m
+  [36m<div>[31m
+    [36m<div[31m
+      [33mclass[31m=[32m"space-y-8"[31m
+    [36m>[31m
+      [36m<div[31m
+        [33mclass[31m=[32m"text-center space-y-4"[31m
+      [36m>[31m
+        [36m<h1[31m
+          [33mclass[31m=[32m"text-4xl font-bold tracking-tight"[31m
+        [36m>[31m
+          [0msearch.title[0m
+        [36m</h1>[31m
+        [36m<p[31m
+          [33mclass[31m=[32m"text-muted-foreground"[31m
+        [36m>[31m
+          [0msearch.subtitle[0m
+        [36m</p>[31m
+      [36m</div>[31m
+      [36m<div[31m
+        [33mdata-testid[31m=[32m"search-bar"[31m
+      [36m>[31m
+        [36m<input[31m
+          [33mdata-testid[31m=[32m"search-input"[31m
+          [33mvalue[31m=[32m"test query"[31m
+        [36m/>[31m
+        [36m<button[31m
+          [33mdata-testid[31m=[32m"search-btn"[31m
+        [36m>[31m
+          [0mSearch Spotify[0m
+        [36m</button>[31m
+        [36m<button[31m
+          [33mdata-testid[31m=[32m"search-all-btn"[31m
+        [36m>[31m
+          [0mSearch All[0m
+        [36m</button>[31m
+        [36m<button[31m
+          [33mdata-testid[31m=[32m"search-error-btn"[31m
+        [36m>[31m
+          [0mSearch Soundcloud[0m
+        [36m</button>[31m
+      [36m</div>[31m
+      [36m<div[31m
+        [33mclass[31m=[32m"mt-8 space-y-8"[31m
+      [36m>[31m
+        [36m<div[31m
+          [33mdata-testid[31m=[32m"search-results"[31m
+        [36m/>[31m
+      [36m</div>[31m
+    [36m</div>[31m
+  [36m</div>[31m
+[36m</body>[31m
+
+Ignored nodes: comments, script, style
+[36m<html>[31m
+  [36m<head />[31m
+  [36m<body>[31m
+    [36m<div>[31m
+      [36m<div[31m
+        [33mclass[31m=[32m"space-y-8"[31m
+      [36m>[31m
+        [36m<div[31m
+          [33mclass[31m=[32m"text-center space-y-4"[31m
+        [36m>[31m
+          [36m<h1[31m
+            [33mclass[31m=[32m"text-4xl font-bold tracking-tight"[31m
+          [36m>[31m
+            [0msearch.title[0m
+          [36m</h1>[31m
+          [36m<p[31m
+            [33mclass[31m=[32m"text-muted-foreground"[31m
+          [36m>[31m
+            [0msearch.subtitle[0m
+          [36m</p>[31m
+        [36m</div>[31m
+        [36m<div[31m
+          [33mdata-testid[31m=[32m"search-bar"[31m
+        [36m>[31m
+          [36m<input[31m
+            [33mdata-testid[31m=[32m"search-input"[31m
+            [33mvalue[31m=[32m"test query"[31m
+          [36m/>[31m
+          [36m<button[31m
+            [33mdata-testid[31m=[32m"search-btn"[31m
+          [36m>[31m
+            [0mSearch Spotify[0m
+          [36m</button>[31m
+          [36m<button[31m
+            [33mdata-testid[31m=[32m"search-all-btn"[31m
+          [36m>[31m
+            [0mSearch All[0m
+          [36m</button>[31m
+          [36m<button[31m
+            [33mdata-testid[31m=[32m"search-error-btn"[31m
+          [36m>[31m
+            [0mSearch Soundcloud[0m
+          [36m</button>[31m
+        [36m</div>[31m
+        [36m<div[31m
+          [33mclass[31m=[32m"mt-8 space-y-8"[31m
+        [36m>[31m
+          [36m<div[31m
+            [33mdata-testid[31m=[32m"search-results"[31m
+          [36m/>[31m
+        [36m</div>[31m
+      [36m</div>[31m
+    [36m</div>[31m
+  [36m</body>[31m
+[36m</html>[31m[39m
+[90m [2m❯[22m Proxy.waitForWrapper node_modules/@testing-library/dom/dist/wait-for.js:[2m163:27[22m[39m
+[36m [2m❯[22m src/pages/Search.test.tsx:[2m185:11[22m[39m
+    [90m183| [39m    fireEvent[33m.[39m[34mclick[39m(screen[33m.[39m[34mgetByTestId[39m([32m"search-all-btn"[39m))[33m;[39m
+    [90m184| [39m
+    [90m185| [39m    [35mawait[39m [34mwaitFor[39m(() [33m=>[39m {
+    [90m   | [39m          [31m^[39m
+    [90m186| [39m      [90m// Should still show Spotify results[39m
+    [90m187| [39m      [34mexpect[39m(screen[33m.[39m[34mgetByText[39m([32m"Spotify"[39m))[33m.[39m[34mtoBeInTheDocument[39m()[33m;[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[13/13]⎯[22m[39m
+
+
+[2m Test Files [22m [1m[31m6 failed[39m[22m[2m | [22m[1m[32m70 passed[39m[22m[90m (76)[39m
+[2m      Tests [22m [1m[31m13 failed[39m[22m[2m | [22m[1m[32m445 passed[39m[22m[90m (458)[39m
+[2m   Start at [22m 22:03:51
+[2m   Duration [22m 4.47s[2m (transform 7.58s, setup 5.04s, import 22.39s, tests 19.60s, environment 44.06s)[22m
+

@@ -7,7 +7,6 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
 from fastapi.middleware.trustedhost import TrustedHostMiddleware
 from fastapi.staticfiles import StaticFiles
-from fastapi_limiter import FastAPILimiter
 from uvicorn.middleware.proxy_headers import ProxyHeadersMiddleware
 
 from app import models  # noqa: F401 - Ensure models are registered
@@ -16,6 +15,7 @@ from app.api.v1 import (
     artists,
     audit,
     auth,
+    browse,
     dashboard,
     deezer,
     downloads,
@@ -90,6 +90,7 @@ application.include_router(history.router, prefix="/api/v1/history", tags=["hist
 application.include_router(youtube.router, prefix="/api/v1/youtube", tags=["youtube"])
 application.include_router(users.router, prefix="/api/v1/users", tags=["users"])
 application.include_router(stream.router, prefix="/api/v1/stream", tags=["stream"])
+application.include_router(browse.router, prefix="/api/v1/browse", tags=["browse"])
 application.include_router(spotify.router, prefix="/api/v1/spotify", tags=["spotify"])
 application.include_router(deezer.router, prefix="/api/v1/deezer", tags=["deezer"])
 application.include_router(sync.router, prefix="/api/v1/sync", tags=["sync"])
@@ -121,29 +122,34 @@ async def get_version():
 
 
 # Ensure download directory exists
-if not os.path.exists(settings.DOWNLOAD_DIR):
-    os.makedirs(settings.DOWNLOAD_DIR)
-try:
-    # nosemgrep: python.lang.security.audit.insecure-file-permissions.insecure-file-permissions, \
-    #            insecure-file-permissions
-    os.chmod(settings.DOWNLOAD_DIR, 0o755)  # nosec B103 - shared download dir needs group/other read+exec
-except Exception as e:
-    logger.warning(f"Could not set permissions on {settings.DOWNLOAD_DIR}: {e}")
+def setup_static_dirs(app: FastAPI):
+    """Setup and mount static directories."""
+    # Ensure download directory exists
+    try:
+        if not os.path.exists(settings.DOWNLOAD_DIR):
+            os.makedirs(settings.DOWNLOAD_DIR, exist_ok=True)
+        # nosemgrep: python.lang.security.audit.insecure-file-permissions.insecure-file-permissions
+        os.chmod(settings.DOWNLOAD_DIR, 0o755)  # nosec B103
+    except Exception as e:
+        logger.warning(f"Could not setup {settings.DOWNLOAD_DIR}: {e}")
 
-logger.info(f"📂 Mounting StaticFiles from: {settings.DOWNLOAD_DIR}")
-try:
-    files = os.listdir(settings.DOWNLOAD_DIR)
-    logger.info(f"📂 Files in {settings.DOWNLOAD_DIR}: {files}")
-except Exception as e:
-    logger.error(f"❌ Error listing files: {e}")
+    logger.info(f"📂 Mounting StaticFiles from: {settings.DOWNLOAD_DIR}")
+    if os.path.exists(settings.DOWNLOAD_DIR):
+        app.mount("/stream", StaticFiles(directory=settings.DOWNLOAD_DIR), name="stream")
+    else:
+        logger.error(f"❌ Cannot mount /stream: {settings.DOWNLOAD_DIR} does not exist")
 
-application.mount("/stream", StaticFiles(directory=settings.DOWNLOAD_DIR), name="stream")
-# Mount static files (avatars, etc.)
-static_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "static")
-if not os.path.exists(static_dir):
-    os.makedirs(static_dir)
-application.mount("/static", StaticFiles(directory=static_dir), name="static")
+    # Mount static files (avatars, etc.)
+    static_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "static")
+    try:
+        if not os.path.exists(static_dir):
+            os.makedirs(static_dir, exist_ok=True)
+        app.mount("/static", StaticFiles(directory=static_dir), name="static")
+    except Exception as e:
+        logger.warning(f"Could not setup static dir {static_dir}: {e}")
 
+
+setup_static_dirs(application)
 application.mount("/socket.io", socket_manager.app)
 
 
@@ -181,10 +187,6 @@ async def startup_event():
 
     # Connect to Redis
     await cache_manager.connect()
-
-    # Init Rate Limiter
-    if cache_manager.redis:
-        await FastAPILimiter.init(cache_manager.redis)
 
     # Start Scheduler
     scheduler_service.start()

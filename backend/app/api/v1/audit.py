@@ -92,7 +92,7 @@ async def list_audit_logs(
     offset = (page - 1) * page_size
     query = query.offset(offset).limit(page_size)
 
-    result = await db.execute(query)
+    result = await db.execute(query)  # nosemgrep: python.fastapi.db.generic-sql-fastapi.generic-sql-fastapi
     logs = result.scalars().all()
 
     return AuditLogListResponse(

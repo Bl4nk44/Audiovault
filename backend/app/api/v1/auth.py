@@ -11,7 +11,11 @@ from app.models.user import User
 from app.services.auth_manager import AuthManager
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi_limiter.depends import RateLimiter
+from pyrate_limiter import Limiter, Rate
 from sqlalchemy.ext.asyncio import AsyncSession
+
+register_limiter = RateLimiter(Limiter(Rate(5, 60000)))
+login_limiter = RateLimiter(Limiter(Rate(10, 60000)))
 
 router = APIRouter()
 
@@ -20,7 +24,7 @@ router = APIRouter()
     "/register",
     response_model=UserResponse,
     status_code=status.HTTP_201_CREATED,
-    dependencies=[Depends(RateLimiter(times=5, seconds=60))],
+    dependencies=[Depends(register_limiter)],
 )
 async def register(user_in: UserCreate, db: AsyncSession = Depends(get_db)):
     auth_manager = AuthManager(db)
@@ -30,7 +34,7 @@ async def register(user_in: UserCreate, db: AsyncSession = Depends(get_db)):
 @router.post(
     "/login",
     response_model=Token,
-    dependencies=[Depends(RateLimiter(times=10, seconds=60))],
+    dependencies=[Depends(login_limiter)],
 )
 async def login(user_in: UserLogin, db: AsyncSession = Depends(get_db)):
     auth_manager = AuthManager(db)

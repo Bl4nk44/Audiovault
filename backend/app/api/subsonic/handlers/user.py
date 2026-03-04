@@ -579,7 +579,7 @@ async def get_random_songs(
     # Random order
     query = query.order_by(sqlfunc.random()).limit(size)
 
-    result = await db.execute(query)
+    result = await db.execute(query)  # nosemgrep: python.fastapi.db.generic-sql-fastapi.generic-sql-fastapi
 
     songs = []
     for track, download in result.all():

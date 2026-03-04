@@ -15,7 +15,7 @@ export default function AlbumDetails() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const location = useLocation();
-  const source = location.state?.source || "spotify";
+  const source = location.state?.source || "deezer";
 
   const { addToQueue } = useStore();
   const [showPlaylistModal, setShowPlaylistModal] = useState(false);
@@ -108,7 +108,7 @@ export default function AlbumDetails() {
 
           <div className="space-y-2">
             <span className="text-sm font-medium text-primary uppercase tracking-wider">
-              {album.album_type === "single" ? "Single" : "Album"}
+              {album.album_type === "single" ? "Single" : album.album_type === "compilation" ? "Compilation" : "Album"}
             </span>
             <motion.h1
               initial={{ opacity: 0, y: 20 }}
@@ -122,7 +122,7 @@ export default function AlbumDetails() {
               className="text-xl text-gray-300 cursor-pointer hover:text-primary transition-colors bg-transparent border-none text-left"
               onClick={() =>
                 navigate(`/artist/${album.artist_id}`, {
-                  state: { source: "spotify" },
+                  state: { source },
                 })
               }
             >
@@ -169,7 +169,7 @@ export default function AlbumDetails() {
       <AddToPlaylistModal
         isOpen={showPlaylistModal}
         onClose={() => setShowPlaylistModal(false)}
-        trackIds={album.tracks?.map((t) => t.id || t.spotify_id || "").filter(Boolean) || []}
+        trackIds={album.tracks?.map((t) => t.id || t.deezer_id || t.spotify_id || "").filter(Boolean) || []}
       />
 
       {/* Tracks Section */}

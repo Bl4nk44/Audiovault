@@ -40,6 +40,7 @@ async def test_subsonic_stream(client: AsyncClient, subsonic_auth_params, sample
     with (
         patch("os.path.exists", return_value=True),
         patch("os.path.getsize", return_value=1024),
+        patch("pathlib.Path.is_relative_to", return_value=True),
         patch("aiofiles.open", new_callable=MagicMock) as mock_open,
     ):
         # Configure aiofiles mock
@@ -62,6 +63,7 @@ async def test_subsonic_stream_range(client: AsyncClient, subsonic_auth_params, 
     with (
         patch("os.path.exists", return_value=True),
         patch("os.path.getsize", return_value=1024),
+        patch("pathlib.Path.is_relative_to", return_value=True),
         patch("aiofiles.open", new_callable=MagicMock) as mock_open,
     ):
         mock_file = AsyncMock()

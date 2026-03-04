@@ -17,12 +17,8 @@ export interface AlbumDetails {
 }
 
 export const albumsApi = {
-  getById: async (id: string, source: string = "spotify"): Promise<AlbumDetails> => {
-    if (source === "spotify") {
-      const response = await api.get<AlbumDetails>(`/spotify/album/${id}`);
-      return response.data;
-    }
-    // Add other sources as needed
-    throw new Error(`Unsupported source: ${source}`);
+  getById: async (id: string, source: string = "deezer"): Promise<AlbumDetails> => {
+    const response = await api.get<AlbumDetails>(`/browse/album/${source}/${id}`);
+    return response.data;
   },
 };

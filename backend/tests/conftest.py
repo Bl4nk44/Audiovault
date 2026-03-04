@@ -68,12 +68,6 @@ async def mock_cache_manager():
         real_cache_manager.redis.evalsha.return_value = 1
         mock_get.return_value = None
 
-        # Mock FastAPILimiter to use our mocked redis
-        from fastapi_limiter import FastAPILimiter
-
-        if not FastAPILimiter.redis:
-            await FastAPILimiter.init(real_cache_manager.redis)
-
         yield real_cache_manager
 
         # Cleanup

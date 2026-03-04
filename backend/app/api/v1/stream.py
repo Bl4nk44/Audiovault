@@ -2,11 +2,13 @@ import asyncio
 import logging
 import os
 from typing import Optional
+from urllib.parse import urlparse
 
 import aiofiles
 import httpx
 import mutagen.mp4
 import yt_dlp
+from app.api.subsonic.handlers.media import ALLOWED_IMAGE_DOMAINS
 from app.core.cache import cache_manager
 from app.core.executors import stream_executor
 from app.db.database import get_db
@@ -168,7 +170,11 @@ async def get_track_cover(track_id: str, db: AsyncSession = Depends(get_db)):
         if album and album.images:
             url = (album.images or {}).get("300") or (album.images or {}).get("640")
             if url:
-                return RedirectResponse(url)
+                parsed = urlparse(url)
+                if parsed.netloc in ALLOWED_IMAGE_DOMAINS:
+                    return RedirectResponse(
+                        url
+                    )  # nosemgrep: python.fastapi.web.tainted-redirect-fastapi.tainted-redirect-fastapi
 
     # 404 if no file source or art found
     raise HTTPException(status_code=404, detail="No cover art found")
@@ -193,7 +199,11 @@ async def get_album_cover(album_id: str, db: AsyncSession = Depends(get_db)):
     # Priority: 300px -> 640px -> generic url
     url = (album.images or {}).get("300") or (album.images or {}).get("640") or (album.images or {}).get("url")
     if url:
-        return RedirectResponse(url)
+        parsed = urlparse(url)
+        if parsed.netloc in ALLOWED_IMAGE_DOMAINS:
+            return RedirectResponse(
+                url
+            )  # nosemgrep: python.fastapi.web.tainted-redirect-fastapi.tainted-redirect-fastapi
 
     raise HTTPException(status_code=404, detail="No cover art found")
 

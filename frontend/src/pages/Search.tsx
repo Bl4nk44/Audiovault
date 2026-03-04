@@ -46,18 +46,7 @@ export default function Search() {
       typesToFetch = [type];
     }
 
-    if (source === "spotify") {
-      // Spotify supports multiple types in one call
-      try {
-        const spotifyTypes = type === "all" ? "track,artist,playlist" : type;
-        const response = await api.get("/spotify/search", {
-          params: { q: query, offset: currentOffset, type: spotifyTypes },
-        });
-        newResults = response.data;
-      } catch (e) {
-        console.error(e);
-      }
-    } else if (source === "youtube") {
+    if (source === "youtube") {
       // YouTube needs separate calls
       const promises = typesToFetch.map((t) =>
         api
@@ -69,47 +58,27 @@ export default function Search() {
       );
       const results = await Promise.all(promises);
       newResults = results.flat();
-    } else if (source === "all") {
-      // Fetch from all sources
-      const spotifyTypes = type === "all" ? "track,artist,playlist" : type;
-      const spotifyPromise = api
-        .get("/spotify/search", {
-          params: { q: query, offset: currentOffset, type: spotifyTypes },
-        })
-        .then((res) => res.data)
-        .catch(() => []);
+    } else if (source === "all" || source === "spotify" || source === "deezer") {
+      // Unified browse search (aggregates Deezer, MusicBrainz, Spotify)
+      try {
+        const browseType = type === "all" ? "track" : type;
+        const response = await api.get("/browse/search", {
+          params: { q: query, offset: currentOffset, type: browseType, limit: 20 },
+        });
+        newResults = response.data;
 
-      const youtubePromises = typesToFetch.map((t) =>
-        api
-          .get("/youtube/search", {
-            params: { q: query, offset: currentOffset, type: t },
-          })
-          .then((res) => res.data)
-          .catch(() => [])
-      );
-
-      // Deezer (tracks only for now)
-      // Only fetch deezer if type is 'all' or 'track'
-      let deezerPromise = Promise.resolve([]);
-      if (type === "all" || type === "track") {
-        deezerPromise = api
-          .get("/deezer/search", {
-            params: { q: query, offset: currentOffset },
-          })
-          .then((res) => res.data)
-          .catch(() => []);
+        // For "all" type, also fetch artists
+        if (type === "all") {
+          const artistResponse = await api.get("/browse/search", {
+            params: { q: query, type: "artist", limit: 5 },
+          }).catch(() => ({ data: [] }));
+          newResults = [...newResults, ...artistResponse.data];
+        }
+      } catch (e) {
+        console.error(e);
       }
-
-      const [spotifyResults, ...youtubeResultsArray] = await Promise.all([
-        spotifyPromise,
-        ...youtubePromises,
-        deezerPromise,
-      ]);
-      const deezerResults = youtubeResultsArray.pop(); // Last one is deezer
-
-      newResults = [...spotifyResults, ...youtubeResultsArray.flat(), ...deezerResults];
     } else {
-      // Fallback for other sources (deezer, apple_music, tidal, amazon_music)
+      // Fallback for other sources (apple_music, tidal, amazon_music, soundcloud)
       const response = await api.get(`/${source}/search`, {
         params: { q: query, offset: currentOffset },
       });

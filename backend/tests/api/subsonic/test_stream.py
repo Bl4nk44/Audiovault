@@ -52,29 +52,35 @@ async def sample_data(db_session: AsyncSession, test_user: User):
 @pytest.mark.asyncio
 async def test_stream(client: AsyncClient, test_user: User, sample_data):
     artist, album, track, temp_path = sample_data
-    response = await client.get(f"/rest/stream.view?id={track.id}&u=testuser&p=testpass&c=test&v=1.16.1&f=json")
+    from unittest.mock import patch
 
-    try:
-        assert response.status_code == 200
-        assert response.headers["Content-Type"] == "audio/mpeg"
-        assert len(response.content) > 0
-    finally:
-        if os.path.exists(temp_path):
-            os.remove(temp_path)
+    with patch("pathlib.Path.is_relative_to", return_value=True):
+        response = await client.get(f"/rest/stream.view?id={track.id}&u=testuser&p=testpass&c=test&v=1.16.1&f=json")
+
+        try:
+            assert response.status_code == 200
+            assert response.headers["Content-Type"] == "audio/mpeg"
+            assert len(response.content) > 0
+        finally:
+            if os.path.exists(temp_path):
+                os.remove(temp_path)
 
 
 @pytest.mark.asyncio
 async def test_download(client: AsyncClient, test_user: User, sample_data):
     artist, album, track, temp_path = sample_data
-    response = await client.get(f"/rest/download.view?id={track.id}&u=testuser&p=testpass&c=test&v=1.16.1&f=json")
+    from unittest.mock import patch
 
-    try:
-        assert response.status_code == 200
-        assert "attachment" in response.headers.get("Content-Disposition", "")
-        assert len(response.content) > 0
-    finally:
-        if os.path.exists(temp_path):
-            os.remove(temp_path)
+    with patch("pathlib.Path.is_relative_to", return_value=True):
+        response = await client.get(f"/rest/download.view?id={track.id}&u=testuser&p=testpass&c=test&v=1.16.1&f=json")
+
+        try:
+            assert response.status_code == 200
+            assert "attachment" in response.headers.get("Content-Disposition", "")
+            assert len(response.content) > 0
+        finally:
+            if os.path.exists(temp_path):
+                os.remove(temp_path)
 
 
 @pytest.mark.asyncio

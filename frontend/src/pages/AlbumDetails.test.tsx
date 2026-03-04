@@ -150,7 +150,7 @@ describe("AlbumDetails Page", () => {
 
     expect(mockNavigate).toHaveBeenCalledWith(
       "/artist/artist-123",
-      expect.objectContaining({ state: { source: "spotify" } })
+      expect.objectContaining({ state: { source: "deezer" } })
     );
   });
 

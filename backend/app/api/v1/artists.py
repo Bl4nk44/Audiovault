@@ -13,7 +13,9 @@ router = APIRouter()
 
 @router.get("/", response_model=list[ArtistResponse])
 async def get_artists(skip: int = 0, limit: int = 100, db: AsyncSession = Depends(get_db)):
-    result = await db.execute(select(Artist).offset(skip).limit(limit))
+    result = await db.execute(
+        select(Artist).offset(skip).limit(limit)
+    )  # nosemgrep: python.fastapi.db.generic-sql-fastapi.generic-sql-fastapi
     return result.scalars().all()
 
 

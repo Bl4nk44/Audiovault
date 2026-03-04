@@ -73,7 +73,7 @@ async def test_get_recommendations_lastfm_success(engine, user_with_lastfm, mock
 
     result = await engine.get_recommendations(user_with_lastfm)
 
-    assert result.source == "lastfm+spotify"
+    assert result.source == "lastfm+deezer"
     assert len(result.tracks) == 1
 
     # Verify caching

@@ -139,7 +139,7 @@ describe("ArtistProfile", () => {
   });
 
   it("handles watchlist toggle (Follow/Unfollow)", async () => {
-    mockArtistsApi.getById.mockResolvedValue({ ...mockArtistFull, spotify_id: "new-id" });
+    mockArtistsApi.getById.mockResolvedValue({ ...mockArtistFull, source: "deezer", spotify_id: "new-id" });
     renderComponent("new-id");
 
     await waitFor(() => expect(screen.getByText("Test Artist")).toBeInTheDocument());
@@ -184,8 +184,8 @@ describe("ArtistProfile", () => {
     fireEvent.click(dlBtn);
 
     await waitFor(() => {
-      expect(api.post).toHaveBeenCalledWith(expect.stringContaining("/download-all"), {
-        source: "spotify",
+      expect(api.post).toHaveBeenCalledWith(expect.stringContaining("/downloads/artist/spotify-123/download-all"), {
+        source: "deezer",
       });
       expect(notify.success).toHaveBeenCalledWith("Queued 10 tracks for download");
     });

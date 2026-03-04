@@ -14,7 +14,7 @@ describe("playlistsApi", () => {
   });
 
   describe("getById", () => {
-    it("should fetch playlist from spotify endpoint by default", async () => {
+    it("should fetch playlist from deezer endpoint by default", async () => {
       const mockPlaylist = {
         id: "pl-1",
         title: "Test Playlist",
@@ -24,7 +24,7 @@ describe("playlistsApi", () => {
 
       const result = await playlistsApi.getById("pl-1");
 
-      expect(api.get).toHaveBeenCalledWith("/spotify/playlist/pl-1");
+      expect(api.get).toHaveBeenCalledWith("/browse/playlist/deezer/pl-1");
       expect(result).toEqual(mockPlaylist);
     });
 
@@ -33,7 +33,7 @@ describe("playlistsApi", () => {
 
       await playlistsApi.getById("pl-1", "spotify");
 
-      expect(api.get).toHaveBeenCalledWith("/spotify/playlist/pl-1");
+      expect(api.get).toHaveBeenCalledWith("/browse/playlist/spotify/pl-1");
     });
 
     it("should fetch playlist from youtube when source is youtube", async () => {
@@ -42,12 +42,6 @@ describe("playlistsApi", () => {
       await playlistsApi.getById("yt-pl-123", "youtube");
 
       expect(api.get).toHaveBeenCalledWith("/youtube/playlist/yt-pl-123");
-    });
-
-    it("should throw error for unsupported sources", async () => {
-      await expect(playlistsApi.getById("pl-1", "deezer")).rejects.toThrow(
-        "Source deezer not supported yet for playlist details"
-      );
     });
   });
 });

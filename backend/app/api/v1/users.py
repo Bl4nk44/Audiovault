@@ -41,9 +41,16 @@ async def delete_user_me(
             # For now, we only delete the default directory to avoid deleting external data.
             pass
 
-        if os.path.exists(user_lib_path):
+        from pathlib import Path
+
+        base_dir = Path(settings.DOWNLOAD_DIR).resolve()
+        target_path = Path(user_lib_path).resolve()
+
+        if os.path.exists(user_lib_path) and target_path.is_relative_to(base_dir) and target_path != base_dir:
             try:
-                shutil.rmtree(user_lib_path)
+                shutil.rmtree(
+                    user_lib_path
+                )  # nosemgrep: python.fastapi.file.tainted-path-traversal-stdlib-fastapi.tainted-path-traversal-stdlib-fastapi  # noqa: E501
             except Exception as e:
                 # Log error but proceed with account deletion
                 print(f"Failed to delete user library: {e}")
@@ -108,10 +115,9 @@ async def update_password_me(
     import hashlib
 
     current_user.hashed_password = get_password_hash(password_update.new_password)
-    # Sync Subsonic password (MD5)
-    # nosec B303: MD5 required for Subsonic Legacy Auth
-    md5_hash = hashlib.md5(password_update.new_password.encode("utf-8")).hexdigest()
-    # nosemgrep: python.lang.security.audit.md5-used-as-password.md5-used-as-password, md5-used-as-password
+    # Sync Subsonic password (MD5) - required for Subsonic Legacy Auth
+    # nosemgrep: python.lang.security.audit.md5-used-as-password.md5-used-as-password
+    md5_hash = hashlib.md5(password_update.new_password.encode("utf-8")).hexdigest()  # nosec B303
     current_user.subsonic_password = md5_hash
     await db.commit()
     return {"status": "success"}

@@ -14,7 +14,7 @@ describe("albumsApi", () => {
   });
 
   describe("getById", () => {
-    it("should fetch album from spotify endpoint by default", async () => {
+    it("should fetch album from browse endpoint using deezer by default", async () => {
       const mockAlbum = {
         id: "album-1",
         title: "Test Album",
@@ -25,22 +25,16 @@ describe("albumsApi", () => {
 
       const result = await albumsApi.getById("album-1");
 
-      expect(api.get).toHaveBeenCalledWith("/spotify/album/album-1");
+      expect(api.get).toHaveBeenCalledWith("/browse/album/deezer/album-1");
       expect(result).toEqual(mockAlbum);
     });
 
-    it("should fetch album from spotify endpoint when source is spotify", async () => {
+    it("should fetch album from browse endpoint when source is spotify", async () => {
       vi.mocked(api.get).mockResolvedValue({ data: { id: "album-1" } });
 
       await albumsApi.getById("album-1", "spotify");
 
-      expect(api.get).toHaveBeenCalledWith("/spotify/album/album-1");
-    });
-
-    it("should throw error for unsupported sources", async () => {
-      await expect(albumsApi.getById("album-1", "unsupported")).rejects.toThrow(
-        "Unsupported source: unsupported"
-      );
+      expect(api.get).toHaveBeenCalledWith("/browse/album/spotify/album-1");
     });
   });
 });
