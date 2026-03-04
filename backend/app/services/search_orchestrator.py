@@ -223,7 +223,7 @@ class SearchOrchestrator:
         """Deduplicate results by ISRC, preferring entries with cover art."""
         seen_isrcs: dict[str, dict[str, Any]] = {}
         seen_titles: dict[str, dict[str, Any]] = {}
-        unique = []
+        unique: list[dict[str, Any]] = []
 
         for result in results:
             isrc = result.get("isrc")
@@ -260,7 +260,7 @@ class SearchOrchestrator:
     def _deduplicate_by_name(self, results: list[dict[str, Any]]) -> list[dict[str, Any]]:
         """Deduplicate artist/album results by name, preferring one with image."""
         seen: dict[str, dict[str, Any]] = {}
-        unique = []
+        unique: list[dict[str, Any]] = []
 
         for result in results:
             name = result.get("name", result.get("title", "")).lower()

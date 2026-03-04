@@ -170,7 +170,7 @@ class TestAlbumDetailsDeprecatedFields:
             # No 'label' key
             # No 'album_type' key
         }
-        mock_tracks = {"items": [], "next": None}
+        mock_tracks: dict[str, Any] = {"items": [], "next": None}
         spotify_service.client.album.return_value = mock_album
         spotify_service.client.album_tracks.return_value = mock_tracks
 
@@ -189,7 +189,7 @@ class TestAlbumDetailsDeprecatedFields:
             "album_type": "single",
             "total_tracks": 1,
         }
-        mock_tracks = {"items": [], "next": None}
+        mock_tracks: dict[str, Any] = {"items": [], "next": None}
         spotify_service.client.album.return_value = mock_album
         spotify_service.client.album_tracks.return_value = mock_tracks
 
@@ -220,7 +220,7 @@ class TestPlaylistNoTracks:
 
     def test_playlist_tracks_empty_items(self, spotify_service):
         """get_playlist_tracks should return empty list for restricted playlists."""
-        mock_result = {"items": [], "next": None}
+        mock_result: dict[str, Any] = {"items": [], "next": None}
         spotify_service.client.playlist_tracks.return_value = mock_result
 
         result = spotify_service.get_playlist_tracks("pl_restricted")

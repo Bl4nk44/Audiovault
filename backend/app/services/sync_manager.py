@@ -28,7 +28,7 @@ class SyncManager:
             return val
         return UUID(str(val))
 
-    async def analyze_watchlist(self, db: AsyncSession, user_id: str, watchlist_id: str) -> dict:
+    async def analyze_watchlist(self, db: AsyncSession, user_id: str | UUID, watchlist_id: str | UUID) -> dict:
         """
         Analyzes a watchlist for synchronization.
         Returns a report containing items to add, remove, and safety warnings.
@@ -149,7 +149,7 @@ class SyncManager:
     async def execute_sync(
         self,
         db: AsyncSession,
-        user_id: str,
+        user_id: str | UUID,
         sync_token: str,
         approved_removals: list[str],
     ):
@@ -162,6 +162,7 @@ class SyncManager:
 
         report = self._pending_reports[sync_token]
         watchlist_id = self._to_uuid(report["watchlist_id"])
+        u_uuid = self._to_uuid(user_id)
 
         # 1. Process Removals
         removed_count = 0
@@ -193,7 +194,7 @@ class SyncManager:
             ref_count_result = await db.execute(
                 select(func.count(WatchlistItem.id))
                 .join(Watchlist)
-                .where(Watchlist.user_id == user_id, WatchlistItem.track_id == track_uuid)
+                .where(Watchlist.user_id == u_uuid, WatchlistItem.track_id == track_uuid)
             )
             ref_count = ref_count_result.scalar()
 
@@ -203,7 +204,7 @@ class SyncManager:
 
                 # Get Download
                 d_result = await db.execute(
-                    select(Download).where(Download.user_id == user_id, Download.track_id == track_uuid)
+                    select(Download).where(Download.user_id == u_uuid, Download.track_id == track_uuid)
                 )
                 download = d_result.scalar_one_or_none()
 

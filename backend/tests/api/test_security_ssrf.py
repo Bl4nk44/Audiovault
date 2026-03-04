@@ -38,7 +38,7 @@ async def test_subsonic_media_ssrf_prevention(
             await get_cover_art(
                 id=f"al-{evil_album_id}",
                 db=db_session,
-                user=admin_user,
+                current_user=admin_user,
             )
         except Exception:
             pass
