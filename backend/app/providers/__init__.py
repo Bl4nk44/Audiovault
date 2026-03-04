@@ -3,6 +3,7 @@ from app.providers.apple_music_provider import AppleMusicProvider
 from app.providers.deezer_provider import DeezerProvider
 from app.providers.generic import GenericProvider
 from app.providers.manager import provider_manager
+from app.providers.musicbrainz_provider import MusicBrainzProvider
 from app.providers.soundcloud_provider import SoundCloudProvider
 from app.providers.spotify_provider import SpotifyProvider
 from app.providers.tidal_provider import TidalProvider
@@ -16,6 +17,7 @@ provider_manager.register_provider(DeezerProvider())
 provider_manager.register_provider(TidalProvider())
 provider_manager.register_provider(AmazonMusicProvider())
 provider_manager.register_provider(SoundCloudProvider())
+provider_manager.register_provider(MusicBrainzProvider())
 provider_manager.register_provider(SpotifyProvider())
 provider_manager.register_provider(YouTubeProvider())
 

@@ -138,7 +138,7 @@ pre-commit run ruff --all-files
 - Detects type-related errors
 - Improves IDE support
 
-**Configuration**: See `pyrightconfig.json`
+**Configuration**: See `pyproject.toml`
 
 ```bash
 pre-commit run pyright --all-files
@@ -432,8 +432,7 @@ repos:  # Define repositories with hooks
 
 ### Python Configuration Files
 
-- **`pyproject.toml`**: Ruff configuration, Python version
-- **`pyrightconfig.json`**: Pyright settings, type checking mode
+- **`pyproject.toml`**: Ruff and Pyright configuration, Python version
 
 ### Frontend Configuration Files
 

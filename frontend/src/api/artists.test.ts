@@ -34,32 +34,32 @@ describe("artistsApi", () => {
   });
 
   describe("getById", () => {
-    it("should fetch artist by id using local endpoint by default", async () => {
+    it("should fetch artist by id using deezer endpoint by default", async () => {
       const mockArtist = { id: "a-1", name: "Test Artist" };
       vi.mocked(api.get).mockResolvedValue({ data: mockArtist });
 
       const result = await artistsApi.getById("a-1");
 
-      expect(api.get).toHaveBeenCalledWith("/artists/a-1");
+      expect(api.get).toHaveBeenCalledWith("/browse/artist/deezer/a-1");
       expect(result).toEqual(mockArtist);
     });
 
-    it("should fetch artist from spotify endpoint when source is spotify", async () => {
+    it("should fetch artist from browse endpoint when source is spotify", async () => {
       const mockArtist = { id: "sp-artist", name: "Spotify Artist" };
       vi.mocked(api.get).mockResolvedValue({ data: mockArtist });
 
       const result = await artistsApi.getById("sp-artist", "spotify");
 
-      expect(api.get).toHaveBeenCalledWith("/spotify/artist/sp-artist");
+      expect(api.get).toHaveBeenCalledWith("/browse/artist/spotify/sp-artist");
       expect(result).toEqual(mockArtist);
     });
 
-    it("should use local endpoint for non-spotify sources", async () => {
+    it("should use local endpoint for local source", async () => {
       vi.mocked(api.get).mockResolvedValue({ data: {} });
 
-      await artistsApi.getById("yt-123", "youtube");
+      await artistsApi.getById("local-123", "local");
 
-      expect(api.get).toHaveBeenCalledWith("/artists/yt-123");
+      expect(api.get).toHaveBeenCalledWith("/artists/local-123");
     });
   });
 });

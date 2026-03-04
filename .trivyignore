@@ -1,101 +1,14 @@
-# ==============================================
-# Trivy Ignore — False Positives & Noise Reduction
-# ==============================================
+# Accepted vulnerabilities for Trivy
+# These are issues present in the base OS image (Debian Bookworm) that are either
+# false positives in our context or awaiting upstream patches.
 
-# Virtual environment — external packages (yt-dlp extractors contain
-# hardcoded JWT tokens and AWS keys used as API constants, not secrets)
-.venv/
-venv/
+# zlib1g: integer overflow in MiniZip (MiniZip is not used by our app)
+CVE-2023-45853
 
-# Node modules
-node_modules/
-frontend/node_modules/
-
-# Build artifacts
-dist/
-build/
-.next/
-*.whl
-*.egg-info/
-
-# Python cache
-__pycache__/
-*.pyc
-*.pyo
-*.pyd
-.Python
-.mypy_cache/
-.ruff_cache/
-.pytest_cache/
-
-# Tests (no security scanning needed)
-backend/tests/
-frontend/src/__tests__/
-**/*.test.ts
-**/*.test.tsx
-**/*.test.py
-**/*.spec.ts
-**/*.spec.tsx
-
-# Coverage reports
-coverage/
-.coverage
-htmlcov/
-*.cover
-.hypothesis/
-
-# Downloaded media files
-downloads/
-music/
-audio/
-
-# IDE and editor files
-.vscode/
-.idea/
-*.swp
-*.swo
-*~
-
-# OS files
-.DS_Store
-Thumbs.db
-
-# Logs
-*.log
-logs/
-
-# Database files
-*.db
-*.sqlite
-*.sqlite3
-
-# ==============================================
-# Disputed / Low-relevance CVEs (False Positives)
-# ==============================================
-
-# libtiff command line tools (tiffcmp, tiffcrop, tiff2pdf, tiffcp)
-# Not used by the application, vulnerabilities are mostly in CLI tools themselves
-CVE-2025-9165
-CVE-2025-8961
-CVE-2025-8851
-CVE-2024-13978
-CVE-2023-6228
-CVE-2023-3164
-CVE-2023-1916
-
-# ncurses-bin (not used in production backend logic)
-CVE-2023-50495
-
-# Docker
-.dockerignore
-
-# Git
-.git/
-.gitignore
-
-# Documentation
-docs/
-*.md
-README*
-CHANGELOG*
-LICENSE*
+# libzvbi0: various integer overflows and uninitialized pointers in VBI decoding
+# (Our app only uses ffmpeg which might dynamically link it, but we don't process VBI captions)
+CVE-2025-2173
+CVE-2025-2174
+CVE-2025-2176
+CVE-2025-2175
+CVE-2025-2177

@@ -8,7 +8,7 @@ from app.core.cache import cache_manager
 from app.models.user import User
 from app.schemas.recommendation import RecommendationResponse, RecommendedArtist, RecommendedPlaylist, RecommendedTrack
 from app.services.lastfm_service import LastfmError, LastfmService
-from app.services.spotify_service import SpotifyService
+from app.services.deezer_service import DeezerService
 
 logger = logging.getLogger(__name__)
 
@@ -72,14 +72,13 @@ class HybridRecommendationEngine:
             logger.info(f"Tracks total: {len(tracks)}, missing images: {len(tracks_missing_images)}")
 
             if tracks_missing_images:
-                logger.info(f"Found {len(tracks_missing_images)} tracks missing images, searching Spotify...")
-                spotify = SpotifyService()
+                logger.info(f"Found {len(tracks_missing_images)} tracks missing images, searching Deezer...")
+                deezer = DeezerService()
 
-                async def fetch_spotify_image(track: RecommendedTrack):
+                async def fetch_track_image(track: RecommendedTrack):
                     try:
-                        # Broaden search - try multiple results
                         query = f"{track.artist} {track.name}"
-                        results = await asyncio.to_thread(spotify.search, query, limit=5, type="track")
+                        results = await deezer.search(query, limit=5)
 
                         for result in results:
                             img = result.get("image_url")
@@ -88,12 +87,12 @@ class HybridRecommendationEngine:
                                 logger.info(f"✓ Image found for: {track.name}")
                                 return
 
-                        logger.warning(f"✗ No image on Spotify for: {track.artist} - {track.name}")
+                        logger.warning(f"✗ No image on Deezer for: {track.artist} - {track.name}")
                     except Exception as e:
-                        logger.error(f"Spotify search error for {track.name}: {e}")
+                        logger.error(f"Deezer search error for {track.name}: {e}")
 
                 # Process all missing images (up to 50)
-                await asyncio.gather(*[fetch_spotify_image(t) for t in tracks_missing_images[:50]])
+                await asyncio.gather(*[fetch_track_image(t) for t in tracks_missing_images[:50]])
 
             # ------------------------------
 
@@ -135,23 +134,20 @@ class HybridRecommendationEngine:
             artist_names = [a.get("name") for a in artists if a.get("name")]
             logger.info(f"Fetching playlists for artists: {artist_names}")
 
-            spotify = SpotifyService()
+            deezer = DeezerService()
             playlists = []
 
             async def search_artist_playlists(artist_name):
-                # Search for "This Is {Artist}" (Spotify Official) or "{Artist} Mix"
-                # We try two queries to get good coverage
                 results = []
                 try:
-                    # 1. "This Is {Artist}" - High quality official playlists
+                    # Search Deezer for playlists related to the artist
                     q1 = f"This Is {artist_name}"
-                    r1 = await asyncio.to_thread(spotify.search, q1, limit=2, type="playlist")
+                    r1 = await deezer.search(q1, limit=2)
                     if r1:
                         results.extend(r1)
 
-                    # 2. "{Artist} Mix" - Good algorithmic playlists
                     q2 = f"{artist_name} Mix"
-                    r2 = await asyncio.to_thread(spotify.search, q2, limit=2, type="playlist")
+                    r2 = await deezer.search(q2, limit=2)
                     if r2:
                         results.extend(r2)
                 except Exception as e:
@@ -165,16 +161,14 @@ class HybridRecommendationEngine:
             for results in search_results:
                 for p in results:
                     if p["id"] not in seen_ids:
-                        # Basic filtering to avoid completely irrelevant stuff
-                        # (e.g. strict name check is hard, but we trust Spotify search relevance for specific queries)
                         playlists.append(
                             RecommendedPlaylist(
                                 id=p["id"],
-                                title=p["title"],
+                                title=p.get("title", ""),
                                 image_url=p.get("image_url"),
                                 track_count=p.get("track_count", 0),
-                                source="spotify",
-                                url=f"https://open.spotify.com/playlist/{p['id']}",
+                                source="deezer",
+                                url=f"https://www.deezer.com/track/{p['id']}",
                             )
                         )
                         seen_ids.add(p["id"])
@@ -204,20 +198,20 @@ class HybridRecommendationEngine:
                 a.image_url = None
 
             if artists:
-                logger.info(f"Forcing Spotify image search for {len(artists)} artists...")
-                spotify = SpotifyService()
+                logger.info(f"Searching Deezer for images of {len(artists)} artists...")
+                deezer = DeezerService()
 
                 async def fetch_artist_image(artist):
                     try:
-                        results = await asyncio.to_thread(spotify.search, artist.name, limit=1, type="artist")
+                        results = await deezer.search(artist.name, limit=1)
                         if results and len(results) > 0:
                             img = results[0].get("image_url")
                             if img:
                                 artist.image_url = img
                                 return
-                        logger.warning(f"✗ No image on Spotify for artist: {artist.name}")
+                        logger.warning(f"✗ No image on Deezer for artist: {artist.name}")
                     except Exception as e:
-                        logger.error(f"Spotify artist search error for {artist.name}: {e}")
+                        logger.error(f"Deezer artist search error for {artist.name}: {e}")
 
                 # Process all artists (up to 20)
                 await asyncio.gather(*[fetch_artist_image(a) for a in artists[:20]])
@@ -248,7 +242,7 @@ class HybridRecommendationEngine:
         # 3. Fetch Playlists
         playlists = await self._fetch_playlists(user)
 
-        used_source = "lastfm+spotify" if (tracks or artists or playlists) else "unknown"
+        used_source = "lastfm+deezer" if (tracks or artists or playlists) else "unknown"
 
         response = RecommendationResponse(
             tracks=tracks,

@@ -83,7 +83,7 @@ async def get_playlists(
         .offset(skip)
         .limit(limit)
     )
-    result = await db.execute(query)
+    result = await db.execute(query)  # nosemgrep: python.fastapi.db.generic-sql-fastapi.generic-sql-fastapi
     playlists = result.scalars().all()
 
     # Manual mapping to include track count efficiently if needed,
@@ -411,7 +411,7 @@ async def remove_tracks_from_playlist(
         return
 
     stmt = delete(PlaylistTrack).where(PlaylistTrack.playlist_id == playlist_id, PlaylistTrack.track_id.in_(target_ids))
-    await db.execute(stmt)
+    await db.execute(stmt)  # nosemgrep: python.fastapi.db.generic-sql-fastapi.generic-sql-fastapi
     await db.commit()
 
 

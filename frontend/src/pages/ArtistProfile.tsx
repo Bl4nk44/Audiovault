@@ -17,8 +17,8 @@ export default function ArtistProfile() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const location = useLocation();
-  // Safe cast or default to 'local' if no state provided, but we know searching gives 'spotify'
-  const source = location.state?.source || "local";
+  // Use source from navigation state, default to 'deezer' for browse results
+  const source = location.state?.source || "deezer";
 
   const { watchlist, addToWatchlist, removeFromWatchlist } = useStore();
   const [isDownloading, setIsDownloading] = useState(false);
@@ -60,14 +60,14 @@ export default function ArtistProfile() {
 
   const isWatched = watchlist.some(
     (item) =>
-      item.source_id === artist.spotify_id ||
       item.source_id === artist.deezer_id ||
+      item.source_id === artist.spotify_id ||
       item.source_id === artist.id
   );
   const watchedItem = watchlist.find(
     (item) =>
-      item.source_id === artist.spotify_id ||
       item.source_id === artist.deezer_id ||
+      item.source_id === artist.spotify_id ||
       item.source_id === artist.id
   );
 
@@ -79,11 +79,11 @@ export default function ArtistProfile() {
     }
 
     addToWatchlist({
-      source: "spotify",
-      source_id: artist.spotify_id || artist.id,
+      source: source,
+      source_id: artist.deezer_id || artist.spotify_id || artist.id,
       source_name: artist.name,
       watch_type: "artist",
-      auto_download: false, // Default to FALSE for just "Follow"
+      auto_download: false,
       new_items_count: 0,
       metadata_content: { image_url: heroImage || undefined },
     });
@@ -98,9 +98,10 @@ export default function ArtistProfile() {
 
     setIsDownloading(true);
     try {
+      const artistExternalId = artist.deezer_id || artist.spotify_id || artist.id;
       const response = await api.post(
-        `/downloads/artist/${artist.spotify_id || artist.id}/download-all`,
-        { source: "spotify" }
+        `/downloads/artist/${artistExternalId}/download-all`,
+        { source: source }
       );
 
       toast.success(`Queued ${response.data.queued_count} tracks for download`);
@@ -114,14 +115,11 @@ export default function ArtistProfile() {
 
   const handleDownloadAlbum = async (album: Album) => {
     try {
-      // Use spotify_id if available (for search results), otherwise id (for local/database items)
-      // If we are in "spotify" source mode (which search usually is), we should prefer spotify_id or id if that's what semantic is.
-      // Actually backend expects an ID it can use to find the album.
-      // If we are browsing Spotify artist, we probably have spotify IDs.
+      // Use source-specific ID if available, otherwise generic id
       const targetId = album.spotify_id || album.id;
 
       const response = await api.post(`/downloads/album/${targetId}/download`, {
-        source: "spotify",
+        source: source,
       });
 
       toast.success(response.data.message || "Album queued for download");
@@ -221,7 +219,7 @@ export default function ArtistProfile() {
                 key={track.id}
                 track={{
                   ...track,
-                  source: "spotify",
+                  source: source,
                   duration_ms: track.duration_ms,
                   cover: track.image_url || artist.image_url, // Use image_url from track or fallback to artist
                 }}
@@ -235,7 +233,7 @@ export default function ArtistProfile() {
       {(() => {
         const albums =
           artist.albums?.filter(
-            (a: Album) => a.album_type === "album" || (!a.album_type && (a.total_tracks ?? 0) > 3)
+            (a: Album) => (a.album_type || "album") === "album" || (!a.album_type && (a.total_tracks ?? 0) > 3)
           ) || [];
 
         return (
@@ -256,11 +254,11 @@ export default function ArtistProfile() {
                         role="button"
                         tabIndex={0}
                         onClick={() =>
-                          navigate(`/album/${album.id}`, { state: { source: "spotify" } })
+                          navigate(`/album/${album.id}`, { state: { source } })
                         }
                         onKeyDown={(e) => {
                           if (e.key === "Enter" || e.key === " ") {
-                            navigate(`/album/${album.id}`, { state: { source: "spotify" } });
+                            navigate(`/album/${album.id}`, { state: { source } });
                           }
                         }}
                         className="bg-white/5 rounded-xl p-4 hover:bg-white/10 transition-colors cursor-pointer w-full text-left"
@@ -335,11 +333,11 @@ export default function ArtistProfile() {
                         role="button"
                         tabIndex={0}
                         onClick={() =>
-                          navigate(`/album/${single.id}`, { state: { source: "spotify" } })
+                          navigate(`/album/${single.id}`, { state: { source } })
                         }
                         onKeyDown={(e) => {
                           if (e.key === "Enter" || e.key === " ") {
-                            navigate(`/album/${single.id}`, { state: { source: "spotify" } });
+                            navigate(`/album/${single.id}`, { state: { source } });
                           }
                         }}
                         className="bg-white/5 rounded-xl p-3 hover:bg-white/10 transition-colors cursor-pointer w-full text-left"

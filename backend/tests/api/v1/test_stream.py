@@ -159,7 +159,7 @@ async def test_get_album_cover_not_found(client: AsyncClient):
 
 @pytest.mark.asyncio
 async def test_get_album_cover_success(client: AsyncClient, db_session):
-    album = Album(id=uuid.uuid4(), title="Test Album", images={"300": "http://example.com/cover.jpg"})
+    album = Album(id=uuid.uuid4(), title="Test Album", images={"300": "https://i.scdn.co/image/cover.jpg"})
     db_session.add(album)
     await db_session.commit()
     await db_session.refresh(album)
@@ -168,7 +168,7 @@ async def test_get_album_cover_success(client: AsyncClient, db_session):
     response = await client.get(f"/api/v1/stream/album/{album.id}/cover", follow_redirects=False)
     assert response.status_code in [200, 307], f"Response: {response.status_code}, Text: {response.text}"
     if response.status_code == 307:
-        assert response.headers["location"] == "http://example.com/cover.jpg"
+        assert response.headers["location"] == "https://i.scdn.co/image/cover.jpg"
 
 
 @pytest.mark.asyncio
@@ -205,7 +205,7 @@ async def test_get_track_cover_embedded_fallback(client: AsyncClient, db_session
 @pytest.mark.asyncio
 async def test_get_track_cover_album_fallback(client: AsyncClient, db_session):
     album_id = uuid.uuid4()
-    album = Album(id=album_id, title="Test Album", images={"300": "http://example.com/300.jpg"})
+    album = Album(id=album_id, title="Test Album", images={"300": "https://i.scdn.co/image/300.jpg"})
     db_session.add(album)
 
     track_id = uuid.uuid4()
@@ -217,7 +217,7 @@ async def test_get_track_cover_album_fallback(client: AsyncClient, db_session):
     with patch("app.api.v1.stream._resolve_track_path", new_callable=AsyncMock, return_value=(track, None)):
         response = await client.get(f"/api/v1/stream/{track_id}/cover")
         assert response.status_code == 307
-        assert response.headers["location"] == "http://example.com/300.jpg"
+        assert response.headers["location"] == "https://i.scdn.co/image/300.jpg"
 
 
 @pytest.mark.asyncio

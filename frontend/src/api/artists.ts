@@ -7,16 +7,14 @@ export const artistsApi = {
     return response.data;
   },
 
-  getById: async (id: string, source: string = "local") => {
-    // If source is spotify, use the spotify-specific endpoint
-    if (source === "spotify") {
-      const response = await api.get<Artist>(`/spotify/artist/${id}`);
+  getById: async (id: string, source: string = "deezer") => {
+    // Use browse endpoint for external sources (routes to SearchOrchestrator)
+    if (source !== "local") {
+      const response = await api.get<Artist>(`/browse/artist/${source}/${id}`);
       return response.data;
     }
 
     // Default to local/generic endpoint (which expects UUID)
-    // If source is 'youtube', we will implement that in Phase 2
-
     const response = await api.get<Artist>(`/artists/${id}`);
     return response.data;
   },

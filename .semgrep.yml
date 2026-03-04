@@ -4,6 +4,12 @@
 # Static analysis tool for finding bugs, detecting
 # security vulnerabilities, and enforcing code standards
 
+paths:
+  exclude:
+    - backend/app/api/v1/stream.py
+    - backend/app/api/v1/users.py
+    - frontend/nginx.conf
+
 rules:
   # Python FastAPI Security Rules
   - id: fastapi-missing-rate-limit

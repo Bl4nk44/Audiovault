@@ -21,6 +21,8 @@ from mutagen import File as MutagenFile
 from mutagen.id3 import APIC, ID3
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
+from urllib.parse import urlparse
+from app.api.subsonic.handlers.media import ALLOWED_IMAGE_DOMAINS
 
 router = APIRouter()
 logger = logging.getLogger(__name__)
@@ -168,7 +170,9 @@ async def get_track_cover(track_id: str, db: AsyncSession = Depends(get_db)):
         if album and album.images:
             url = (album.images or {}).get("300") or (album.images or {}).get("640")
             if url:
-                return RedirectResponse(url)
+                parsed = urlparse(url)
+                if parsed.netloc in ALLOWED_IMAGE_DOMAINS:
+                    return RedirectResponse(url)  # nosemgrep: python.fastapi.web.tainted-redirect-fastapi.tainted-redirect-fastapi
 
     # 404 if no file source or art found
     raise HTTPException(status_code=404, detail="No cover art found")
@@ -193,7 +197,9 @@ async def get_album_cover(album_id: str, db: AsyncSession = Depends(get_db)):
     # Priority: 300px -> 640px -> generic url
     url = (album.images or {}).get("300") or (album.images or {}).get("640") or (album.images or {}).get("url")
     if url:
-        return RedirectResponse(url)
+        parsed = urlparse(url)
+        if parsed.netloc in ALLOWED_IMAGE_DOMAINS:
+            return RedirectResponse(url)  # nosemgrep: python.fastapi.web.tainted-redirect-fastapi.tainted-redirect-fastapi
 
     raise HTTPException(status_code=404, detail="No cover art found")
 

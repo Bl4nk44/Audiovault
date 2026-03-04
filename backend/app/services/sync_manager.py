@@ -23,6 +23,11 @@ class SyncManager:
     def __init__(self):
         self._pending_reports = {}  # Token -> Report Data
 
+    def _to_uuid(self, val: str | UUID) -> UUID:
+        if isinstance(val, UUID):
+            return val
+        return UUID(str(val))
+
     async def analyze_watchlist(self, db: AsyncSession, user_id: str, watchlist_id: str) -> dict:
         """
         Analyzes a watchlist for synchronization.
@@ -156,13 +161,14 @@ class SyncManager:
             raise ValueError("Invalid or expired sync token")
 
         report = self._pending_reports[sync_token]
-        watchlist_id = report["watchlist_id"]
+        watchlist_id = self._to_uuid(report["watchlist_id"])
 
         # 1. Process Removals
         removed_count = 0
         soft_deleted_files = 0
 
-        for track_uuid in approved_removals:
+        for t_id in approved_removals:
+            track_uuid = self._to_uuid(t_id)
             # A. Remove connection from this Watchlist
             # Verify it's in the candidates to avoid abuse?
             # Logic: Just try to delete the WatchlistItem for this watchlist & track.

@@ -21,10 +21,13 @@ class SpotifyService:
         else:
             self.client = None
 
-    def search(self, query: str, limit: int = 20, offset: int = 0, type: str = "track") -> list[dict[str, Any]]:
+    def search(self, query: str, limit: int = 10, offset: int = 0, type: str = "track") -> list[dict[str, Any]]:
         if not self.client:
             logger.warning("Spotify client not configured")
             return []
+
+        # Spotify API Feb 2026: search limit reduced from 50 to 10
+        limit = min(limit, 10)
 
         logger.info(f"Spotify search query: {query}, type: {type}")
 
@@ -253,6 +256,7 @@ class SpotifyService:
             return None
 
     def get_artist_top_tracks(self, artist_id: str) -> list[dict[str, Any]]:
+        """Fetch artist top tracks. NOTE: /artists/{id}/top-tracks removed Feb 2026."""
         if not self.client:
             return []
 
@@ -260,7 +264,9 @@ class SpotifyService:
             results = self.client.artist_top_tracks(artist_id)
             return [self._format_track(track) for track in results["tracks"]]
         except Exception as e:
-            logger.error(f"Error fetching top tracks for {artist_id}: {e}")
+            logger.warning(
+                f"Top tracks unavailable for {artist_id} (endpoint may be deprecated): {e}"
+            )
             return []
 
     def get_artist_albums(self, artist_id: str) -> list[dict[str, Any]]:
@@ -373,6 +379,7 @@ class SpotifyService:
             "duration_ms": item["duration_ms"],
             "image_url": image_url,
             "source": "spotify",
+            # Spotify API Feb 2026: popularity and external_ids removed from responses
             "popularity": item.get("popularity", 0),
             "isrc": item.get("external_ids", {}).get("isrc"),
         }

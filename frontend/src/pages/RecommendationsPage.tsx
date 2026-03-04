@@ -109,17 +109,16 @@ const RecommendationsPage: React.FC = () => {
   const handlePlayTrack = async (track: RecommendedTrack) => {
     const toastId = toast.loading(`Finding ${track.name}...`);
     try {
-      // Since recommendation is just text metadata, we need to find a playable source
-      // We'll search Spotify (as a proxy for "all sources") to get a playable ID
+      // Search via unified browse endpoint (aggregates Deezer, MusicBrainz, Spotify)
       const query = `${track.artist} ${track.name}`;
-      const { data } = await api.get("/spotify/search", {
+      const { data } = await api.get("/browse/search", {
         params: { q: query, type: "track", limit: 1 },
       });
 
       if (data && data.length > 0) {
         const foundTrack = data[0];
-        // Ensure it has a source (API usually returns it)
-        if (!foundTrack.source) foundTrack.source = "spotify";
+        // Source comes from browse endpoint (deezer, spotify, musicbrainz)
+        if (!foundTrack.source) foundTrack.source = "deezer";
 
         playTrack(foundTrack);
         toast.dismiss(toastId);

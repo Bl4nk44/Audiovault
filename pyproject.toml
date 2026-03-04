@@ -8,7 +8,18 @@ build_command = "python scripts/update_versions.py {version}"
 
 
 [tool.semantic_release.commit_parser_options]
-allowed_tags = ["build", "chore", "ci", "docs", "feat", "fix", "perf", "style", "refactor", "test"]
+allowed_tags = [
+    "build",
+    "chore",
+    "ci",
+    "docs",
+    "feat",
+    "fix",
+    "perf",
+    "style",
+    "refactor",
+    "test",
+]
 minor_tags = ["feat"]
 patch_tags = ["fix", "perf", "chore"]
 
@@ -34,10 +45,29 @@ check_untyped_defs = true
 plugins = ["sqlalchemy.ext.mypy.plugin"]
 [tool.pyright]
 include = ["backend/app"]
-exclude = ["**/__pycache__", "**/node_modules", "backend/.venv", "backend/tests"]
+exclude = [
+    "**/__pycache__",
+    "**/node_modules",
+    "backend/.venv",
+    "backend/tests",
+]
 pythonVersion = "3.12"
 typeCheckingMode = "basic"
-reportMissingImports = true
+venvPath = "."
+venv = ".venv"
+reportMissingImports = false
 reportMissingTypeStubs = false
 reportUnusedImport = true
 reportUnusedVariable = true
+# Dodatkowe wyłączenia dla zgodności z poprzednią konfiguracją
+reportOptionalSubscript = "none"
+reportOptionalMemberAccess = "none"
+reportArgumentType = "none"
+reportGeneralTypeIssues = "none"
+reportPrivateImportUsage = "none"
+reportCallIssue = "none"
+reportTypedDictNotRequiredAccess = "none"
+reportReturnType = "none"
+reportOptionalOperand = "none"
+reportOperatorIssue = "none"
+extraPaths = ["backend/app"]

@@ -58,9 +58,17 @@ async def verify_youtube(creds: VerifyYouTube):
 
     try:
         # Simple test request to YouTube Data API
-        url = f"https://www.googleapis.com/youtube/v3/search?part=snippet&q=test&key={creds.apiKey}&maxResults=1"
+        url = "https://www.googleapis.com/youtube/v3/search"
         async with httpx.AsyncClient() as client:
-            response = await client.get(url)
+            response = await client.get(  # nosemgrep: python.fastapi.net.tainted-fastapi-http-request-httpx.tainted-fastapi-http-request-httpx
+                url,
+                params={
+                    "part": "snippet",
+                    "q": "test",
+                    "key": creds.apiKey,
+                    "maxResults": "1"
+                }
+            )
 
         if response.status_code == 200:
             return {"status": "valid"}

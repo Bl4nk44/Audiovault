@@ -12,12 +12,8 @@ export interface PlaylistDetails extends Playlist {
 }
 
 export const playlistsApi = {
-  // --- External Sources (Spotify/YouTube) ---
-  getById: async (id: string, source: string = "spotify") => {
-    if (source === "spotify") {
-      const response = await api.get<PlaylistDetails>(`/spotify/playlist/${id}`);
-      return response.data;
-    }
+  // --- External Sources (Browse/YouTube) ---
+  getById: async (id: string, source: string = "deezer") => {
     if (source === "youtube") {
       const response = await api.get<PlaylistDetails>(`/youtube/playlist/${id}`);
       return response.data;
@@ -25,7 +21,9 @@ export const playlistsApi = {
     if (source === "local") {
       return playlistsApi.getLocalById(id);
     }
-    throw new Error(`Source ${source} not supported yet for playlist details`);
+    // Use browse for all other sources (spotify, deezer, etc.)
+    const response = await api.get<PlaylistDetails>(`/browse/playlist/${source}/${id}`);
+    return response.data;
   },
 
   // --- Local Backend Playlists (CRUD) ---

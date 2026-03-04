@@ -35,6 +35,12 @@ class Track(Base):
     spotify_id: Mapped[str | None] = mapped_column(String(100), nullable=True, unique=True)
     youtube_id: Mapped[str | None] = mapped_column(String(100), nullable=True, unique=True)
     deezer_id: Mapped[str | None] = mapped_column(String(100), nullable=True, unique=True)
+    musicbrainz_id: Mapped[str | None] = mapped_column(String(100), nullable=True, unique=True)
+    soundcloud_id: Mapped[str | None] = mapped_column(String(100), nullable=True, unique=True)
+
+    # Metadata provenance
+    metadata_source: Mapped[str | None] = mapped_column(String(50), nullable=True)  # 'spotify', 'deezer', 'musicbrainz'
+    metadata_confidence: Mapped[float | None] = mapped_column(default=1.0)  # 0.0-1.0
 
     # Metadata
     metadata_content: Mapped[dict | None] = mapped_column(

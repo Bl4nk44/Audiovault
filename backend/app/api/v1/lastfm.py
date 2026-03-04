@@ -167,13 +167,13 @@ async def get_lastfm_profile(
 
         # If fetching user info failed, we can't show the profile
         if isinstance(user_info_result, Exception):
-            logger.error(f"Failed to fetch user info for {username}: {user_info_result}")
+            logger.error(f"Failed to fetch user info for {username}: {user_info_result}")  # nosemgrep: python.fastapi.log.tainted-log-injection-stdlib-fastapi.tainted-log-injection-stdlib-fastapi
             raise user_info_result
 
         # If fetching friends failed, just show empty list (graceful degradation)
         friends = []
         if isinstance(friends_result, Exception):
-            logger.warning(f"Failed to fetch friends for {username}: {friends_result}")
+            logger.warning(f"Failed to fetch friends for {username}: {friends_result}")  # nosemgrep: python.fastapi.log.tainted-log-injection-stdlib-fastapi.tainted-log-injection-stdlib-fastapi
         else:
             friends = friends_result
 

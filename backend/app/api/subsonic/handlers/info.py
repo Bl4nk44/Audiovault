@@ -149,7 +149,7 @@ async def get_similar_songs2(
 
     # Get songs by the same artist (only downloaded ones)
     result = await db.execute(
-        select(Track, Download)
+        select(Track, Download)  # nosemgrep: python.fastapi.db.generic-sql-fastapi.generic-sql-fastapi
         .join(Download, Download.track_id == Track.id)
         .where(
             Track.artist_id == artist_id,

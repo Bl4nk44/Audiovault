@@ -4,6 +4,7 @@ from app.api.v1 import (
     artists,
     audit,
     auth,
+    browse,
     dashboard,
     deezer,
     downloads,
@@ -25,6 +26,7 @@ from fastapi import APIRouter
 
 api_router = APIRouter()
 api_router.include_router(auth.router, prefix="/auth", tags=["auth"])
+api_router.include_router(browse.router, prefix="/browse", tags=["browse"])
 api_router.include_router(spotify.router, prefix="/spotify", tags=["spotify"])
 api_router.include_router(downloads.router, prefix="/downloads", tags=["downloads"])
 api_router.include_router(settings.router, prefix="/settings", tags=["settings"])

@@ -46,7 +46,8 @@ async def test_execute_sync_success(sync_manager):
     token = "test_token"
     track_uuid = str(uuid.uuid4())
 
-    sync_manager._pending_reports[token] = {"watchlist_id": "wl123", "to_remove_items": [{"track_id": track_uuid}]}
+    watchlist_id = str(uuid.uuid4())
+    sync_manager._pending_reports[token] = {"watchlist_id": watchlist_id, "to_remove_items": [{"track_id": track_uuid}]}
 
     db_mock = AsyncMock(spec=AsyncSession)
     m_ref = MagicMock()

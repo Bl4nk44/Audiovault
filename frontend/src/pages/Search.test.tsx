@@ -83,7 +83,7 @@ describe("Search Page Integration", () => {
 
     await waitFor(() => {
       expect(api.get).toHaveBeenCalledWith(
-        "/spotify/search",
+        "/browse/search",
         expect.objectContaining({
           params: expect.objectContaining({ q: "test query", type: "track" }),
         })
@@ -92,14 +92,10 @@ describe("Search Page Integration", () => {
     });
   });
 
-  it("handles 'All' source search (Multiple APIs)", async () => {
+  it("handles 'All' source search (Unified API)", async () => {
     (api.get as unknown as Mock).mockImplementation((url) => {
-      if (url.includes("spotify"))
-        return Promise.resolve({ data: [{ id: "s1", title: "Spotify Item" }] });
-      if (url.includes("youtube"))
-        return Promise.resolve({ data: [{ id: "y1", title: "YouTube Item" }] });
-      if (url.includes("deezer"))
-        return Promise.resolve({ data: [{ id: "d1", title: "Deezer Item" }] });
+      if (url.includes("browse"))
+        return Promise.resolve({ data: [{ id: "b1", title: "Browse Item" }] });
       return Promise.resolve({ data: [] });
     });
 
@@ -107,9 +103,7 @@ describe("Search Page Integration", () => {
     fireEvent.click(screen.getByTestId("search-all-btn"));
 
     await waitFor(() => {
-      expect(screen.getByText("Spotify Item")).toBeInTheDocument();
-      expect(screen.getAllByText("YouTube Item").length).toBeGreaterThan(0);
-      expect(screen.getByText("Deezer Item")).toBeInTheDocument();
+      expect(screen.getAllByText("Browse Item").length).toBe(2);
     });
   });
 
@@ -122,7 +116,7 @@ describe("Search Page Integration", () => {
 
     await waitFor(() => {
       expect(api.get).toHaveBeenCalledWith(
-        "/spotify/search",
+        "/browse/search",
         expect.objectContaining({ params: expect.objectContaining({ q: "hello" }) })
       );
       expect(screen.getByText("URL Param Result")).toBeInTheDocument();
@@ -168,24 +162,15 @@ describe("Search Page Integration", () => {
     spy.mockRestore();
   });
 
-  it("handles partial failure in 'All' search", async () => {
-    (api.get as unknown as Mock).mockImplementation((url) => {
-      if (url.includes("spotify"))
-        return Promise.resolve({ data: [{ id: "s1", title: "Spotify" }] });
-      // YouTube fails silently in the code (catch returns [])
-      if (url.includes("youtube")) return Promise.reject(new Error("YT Fail"));
-      // Deezer fails
-      if (url.includes("deezer")) return Promise.reject(new Error("Deezer Fail"));
-      return Promise.resolve({ data: [] });
-    });
+  it("handles failure in 'All' search gracefully", async () => {
+    (api.get as unknown as Mock).mockRejectedValue(new Error("API Fail"));
 
     renderSearch();
     fireEvent.click(screen.getByTestId("search-all-btn"));
 
     await waitFor(() => {
-      // Should still show Spotify results
-      expect(screen.getByText("Spotify")).toBeInTheDocument();
-      // Should not crash
+      // Should handle the error and maybe not crash
+      expect(screen.queryByTestId("result-item")).not.toBeInTheDocument();
     });
   });
 

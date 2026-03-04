@@ -1,0 +1,31 @@
+{%- if already_included -%}
+Already included (full content):
+{% for file in already_included -%}
+{{ file }}
+{% endfor %}
+{% endif -%}
+{%- if already_excerpted -%}
+Already included (excerpted):
+{% for file in already_excerpted -%}
+{%- set excerpt_meta = excerpted_metadata.get(file, {}) -%}
+{{ file }} (lc-missing -e for excluded)
+{% endfor %}
+{% endif -%}
+{%- if deleted_files -%}
+Deleted files (no longer exist):
+{% for file in deleted_files -%}
+{{ file }}
+{% endfor %}
+{% endif -%}
+{%- if files_to_fetch -%}
+Updated content:
+{% for item in files_to_fetch -%}
+{{ item.path }}{% if item.path in modified_files %} (modified){% elif item.path in missing_files %} (new){% endif %}
+॥๛॥
+{{ item.content }}
+॥๛॥
+{% endfor %}
+{%- endif -%}
+{%- if not already_included and not already_excerpted and not deleted_files and not files_to_fetch -%}
+No files to retrieve.
+{%- endif -%}

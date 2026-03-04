@@ -18,6 +18,7 @@ function getNestedValue(obj: TranslationMap | string, keys: string[]): string | 
     ) {
       return undefined;
     }
+    // nosemgrep: javascript.lang.security.audit.prototype-pollution.prototype-pollution-loop.prototype-pollution-loop
     current = current[key];
   }
 

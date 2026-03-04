@@ -38,9 +38,11 @@ export default function LyricsPanel({ isOpen, onClose, currentTime }: LyricsPane
 
     if (counterpart) {
       const escapedCounterpart = counterpart.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-      // nosemgrep: detect-non-literal-regexp — escapedCounterpart is sanitized via regex escaping above
+      // nosemgrep: javascript.lang.security.audit.detect-non-literal-regexp.detect-non-literal-regexp
       cleaned = cleaned
+        // nosemgrep: javascript.lang.security.audit.detect-non-literal-regexp.detect-non-literal-regexp
         .replace(new RegExp(`^${escapedCounterpart}\\s*-\\s*`, "i"), "")
+        // nosemgrep: javascript.lang.security.audit.detect-non-literal-regexp.detect-non-literal-regexp
         .replace(new RegExp(`\\s*-\\s*${escapedCounterpart}$`, "i"), "");
     }
 
