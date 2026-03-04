@@ -164,9 +164,7 @@ class SearchOrchestrator:
         # Spotify API Feb 2026: search limit reduced to max 10
         spotify_limit = min(limit, 10)
         try:
-            return await asyncio.to_thread(
-                self.spotify.search, query, limit=spotify_limit, type="track"
-            )
+            return await asyncio.to_thread(self.spotify.search, query, limit=spotify_limit, type="track")
         except Exception as e:
             logger.warning(f"Spotify search failed: {e}")
             return []
@@ -180,13 +178,15 @@ class SearchOrchestrator:
             name = t.get("artist")
             if name and name not in artists_seen:
                 artists_seen.add(name)
-                artists.append({
-                    "id": t.get("id"),
-                    "name": name,
-                    "image_url": t.get("image_url"),
-                    "source": "deezer",
-                    "type": "artist",
-                })
+                artists.append(
+                    {
+                        "id": t.get("id"),
+                        "name": name,
+                        "image_url": t.get("image_url"),
+                        "source": "deezer",
+                        "type": "artist",
+                    }
+                )
         return artists
 
     async def _search_musicbrainz_artists(self, query: str, limit: int = 10) -> list[dict[str, Any]]:
@@ -202,13 +202,15 @@ class SearchOrchestrator:
             album_name = t.get("album")
             if album_name and album_name not in albums_seen:
                 albums_seen.add(album_name)
-                albums.append({
-                    "id": t.get("id"),
-                    "title": album_name,
-                    "artist": t.get("artist"),
-                    "image_url": t.get("image_url"),
-                    "source": "deezer",
-                })
+                albums.append(
+                    {
+                        "id": t.get("id"),
+                        "title": album_name,
+                        "artist": t.get("artist"),
+                        "image_url": t.get("image_url"),
+                        "source": "deezer",
+                    }
+                )
         return albums
 
     async def _search_musicbrainz_albums(self, query: str, limit: int = 10) -> list[dict[str, Any]]:

@@ -1,21 +1,21 @@
 import uuid
 
 import pytest
+from app.api.subsonic.handlers.browse import (
+    get_album,
+    get_artist,
+    get_artists,
+    get_indexes,
+    get_music_directory,
+    get_music_folders,
+    get_song,
+)
 from app.models.album import Album
 from app.models.artist import Artist
 from app.models.download import Download
 from app.models.track import Track
 from app.models.user import User
 from httpx import AsyncClient
-from app.api.subsonic.handlers.browse import (
-    get_music_folders,
-    get_indexes,
-    get_artists,
-    get_artist,
-    get_album,
-    get_song,
-    get_music_directory,
-)
 from sqlalchemy.ext.asyncio import AsyncSession
 
 

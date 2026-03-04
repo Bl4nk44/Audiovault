@@ -14,7 +14,6 @@ from unittest.mock import AsyncMock, patch
 
 import pytest
 
-
 # --- Mock Data ---
 
 MOCK_SEARCH_RESULTS = [

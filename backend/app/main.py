@@ -148,6 +148,7 @@ def setup_static_dirs(app: FastAPI):
     except Exception as e:
         logger.warning(f"Could not setup static dir {static_dir}: {e}")
 
+
 setup_static_dirs(application)
 application.mount("/socket.io", socket_manager.app)
 
@@ -186,7 +187,6 @@ async def startup_event():
 
     # Connect to Redis
     await cache_manager.connect()
-
 
     # Start Scheduler
     scheduler_service.start()

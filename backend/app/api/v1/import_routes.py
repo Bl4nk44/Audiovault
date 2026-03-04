@@ -64,7 +64,9 @@ async def import_playlist(request: ImportRequest):
     using the Universal Provider system.
     Returns the extracted metadata for preview.
     """
-    logger.info(f"Importing playlist from URL: {request.url}")  # nosemgrep: python.fastapi.log.tainted-log-injection-stdlib-fastapi.tainted-log-injection-stdlib-fastapi
+    logger.info(
+        f"Importing playlist from URL: {request.url}"
+    )  # nosemgrep: python.fastapi.log.tainted-log-injection-stdlib-fastapi.tainted-log-injection-stdlib-fastapi
 
     try:
         playlist = await provider_manager.extract_playlist(request.url)
@@ -74,7 +76,9 @@ async def import_playlist(request: ImportRequest):
                 detail="Could not extract playlist. Provider returned no data.",
             )
 
-        logger.info(f"Extracted {len(playlist.tracks)} tracks from {playlist.title}")  # nosemgrep: python.fastapi.log.tainted-log-injection-stdlib-fastapi.tainted-log-injection-stdlib-fastapi
+        logger.info(
+            f"Extracted {len(playlist.tracks)} tracks from {playlist.title}"
+        )  # nosemgrep: python.fastapi.log.tainted-log-injection-stdlib-fastapi.tainted-log-injection-stdlib-fastapi
         return playlist
 
     except Exception as e:

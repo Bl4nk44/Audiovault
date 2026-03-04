@@ -16,9 +16,7 @@ import asyncio
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
-
 from app.services.musicbrainz_service import MusicBrainzService
-
 
 # --- Fixtures ---
 
@@ -424,9 +422,7 @@ async def test_get_artist_top_releases(service: MusicBrainzService):
 @pytest.mark.asyncio
 async def test_rate_limiter_enforced(service: MusicBrainzService):
     """Consecutive requests should be delayed by at least ~1 second."""
-    mock_resp = _mock_response(MOCK_RECORDING_SEARCH_EMPTY)
     call_count = 0
-    original_side_effect = None
 
     def make_response(*args, **kwargs):
         nonlocal call_count
@@ -469,6 +465,6 @@ async def test_user_agent_header_set(service: MusicBrainzService):
     session_headers = session_call.kwargs.get("headers", {}) if session_call and session_call.kwargs else {}
 
     all_headers = {**headers, **session_headers}
-    assert "User-Agent" in all_headers or any(
-        "Audiovault" in str(v) for v in all_headers.values()
-    ), "User-Agent header must be set for MusicBrainz API compliance"
+    assert "User-Agent" in all_headers or any("Audiovault" in str(v) for v in all_headers.values()), (
+        "User-Agent header must be set for MusicBrainz API compliance"
+    )

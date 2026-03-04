@@ -19,7 +19,7 @@ SPOTIFY_CONFIG_ERROR = "Spotify service not configured"
 
 async def _resolve_track_to_local_id(db: AsyncSession, track_id_str: str, source: str) -> UUID:
     """Helper to resolve a possibly external track ID to a local UUID.
-    
+
     Supports sources: spotify, youtube, deezer, musicbrainz.
     """
     from app.models.track import Track
@@ -41,6 +41,7 @@ async def _resolve_track_to_local_id(db: AsyncSession, track_id_str: str, source
 
         if not track_obj:
             from app.services.spotify_service import SpotifyService
+
             spotify = SpotifyService()
             if not spotify.client:
                 raise HTTPException(status_code=503, detail=SPOTIFY_CONFIG_ERROR)
@@ -73,6 +74,7 @@ async def _resolve_track_to_local_id(db: AsyncSession, track_id_str: str, source
 
         if not track_obj:
             from app.services.deezer_service import DeezerService
+
             deezer = DeezerService()
             track_data = await deezer.get_track(track_id_str)
             if not track_data:
@@ -101,6 +103,7 @@ async def _resolve_track_to_local_id(db: AsyncSession, track_id_str: str, source
 
         if not track_obj:
             from app.services.musicbrainz_service import MusicBrainzService
+
             mb = MusicBrainzService()
             track_data = await mb.get_track_by_isrc(track_id_str)
             if not track_data:
@@ -220,18 +223,23 @@ async def remove_download(
     if file_path and os.path.exists(file_path):
         try:
             from pathlib import Path
+
             from app.core.config import settings
-            
+
             base_dir = Path(settings.DOWNLOAD_DIR).resolve()
             target_path = Path(file_path).resolve()
-            
+
             if target_path.is_relative_to(base_dir):
-                os.remove(file_path)  # nosemgrep: python.fastapi.file.tainted-path-traversal-stdlib-fastapi.tainted-path-traversal-stdlib-fastapi
+                os.remove(
+                    file_path
+                )  # nosemgrep: python.fastapi.file.tainted-path-traversal-stdlib-fastapi.tainted-path-traversal-stdlib-fastapi  # noqa: E501
         except OSError as e:
             import logging
 
             logger = logging.getLogger(__name__)
-            logger.error(f"Error deleting file {file_path}: {e}")  # nosemgrep: python.fastapi.log.tainted-log-injection-stdlib-fastapi.tainted-log-injection-stdlib-fastapi
+            logger.error(
+                f"Error deleting file {file_path}: {e}"
+            )  # nosemgrep: python.fastapi.log.tainted-log-injection-stdlib-fastapi.tainted-log-injection-stdlib-fastapi  # noqa: E501
 
     return {"status": "success"}
 
@@ -272,6 +280,7 @@ async def download_all_artist_tracks(
     # Multi-source: support deezer and spotify
     if request.source == "deezer":
         from app.services.deezer_service import DeezerService
+
         service = DeezerService()
 
         artist = await service.get_artist_details(artist_id)
@@ -319,11 +328,14 @@ async def download_all_artist_tracks(
                 await download_manager.add_download(db, current_user.id, download_data)
                 queued_count += 1
             except Exception as e:
-                logger.warning(f"Failed to queue track {track_data['title']}: {e}")  # nosemgrep: python.fastapi.log.tainted-log-injection-stdlib-fastapi.tainted-log-injection-stdlib-fastapi
+                logger.warning(
+                    f"Failed to queue track {track_data['title']}: {e}"
+                )  # nosemgrep: python.fastapi.log.tainted-log-injection-stdlib-fastapi.tainted-log-injection-stdlib-fastapi  # noqa: E501
                 continue
 
     elif request.source == "spotify":
         from app.services.spotify_service import SpotifyService
+
         service_sp = SpotifyService()
         if not service_sp.client:
             raise HTTPException(status_code=503, detail=SPOTIFY_CONFIG_ERROR)
@@ -373,7 +385,9 @@ async def download_all_artist_tracks(
                     await download_manager.add_download(db, current_user.id, download_data)
                     queued_count += 1
                 except Exception as e:
-                    logger.warning(f"Failed to queue track {track_data['title']}: {e}")  # nosemgrep: python.fastapi.log.tainted-log-injection-stdlib-fastapi.tainted-log-injection-stdlib-fastapi
+                    logger.warning(
+                        f"Failed to queue track {track_data['title']}: {e}"
+                    )  # nosemgrep: python.fastapi.log.tainted-log-injection-stdlib-fastapi.tainted-log-injection-stdlib-fastapi  # noqa: E501
                     continue
     else:
         raise HTTPException(status_code=400, detail=f"Source '{request.source}' not supported for artist downloads")
@@ -410,6 +424,7 @@ async def download_album(
 
     if request.source == "deezer":
         from app.services.deezer_service import DeezerService
+
         deezer = DeezerService()
 
         # Get album tracks from Deezer
@@ -449,11 +464,14 @@ async def download_album(
                 await download_manager.add_download(db, current_user.id, download_data)
                 queued_count += 1
             except Exception as e:
-                logger.warning(f"Failed to queue track {track_data['title']}: {e}")  # nosemgrep: python.fastapi.log.tainted-log-injection-stdlib-fastapi.tainted-log-injection-stdlib-fastapi
+                logger.warning(
+                    f"Failed to queue track {track_data['title']}: {e}"
+                )  # nosemgrep: python.fastapi.log.tainted-log-injection-stdlib-fastapi.tainted-log-injection-stdlib-fastapi  # noqa: E501
                 continue
 
     elif request.source == "spotify":
         from app.services.spotify_service import SpotifyService
+
         service = SpotifyService()
         if not service.client:
             raise HTTPException(status_code=503, detail=SPOTIFY_CONFIG_ERROR)
@@ -464,7 +482,9 @@ async def download_album(
                 raise HTTPException(status_code=404, detail="Album not found")
             album_name = album_data["name"]
         except Exception as e:
-            logger.error(f"Error fetching album {album_id}: {e}")  # nosemgrep: python.fastapi.log.tainted-log-injection-stdlib-fastapi.tainted-log-injection-stdlib-fastapi
+            logger.error(
+                f"Error fetching album {album_id}: {e}"
+            )  # nosemgrep: python.fastapi.log.tainted-log-injection-stdlib-fastapi.tainted-log-injection-stdlib-fastapi  # noqa: E501
             raise HTTPException(status_code=404, detail="Album not found")
 
         tracks = service.get_album_tracks(album_id)
@@ -501,7 +521,9 @@ async def download_album(
                 await download_manager.add_download(db, current_user.id, download_data)
                 queued_count += 1
             except Exception as e:
-                logger.warning(f"Failed to queue track {track_data['title']}: {e}")  # nosemgrep: python.fastapi.log.tainted-log-injection-stdlib-fastapi.tainted-log-injection-stdlib-fastapi
+                logger.warning(
+                    f"Failed to queue track {track_data['title']}: {e}"
+                )  # nosemgrep: python.fastapi.log.tainted-log-injection-stdlib-fastapi.tainted-log-injection-stdlib-fastapi  # noqa: E501
                 continue
     else:
         raise HTTPException(status_code=400, detail=f"Source '{request.source}' not supported for album downloads")

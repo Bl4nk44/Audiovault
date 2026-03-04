@@ -42,12 +42,15 @@ async def delete_user_me(
             pass
 
         from pathlib import Path
+
         base_dir = Path(settings.DOWNLOAD_DIR).resolve()
         target_path = Path(user_lib_path).resolve()
 
         if os.path.exists(user_lib_path) and target_path.is_relative_to(base_dir) and target_path != base_dir:
             try:
-                shutil.rmtree(user_lib_path)  # nosemgrep: python.fastapi.file.tainted-path-traversal-stdlib-fastapi.tainted-path-traversal-stdlib-fastapi
+                shutil.rmtree(
+                    user_lib_path
+                )  # nosemgrep: python.fastapi.file.tainted-path-traversal-stdlib-fastapi.tainted-path-traversal-stdlib-fastapi  # noqa: E501
             except Exception as e:
                 # Log error but proceed with account deletion
                 print(f"Failed to delete user library: {e}")

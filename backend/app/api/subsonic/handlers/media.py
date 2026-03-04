@@ -192,11 +192,15 @@ async def stream(
     file_path = download.file_path
 
     if not file_path or not os.path.exists(file_path):
-        logger.warning(f"File not found: {file_path}")  # nosemgrep: python.fastapi.log.tainted-log-injection-stdlib-fastapi.tainted-log-injection-stdlib-fastapi
+        logger.warning(
+            f"File not found: {file_path}"
+        )  # nosemgrep: python.fastapi.log.tainted-log-injection-stdlib-fastapi.tainted-log-injection-stdlib-fastapi
         return subsonic_error(70, "File not found on disk", f=f)
-        
+
     from pathlib import Path
+
     from app.core.config import settings
+
     base_dir = Path(settings.DOWNLOAD_DIR).resolve()
     target_path = Path(file_path).resolve()
     if not target_path.is_relative_to(base_dir):
@@ -271,7 +275,9 @@ async def download_file(
     file_path = download.file_path
 
     from pathlib import Path
+
     from app.core.config import settings
+
     base_dir = Path(settings.DOWNLOAD_DIR).resolve()
     target_path = Path(file_path).resolve()
     if not target_path.is_relative_to(base_dir):
@@ -328,7 +334,9 @@ async def _get_remote_image(image_url: str) -> Response | None:
 
         # Fetch remote
         async with httpx.AsyncClient(timeout=10.0) as client:
-            resp = await client.get(image_url, follow_redirects=True, headers={"User-Agent": "Audiovault/1.0"})  # nosemgrep: python.fastapi.net.tainted-fastapi-http-request-httpx.tainted-fastapi-http-request-httpx
+            resp = await client.get(
+                image_url, follow_redirects=True, headers={"User-Agent": "Audiovault/1.0"}
+            )  # nosemgrep: python.fastapi.net.tainted-fastapi-http-request-httpx.tainted-fastapi-http-request-httpx
             if resp.status_code != 200:
                 return None
 

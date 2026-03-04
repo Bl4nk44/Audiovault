@@ -7,8 +7,8 @@ from typing import List, Optional
 from app.core.cache import cache_manager
 from app.models.user import User
 from app.schemas.recommendation import RecommendationResponse, RecommendedArtist, RecommendedPlaylist, RecommendedTrack
-from app.services.lastfm_service import LastfmError, LastfmService
 from app.services.deezer_service import DeezerService
+from app.services.lastfm_service import LastfmError, LastfmService
 
 logger = logging.getLogger(__name__)
 

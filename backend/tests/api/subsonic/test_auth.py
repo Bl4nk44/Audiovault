@@ -5,8 +5,8 @@ import pytest
 from app.core.security import get_password_hash
 from app.models.subsonic import SubsonicAuthToken
 from app.models.user import User
+from fastapi import HTTPException
 from httpx import AsyncClient
-from fastapi import Depends, HTTPException, Query, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 
@@ -128,6 +128,7 @@ async def test_subsonic_auth_expired_token(client: AsyncClient, test_user: User,
 @pytest.mark.asyncio
 async def test_subsonic_auth_error_class():
     from app.api.subsonic.auth import SubsonicAuthError
+
     err = SubsonicAuthError(40, "Test error")
     assert err.code == 40
     assert err.message == "Test error"
@@ -136,6 +137,7 @@ async def test_subsonic_auth_error_class():
 @pytest.mark.asyncio
 async def test_subsonic_params_class():
     from app.api.subsonic.auth import SubsonicParams
+
     params = SubsonicParams(u="user", c="client", v="1.0", f="xml")
     assert params.username == "user"
     assert params.client == "client"
@@ -146,6 +148,7 @@ async def test_subsonic_params_class():
 @pytest.mark.asyncio
 async def test_create_auth_token_coverage(db_session: AsyncSession, test_user: User):
     from app.api.subsonic.auth import create_auth_token
+
     token_obj = await create_auth_token(db_session, test_user, "test-client")
     assert token_obj.token is not None
     assert token_obj.client_name == "test-client"
@@ -155,6 +158,7 @@ async def test_create_auth_token_coverage(db_session: AsyncSession, test_user: U
 @pytest.mark.asyncio
 async def test_verify_token_auth_no_tokens(db_session: AsyncSession, test_user: User):
     from app.api.subsonic.auth import verify_token_auth
+
     result = await verify_token_auth(db_session, test_user, "sometoken", "somesalt")
     assert result is False
 
@@ -162,6 +166,7 @@ async def test_verify_token_auth_no_tokens(db_session: AsyncSession, test_user: 
 @pytest.mark.asyncio
 async def test_subsonic_auth_explicit_call(db_session: AsyncSession, test_user: User):
     from app.api.subsonic.auth import subsonic_auth
+
     # Success case
     user = await subsonic_auth(u="testuser", p="testpass", _c="test", db=db_session)
     assert user.id == test_user.id

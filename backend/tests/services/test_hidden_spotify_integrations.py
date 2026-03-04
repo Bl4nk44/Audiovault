@@ -10,10 +10,7 @@ Covers:
 - H7-H9: Watchlist/sync services handle Spotify API changes
 """
 
-import logging
-from unittest.mock import MagicMock, patch
-
-import pytest
+from unittest.mock import patch
 
 
 class TestDownloadsSpotifyIntegration:
@@ -156,12 +153,8 @@ class TestWatchlistSpotifyIntegration:
         """H9: SyncManager._fetch_remote_tracks works with Spotify artist."""
         with patch("app.services.spotify_service.SpotifyService") as MockService:
             mock_instance = MockService.return_value
-            mock_instance.get_artist_albums.return_value = [
-                {"id": "album_1", "name": "Album 1"}
-            ]
-            mock_instance.get_album_tracks.return_value = [
-                {"id": "track_1", "title": "Track 1", "artist": "Artist 1"}
-            ]
+            mock_instance.get_artist_albums.return_value = [{"id": "album_1", "name": "Album 1"}]
+            mock_instance.get_album_tracks.return_value = [{"id": "track_1", "title": "Track 1", "artist": "Artist 1"}]
 
             albums = mock_instance.get_artist_albums("artist_id_sync")
             assert len(albums) == 1

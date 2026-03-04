@@ -10,12 +10,10 @@ Covers:
 - track/artist/album details delegation
 """
 
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, patch
 
 import pytest
-
 from app.services.search_orchestrator import SearchOrchestrator
-
 
 # --- Fixtures ---
 
@@ -157,10 +155,7 @@ async def test_search_tracks_prefers_deezer_with_image(orchestrator: SearchOrche
 @pytest.mark.asyncio
 async def test_search_tracks_respects_limit(orchestrator: SearchOrchestrator):
     """Should respect the limit parameter."""
-    many_results = [
-        {**DEEZER_RESULTS[0], "id": f"dz-{i}", "isrc": f"ISRC{i:05d}"}
-        for i in range(30)
-    ]
+    many_results = [{**DEEZER_RESULTS[0], "id": f"dz-{i}", "isrc": f"ISRC{i:05d}"} for i in range(30)]
 
     with (
         patch.object(orchestrator, "_search_deezer", new_callable=AsyncMock) as mock_dz,
@@ -292,9 +287,7 @@ async def test_get_track_details_unknown_source(orchestrator: SearchOrchestrator
 async def test_resolve_isrc_from_musicbrainz(orchestrator: SearchOrchestrator):
     """Should resolve ISRC using MusicBrainz search."""
     mock_mb = AsyncMock()
-    mock_mb.search_track.return_value = [
-        {"isrc": "USGF19942501", "title": "Test", "artist": "Test"}
-    ]
+    mock_mb.search_track.return_value = [{"isrc": "USGF19942501", "title": "Test", "artist": "Test"}]
     orchestrator.musicbrainz = mock_mb
 
     isrc = await orchestrator.resolve_isrc("Nirvana", "Smells Like Teen Spirit")

@@ -68,7 +68,6 @@ async def mock_cache_manager():
         real_cache_manager.redis.evalsha.return_value = 1
         mock_get.return_value = None
 
-
         yield real_cache_manager
 
         # Cleanup

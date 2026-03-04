@@ -264,9 +264,7 @@ class SpotifyService:
             results = self.client.artist_top_tracks(artist_id)
             return [self._format_track(track) for track in results["tracks"]]
         except Exception as e:
-            logger.warning(
-                f"Top tracks unavailable for {artist_id} (endpoint may be deprecated): {e}"
-            )
+            logger.warning(f"Top tracks unavailable for {artist_id} (endpoint may be deprecated): {e}")
             return []
 
     def get_artist_albums(self, artist_id: str) -> list[dict[str, Any]]:

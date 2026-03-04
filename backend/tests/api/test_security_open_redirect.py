@@ -1,10 +1,12 @@
-import pytest
-from httpx import AsyncClient
 from uuid import uuid4
-from sqlalchemy.ext.asyncio import AsyncSession
+
+import pytest
 from app.models.album import Album
 from app.models.track import Track
 from app.models.user import User
+from httpx import AsyncClient
+from sqlalchemy.ext.asyncio import AsyncSession
+
 
 @pytest.mark.asyncio
 async def test_stream_album_cover_open_redirect_prevention(
@@ -18,7 +20,7 @@ async def test_stream_album_cover_open_redirect_prevention(
     the /album/{id}/cover endpoint refuses to redirect to untrusted domains.
     """
     evil_album_id = uuid4()
-    
+
     # Poison DB
     evil_album = Album(
         id=evil_album_id,
@@ -26,7 +28,7 @@ async def test_stream_album_cover_open_redirect_prevention(
         images={
             "300": "http://evil.com/phishing",
             "640": "http://evil.com/phishing",
-        }
+        },
     )
     db_session.add(evil_album)
     await db_session.commit()
@@ -57,7 +59,7 @@ async def test_stream_track_cover_open_redirect_prevention(
     """
     evil_album_id = uuid4()
     evil_track_id = uuid4()
-    
+
     # Poison DB
     evil_album = Album(
         id=evil_album_id,
@@ -65,15 +67,15 @@ async def test_stream_track_cover_open_redirect_prevention(
         images={
             "300": "https://phishing.site/login",
             "640": "https://phishing.site/login",
-        }
+        },
     )
-    
+
     evil_track = Track(
         id=evil_track_id,
         title="Evil Track",
         album_id=evil_album_id,
     )
-    
+
     db_session.add(evil_album)
     db_session.add(evil_track)
     await db_session.commit()

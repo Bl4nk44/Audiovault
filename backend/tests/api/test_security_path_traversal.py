@@ -1,9 +1,7 @@
 import os
-from pathlib import Path
 from uuid import uuid4
 
 import pytest
-from app.core.config import settings
 from app.models.download import Download
 from app.models.user import User
 from httpx import AsyncClient
@@ -55,10 +53,12 @@ async def test_subsonic_download_path_traversal_db_poisoning(
                 "id": str(evil_track_id),
             },
         )
-        
+
         # We expect this to fail (400 or subsonic error) and not return the file
         assert "SECRET DATA" not in response.text
-        assert response.status_code == 400 or (response.status_code == 200 and 'Failed' in response.text or 'error' in response.text)
+        assert response.status_code == 400 or (
+            response.status_code == 200 and "Failed" in response.text or "error" in response.text
+        )
 
     finally:
         os.remove(secret_file_path)
@@ -121,12 +121,13 @@ async def test_users_delete_library_path_traversal(
     does not delete arbitrary paths if the username is somehow crafted
     or preferences are poisoned.
     """
-    
+
     # We will test normal deletion for green path, but for now we focus on logic.
     # Users deletion is mostly handled by `sanitize_filename`, but let's test a weird name.
-    
+
     # Let's create a user with a weird username
     from app.core.security import get_password_hash
+
     weird_user = User(
         id=uuid4(),
         username="../../root",
@@ -136,8 +137,9 @@ async def test_users_delete_library_path_traversal(
     )
     db_session.add(weird_user)
     await db_session.commit()
-    
+
     # Try deleting weird user library
     # The sanitize_filename should convert "../../root" to something safe like ".._.._root"
     # We just ensure it doesn't crash or delete parent dirs.
-    assert True # Placeholder as it's harder to mock auth for a newly created weird user in a single basic test without full setup.
+    # Placeholder as it's harder to mock auth for a newly created weird user in a single basic test without full setup.
+    assert True

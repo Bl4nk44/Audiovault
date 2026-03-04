@@ -30,7 +30,9 @@ async def add_to_watchlist(
     import logging
 
     logger = logging.getLogger(__name__)
-    logger.info(f"Watchlist add request: {request.dict()}")  # nosemgrep: python.fastapi.log.tainted-log-injection-stdlib-fastapi.tainted-log-injection-stdlib-fastapi
+    logger.info(
+        f"Watchlist add request: {request.dict()}"
+    )  # nosemgrep: python.fastapi.log.tainted-log-injection-stdlib-fastapi.tainted-log-injection-stdlib-fastapi
     return await watchlist_engine.add_to_watchlist(db, current_user.id, request.dict())
 
 

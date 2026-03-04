@@ -83,9 +83,7 @@ class MusicBrainzService:
         artists = data.get("artists", [])
         return [self._format_artist(a) for a in artists]
 
-    async def search_album(
-        self, title: str, artist: str | None = None, limit: int = 10
-    ) -> list[dict[str, Any]]:
+    async def search_album(self, title: str, artist: str | None = None, limit: int = 10) -> list[dict[str, Any]]:
         """Search for releases by title and optional artist."""
         query = f'release:"{title}"'
         if artist:
@@ -137,11 +135,7 @@ class MusicBrainzService:
             if img.get("front"):
                 thumbnails = img.get("thumbnails", {})
                 # Prefer 500px, then large, then full image
-                return (
-                    thumbnails.get("500")
-                    or thumbnails.get("large")
-                    or img.get("image")
-                )
+                return thumbnails.get("500") or thumbnails.get("large") or img.get("image")
 
         # Fallback to first image if no front cover
         if images:
@@ -175,14 +169,16 @@ class MusicBrainzService:
                 continue
             seen_titles.add(title.lower())
 
-            formatted.append({
-                "id": rel.get("id"),
-                "title": title,
-                "date": rel.get("date"),
-                "status": rel.get("status"),
-                "type": rel.get("release-group", {}).get("primary-type", "Album"),
-                "source": "musicbrainz",
-            })
+            formatted.append(
+                {
+                    "id": rel.get("id"),
+                    "title": title,
+                    "date": rel.get("date"),
+                    "status": rel.get("status"),
+                    "type": rel.get("release-group", {}).get("primary-type", "Album"),
+                    "source": "musicbrainz",
+                }
+            )
 
         return formatted
 

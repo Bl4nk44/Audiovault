@@ -1,8 +1,10 @@
-import pytest
-from app.main import application, startup_event, shutdown_event
-from httpx import AsyncClient
 import os
 import shutil
+
+import pytest
+from app.main import shutdown_event, startup_event
+from httpx import AsyncClient
+
 
 @pytest.mark.asyncio
 async def test_main_endpoints(client: AsyncClient):
@@ -21,6 +23,7 @@ async def test_main_endpoints(client: AsyncClient):
     assert response.status_code == 200
     assert "version" in response.json()
 
+
 @pytest.mark.asyncio
 async def test_main_lifecycle(db_session):
     # Trigger startup manually for coverage
@@ -32,28 +35,29 @@ async def test_main_lifecycle(db_session):
     except Exception:
         # We might expect some failures if Redis is not running in test env
         pass
-    
+
     try:
         await shutdown_event()
     except Exception:
         pass
 
+
 @pytest.mark.asyncio
 async def test_setup_static_dirs():
+    from app.core.config import settings
     from app.main import setup_static_dirs
     from fastapi import FastAPI
-    from app.core.config import settings
-    
+
     test_app = FastAPI()
     temp_dir = "/tmp/audiovault_test_static"
     if os.path.exists(temp_dir):
         shutil.rmtree(temp_dir)
     os.makedirs(temp_dir)
-    
+
     # Temporarily override setting
     old_dir = settings.DOWNLOAD_DIR
     settings.DOWNLOAD_DIR = temp_dir
-    
+
     try:
         setup_static_dirs(test_app)
     finally:
