@@ -1,11 +1,11 @@
-# Streaming Guide 📱
+# Personal Streaming Server
 
+Turn Audiovault into your personal streaming service, accessible from anywhere. 
 Audiovault implements the Subsonic API (v1.16.1), allowing you to stream your music library to almost any device using compatible clients.
 
 ## Compatible Clients
 
 We recommend the following clients:
-
 - **Desktop/Linux**: [Sonixd](https://github.com/tempugh/Sonixd) (Highly Recommended), [Supersonic](https://github.com/dweymouth/supersonic), [Feishin](https://github.com/jeffvli/feishin)
 - **Android**: [Symfonium](https://symfonium.app/) (Recommended), [DSub](https://github.com/daneren2005/Subsonic-Apps)
 - **iOS**: [Amperfy](https://github.com/amperfy/amperfy) (Verified), [substreamer](https://substreamerapp.com/)
@@ -13,7 +13,6 @@ We recommend the following clients:
 ## Connection Details
 
 To connect your client to Audiovault:
-
 1.  **Server Type**: Subsonic / OpenSubsonic
 2.  **Address**:
     - **Local**: `http://YOUR_LOCAL_IP:2137` (e.g., `http://192.168.1.100:2137`)
@@ -38,11 +37,9 @@ If you see a `401 Unauthorized` error, it is almost certainly because this setti
 ## Troubleshooting
 
 ### "Bad Credentials" / 401 Error
-
 - Verify your password works on the Web UI.
 - **Enable Legacy Authentication** in your app settings.
 
 ### "Connection Refused"
-
 - Ensure you are using the correct IP and Port (`2137` for frontend or `8000` for backend direct).
-- If using Tailscale, ensure Tailscale is active on both devices.
+- If using Tailscale (for secure remote access without opening ports on your router), ensure Tailscale is active on both devices.

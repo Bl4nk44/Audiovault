@@ -39,9 +39,7 @@ class Settings(BaseSettings):
     ADMIN_USERNAME: str = "admin"
     ADMIN_PASSWORD: str = "admin"
 
-    SPOTIFY_CLIENT_ID: str | None = None
-    SPOTIFY_CLIENT_SECRET: str | None = None
-    SPOTIFY_REDIRECT_URI: str | None = None
+
 
     # Genius API for lyrics
     GENIUS_API_TOKEN: str | None = None
