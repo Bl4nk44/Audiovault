@@ -43,10 +43,8 @@ async def _resolve_track_to_local_id(db: AsyncSession, track_id_str: str, source
             from app.services.spotify_service import SpotifyService
 
             spotify = SpotifyService()
-            if not spotify.client:
-                raise HTTPException(status_code=503, detail=SPOTIFY_CONFIG_ERROR)
 
-            track_data = spotify.get_track(track_id_str)
+            track_data = await spotify.get_track(track_id_str)
             if not track_data:
                 raise HTTPException(status_code=404, detail="Track not found on Spotify")
 
@@ -337,21 +335,19 @@ async def download_all_artist_tracks(
         from app.services.spotify_service import SpotifyService
 
         service_sp = SpotifyService()
-        if not service_sp.client:
-            raise HTTPException(status_code=503, detail=SPOTIFY_CONFIG_ERROR)
 
-        artist = service_sp.get_artist_details(artist_id)
+        artist = await service_sp.get_artist_details(artist_id)
         if not artist:
             raise HTTPException(status_code=404, detail="Artist not found")
 
         artist_name = artist["name"]
         queued_count = 0
 
-        albums = service_sp.get_artist_albums(artist_id)
+        albums = await service_sp.get_artist_albums(artist_id)
 
         for album in albums:
             album_id_local = album["id"]
-            tracks = service_sp.get_album_tracks(album_id_local)
+            tracks = await service_sp.get_album_tracks(album_id_local)
 
             for track_data in tracks:
                 existing = await db.execute(select(Track).where(Track.spotify_id == track_data["id"]))
@@ -473,11 +469,9 @@ async def download_album(
         from app.services.spotify_service import SpotifyService
 
         service = SpotifyService()
-        if not service.client:
-            raise HTTPException(status_code=503, detail=SPOTIFY_CONFIG_ERROR)
 
         try:
-            album_data = service.get_album(album_id)
+            album_data = await service.get_album_details(album_id)
             if not album_data:
                 raise HTTPException(status_code=404, detail="Album not found")
             album_name = album_data["name"]
@@ -487,7 +481,7 @@ async def download_album(
             )  # nosemgrep: python.fastapi.log.tainted-log-injection-stdlib-fastapi.tainted-log-injection-stdlib-fastapi  # noqa: E501
             raise HTTPException(status_code=404, detail="Album not found")
 
-        tracks = service.get_album_tracks(album_id)
+        tracks = await service.get_album_tracks(album_id)
 
         for track_data in tracks:
             existing = await db.execute(select(Track).where(Track.spotify_id == track_data["id"]))

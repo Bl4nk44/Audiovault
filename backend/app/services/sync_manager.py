@@ -278,9 +278,9 @@ class SyncManager:
                 # Simplification: Reuse services
                 if item.source == "spotify" and item.source_id:
                     spotify_service = SpotifyService()
-                    albums = spotify_service.get_artist_albums(item.source_id)
+                    albums = await spotify_service.get_artist_albums(item.source_id)
                     for album in albums:
-                        album_tracks = spotify_service.get_album_tracks(album["id"])
+                        album_tracks = await spotify_service.get_album_tracks(album["id"])
                         tracks.extend(album_tracks)
                 elif item.source == "youtube" and item.source_id:
                     youtube = YouTubeService()

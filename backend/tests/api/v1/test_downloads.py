@@ -1,5 +1,5 @@
 import uuid
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, patch
 
 import pytest
 from app.models.download import Download
@@ -32,15 +32,16 @@ async def test_create_download(client, admin_token_headers):
     data = {"track_id": str(uuid.uuid4()), "source": "spotify", "playlist_name": "Test"}
     with patch("app.services.spotify_service.SpotifyService") as MockSpotify:
         mock_instance = MockSpotify.return_value
-        mock_instance.client = MagicMock()
-        mock_instance.get_track.return_value = {
-            "title": "Test Title",
-            "artist": "Test Artist",
-            "duration_ms": 1000,
-            "image_url": "http://example.com/img.jpg",
-            "album": "Test Album",
-            "isrc": "US123",
-        }
+        mock_instance.get_track = AsyncMock(
+            return_value={
+                "title": "Test Title",
+                "artist": "Test Artist",
+                "duration_ms": 1000,
+                "image_url": "http://example.com/img.jpg",
+                "album": "Test Album",
+                "isrc": "US123",
+            }
+        )
 
         response = await client.post("/api/v1/downloads/add", json=data, headers=admin_token_headers)
         assert response.status_code in [200, 201]
@@ -65,11 +66,9 @@ async def test_delete_download(client, admin_token_headers, sample_download, db_
 
 @pytest.mark.asyncio
 async def test_bulk_update_downloads(client, admin_token_headers, sample_download, db_session):
-    data = {
-        "download_ids": [str(sample_download.id)],
-        "updates": {"genre": "Rock", "artist": "Updated Artist"}
-    }
-    with patch("app.services.library_maintenance.library_maintenance_service.update_download_item", new_callable=AsyncMock) as mock_update:
+    data = {"download_ids": [str(sample_download.id)], "updates": {"genre": "Rock", "artist": "Updated Artist"}}
+    patch_target = "app.services.library_maintenance.library_maintenance_service.update_download_item"
+    with patch(patch_target, new_callable=AsyncMock) as mock_update:
         response = await client.put("/api/v1/downloads/library/bulk-update", json=data, headers=admin_token_headers)
         assert response.status_code == 200
         assert response.json()["updated_count"] == 1
@@ -78,10 +77,7 @@ async def test_bulk_update_downloads(client, admin_token_headers, sample_downloa
 
 @pytest.mark.asyncio
 async def test_bulk_update_invalid_fields(client, admin_token_headers, sample_download):
-    data = {
-        "download_ids": [str(sample_download.id)],
-        "updates": {"invalid_field": "Hacker"}
-    }
+    data = {"download_ids": [str(sample_download.id)], "updates": {"invalid_field": "Hacker"}}
     response = await client.put("/api/v1/downloads/library/bulk-update", json=data, headers=admin_token_headers)
     assert response.status_code == 400
     assert "Invalid fields" in response.json()["detail"]
@@ -90,21 +86,22 @@ async def test_bulk_update_invalid_fields(client, admin_token_headers, sample_do
 @pytest.mark.asyncio
 async def test_resolve_spotify_track(client, admin_token_headers, db_session):
     from app.api.v1.downloads import _resolve_track_to_local_id
-    
+
     with patch("app.services.spotify_service.SpotifyService") as MockSpotify:
         mock_instance = MockSpotify.return_value
-        mock_instance.client = MagicMock()
-        mock_instance.get_track.return_value = {
-            "title": "New Spotify Track",
-            "artist": "Spotify Artist",
-            "duration_ms": 200000,
-            "image_url": "http://img.com",
-            "album": "Spotify Album"
-        }
-        
+        mock_instance.get_track = AsyncMock(
+            return_value={
+                "title": "New Spotify Track",
+                "artist": "Spotify Artist",
+                "duration_ms": 200000,
+                "image_url": "http://img.com",
+                "album": "Spotify Album",
+            }
+        )
+
         track_uuid = await _resolve_track_to_local_id(db_session, "sp_new_123", "spotify")
         assert track_uuid is not None
-        
+
         # Verify it was saved to DB
         result = await db_session.execute(select(Track).where(Track.id == track_uuid))
         track = result.scalar_one()
@@ -115,21 +112,23 @@ async def test_resolve_spotify_track(client, admin_token_headers, db_session):
 @pytest.mark.asyncio
 async def test_resolve_deezer_track(client, admin_token_headers, db_session):
     from app.api.v1.downloads import _resolve_track_to_local_id
-    
+
     with patch("app.services.deezer_service.DeezerService") as MockDeezer:
         mock_instance = MockDeezer.return_value
-        mock_instance.get_track = AsyncMock(return_value={
-            "title": "Deezer Song",
-            "artist": "Deezer Artist",
-            "duration_ms": 180000,
-            "image_url": "http://deezer.com/img",
-            "album": "Deezer Album",
-            "isrc": "FR123"
-        })
-        
+        mock_instance.get_track = AsyncMock(
+            return_value={
+                "title": "Deezer Song",
+                "artist": "Deezer Artist",
+                "duration_ms": 180000,
+                "image_url": "http://deezer.com/img",
+                "album": "Deezer Album",
+                "isrc": "FR123",
+            }
+        )
+
         track_uuid = await _resolve_track_to_local_id(db_session, "dz_456", "deezer")
         assert track_uuid is not None
-        
+
         result = await db_session.execute(select(Track).where(Track.id == track_uuid))
         track = result.scalar_one()
         assert track.title == "Deezer Song"

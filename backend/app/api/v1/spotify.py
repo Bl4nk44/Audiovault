@@ -21,12 +21,9 @@ async def search_spotify(
     logger = logging.getLogger(__name__)
 
     service = SpotifyService()
-    if not service.client:
-        logger.error(SPOTIFY_NOT_CONFIGURED_MSG)
-        raise HTTPException(status_code=503, detail=SPOTIFY_NOT_CONFIGURED_MSG)
 
     try:
-        return service.search(q, limit, offset, type)
+        return await service.search(q, limit, offset, type)
     except Exception as e:
         logger.error(f"Error in spotify search endpoint: {e}")
         raise HTTPException(status_code=500, detail=str(e)) from e
@@ -35,10 +32,8 @@ async def search_spotify(
 @router.get("/track/{track_id}")
 async def get_spotify_track(track_id: str, current_user: User = Depends(get_current_active_user)):
     service = SpotifyService()
-    if not service.client:
-        raise HTTPException(status_code=503, detail=SPOTIFY_NOT_CONFIGURED_MSG)
 
-    track = service.get_track(track_id)
+    track = await service.get_track(track_id)
     if not track:
         raise HTTPException(status_code=404, detail="Track not found")
 
@@ -48,10 +43,8 @@ async def get_spotify_track(track_id: str, current_user: User = Depends(get_curr
 @router.get("/playlist/{playlist_id}")
 async def get_spotify_playlist(playlist_id: str, current_user: User = Depends(get_current_active_user)):
     service = SpotifyService()
-    if not service.client:
-        raise HTTPException(status_code=503, detail=SPOTIFY_NOT_CONFIGURED_MSG)
 
-    playlist = service.get_playlist_details(playlist_id)
+    playlist = await service.get_playlist_details(playlist_id)
     if not playlist:
         raise HTTPException(status_code=404, detail="Playlist not found")
 
@@ -61,10 +54,8 @@ async def get_spotify_playlist(playlist_id: str, current_user: User = Depends(ge
 @router.get("/artist/{artist_id}")
 async def get_spotify_artist(artist_id: str, current_user: User = Depends(get_current_active_user)):
     service = SpotifyService()
-    if not service.client:
-        raise HTTPException(status_code=503, detail=SPOTIFY_NOT_CONFIGURED_MSG)
 
-    artist = service.get_artist_details(artist_id)
+    artist = await service.get_artist_details(artist_id)
     if not artist:
         raise HTTPException(status_code=404, detail="Artist not found")
 
@@ -75,10 +66,8 @@ async def get_spotify_artist(artist_id: str, current_user: User = Depends(get_cu
 async def get_spotify_album(album_id: str, current_user: User = Depends(get_current_active_user)):
     """Get album details with all tracks."""
     service = SpotifyService()
-    if not service.client:
-        raise HTTPException(status_code=503, detail=SPOTIFY_NOT_CONFIGURED_MSG)
 
-    album = service.get_album_details(album_id)
+    album = await service.get_album_details(album_id)
     if not album:
         raise HTTPException(status_code=404, detail="Album not found")
 

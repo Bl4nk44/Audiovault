@@ -181,6 +181,7 @@ async def admin_user(db_session):
 @pytest.fixture(scope="function")
 async def admin_token_headers(admin_user):
     from app.core.security import create_access_token
+
     token = create_access_token(subject=admin_user.id)
     return {"Authorization": f"Bearer {token}"}
 
@@ -188,6 +189,7 @@ async def admin_token_headers(admin_user):
 @pytest.fixture(scope="function")
 async def normal_user(db_session):
     import uuid
+
     from app.core.security import get_password_hash
     from app.models.user import User
 
@@ -205,6 +207,7 @@ async def normal_user(db_session):
 @pytest.fixture(scope="function")
 async def normal_user_token_headers(normal_user):
     from app.core.security import create_access_token
+
     token = create_access_token(subject=normal_user.id)
     return {"Authorization": f"Bearer {token}"}
 

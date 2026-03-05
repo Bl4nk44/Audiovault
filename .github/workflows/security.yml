@@ -10,8 +10,8 @@ on:
       - main
       - dev
   schedule:
-    # Run security scans daily at 2 AM UTC
-    - cron: '0 2 * * *'
+    # Run security scans weekly on Sundays at 2 AM UTC
+    - cron: '0 2 * * 0'
   workflow_dispatch:
 
 jobs:
@@ -288,7 +288,7 @@ jobs:
 
       - name: Send Email Report
         uses: dawidd6/action-send-mail@v4
-        if: always()
+        if: always() && (github.event_name == 'schedule' || needs.secret-scan.result == 'failure' || needs.trivy-scan.result == 'failure' || needs.semgrep.result == 'failure')
         with:
           server_address: ${{ secrets.MAIL_SERVER }}
           server_port: 465

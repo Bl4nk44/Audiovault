@@ -233,13 +233,18 @@ async def test_resolve_stream_url_cached(client: AsyncClient):
 async def test_resolve_stream_url_spotify_to_youtube(client: AsyncClient):
     with (
         patch("app.api.v1.stream.cache_manager.get", new_callable=AsyncMock, return_value=None),
-        patch("app.api.v1.stream._get_spotify_track_sync") as m_spot,
-        patch("app.api.v1.stream._resolve_stream_url_sync") as m_yt,
+        patch("app.api.v1.stream.SpotifyService") as MockSpotify,
+        patch("app.api.v1.stream.YouTubeService") as MockYoutube,
         patch("app.api.v1.stream.cache_manager.set", new_callable=AsyncMock) as m_set,
     ):
-        m_spot.return_value = {"title": "S", "artist": "A"}
-        m_yt.return_value = "https://youtube.com/watch?v=spot"
+        mock_sp = AsyncMock()
+        mock_sp.get_track.return_value = {"title": "S", "artist": "A"}
+        MockSpotify.return_value = mock_sp
+
+        mock_yt = MagicMock()
+        mock_yt.search.return_value = [{"id": "spot"}]
+        MockYoutube.return_value = mock_yt
 
         url = await stream._resolve_stream_url("spotify_id")
-        assert url == "https://youtube.com/watch?v=spot"
+        assert url == "https://www.youtube.com/watch?v=spot"
         assert m_set.called

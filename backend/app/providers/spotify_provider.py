@@ -2,6 +2,7 @@ from app.providers.base import MusicProvider
 from app.schemas.metadata import PlaylistMetadata, TrackMetadata
 from app.services.spotify_service import SpotifyService
 
+
 class SpotifyProvider(MusicProvider):
     SPOTIFY_URI_PREFIX = "spotify:"
     SPOTIFY_DOMAIN = "spotify.com"
