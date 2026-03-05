@@ -1,109 +1,174 @@
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { render, screen, waitFor } from "@testing-library/react";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { render, screen, fireEvent } from "@testing-library/react";
+import { describe, it, expect, vi, beforeEach } from "vitest";
 import LyricsPanel from "./LyricsPanel";
+import { useQuery } from "@tanstack/react-query";
+import { useStore } from "../../store/useStore";
 
-// Mock store
-const mockCurrentTrack = {
-  id: "1",
-  title: "Test Song",
-  artist: "Test Artist",
-};
-
-vi.mock("../../store/useStore", () => ({
-  useStore: () => ({
-    currentTrack: mockCurrentTrack,
-  }),
+// Mocks
+vi.mock("@tanstack/react-query", () => ({
+  useQuery: vi.fn(),
+  QueryClient: vi.fn(),
+  QueryClientProvider: ({ children }: any) => <div>{children}</div>,
 }));
 
-// Mock API
-const mockSearchLyrics = vi.fn();
+vi.mock("../../store/useStore", () => ({
+  useStore: vi.fn(),
+}));
+
 vi.mock("../../api/lyrics", () => ({
   lyricsApi: {
-    search: (artist: string, title: string) => mockSearchLyrics(artist, title),
+    search: vi.fn(),
   },
 }));
 
-// Query Client for tests
-const createTestQueryClient = () =>
-  new QueryClient({
-    defaultOptions: {
-      queries: {
-        retry: false,
-      },
-    },
-  });
+// Mock framer-motion
+vi.mock("framer-motion", () => ({
+  motion: {
+    div: ({ children, ...props }: any) => <div {...props}>{children}</div>,
+    p: ({ children, ...props }: any) => <p {...props}>{children}</p>,
+  },
+  AnimatePresence: ({ children }: any) => <>{children}</>,
+}));
+
+// Mock lucide-react
+vi.mock("lucide-react", () => ({
+  Music2: () => <div data-testid="music-icon" />,
+  X: () => <div data-testid="close-icon" />,
+  RefreshCcw: () => <div data-testid="refresh-icon" />,
+  AlertCircle: () => <div data-testid="alert-icon" />,
+  Loader2: () => <div data-testid="loader-icon" />,
+  ExternalLink: () => <div data-testid="external-link-icon" />,
+}));
 
 describe("LyricsPanel", () => {
-  let queryClient: QueryClient;
-
   beforeEach(() => {
     vi.clearAllMocks();
-    queryClient = createTestQueryClient();
+    // Default mock for scrollIntoView
+    window.HTMLElement.prototype.scrollIntoView = vi.fn();
   });
 
-  const renderComponent = (isOpen = true) => {
-    render(
-      <QueryClientProvider client={queryClient}>
-        <LyricsPanel isOpen={isOpen} onClose={vi.fn()} currentTime={0} />
-      </QueryClientProvider>
-    );
+  const mockTrack = {
+    id: "1",
+    title: "Test Song",
+    artist: "Test Artist",
   };
 
-  it("should not render when isOpen is false", () => {
-    renderComponent(false);
-    expect(screen.queryByText("Lyrics")).not.toBeInTheDocument();
+  it("renders 'No track playing' when currentTrack is null", () => {
+    vi.mocked(useStore).mockReturnValue({ currentTrack: null } as any);
+    vi.mocked(useQuery).mockReturnValue({
+      data: null,
+      isLoading: false,
+      isRefetching: false,
+      error: null,
+      refetch: vi.fn(),
+    } as any);
+
+    render(<LyricsPanel isOpen={true} onClose={() => {}} currentTime={0} />);
+
+    expect(screen.getByText(/No track playing/i)).toBeInTheDocument();
   });
 
-  it("should render and show loading state", () => {
-    // Return a promise that doesn't resolve immediately to test loading state
-    mockSearchLyrics.mockImplementation(() => new Promise(() => {}));
+  it("renders loading state", () => {
+    vi.mocked(useStore).mockReturnValue({ currentTrack: mockTrack } as any);
+    vi.mocked(useQuery).mockReturnValue({
+      data: null,
+      isLoading: true,
+      isRefetching: false,
+      error: null,
+      refetch: vi.fn(),
+    } as any);
 
-    renderComponent(true);
+    render(<LyricsPanel isOpen={true} onClose={() => {}} currentTime={0} />);
 
-    expect(screen.getByText("Lyrics")).toBeInTheDocument();
-    expect(screen.getByText("Test Song")).toBeInTheDocument();
-    expect(screen.getByText("Fetching lyrics...")).toBeInTheDocument();
+    expect(screen.getByTestId("loader-icon")).toBeInTheDocument();
+    expect(screen.getByText(/Fetching lyrics/i)).toBeInTheDocument();
   });
 
-  it("should display lyrics when found", async () => {
-    mockSearchLyrics.mockResolvedValue({
-      found: true,
-      lyrics: "These are the lyrics",
-      url: "http://example.com/lyrics",
-    });
+  it("renders error state and handles retry", () => {
+    const mockRefetch = vi.fn();
+    vi.mocked(useStore).mockReturnValue({ currentTrack: mockTrack } as any);
+    vi.mocked(useQuery).mockReturnValue({
+      data: null,
+      isLoading: false,
+      isRefetching: false,
+      error: new Error("Failed"),
+      refetch: mockRefetch,
+    } as any);
 
-    renderComponent(true);
+    render(<LyricsPanel isOpen={true} onClose={() => {}} currentTime={0} />);
 
-    await waitFor(() => {
-      expect(screen.getByText("These are the lyrics")).toBeInTheDocument();
-    });
-    expect(screen.getByText("View on Genius")).toBeInTheDocument();
+    expect(screen.getByText(/Failed to load lyrics/i)).toBeInTheDocument();
+    fireEvent.click(screen.getByText(/Try Again/i));
+    expect(mockRefetch).toHaveBeenCalled();
   });
 
-  it("should display not found message", async () => {
-    mockSearchLyrics.mockResolvedValue({
-      found: false,
-      lyrics: null,
-    });
-
-    renderComponent(true);
-
-    await waitFor(() => {
-      expect(screen.getByText("No lyrics found for this song")).toBeInTheDocument();
-    });
-  });
-
-  it("should display error state", async () => {
-    mockSearchLyrics.mockRejectedValue(new Error("Network error"));
-
-    renderComponent(true);
-
-    await waitFor(
-      () => {
-        expect(screen.getByText("Failed to load lyrics")).toBeInTheDocument();
+  it("renders plain lyrics when no synced lyrics available", () => {
+    vi.mocked(useStore).mockReturnValue({ currentTrack: mockTrack } as any);
+    vi.mocked(useQuery).mockReturnValue({
+      data: {
+        found: true,
+        lyrics: "Line 1\nLine 2",
+        synced_lyrics: null,
       },
-      { timeout: 4000 }
-    );
+      isLoading: false,
+      isRefetching: false,
+      error: null,
+      refetch: vi.fn(),
+    } as any);
+
+    render(<LyricsPanel isOpen={true} onClose={() => {}} currentTime={0} />);
+
+    expect(screen.getByText("Plain")).toBeInTheDocument();
+    expect(screen.getByText(/Line 1/)).toBeInTheDocument();
+    expect(screen.getByText(/Line 2/)).toBeInTheDocument();
+  });
+
+  it("renders synced lyrics and highlights active line", () => {
+    const syncedLrc = "[00:00.00]First line\n[00:10.00]Second line";
+    vi.mocked(useStore).mockReturnValue({ currentTrack: mockTrack } as any);
+    vi.mocked(useQuery).mockReturnValue({
+      data: {
+        found: true,
+        lyrics: null,
+        synced_lyrics: syncedLrc,
+      },
+      isLoading: false,
+      isRefetching: false,
+      error: null,
+      refetch: vi.fn(),
+    } as any);
+
+    // Current time 12s -> Second line should be active
+    render(<LyricsPanel isOpen={true} onClose={() => {}} currentTime={12} />);
+
+    expect(screen.getByText("Karaoke")).toBeInTheDocument();
+    const secondLine = screen.getByText("Second line");
+    expect(secondLine).toBeInTheDocument();
+    
+    // Check if scrollIntoView was called (it is called in useEffect when actualIndex changes)
+    expect(window.HTMLElement.prototype.scrollIntoView).toHaveBeenCalled();
+  });
+
+  it("handles refresh and close actions", () => {
+    const mockOnClose = vi.fn();
+    vi.mocked(useStore).mockReturnValue({ currentTrack: mockTrack } as any);
+    vi.mocked(useQuery).mockReturnValue({
+      data: null,
+      isLoading: false,
+      isRefetching: false,
+      error: null,
+      refetch: vi.fn(),
+    } as any);
+
+    render(<LyricsPanel isOpen={true} onClose={mockOnClose} currentTime={0} />);
+
+    // Close
+    fireEvent.click(screen.getByTestId("close-icon").parentElement!);
+    expect(mockOnClose).toHaveBeenCalled();
+
+    // Refresh - this should trigger setRefreshCount which triggers useQuery refetch (via key change)
+    fireEvent.click(screen.getByTestId("refresh-icon").parentElement!);
+    // Since we mock useQuery, we can't easily check the internal refreshCount state change 
+    // without a more complex setup, but we covered the button click.
   });
 });

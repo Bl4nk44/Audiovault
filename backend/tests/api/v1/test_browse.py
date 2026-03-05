@@ -196,3 +196,96 @@ async def test_browse_playlist(client, admin_token_headers):
     assert response.status_code == 200
     data = response.json()
     assert data["title"] == "Classic Rock"
+
+
+@pytest.mark.asyncio
+async def test_browse_search_with_type_album(client, admin_token_headers):
+    """GET /browse/search?type=album should return album results."""
+    with patch("app.api.v1.browse.search_orchestrator") as mock_orch:
+        mock_orch.search_albums = AsyncMock(return_value=[MOCK_ALBUM])
+
+        response = await client.get(
+            "/api/v1/browse/search",
+            params={"q": "A Night at the Opera", "type": "album"},
+            headers=admin_token_headers,
+        )
+
+    assert response.status_code == 200
+    data = response.json()
+    assert len(data) >= 1
+    assert data[0]["title"] == "A Night at the Opera"
+
+
+@pytest.mark.asyncio
+async def test_browse_search_with_type_playlist(client, admin_token_headers):
+    """GET /browse/search?type=playlist should return playlist results."""
+    with patch("app.api.v1.browse.search_orchestrator") as mock_orch:
+        mock_orch.search_tracks = AsyncMock(return_value=[MOCK_PLAYLIST])
+
+        response = await client.get(
+            "/api/v1/browse/search",
+            params={"q": "Classic Rock", "type": "playlist"},
+            headers=admin_token_headers,
+        )
+
+    assert response.status_code == 200
+    data = response.json()
+    assert len(data) >= 1
+
+
+@pytest.mark.asyncio
+async def test_browse_search_error_handling(client, admin_token_headers):
+    """Search should return 500 when orchestrator fails."""
+    with patch("app.api.v1.browse.search_orchestrator") as mock_orch:
+        mock_orch.search_tracks = AsyncMock(side_effect=Exception("Internal error"))
+
+        response = await client.get(
+            "/api/v1/browse/search",
+            params={"q": "error"},
+            headers=admin_token_headers,
+        )
+
+    assert response.status_code == 500
+    assert response.json()["detail"] == "Internal error"
+
+
+@pytest.mark.asyncio
+async def test_browse_playlist_not_found(client, admin_token_headers):
+    """GET /browse/playlist/{source}/{id} should return 404 if not found."""
+    with patch("app.api.v1.browse.search_orchestrator") as mock_orch:
+        mock_orch.get_playlist_details = AsyncMock(return_value=None)
+
+        response = await client.get(
+            "/api/v1/browse/playlist/deezer/nonexistent",
+            headers=admin_token_headers,
+        )
+
+    assert response.status_code == 404
+
+
+@pytest.mark.asyncio
+async def test_browse_album_not_found(client, admin_token_headers):
+    """GET /browse/album/{source}/{id} should return 404 if not found."""
+    with patch("app.api.v1.browse.search_orchestrator") as mock_orch:
+        mock_orch.get_album_details = AsyncMock(return_value=None)
+
+        response = await client.get(
+            "/api/v1/browse/album/deezer/nonexistent",
+            headers=admin_token_headers,
+        )
+
+    assert response.status_code == 404
+
+
+@pytest.mark.asyncio
+async def test_browse_artist_not_found(client, admin_token_headers):
+    """GET /browse/artist/{source}/{id} should return 404 if not found."""
+    with patch("app.api.v1.browse.search_orchestrator") as mock_orch:
+        mock_orch.get_artist_details = AsyncMock(return_value=None)
+
+        response = await client.get(
+            "/api/v1/browse/artist/deezer/nonexistent",
+            headers=admin_token_headers,
+        )
+
+    assert response.status_code == 404

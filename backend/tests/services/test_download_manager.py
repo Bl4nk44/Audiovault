@@ -226,3 +226,66 @@ async def test_dm_handle_completion_metadata(download_manager):
         assert download.track.title == "Title"
         assert download.track.artist_id == "a1"
         assert db_mock.commit.called
+
+
+@pytest.mark.asyncio
+async def test_dm_fix_filename_artifacts(download_manager):
+    # Case 1: "NA - " prefix
+    download = MagicMock(file_path="/downloads/testuser/NA - Awesome Song.mp3")
+    with patch("os.path.exists", return_value=True), \
+         patch("os.rename") as mock_rename:
+        download_manager._fix_filename_artifacts(download)
+        assert "NA -" not in download.file_path
+        assert mock_rename.called
+        args, _ = mock_rename.call_args
+        assert "Awesome Song.mp3" in args[1]
+
+    # Case 2: "uploader｜creator - " prefix
+    download = MagicMock(file_path="/downloads/testuser/uploader｜creator - Better Song.mp3")
+    with patch("os.path.exists", return_value=True), \
+         patch("os.rename") as mock_rename:
+        download_manager._fix_filename_artifacts(download)
+        assert "uploader｜creator -" not in download.file_path
+        assert "Better Song.mp3" in download.file_path
+
+    # Case 3: No artifacts
+    path = "/downloads/testuser/Clean Song.mp3"
+    download = MagicMock(file_path=path)
+    with patch("os.path.exists", return_value=True), \
+         patch("os.rename") as mock_rename:
+        download_manager._fix_filename_artifacts(download)
+        assert download.file_path == path
+        assert not mock_rename.called
+
+
+@pytest.mark.asyncio
+async def test_dm_handle_error_retry_increment(download_manager):
+    db_mock = MagicMock()
+    db_mock.commit = AsyncMock()
+    download = MagicMock(id="dl-error", retry_count=1, status="downloading")
+    
+    with patch("app.services.download_manager.socket_manager.emit", new_callable=AsyncMock) as mock_emit:
+        await download_manager._handle_error(db_mock, download, Exception("Network Timeout"))
+        
+        assert download.status == "failed"
+        assert download.retry_count == 2
+        assert download.error_message == "Network Timeout"
+        assert db_mock.commit.called
+        assert mock_emit.called
+
+
+@pytest.mark.asyncio
+async def test_dm_handle_error_paused(download_manager):
+    db_mock = MagicMock()
+    db_mock.commit = AsyncMock()
+    download = MagicMock(id="dl-paused", status="downloading")
+    
+    with patch("app.services.download_manager.socket_manager.emit", new_callable=AsyncMock) as mock_emit:
+        from app.services.download_manager import DownloadPausedError
+        await download_manager._handle_error(db_mock, download, DownloadPausedError("DOWNLOAD_PAUSED"))
+        
+        assert download.status == "paused"
+        assert db_mock.commit.called
+        assert mock_emit.called
+        args, _ = mock_emit.call_args
+        assert args[0] == "download:paused"

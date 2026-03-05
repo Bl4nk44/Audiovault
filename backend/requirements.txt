@@ -12,7 +12,6 @@ passlib[bcrypt]>=1.7.4
 bcrypt>=5.0.0
 python-multipart>=0.0.22
 aiohttp>=3.13.3
-spotipy>=2.25.2
 yt-dlp>=2026.2.4
 ytmusicapi>=1.11.5
 redis>=7.1.1
