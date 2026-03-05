@@ -93,9 +93,7 @@ describe("Player Component - Deep Dive", () => {
     (useAudioVisualizer as any).mockReturnValue({ current: null });
 
     // Polyfill MediaMetadata
-    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-ignore
-
     globalThis.MediaMetadata = class MediaMetadata {
       title: string;
       artist: string;

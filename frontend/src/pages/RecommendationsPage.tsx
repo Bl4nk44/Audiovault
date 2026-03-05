@@ -39,6 +39,7 @@ const RecommendationsPage: React.FC = () => {
     } else {
       checkStatus();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchParams]);
 
   const handleCallback = async (token: string) => {

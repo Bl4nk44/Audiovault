@@ -112,7 +112,7 @@ describe("playlistsApi", () => {
       };
       const createElementSpy = vi.spyOn(document, "createElement").mockReturnValue(mockLink as any);
       const appendChildSpy = vi.spyOn(document.body, "appendChild").mockImplementation(() => mockLink as any);
-      const createObjectURLSpy = vi.stubGlobal("URL", {
+      vi.stubGlobal("URL", {
         createObjectURL: vi.fn(() => "blob:url"),
         revokeObjectURL: vi.fn(),
       });
