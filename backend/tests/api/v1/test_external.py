@@ -26,6 +26,3 @@ async def test_get_spotify_track(client: AsyncClient, admin_token_headers, mock_
     response = await client.get("/api/v1/spotify/track/123", headers=admin_token_headers)
     assert response.status_code == 200
     assert response.json()["name"] == "Fake Track"
-
-
-

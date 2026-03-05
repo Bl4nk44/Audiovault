@@ -56,6 +56,3 @@ async def test_get_spotify_track(client, admin_token_headers, mock_spotify_servi
     response = await client.get("/api/v1/spotify/track/t1", headers=admin_token_headers)
     assert response.status_code == 200
     mock_spotify_service.get_track.assert_called_with("t1")
-
-
-
