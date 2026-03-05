@@ -101,10 +101,13 @@ class LastfmService:
             logger.error(f"Last.fm request failed: {e}")
             raise LastfmAPIError(f"HTTP request failed: {str(e)}")
 
-    def get_auth_url(self) -> str:
-        # Use first origin if available, otherwise localhost
-        origins = list(settings.BACKEND_CORS_ORIGINS)
-        callback_base = origins[0] if origins else "http://localhost:3000"
+    def get_auth_url(self, base_url: str | None = None) -> str:
+        if base_url:
+            callback_base = base_url.rstrip("/")
+        else:
+            # Fallback to first CORS origin
+            origins = list(settings.BACKEND_CORS_ORIGINS)
+            callback_base = origins[0] if origins else "http://localhost:3000"
         callback_url = f"{callback_base}/recommendations"
         return f"http://www.last.fm/api/auth/?api_key={settings.LASTFM_API_KEY}&cb={callback_url}"
 

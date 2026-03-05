@@ -8,7 +8,7 @@ from app.models.user import User
 from app.schemas.lastfm import NowPlayingRequest, ScrobbleRequest
 from app.schemas.recommendation import RecommendationResponse
 from app.services.lastfm_service import LastfmError, LastfmService
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Request
 from sqlalchemy.ext.asyncio import AsyncSession
 
 logger = logging.getLogger(__name__)
@@ -22,6 +22,7 @@ def get_lastfm_service() -> LastfmService:
 
 @router.get("/connect")
 async def connect_lastfm(
+    request: Request,
     service: Annotated[LastfmService, Depends(get_lastfm_service)],
     current_user: Annotated[User, Depends(get_current_user)],
 ):
@@ -29,7 +30,15 @@ async def connect_lastfm(
     Generate Last.fm auth URL.
     User should be redirected here.
     """
-    return {"auth_url": service.get_auth_url()}
+    # Build callback URL from the request origin so it works from any device
+    origin = request.headers.get("origin") or request.headers.get("referer")
+    base_url = None
+    if origin:
+        from urllib.parse import urlparse
+
+        parsed = urlparse(origin)
+        base_url = f"{parsed.scheme}://{parsed.netloc}"
+    return {"auth_url": service.get_auth_url(base_url=base_url)}
 
 
 @router.get("/callback")
