@@ -27,10 +27,11 @@ vi.mock("react-router-dom", async () => {
 });
 
 // Mock framer-motion to avoid animation issues in tests
-vi.mock("framer-motion", () => {
-  const React = require("react");
+vi.mock("framer-motion", async () => {
+  const React = await import("react");
   const dummy = (tag: string) =>
     React.forwardRef((props: any, ref: any) => {
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
       const { whileHover, whileTap, whileFocus, initial, variants, transition, ...rest } = props;
       return React.createElement(tag, { ...rest, ref });
     });
