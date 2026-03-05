@@ -153,6 +153,22 @@ setup_static_dirs(application)
 application.mount("/socket.io", socket_manager.app)
 
 
+def _run_alembic_upgrade():
+    """Run Alembic migrations via subprocess to avoid asyncio.run() conflict."""
+    import subprocess
+    import sys
+
+    result = subprocess.run(
+        [sys.executable, "-m", "alembic", "upgrade", "head"],
+        capture_output=True,
+        text=True,
+        cwd="/app",
+    )
+    if result.returncode != 0:
+        raise RuntimeError(f"Alembic upgrade failed: {result.stderr}")
+    return result.stdout
+
+
 @application.on_event("startup")
 async def startup_event():
     banner = r"""
@@ -166,18 +182,22 @@ async def startup_event():
     logger.info(banner)
     print(banner)  # Ensure it prints to console even if logs are diverted
 
-    # Create tables with retry logic
+    # Database setup with retry logic
     retries = 5
     for i in range(retries):
         try:
-            async with engine.begin() as conn:
-                await conn.run_sync(Base.metadata.create_all)
+            # Run Alembic migrations (creates/updates tables and columns)
+            _run_alembic_upgrade()
+            logger.info("✅ Alembic migrations applied successfully")
             break
         except Exception as e:
             if i == retries - 1:
-                raise e
-            logger.info(f"Database not ready, retrying in 2 seconds... ({i + 1}/{retries})")
-            await asyncio.sleep(2)
+                logger.warning(f"⚠️ Alembic migration failed: {e}. Falling back to create_all.")
+                async with engine.begin() as conn:
+                    await conn.run_sync(Base.metadata.create_all)
+            else:
+                logger.info(f"Database not ready, retrying in 2 seconds... ({i + 1}/{retries})")
+                await asyncio.sleep(2)
 
     # Init data
     async with AsyncSessionLocal() as session:
