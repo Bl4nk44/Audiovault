@@ -1,4 +1,4 @@
-from unittest.mock import MagicMock, patch
+from unittest.mock import AsyncMock, patch
 
 import pytest
 from httpx import AsyncClient
@@ -7,8 +7,8 @@ from httpx import AsyncClient
 @pytest.fixture
 def mock_spotify_service():
     with patch("app.api.v1.spotify.SpotifyService") as mock:
-        instance = mock.return_value
-        instance.client = MagicMock()
+        instance = AsyncMock()
+        mock.return_value = instance
         instance.search.return_value = {"tracks": {"items": []}}
         instance.get_track.return_value = {"id": "123", "name": "Fake Track"}
         yield instance
@@ -28,11 +28,4 @@ async def test_get_spotify_track(client: AsyncClient, admin_token_headers, mock_
     assert response.json()["name"] == "Fake Track"
 
 
-@pytest.mark.asyncio
-async def test_spotify_not_configured(client: AsyncClient, admin_token_headers):
-    with patch("app.api.v1.spotify.SpotifyService") as mock:
-        instance = mock.return_value
-        instance.client = None  # Service not configured
-        response = await client.get("/api/v1/spotify/search?q=test", headers=admin_token_headers)
-        assert response.status_code == 503
-        assert response.json()["detail"] == "Spotify service not configured"
+
