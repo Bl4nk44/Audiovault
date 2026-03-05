@@ -2,9 +2,11 @@ import logging
 import re
 import time
 from typing import Any
+
 import httpx
 
 logger = logging.getLogger(__name__)
+
 
 class SpotifyService:
     def __init__(self):
@@ -19,9 +21,12 @@ class SpotifyService:
 
         url = "https://open.spotify.com/get_access_token?reason=transport&productType=web_player"
         headers = {
-            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+            "User-Agent": (
+                "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
+                "(KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+            )
         }
-        
+
         async with httpx.AsyncClient() as client:
             try:
                 response = await client.get(url, headers=headers, timeout=10.0)
@@ -29,7 +34,7 @@ class SpotifyService:
                 data = response.json()
                 self._token = data.get("accessToken")
                 # Tokens usually expire in 3600 seconds, setting buffer of 60 seconds
-                self._token_expires_at = time.time() + 3540 
+                self._token_expires_at = time.time() + 3540
                 return self._token or ""
             except Exception as e:
                 logger.error(f"Failed to fetch Spotify anonymous token: {e}")
@@ -45,13 +50,13 @@ class SpotifyService:
         headers = {
             "Authorization": f"Bearer {token}",
             "Accept": "application/json",
-            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)"
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)",
         }
 
         async with httpx.AsyncClient() as client:
             try:
                 response = await getattr(client, method.lower())(url, headers=headers, params=params, timeout=10.0)
-                
+
                 if response.status_code == 401:
                     # Token expired or invalid, invalidate cache and retry once
                     self._token = None
@@ -130,19 +135,21 @@ class SpotifyService:
         limit = 50
         offset = 0
         total = 1  # arbitrary starting point
-        
-        while offset < total and offset < 500: # hard limit to prevent infinite loops for massive playlists
-            data = await self._request("get", f"playlists/{playlist_id}/tracks", params={"limit": limit, "offset": offset})
+
+        while offset < total and offset < 500:  # hard limit to prevent infinite loops for massive playlists
+            data = await self._request(
+                "get", f"playlists/{playlist_id}/tracks", params={"limit": limit, "offset": offset}
+            )
             if not data:
                 break
-            
+
             total = data.get("total", 0)
             items = data.get("items", [])
             for item in items:
                 track = item.get("track")
                 if track:
                     tracks.append(self._format_track(track))
-            
+
             offset += limit
 
         return tracks
@@ -153,29 +160,31 @@ class SpotifyService:
             return None
 
         formatted = self._format_playlist(data)
-        
+
         # In Spotify Web API, playlist endpoint already returns first 100 tracks
         tracks = []
         tracks_data = data.get("tracks", {})
-        
+
         for item in tracks_data.get("items", []):
             if item.get("track"):
                 tracks.append(self._format_track(item["track"]))
-                
+
         # Handle pagination if more tracks exist
         limit = 50
         offset = 100
         total = tracks_data.get("total", 0)
-        
+
         while offset < total and offset < 500:
-            more_data = await self._request("get", f"playlists/{playlist_id}/tracks", params={"limit": limit, "offset": offset})
+            more_data = await self._request(
+                "get", f"playlists/{playlist_id}/tracks", params={"limit": limit, "offset": offset}
+            )
             if not more_data:
                 break
             for item in more_data.get("items", []):
                 if item.get("track"):
                     tracks.append(self._format_track(item["track"]))
             offset += limit
-            
+
         formatted["tracks"] = tracks
         return formatted
 
@@ -185,15 +194,15 @@ class SpotifyService:
         album_data = await self._request("get", f"albums/{album_id}")
         if not album_data:
             return []
-            
+
         limit = 50
         offset = 0
         total = album_data.get("tracks", {}).get("total", 1)
-        
+
         # Format tracks from initial album request
         for track in album_data.get("tracks", {}).get("items", []):
             tracks.append(self._format_track(track, album_obj=album_data))
-            
+
         offset = 50
         while offset < total and offset < 500:
             data = await self._request("get", f"albums/{album_id}/tracks", params={"limit": limit, "offset": offset})
@@ -215,13 +224,13 @@ class SpotifyService:
         album_data = await self.get_album(album_id)
         if not album_data:
             return None
-            
+
         tracks = await self.get_album_tracks(album_id)
-        
+
         image_url = album_data["images"][0]["url"] if album_data.get("images") else None
         artist_name = album_data["artists"][0]["name"] if album_data.get("artists") else "Unknown Artist"
         artist_id = album_data["artists"][0]["id"] if album_data.get("artists") else None
-        
+
         return {
             "id": album_data.get("id"),
             "title": album_data.get("name"),
@@ -249,12 +258,13 @@ class SpotifyService:
         limit = 50
         offset = 0
         total = 1
-        
+
         while offset < total and offset < 200:
-            data = await self._request("get", f"artists/{artist_id}/albums", params={"include_groups": "album,single", "limit": limit, "offset": offset})
+            params = {"include_groups": "album,single", "limit": limit, "offset": offset}
+            data = await self._request("get", f"artists/{artist_id}/albums", params=params)
             if not data:
                 break
-                
+
             total = data.get("total", 0)
             items = data.get("items", [])
             for alb in items:
@@ -264,49 +274,51 @@ class SpotifyService:
                 if any(art.get("name", "").lower() == "various artists" for art in alb.get("artists", [])):
                     continue
                 albums.append(alb)
-                
+
             offset += limit
-            
+
         return albums
 
     async def get_artist_details(self, artist_id: str) -> dict[str, Any] | None:
         artist_data = await self._request("get", f"artists/{artist_id}")
         if not artist_data:
             return None
-            
+
         formatted_artist = self._format_artist(artist_data)
-        
+
         top_tracks = await self.get_artist_top_tracks(artist_id)
         formatted_artist["tracks"] = top_tracks
-        
+
         albums = await self.get_artist_albums(artist_id)
         formatted_albums = []
         seen_names = set()
-        
+
         for album in albums:
             title = album.get("name", "")
             if title in seen_names:
                 continue
             seen_names.add(title)
-            
+
             image_url = album["images"][0]["url"] if album.get("images") else None
-            formatted_albums.append({
-                "id": album.get("id"),
-                "title": title,
-                "image_url": image_url,
-                "release_date": album.get("release_date"),
-                "total_tracks": album.get("total_tracks"),
-                "type": album.get("type"),
-                "album_type": album.get("album_type", "album"),
-            })
-            
+            formatted_albums.append(
+                {
+                    "id": album.get("id"),
+                    "title": title,
+                    "image_url": image_url,
+                    "release_date": album.get("release_date"),
+                    "total_tracks": album.get("total_tracks"),
+                    "type": album.get("type"),
+                    "album_type": album.get("album_type", "album"),
+                }
+            )
+
         formatted_artist["albums"] = formatted_albums
         return formatted_artist
 
     async def search(self, query: str, limit: int = 10, offset: int = 0, type: str = "track") -> list[dict[str, Any]]:
         """Overrides generic search. Returns results ONLY if it's a Spotify link resolver."""
         logger.info(f"Spotify async search for: {query}")
-        
+
         # Only process URLs
         if "spotify.link" in query or "spoti.fi" in query:
             try:
@@ -317,16 +329,16 @@ class SpotifyService:
                     logger.info(f"Resolved Spotify short link to: {query}")
             except Exception as e:
                 logger.warning(f"Failed to resolve spotify link {query}: {e}")
-                
+
         url_match = re.search(
             r"(?:https?://)?(?:www\.)?(?:open\.spotify\.com/(?:intl-\w+/)?|spotify:)(track|artist|playlist|album)[:/]([a-zA-Z0-9_-]+)",
             query,
         )
-        
+
         if url_match:
             resource_type, resource_id = url_match.groups()
             logger.info(f"Detected Spotify Async URL: type={resource_type}, id={resource_id}")
-            
+
             if resource_type == "track":
                 track = await self.get_track(resource_id)
                 return [track] if track else []
@@ -354,6 +366,6 @@ class SpotifyService:
                 except Exception:
                     pass
                 return []
-                
+
         # If not a link, we do NOT perform generic search anymore
         return []

@@ -18,9 +18,9 @@ from app.services.spotify_service import SpotifyService
 @pytest.fixture
 def spotify_service():
     """Create a SpotifyService with a mocked httpx client."""
-    with patch("app.services.spotify_service.httpx.AsyncClient") as mock_client:
+    with patch("app.services.spotify_service.httpx.AsyncClient"):
         service = SpotifyService()
-        
+
         # We don't need to mock next, search, artist_albums anymore as we don't use spotipy
         # We just test the formatting logic here mostly
         return service
@@ -92,7 +92,7 @@ class TestArtistTopTracksRemoved:
     async def test_artist_details_still_works_without_top_tracks(self, spotify_service):
         """get_artist_details should succeed even if top tracks endpoint fails."""
         mock_artist = {"id": "ar1", "name": "Artist", "images": [{"url": "http://img"}]}
-        
+
         async def mock_request(*args, **kwargs):
             endpoint = args[1] if len(args) > 1 else kwargs.get("endpoint", "")
             if "top-tracks" in endpoint:
@@ -100,7 +100,7 @@ class TestArtistTopTracksRemoved:
             if "albums" in endpoint:
                 return {"items": [], "next": None}
             return mock_artist
-            
+
         with patch.object(spotify_service, "_request", side_effect=mock_request):
             result = await spotify_service.get_artist_details("ar1")
             assert result is not None
@@ -158,13 +158,13 @@ class TestAlbumDetailsDeprecatedFields:
             # No 'album_type' key
         }
         mock_tracks: dict[str, Any] = {"items": [], "next": None}
-        
+
         async def mock_request(*args, **kwargs):
             endpoint = args[1] if len(args) > 1 else kwargs.get("endpoint", "")
             if "tracks" in endpoint:
                 return mock_tracks
             return mock_album
-            
+
         with patch.object(spotify_service, "_request", side_effect=mock_request):
             result = await spotify_service.get_album_details("al1")
             assert result is not None
@@ -183,13 +183,13 @@ class TestAlbumDetailsDeprecatedFields:
             "total_tracks": 1,
         }
         mock_tracks: dict[str, Any] = {"items": [], "next": None}
-        
+
         async def mock_request(*args, **kwargs):
             endpoint = args[1] if len(args) > 1 else kwargs.get("endpoint", "")
             if "tracks" in endpoint:
                 return mock_tracks
             return mock_album
-            
+
         with patch.object(spotify_service, "_request", side_effect=mock_request):
             result = await spotify_service.get_album_details("al2")
             assert result["album_type"] == "single"

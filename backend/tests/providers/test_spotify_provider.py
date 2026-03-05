@@ -43,7 +43,7 @@ async def test_extract_playlist_from_url(spotify_provider, mock_service):
                 "image_url": "img1",
                 "isrc": "isrc1",
             }
-        ]
+        ],
     }
 
     result = await spotify_provider.extract_playlist("https://open.spotify.com/playlist/p1")

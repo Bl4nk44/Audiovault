@@ -39,8 +39,6 @@ class Settings(BaseSettings):
     ADMIN_USERNAME: str = "admin"
     ADMIN_PASSWORD: str = "admin"
 
-
-
     # Genius API for lyrics
     GENIUS_API_TOKEN: str | None = None
 
