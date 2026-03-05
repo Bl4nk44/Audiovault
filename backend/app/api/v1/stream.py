@@ -208,26 +208,7 @@ async def get_album_cover(album_id: str, db: AsyncSession = Depends(get_db)):
     raise HTTPException(status_code=404, detail="No cover art found")
 
 
-def _resolve_stream_url_sync(track_info: dict) -> Optional[str]:
-    """Sync helper for YouTube service search."""
-    try:
-        youtube_service = YouTubeService()
-        query = f"{track_info['artist']} - {track_info['title']}"
-        results = youtube_service.search(query, limit=1)
-        if results:
-            return f"https://www.youtube.com/watch?v={results[0]['id']}"
-    except Exception as e:
-        logger.error(f"YouTube search failed: {e}")
-    return None
 
-
-def _get_spotify_track_sync(track_id: str) -> Optional[dict]:
-    try:
-        spotify_service = SpotifyService()
-        return spotify_service.get_track(track_id)
-    except Exception as e:
-        logger.error(f"Spotify lookup failed: {e}")
-    return None
 
 
 async def _resolve_stream_url(track_id: str) -> str:
@@ -240,22 +221,25 @@ async def _resolve_stream_url(track_id: str) -> str:
         youtube_url = f"https://www.youtube.com/watch?v={track_id}"
     else:
         # Spotify -> YouTube resolution
-        import functools
-
-        loop = asyncio.get_event_loop()
-
         # 1. Get Spotify Metadata
-        track_info = await loop.run_in_executor(stream_executor, functools.partial(_get_spotify_track_sync, track_id))
+        service = SpotifyService()
+        track_info = await service.get_track(track_id)
 
         if not track_info:
             raise HTTPException(status_code=404, detail="Track not found")
 
         # 2. Search on YouTube
-        found_url = await loop.run_in_executor(stream_executor, functools.partial(_resolve_stream_url_sync, track_info))
-
-        if not found_url:
-            raise HTTPException(status_code=404, detail="Stream not found")
-        youtube_url = found_url
+        try:
+            youtube_service = YouTubeService()
+            query = f"{track_info['artist']} - {track_info['title']}"
+            results = youtube_service.search(query, limit=1)
+            if results:
+                youtube_url = f"https://www.youtube.com/watch?v={results[0]['id']}"
+            else:
+                raise HTTPException(status_code=404, detail="Stream not found")
+        except Exception as e:
+            logger.error(f"YouTube search failed: {e}")
+            raise HTTPException(status_code=404, detail="Stream not found") from e
 
     await cache_manager.set(f"stream_url:{track_id}", youtube_url, expire=3600)
     return youtube_url

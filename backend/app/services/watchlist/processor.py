@@ -58,13 +58,13 @@ class WatchlistItemProcessor:
 
         if item.source == "spotify":
             # Run sync method in executor if it blocks, but here we just wrap it
-            albums = self.spotify_service.get_artist_albums(item.source_id) or []
+            albums = await self.spotify_service.get_artist_albums(item.source_id) or []
             for album in albums:
                 album_id = album.get("id")
                 if not album_id:
                     continue
                 # Potentially strictly sync, might block loop but ok for now
-                album_tracks = self.spotify_service.get_album_tracks(str(album_id)) or []
+                album_tracks = await self.spotify_service.get_album_tracks(str(album_id)) or []
                 for t in album_tracks:
                     t_artist = t.get("artist") or ""
                     if not target_artist or target_artist in t_artist.lower():

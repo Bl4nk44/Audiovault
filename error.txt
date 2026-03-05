@@ -1,0 +1,50 @@
+app/services/watchlist/processor.py:61: error: Need type annotation for "albums"  [var-annotated]
+app/services/watchlist/processor.py:62: error: Item "Coroutine[Any, Any, list[dict[str, Any]]]" of "Coroutine[Any, Any, list[dict[str, Any]]] | list[Any]" has no attribute "__iter__" (not iterable)  [union-attr]
+app/services/watchlist/processor.py:62: note: Maybe you forgot to use "await"?
+app/services/watchlist/processor.py:67: error: Need type annotation for "album_tracks"  [var-annotated]
+app/services/watchlist/processor.py:68: error: Item "Coroutine[Any, Any, list[dict[str, Any]]]" of "Coroutine[Any, Any, list[dict[str, Any]]] | list[Any]" has no attribute "__iter__" (not iterable)  [union-attr]
+app/services/watchlist/processor.py:68: note: Maybe you forgot to use "await"?
+app/services/sync_manager.py:282: error: "Coroutine[Any, Any, list[dict[str, Any]]]" has no attribute "__iter__" (not iterable)  [attr-defined]
+app/services/sync_manager.py:282: note: Maybe you forgot to use "await"?
+app/services/sync_manager.py:284: error: Argument 1 to "extend" of "list" has incompatible type "Coroutine[Any, Any, list[dict[str, Any]]]"; expected "Iterable[dict[str, str | None]]"  [arg-type]
+app/services/sync_manager.py:284: note: Maybe you forgot to use "await"?
+app/api/v1/spotify.py:24: error: "SpotifyService" has no attribute "client"; maybe "client_id"?  [attr-defined]
+app/api/v1/spotify.py:38: error: "SpotifyService" has no attribute "client"; maybe "client_id"?  [attr-defined]
+app/api/v1/spotify.py:51: error: "SpotifyService" has no attribute "client"; maybe "client_id"?  [attr-defined]
+app/api/v1/spotify.py:64: error: "SpotifyService" has no attribute "client"; maybe "client_id"?  [attr-defined]
+app/api/v1/spotify.py:78: error: "SpotifyService" has no attribute "client"; maybe "client_id"?  [attr-defined]
+app/api/v1/stream.py:227: error: Incompatible return value type (got "Coroutine[Any, Any, dict[str, Any] | None]", expected "dict[Any, Any] | None")  [return-value]
+app/api/v1/stream.py:227: note: Maybe you forgot to use "await"?
+app/api/v1/downloads.py:46: error: "SpotifyService" has no attribute "client"; maybe "client_id"?  [attr-defined]
+app/api/v1/downloads.py:54: error: Value of type "Coroutine[Any, Any, dict[str, Any] | None]" is not indexable  [index]
+app/api/v1/downloads.py:55: error: Value of type "Coroutine[Any, Any, dict[str, Any] | None]" is not indexable  [index]
+app/api/v1/downloads.py:57: error: "Coroutine[Any, Any, dict[str, Any] | None]" has no attribute "get"  [attr-defined]
+app/api/v1/downloads.py:60: error: "Coroutine[Any, Any, dict[str, Any] | None]" has no attribute "get"  [attr-defined]
+app/api/v1/downloads.py:61: error: "Coroutine[Any, Any, dict[str, Any] | None]" has no attribute "get"  [attr-defined]
+app/api/v1/downloads.py:63: error: "Coroutine[Any, Any, dict[str, Any] | None]" has no attribute "get"  [attr-defined]
+app/api/v1/downloads.py:79: error: Incompatible types in assignment (expression has type "dict[str, Any] | None", variable has type "Coroutine[Any, Any, dict[str, Any] | None]")  [assignment]
+app/api/v1/downloads.py:84: error: Value of type "Coroutine[Any, Any, dict[str, Any] | None]" is not indexable  [index]
+app/api/v1/downloads.py:85: error: Value of type "Coroutine[Any, Any, dict[str, Any] | None]" is not indexable  [index]
+app/api/v1/downloads.py:87: error: "Coroutine[Any, Any, dict[str, Any] | None]" has no attribute "get"  [attr-defined]
+app/api/v1/downloads.py:88: error: "Coroutine[Any, Any, dict[str, Any] | None]" has no attribute "get"  [attr-defined]
+app/api/v1/downloads.py:91: error: "Coroutine[Any, Any, dict[str, Any] | None]" has no attribute "get"  [attr-defined]
+app/api/v1/downloads.py:92: error: "Coroutine[Any, Any, dict[str, Any] | None]" has no attribute "get"  [attr-defined]
+app/api/v1/downloads.py:108: error: Incompatible types in assignment (expression has type "dict[str, Any] | None", variable has type "Coroutine[Any, Any, dict[str, Any] | None]")  [assignment]
+app/api/v1/downloads.py:113: error: Value of type "Coroutine[Any, Any, dict[str, Any] | None]" is not indexable  [index]
+app/api/v1/downloads.py:114: error: Value of type "Coroutine[Any, Any, dict[str, Any] | None]" is not indexable  [index]
+app/api/v1/downloads.py:115: error: "Coroutine[Any, Any, dict[str, Any] | None]" has no attribute "get"  [attr-defined]
+app/api/v1/downloads.py:116: error: "Coroutine[Any, Any, dict[str, Any] | None]" has no attribute "get"  [attr-defined]
+app/api/v1/downloads.py:117: error: "Coroutine[Any, Any, dict[str, Any] | None]" has no attribute "get"  [attr-defined]
+app/api/v1/downloads.py:120: error: "Coroutine[Any, Any, dict[str, Any] | None]" has no attribute "get"  [attr-defined]
+app/api/v1/downloads.py:340: error: "SpotifyService" has no attribute "client"; maybe "client_id"?  [attr-defined]
+app/api/v1/downloads.py:343: error: Incompatible types in assignment (expression has type "Coroutine[Any, Any, dict[str, Any] | None]", variable has type "dict[str, Any] | None")  [assignment]
+app/api/v1/downloads.py:343: note: Maybe you forgot to use "await"?
+app/api/v1/downloads.py:352: error: "Coroutine[Any, Any, list[dict[str, Any]]]" has no attribute "__iter__" (not iterable)  [attr-defined]
+app/api/v1/downloads.py:352: note: Maybe you forgot to use "await"?
+app/api/v1/downloads.py:356: error: "Coroutine[Any, Any, list[dict[str, Any]]]" has no attribute "__iter__" (not iterable)  [attr-defined]
+app/api/v1/downloads.py:356: note: Maybe you forgot to use "await"?
+app/api/v1/downloads.py:476: error: "SpotifyService" has no attribute "client"; maybe "client_id"?  [attr-defined]
+app/api/v1/downloads.py:483: error: Value of type "Coroutine[Any, Any, dict[str, Any] | None]" is not indexable  [index]
+app/api/v1/downloads.py:490: error: Incompatible types in assignment (expression has type "Coroutine[Any, Any, list[dict[str, Any]]]", variable has type "list[dict[str, Any]]")  [assignment]
+app/api/v1/downloads.py:490: note: Maybe you forgot to use "await"?
+Found 40 errors in 5 files (checked 223 source files)
