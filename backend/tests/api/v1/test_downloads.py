@@ -32,14 +32,16 @@ async def test_create_download(client, admin_token_headers):
     data = {"track_id": str(uuid.uuid4()), "source": "spotify", "playlist_name": "Test"}
     with patch("app.services.spotify_service.SpotifyService") as MockSpotify:
         mock_instance = MockSpotify.return_value
-        mock_instance.get_track = AsyncMock(return_value={
-            "title": "Test Title",
-            "artist": "Test Artist",
-            "duration_ms": 1000,
-            "image_url": "http://example.com/img.jpg",
-            "album": "Test Album",
-            "isrc": "US123",
-        })
+        mock_instance.get_track = AsyncMock(
+            return_value={
+                "title": "Test Title",
+                "artist": "Test Artist",
+                "duration_ms": 1000,
+                "image_url": "http://example.com/img.jpg",
+                "album": "Test Album",
+                "isrc": "US123",
+            }
+        )
 
         response = await client.post("/api/v1/downloads/add", json=data, headers=admin_token_headers)
         assert response.status_code in [200, 201]
@@ -87,13 +89,15 @@ async def test_resolve_spotify_track(client, admin_token_headers, db_session):
 
     with patch("app.services.spotify_service.SpotifyService") as MockSpotify:
         mock_instance = MockSpotify.return_value
-        mock_instance.get_track = AsyncMock(return_value={
-            "title": "New Spotify Track",
-            "artist": "Spotify Artist",
-            "duration_ms": 200000,
-            "image_url": "http://img.com",
-            "album": "Spotify Album",
-        })
+        mock_instance.get_track = AsyncMock(
+            return_value={
+                "title": "New Spotify Track",
+                "artist": "Spotify Artist",
+                "duration_ms": 200000,
+                "image_url": "http://img.com",
+                "album": "Spotify Album",
+            }
+        )
 
         track_uuid = await _resolve_track_to_local_id(db_session, "sp_new_123", "spotify")
         assert track_uuid is not None

@@ -208,9 +208,6 @@ async def get_album_cover(album_id: str, db: AsyncSession = Depends(get_db)):
     raise HTTPException(status_code=404, detail="No cover art found")
 
 
-
-
-
 async def _resolve_stream_url(track_id: str) -> str:
     cached_url = await cache_manager.get(f"stream_url:{track_id}")
     if cached_url:

@@ -44,7 +44,6 @@ async def _resolve_track_to_local_id(db: AsyncSession, track_id_str: str, source
 
             spotify = SpotifyService()
 
-
             track_data = await spotify.get_track(track_id_str)
             if not track_data:
                 raise HTTPException(status_code=404, detail="Track not found on Spotify")
