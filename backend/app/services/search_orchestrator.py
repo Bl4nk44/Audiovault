@@ -84,9 +84,7 @@ class SearchOrchestrator:
         if source == "deezer":
             return await self.deezer.get_track(track_id)
         elif source == "spotify":
-            if self.spotify.client:
-                return self.spotify.get_track(track_id)
-            return None
+            return await self.spotify.get_track(track_id)
         elif source == "musicbrainz":
             return await self.musicbrainz.get_track_by_isrc(track_id)
         return None
@@ -96,9 +94,7 @@ class SearchOrchestrator:
         if source == "deezer":
             return await self.deezer.get_artist_details(artist_id)
         elif source == "spotify":
-            if self.spotify.client:
-                return self.spotify.get_artist_details(artist_id)
-            return None
+            return await self.spotify.get_artist_details(artist_id)
         elif source == "musicbrainz":
             return await self.musicbrainz.get_artist(artist_id)
         elif source == "auto":
@@ -115,9 +111,7 @@ class SearchOrchestrator:
             tracks = await self.deezer.get_album_tracks(album_id)
             return {"id": album_id, "tracks": tracks, "source": "deezer"} if tracks else None
         elif source == "spotify":
-            if self.spotify.client:
-                return self.spotify.get_album_details(album_id)
-            return None
+            return await self.spotify.get_album_details(album_id)
         return None
 
     async def get_playlist_details(self, source: str, playlist_id: str) -> dict[str, Any] | None:
@@ -125,9 +119,7 @@ class SearchOrchestrator:
         if source == "deezer":
             return await self.deezer.get_playlist_details(playlist_id)
         elif source == "spotify":
-            if self.spotify.client:
-                return self.spotify.get_playlist_details(playlist_id)
-            return None
+            return await self.spotify.get_playlist_details(playlist_id)
         return None
 
     # --- ISRC Resolution ---
@@ -159,14 +151,12 @@ class SearchOrchestrator:
 
     async def _search_spotify(self, query: str, limit: int = 10) -> list[dict[str, Any]]:
         """Search tracks via Spotify API (optional)."""
-        if not self.spotify.client:
-            return []
         # Spotify API Feb 2026: search limit reduced to max 10
         spotify_limit = min(limit, 10)
         try:
-            return await asyncio.to_thread(self.spotify.search, query, limit=spotify_limit, type="track")
+            return await self.spotify.search(query, limit=spotify_limit, type="track")
         except Exception as e:
-            logger.warning(f"Spotify search failed: {e}")
+            logger.warning(f"Spotify async search failed: {e}")
             return []
 
     async def _search_deezer_artists(self, query: str, limit: int = 10) -> list[dict[str, Any]]:

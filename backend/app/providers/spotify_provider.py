@@ -2,7 +2,6 @@ from app.providers.base import MusicProvider
 from app.schemas.metadata import PlaylistMetadata, TrackMetadata
 from app.services.spotify_service import SpotifyService
 
-
 class SpotifyProvider(MusicProvider):
     SPOTIFY_URI_PREFIX = "spotify:"
     SPOTIFY_DOMAIN = "spotify.com"
@@ -22,78 +21,42 @@ class SpotifyProvider(MusicProvider):
         return any(domain in url for domain in self.domains) or url.startswith(self.SPOTIFY_URI_PREFIX)
 
     async def extract_playlist(self, url: str) -> PlaylistMetadata | None:
-        # Handle both URL and direct ID if passed
-        # Currently Watchlist passes ID for Spotify.
-        # If url is just an ID, self.service.get_playlist_tracks should handle it if we clean it?
-        # Check SpotifyService: get_playlist_tracks(playlist_id)
-        # We need to handle full URL parsing if 'url' is a URL.
-        # SpotifyService.search parses URLs. But get_playlist_tracks takes ID.
-        # Let's extract ID from URL if possible.
-
         import re
 
         playlist_id = url
-        # Simple extraction if it looks like a URL
         if self.SPOTIFY_DOMAIN in url or self.SPOTIFY_URI_PREFIX in url:
             match = re.search(r"(?:playlist[:/])([a-zA-Z0-9_-]+)", url)
             if match:
                 playlist_id = match.group(1)
 
-        # We need metadata about the playlist itself first?
-        # Service has get_playlist logic inside search?
-        # Service has _format_playlist.
-        # Let's use search to get playlist info.
-
-        # Wait, extract_playlist should return metadata AND tracks?
-        # PlaylistMetadata definition?
-        # Let's check schemas/metadata.py first? No, I assume standard.
-        # Actually I need to check PlaylistMetadata definition to be safe.
-        # But for now assume it needs title, tracks etc.
-
-        # SpotifyService doesn't have a clean "get_playlist_with_tracks" method.
-        # It has get_playlist_tracks.
-
-        tracks_data = self.service.get_playlist_tracks(playlist_id)
-        if not tracks_data:
+        playlist_data = await self.service.get_playlist_details(playlist_id)
+        if not playlist_data:
             return None
 
-        # We need playlist title etc.
-        # Try to get playlist info
-        try:
-            # This is a bit hacky, but SpotifyService client is public
-            if self.service.client:
-                playlist_info = self.service.client.playlist(playlist_id)
-                formatted_info = self.service._format_playlist(playlist_info)
-
-                tracks = []
-                for t in tracks_data:
-                    tracks.append(
-                        TrackMetadata(
-                            title=t["title"],
-                            artist=t["artist"],
-                            album=t["album"],
-                            duration_ms=t["duration_ms"],
-                            image_url=t["image_url"],
-                            source="spotify",
-                            source_id=t["id"],
-                            isrc=t.get("isrc"),  # Assuming isrc is there
-                        )
-                    )
-
-                return PlaylistMetadata(
-                    title=formatted_info["title"],
-                    description=None,
-                    author=None,
-                    image_url=formatted_info["image_url"],
-                    tracks=tracks,
+        tracks = []
+        for t in playlist_data.get("tracks", []):
+            tracks.append(
+                TrackMetadata(
+                    title=t.get("title", "Unknown"),
+                    artist=t.get("artist", "Unknown"),
+                    album=t.get("album", "Unknown"),
+                    duration_ms=t.get("duration_ms", 0) or 0,
+                    image_url=t.get("image_url"),
                     source="spotify",
-                    source_id=formatted_info["id"],
+                    source_id=t.get("id", ""),
+                    isrc=t.get("isrc"),
                 )
-        except Exception:  # nosec
-            # Fallback if client fail or not configured
-            pass
+            )
 
-        return None
+        return PlaylistMetadata(
+            title=playlist_data.get("title", "Unknown Playlist"),
+            description=None,
+            author=None,
+            image_url=playlist_data.get("image_url"),
+            tracks=tracks,
+            source="spotify",
+            source_id=playlist_data.get("id", ""),
+        )
 
     async def get_track(self, url: str) -> TrackMetadata | None:
         import re
@@ -104,16 +67,16 @@ class SpotifyProvider(MusicProvider):
             if match:
                 track_id = match.group(1)
 
-        t = self.service.get_track(track_id)
+        t = await self.service.get_track(track_id)
         if t:
             return TrackMetadata(
-                title=t["title"],
-                artist=t["artist"],
-                album=t["album"],
-                duration_ms=t["duration_ms"],
-                image_url=t["image_url"],
+                title=t.get("title", "Unknown"),
+                artist=t.get("artist", "Unknown"),
+                album=t.get("album", "Unknown"),
+                duration_ms=t.get("duration_ms", 0) or 0,
+                image_url=t.get("image_url"),
                 source="spotify",
-                source_id=t["id"],
+                source_id=t.get("id", ""),
                 isrc=t.get("isrc"),
             )
         return None

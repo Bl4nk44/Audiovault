@@ -1,4 +1,4 @@
-from unittest.mock import MagicMock, patch
+from unittest.mock import AsyncMock, patch
 
 import pytest
 from app.providers.spotify_provider import SpotifyProvider
@@ -7,7 +7,10 @@ from app.providers.spotify_provider import SpotifyProvider
 @pytest.fixture
 def mock_service():
     with patch("app.providers.spotify_provider.SpotifyService") as mock:
-        yield mock.return_value
+        service_mock = mock.return_value
+        service_mock.get_playlist_details = AsyncMock()
+        service_mock.get_track = AsyncMock()
+        yield service_mock
 
 
 @pytest.fixture
@@ -25,23 +28,23 @@ async def test_can_handle(spotify_provider):
 
 @pytest.mark.asyncio
 async def test_extract_playlist_from_url(spotify_provider, mock_service):
-    # Setup mock return for get_playlist_tracks
-    mock_service.get_playlist_tracks.return_value = [
-        {
-            "id": "t1",
-            "title": "Song 1",
-            "artist": "Artist 1",
-            "album": "Album 1",
-            "duration_ms": 1000,
-            "image_url": "img1",
-            "isrc": "isrc1",
-        }
-    ]
-
-    # Setup mock for client.playlist (used for metadata)
-    mock_service.client = MagicMock()
-    mock_service.client.playlist.return_value = {"id": "p1", "name": "Playlist 1"}
-    mock_service._format_playlist.return_value = {"id": "p1", "title": "Playlist 1", "image_url": "img_pl"}
+    # Setup mock return for get_playlist_details
+    mock_service.get_playlist_details.return_value = {
+        "id": "p1",
+        "title": "Playlist 1",
+        "image_url": "img_pl",
+        "tracks": [
+            {
+                "id": "t1",
+                "title": "Song 1",
+                "artist": "Artist 1",
+                "album": "Album 1",
+                "duration_ms": 1000,
+                "image_url": "img1",
+                "isrc": "isrc1",
+            }
+        ]
+    }
 
     result = await spotify_provider.extract_playlist("https://open.spotify.com/playlist/p1")
 
@@ -52,7 +55,7 @@ async def test_extract_playlist_from_url(spotify_provider, mock_service):
     assert result.source == "spotify"
 
     # Verify ID extraction
-    mock_service.get_playlist_tracks.assert_called_with("p1")
+    mock_service.get_playlist_details.assert_called_with("p1")
 
 
 @pytest.mark.asyncio

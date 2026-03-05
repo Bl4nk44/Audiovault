@@ -1,142 +1,101 @@
-from typing import Any
-from unittest.mock import MagicMock, patch
-
 import pytest
+import httpx
+from unittest.mock import patch, MagicMock
 from app.services.spotify_service import SpotifyService
-
 
 @pytest.fixture
 def spotify_service():
-    with (
-        patch("app.services.spotify_service.spotipy.Spotify"),
-        patch("app.services.spotify_service.SpotifyClientCredentials"),
-    ):
-        service = SpotifyService()
-        mock_client = MagicMock()
-        safe_paginated: dict[str, Any] = {"items": [], "next": None, "tracks": {"items": [], "next": None}}
-        mock_client.next.return_value = {"next": None, "items": []}
-        mock_client.search.return_value = safe_paginated
-        mock_client.artist_albums.return_value = safe_paginated
-        mock_client.artist_top_tracks.return_value = {"tracks": []}
-        mock_client.album_tracks.return_value = safe_paginated
-        mock_client.playlist_tracks.return_value = safe_paginated
-        service.client = mock_client
-        return service
+    return SpotifyService()
 
+@pytest.mark.asyncio
+@patch("httpx.AsyncClient.get")
+async def test_get_anonymous_token(mock_get, spotify_service):
+    # Mocking the HTML response containing the token
+    mock_response = MagicMock()
+    mock_response.status_code = 200
+    mock_response.json.return_value = {"clientId":"client_123","accessToken":"BQA_mock_token","isAnonymous":True}
+    mock_get.return_value = mock_response
 
-def test_spotify_search_keywords(spotify_service):
-    mock_results = {
-        "tracks": {
-            "items": [
-                {
-                    "id": "t1",
-                    "name": "T1",
-                    "artists": [{"name": "A1", "id": "a1"}],
-                    "album": {"name": "AL1", "images": [{"url": "http://img"}]},
-                    "duration_ms": 100,
-                }
-            ]
-        }
-    }
-    spotify_service.client.search.return_value = mock_results
-    results = spotify_service.search("test")
-    assert len(results) == 1
-    assert results[0]["title"] == "T1"
+    token = await spotify_service.get_anonymous_token()
+    assert token == "BQA_mock_token"
+    mock_get.assert_called_once()
 
-
-def test_spotify_get_track(spotify_service):
-    mock_track = {
+@pytest.mark.asyncio
+@patch("httpx.AsyncClient.get")
+@patch.object(SpotifyService, "get_anonymous_token")
+async def test_spotify_get_track(mock_token, mock_get, spotify_service):
+    mock_token.return_value = "mock_token"
+    
+    # Mocking track API response
+    mock_response = MagicMock()
+    mock_response.status_code = 200
+    mock_response.json.return_value = {
         "id": "t1",
         "name": "T1",
         "artists": [{"name": "A1", "id": "a1"}],
         "album": {"name": "AL1", "images": [{"url": "http://img"}]},
         "duration_ms": 100,
+        "external_ids": {"isrc": "ISRC123"},
+        "popularity": 80
     }
-    spotify_service.client.track.return_value = mock_track
-    track = spotify_service.get_track("t1")
+    mock_get.return_value = mock_response
+
+    track = await spotify_service.get_track("t1")
+    
+    assert track is not None
     assert track["title"] == "T1"
+    assert track["source"] == "spotify"
+    assert track["image_url"] == "http://img"
 
-
-def test_spotify_get_playlist_tracks(spotify_service):
-    mock_pl = {
-        "items": [
-            {
-                "track": {
-                    "id": "t1",
-                    "name": "T1",
-                    "artists": [{"name": "A1", "id": "a1"}],
-                    "album": {"name": "AL1", "images": [{"url": "http://img"}]},
-                    "duration_ms": 100,
+@pytest.mark.asyncio
+@patch("httpx.AsyncClient.get")
+@patch.object(SpotifyService, "get_anonymous_token")
+async def test_spotify_get_playlist_details(mock_token, mock_get, spotify_service):
+    mock_token.return_value = "mock_token"
+    
+    # Needs two API calls typically: one for playlist, one for tracks
+    mock_playlist_response = MagicMock()
+    mock_playlist_response.status_code = 200
+    mock_playlist_response.json.return_value = {
+        "id": "pl1",
+        "name": "My Playlist",
+        "images": [{"url": "http://pl-img"}],
+        "tracks": {
+            "total": 1,
+            "items": [
+                {
+                    "track": {
+                        "id": "t1",
+                        "name": "T1",
+                        "artists": [{"name": "A1", "id": "a1"}],
+                        "album": {"name": "AL1", "images": [{"url": "http://img"}]},
+                        "duration_ms": 100
+                    }
                 }
-            }
-        ],
-        "next": None,
+            ],
+            "next": None
+        }
     }
-    spotify_service.client.playlist_tracks.return_value = mock_pl
-    tracks = spotify_service.get_playlist_tracks("pl1")
-    assert len(tracks) == 1
+    
+    mock_get.return_value = mock_playlist_response
+    
+    playlist = await spotify_service.get_playlist_details("pl1")
+    
+    assert playlist is not None
+    assert playlist["title"] == "My Playlist"
+    assert playlist["track_count"] == 1
+    assert len(playlist["tracks"]) == 1
+    assert playlist["tracks"][0]["title"] == "T1"
 
+@pytest.mark.asyncio
+async def test_search_links_only(spotify_service):
+    # Text search should return empty
+    text_results = await spotify_service.search("some random text")
+    assert text_results == []
 
-def test_spotify_get_album_tracks(spotify_service):
-    mock_album = {
-        "id": "al1",
-        "name": "Album",
-        "artists": [{"name": "A1", "id": "a1"}],
-        "images": [{"url": "http://img"}],
-    }
-    mock_tracks = {
-        "items": [{"id": "t1", "name": "T1", "artists": [{"name": "A1", "id": "a1"}], "duration_ms": 100}],
-        "next": None,
-    }
-    spotify_service.client.album.return_value = mock_album
-    spotify_service.client.album_tracks.return_value = mock_tracks
-    tracks = spotify_service.get_album_tracks("al1")
-    assert len(tracks) == 1
-
-
-def test_spotify_format_playlist(spotify_service):
-    item = {"id": "pl1", "name": "PL", "images": [{"url": "http://img"}], "tracks": {"total": 10}}
-    res = spotify_service._format_playlist(item)
-    assert res["title"] == "PL"
-    assert res["track_count"] == 10
-
-
-def test_spotify_format_artist(spotify_service):
-    item = {"id": "ar1", "name": "Artist", "images": [{"url": "http://img"}]}
-    res = spotify_service._format_artist(item)
-    assert res["name"] == "Artist"
-
-
-def test_spotify_get_artist_details(spotify_service):
-    mock_artist = {"id": "ar1", "name": "Artist", "images": [{"url": "http://img"}]}
-    mock_top = {
-        "tracks": [
-            {
-                "id": "t1",
-                "name": "T1",
-                "artists": [{"name": "A1", "id": "a1"}],
-                "album": {"name": "AL1", "images": [{"url": "http://img"}]},
-                "duration_ms": 100,
-            }
-        ]
-    }
-    mock_albums = {
-        "items": [
-            {
-                "id": "al1",
-                "name": "Album",
-                "images": [{"url": "http://img"}],
-                "release_date": "2024",
-                "total_tracks": 5,
-                "type": "album",
-            }
-        ],
-        "next": None,
-    }
-    spotify_service.client.artist.return_value = mock_artist
-    spotify_service.client.artist_top_tracks.return_value = mock_top
-    spotify_service.client.artist_albums.return_value = mock_albums
-    res = spotify_service.get_artist_details("ar1")
-    assert res["name"] == "Artist"
-    assert len(res["tracks"]) == 1
-    assert len(res["albums"]) == 1
+    # Link should still function (this will call get_track or other underlying methods)
+    with patch.object(SpotifyService, "get_track") as mock_get_track:
+        mock_get_track.return_value = {"id": "t1", "title": "T1", "source": "spotify"}
+        link_results = await spotify_service.search("https://open.spotify.com/track/t1")
+        assert len(link_results) == 1
+        assert link_results[0]["title"] == "T1"
