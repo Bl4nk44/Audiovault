@@ -78,6 +78,7 @@ backend/app/debug_genres.py
 
 # Agentic AI
 .agent/
+.llm-context/
 
 # Conductor temporary state and archives
 conductor/setup_state.json
