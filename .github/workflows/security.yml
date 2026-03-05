@@ -8,6 +8,7 @@ on:
   pull_request:
     branches:
       - main
+      - dev
   schedule:
     # Run security scans daily at 2 AM UTC
     - cron: '0 2 * * *'
