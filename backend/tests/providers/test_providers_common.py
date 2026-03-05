@@ -1,4 +1,4 @@
-from unittest.mock import MagicMock
+from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 from app.providers.soundcloud_provider import SoundCloudProvider
@@ -27,8 +27,8 @@ def test_spotify_can_handle(spotify_provider):
 
 @pytest.mark.asyncio
 async def test_spotify_get_track(spotify_provider):
-    # Mock service
-    spotify_provider.service = MagicMock()
+    # Mock service with async methods
+    spotify_provider.service = AsyncMock()
     spotify_provider.service.get_track.return_value = {
         "id": "123",
         "title": "Song",

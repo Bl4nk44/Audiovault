@@ -16,7 +16,7 @@ def mock_provider_manager():
 
 @pytest.fixture
 def mock_spotify_service():
-    return MagicMock()
+    return AsyncMock()
 
 
 @pytest.fixture
