@@ -34,37 +34,24 @@ Audiovault is a powerful, self-hosted application designed to import, manage, an
 
 ### Extensive Platform Support
 
-Import playlists, albums, and tracks from:
-
-- ![Spotify](https://img.shields.io/badge/Spotify-1ED760?style=flat-square&logo=spotify&logoColor=white) - Playlists, albums, liked songs, recommendations
-- ![YouTube](https://img.shields.io/badge/YouTube-FF0000?style=flat-square&logo=youtube&logoColor=white) - Playlists, mixes, videos, channels
-- ![Deezer](https://img.shields.io/badge/Deezer-00C7F2?style=flat-square&logo=deezer&logoColor=white) - Native search, artist profiles, playlists
-- ![SoundCloud](https://img.shields.io/badge/SoundCloud-FF3300?style=flat-square&logo=soundcloud&logoColor=white) - Tracks, playlists, user libraries
-- ![Apple Music](https://img.shields.io/badge/Apple%20Music-FE2432?style=flat-square&logo=apple-music&logoColor=white) - Playlists, library, recommendations
-- ![Tidal](https://img.shields.io/badge/Tidal-000000?style=flat-square&logo=tidal&logoColor=white) - Playlists, favorites, discovery
-- ![Amazon Music](https://img.shields.io/badge/Amazon%20Music-00A8E1?style=flat-square&logo=amazon-music&logoColor=white) - Playlists, library, recommendations
-
-### Robust Fallback System
-
-Never miss a track. If a download fails (e.g., due to geo-restrictions or broken links), Audiovault automatically:
-
-1. Tries alternative search queries (Official Audio, Lyrics Video)
-2. Searches cross-platform (e.g., falls back to SoundCloud if YouTube fails)
-3. Uses proxies (Invidious) to bypass region locks
+- **Supported Services**: Spotify, YouTube, Deezer, SoundCloud, Apple Music, Tidal, Amazon Music
+- **Zero-Config Spotify**: Anonymous scraping means no developer API keys required
+- **Robust Fallback**: Automatically tries alternative sources or proxies if a download fails
+- [Read the Platform & Fallback Guide](docs/PLATFORM_SUPPORT.md)
+- [Read the Spotify Integration Guide](docs/SPOTIFY_INTEGRATION.md)
 
 ### Watchlist & Automation
 
-- **Auto-Sync**: Background scheduler checks for new tracks every 60 minutes
-- **Safe Purge**: Automatically removes local tracks that were deleted from remote playlists (with specific user approval & dry-run safety)
-- **Smart De-duplication**: Prevents duplicate downloads by checking both ID3 tags and internal database history
-- **Universal Search**: Unified search bar for all supported providers
+- **Auto-Sync**: Background scheduler checks for new tracks
+- **Safe Purge**: Removes local tracks deleted from remote playlists
+- **Smart De-duplication**: Prevents duplicate downloads
+- [Read the Automation Guide](docs/AUTOMATION.md)
 
 ### Audio Quality Options
 
-- **MP3**: 128kbps, 192kbps, 320kbps
-- **FLAC**: Lossless audio for audiophiles
-- **FLAC**: Lossless audio for audiophiles
-- Automatic format selection based on user preferences
+- **Formats**: Various MP3 bitrates (128-320kbps) and Lossless FLAC
+- **Smart Formatting**: Automatic format selection based on preference
+- [Read the Audio Quality Guide](docs/AUDIO_QUALITY.md)
 
 ### 🎵 Last.fm Integration
 
@@ -76,38 +63,10 @@ Never miss a track. If a download fails (e.g., due to geo-restrictions or broken
 
 ### Personal Streaming Server
 
-Turn Audiovault into your personal Spotify.
-
-- **Subsonic API Support**: Native implementation of the Subsonic API (v1.16.1)
-  > [![Sonixd](https://img.shields.io/badge/Verified-Sonixd-success?style=flat-square)](https://github.com/tempugh/Sonixd) [![Amperfy](https://img.shields.io/badge/Testing-Amperfy-orange?style=flat-square)](https://github.com/amperfy/amperfy)
-- **Mobile Apps**: Stream your library to your phone using **Symfonium**, **Amperfy**, **DSub**, or any Subsonic-compatible player
-- **Remote Access**: Works seamlessly with **Tailscale** for secure remote streaming without port forwarding
-- **Legacy Auth**: **REQUIRED** for most clients. Enable "Legacy Authentication" or "Use plaintext password" in your app settings (Amperfy, Symfonium).
-
-### Redesigned Library
-
-- **Hierarchical View**: Browse by **Service → Playlist → Tracks**
-- **Folders**: Organizational structure that keeps your library clean
-- **Management**: Rename files, edit metadata, and manage storage directly from the UI
-- **Rescan**: Detects manually added files or fixes missing entries
-
-### Modern UI/UX
-
-- **Glassmorphism**: Stunning, responsive interface powered by React & TailwindCSS
-- **Neon Aesthetics**: New "Liquid Neon" styling with glowing borders and glass effects
-- **Audio Visualizer**: Real-time frequency equalizer synced to music playback
-- **Themes**: Deep Void (Default), Midnight, Ocean, Forest, Sunset, Neon
-- **Feedback**: Real-time progress updates via WebSocket notifications
-- **i18n**: Multi-language support (English, Polish, German, French, Spanish)
-
-## 🛠️ Tech Stack
-
-| Component          | Technology                                                 |
-| ------------------ | ---------------------------------------------------------- |
-| **Backend**        | Python, FastAPI, yt-dlp, SQLAlchemy (Async), APScheduler   |
-| **Frontend**       | React, TypeScript, TailwindCSS v4, Framer Motion           |
-| **Database**       | SQLite (default) / PostgreSQL (supported), Redis (Caching) |
-| **Infrastructure** | Docker & Docker Compose                                    |
+- **Subsonic API Support**: Native implementation for compatibility with mobile apps
+- **Mobile Apps**: Stream using Symfonium, Amperfy, DSub, and more
+- **Remote Access**: Seamless integration with Tailscale for secure streaming
+- [Read the Streaming Server Guide](docs/STREAMING_SERVER.md)
 
 ## 🚀 Getting Started
 
@@ -212,10 +171,4 @@ This project adheres to a [Code of Conduct](CODE_OF_CONDUCT.md). By participatin
 
 Distributed under the MIT License. See [LICENSE](LICENSE) for more information.
 
-## 🌟 Acknowledgments
 
-- **[yt-dlp](https://github.com/yt-dlp/yt-dlp)** - Powerful video/audio downloader
-- **[FastAPI](https://fastapi.tiangolo.com/)** - Modern Python web framework
-- **[React](https://react.dev/)** - JavaScript library for building UIs
-- **[TailwindCSS](https://tailwindcss.com/)** - Utility-first CSS framework
-- **[SQLAlchemy](https://www.sqlalchemy.org/)** - Python SQL toolkit
