@@ -43,6 +43,8 @@ Closes #nr
 ```
 
 ## Wzorce i konwencje (czytaj gdy kodujesz)
+- `agent_docs/architecture.md` — system overview, warstwy, Subsonic API, Docker
+- `agent_docs/testing.md` — fixtures, wzorce testów, uruchamianie, typowe błędy
 - `agent_docs/patterns.md` — 10 wzorców kodu (async DB, service layer, yt-dlp, Pydantic v2…)
 - `agent_docs/conventions.md` — Ruff, Pyright, Prettier, ESLint, HTTP codes, Glassmorphism
 - `agent_docs/pitfalls.md` — pułapki, zależności do obserwowania
