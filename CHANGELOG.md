@@ -1,6 +1,88 @@
 # Changelog
 
 All notable changes to Audiovault will be documented in this file.
+## [0.14.0] - 2026-04-15
+
+### Bug Fixes
+
+- **db**: Add missing track columns (musicbrainz_id, soundcloud_id, metadata_source, metadata_confidence)
+- Resolve frontend ESLint and TypeScript build errors
+- Resolve remaining Ruff lint errors in backend
+- Resolve Ruff and Mypy type errors in backend
+- Remove unused MagicMock import in test_downloads.py
+- Update spotify mocks to AsyncMock and remove stale tests
+- Update all test mocks to AsyncMock after SpotifyService async refactoring
+- Use dynamic callback URL for Last.fm auth based on request origin
+- Fix.gitignore`.
+- **deps**: Correct pydantic-core version constraint
+- **frontend**: Use ManualChunksFunction syntax in vite.config
+
+### CI/CD
+
+- Enable PR workflows for the dev branch
+- Fix push triggers for dev branch and optimize security scan notifications
+
+### Dependencies
+
+- **deps**: Update Python backend dependencies
+- **deps**: Update frontend npm dependencies
+
+### Documentation
+
+- Update README and migrate WIKI documentation to docs directory
+- **agent**: Add testing and architecture guides to agent_docs
+
+### Features
+
+- **startup**: Auto-run Alembic migrations on backend startup
+- Improve code coverage to 85%+; add tests for Recommendations, Lyrics, and Last.fm profile
+- Migrate Spotify API to anonymous httpx scraper
+
+### Miscellaneous
+
+- **docker**: Update Redis base image to redis:8-alpine
+- **config**: Move code patterns and conventions to agent_docs/
+
+### Styling
+
+- Reformat files with ruff
+- Reformat test files with ruff
+
+## [0.13.0] - 2026-03-04
+
+### Bug Fixes
+
+- Shell syntax in security summary and workflow cleanup
+- Remove trailing whitespace in test_coverage_master_boost.py
+- **agent**: Rewrite memory-bank-protocol SKILL.md with OpenMemory MCP integration and correct paths
+- **ci**: Fix silent mock exceptions causing empty tracklists in watchlist processor
+- **ci**: Resolve mypy typings issue in watchlist processor
+- Resolve all remaining ruff linting errors (E501, F841)
+- **mypy**: Resolve all remaining type hints and signature incompatibilities
+
+### CI/CD
+
+- Migrate security reports to email and fix ruff formatting
+
+### Documentation
+
+- Add reverse proxy and update release workflow
+- Translate REVERSE_PROXY.md from Polish to English
+
+### Miscellaneous
+
+- **tests**: Remove redundant coverage and boost test files
+- **agent**: Sync entire .agent folder from main (with fixed memory-bank-protocol SKILL.md)
+- Bump version to 0.13.0 and update all dependencies
+
+### Styling
+
+- Format test_coverage_master_boost.py with ruff
+
+### Testing
+
+- Improve subsonic search mocks for better coverage and stability
+
 ## [0.12.0] - 2026-02-21
 
 ### Bug Fixes
