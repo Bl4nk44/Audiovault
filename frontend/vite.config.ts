@@ -36,12 +36,12 @@ export default defineConfig({
   build: {
     rollupOptions: {
       output: {
-        manualChunks: {
-          "vendor-react": ["react", "react-dom", "react-router-dom"],
-          "vendor-framer": ["framer-motion"],
-          "vendor-icons": ["lucide-react"],
-          "vendor-utils": ["clsx", "tailwind-merge", "zustand", "axios"],
-          "vendor-query": ["@tanstack/react-query"],
+        manualChunks(id) {
+          if (id.includes("node_modules/react/") || id.includes("node_modules/react-dom/") || id.includes("node_modules/react-router-dom/")) return "vendor-react";
+          if (id.includes("node_modules/framer-motion/")) return "vendor-framer";
+          if (id.includes("node_modules/lucide-react/")) return "vendor-icons";
+          if (id.includes("node_modules/clsx/") || id.includes("node_modules/tailwind-merge/") || id.includes("node_modules/zustand/") || id.includes("node_modules/axios/")) return "vendor-utils";
+          if (id.includes("node_modules/@tanstack/react-query/")) return "vendor-query";
         },
       },
     },
