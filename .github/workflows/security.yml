@@ -31,7 +31,7 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Run Trivy vulnerability scanner (filesystem)
-        uses: aquasecurity/trivy-action@master
+        uses: aquasecurity/trivy-action@v0.35.0
         with:
           scan-type: 'fs'
           scan-ref: '.'
@@ -48,7 +48,7 @@ jobs:
           path: trivy-results.sarif
 
       - name: Run Trivy vulnerability scanner (filesystem JSON)
-        uses: aquasecurity/trivy-action@master
+        uses: aquasecurity/trivy-action@v0.35.0
         with:
           scan-type: 'fs'
           scan-ref: '.'
@@ -65,7 +65,7 @@ jobs:
           path: trivy-results.json
 
       - name: Run Trivy vulnerability scanner (dependencies)
-        uses: aquasecurity/trivy-action@master
+        uses: aquasecurity/trivy-action@v0.35.0
         with:
           scan-type: 'fs'
           scan-ref: '.'
@@ -106,7 +106,7 @@ jobs:
             ${{ matrix.image.context }}
 
       - name: Run Trivy on Docker image
-        uses: aquasecurity/trivy-action@master
+        uses: aquasecurity/trivy-action@v0.35.0
         with:
           image-ref: 'audiovault-${{ matrix.image.name }}:test'
           format: 'sarif'
@@ -122,7 +122,7 @@ jobs:
           path: trivy-docker-${{ matrix.image.name }}.sarif
 
       - name: Run Trivy on Docker image (JSON)
-        uses: aquasecurity/trivy-action@master
+        uses: aquasecurity/trivy-action@v0.35.0
         with:
           image-ref: 'audiovault-${{ matrix.image.name }}:test'
           format: 'json'
@@ -154,17 +154,7 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Run Semgrep with custom rules (JSON output)
-        run: |
-          semgrep scan \
-            --config .semgrep.yml \
-            --config auto \
-            --json \
-            --output semgrep-results.json \
-            --verbose
-        continue-on-error: true
-
-      - name: Run Semgrep with custom rules (SARIF output)
+      - name: Run Semgrep (SARIF — fails job on findings)
         run: |
           semgrep scan \
             --config .semgrep.yml \
@@ -173,6 +163,15 @@ jobs:
             --output semgrep-results.sarif \
             --error \
             --verbose
+        continue-on-error: true
+
+      - name: Run Semgrep (JSON artifact)
+        run: |
+          semgrep scan \
+            --config .semgrep.yml \
+            --config auto \
+            --json \
+            --output semgrep-results.json
         continue-on-error: true
 
       - name: Upload Semgrep JSON results
@@ -188,14 +187,6 @@ jobs:
         with:
           name: semgrep-results-sarif
           path: semgrep-results.sarif
-
-      - name: Run Semgrep (console output)
-        run: |
-          semgrep scan \
-            --config .semgrep.yml \
-            --config auto \
-            --verbose
-        continue-on-error: true
 
   # ==============================================
   # Secret Scanning
@@ -214,7 +205,7 @@ jobs:
           fetch-depth: 0  # Full history for better secret detection
 
       - name: Run Trivy secret scanner
-        uses: aquasecurity/trivy-action@master
+        uses: aquasecurity/trivy-action@v0.35.0
         with:
           scan-type: 'fs'
           scan-ref: '.'
@@ -243,7 +234,7 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Run Trivy license scanner
-        uses: aquasecurity/trivy-action@master
+        uses: aquasecurity/trivy-action@v0.35.0
         with:
           scan-type: 'fs'
           scan-ref: '.'

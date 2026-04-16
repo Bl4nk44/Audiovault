@@ -98,71 +98,77 @@ jobs:
       # ==============================================
       - name: Create GitHub Issue with Report
         uses: actions/github-script@v7
+        env:
+          PYTHON_OUTDATED: ${{ steps.python-updates.outputs.PYTHON_OUTDATED }}
+          NPM_OUTDATED: ${{ steps.npm-updates.outputs.NPM_OUTDATED }}
+          PYTHON_VULNS: ${{ steps.python-audit.outputs.PYTHON_VULNS }}
+          NPM_VULNS: ${{ steps.npm-audit.outputs.NPM_VULNS }}
+          DOCKER_INFO: ${{ steps.docker-updates.outputs.DOCKER_INFO }}
         with:
           script: |
-            const pythonUpdates = `${{ steps.python-updates.outputs.PYTHON_OUTDATED }}`;
-            const npmUpdates = `${{ steps.npm-updates.outputs.NPM_OUTDATED }}`;
-            const pythonVulns = `${{ steps.python-audit.outputs.PYTHON_VULNS }}`;
-            const npmVulns = `${{ steps.npm-audit.outputs.NPM_VULNS }}`;
-            const dockerInfo = `${{ steps.docker-updates.outputs.DOCKER_INFO }}`;
+            const pythonUpdates = process.env.PYTHON_OUTDATED || '';
+            const npmUpdates = process.env.NPM_OUTDATED || '';
+            const pythonVulns = process.env.PYTHON_VULNS || '';
+            const npmVulns = process.env.NPM_VULNS || '';
+            const dockerInfo = process.env.DOCKER_INFO || '';
             
             const date = new Date().toISOString().split('T')[0];
             
             const issueBody = `## 📦 Weekly Dependency Update Report
             **Generated:** ${date}
-            
+
             ### 🐍 Python Backend Dependencies
-            
+
             #### Available Updates:
             \`\`\`
             ${pythonUpdates || 'No updates available'}
             \`\`\`
-            
+
             #### Security Vulnerabilities:
             \`\`\`json
             ${pythonVulns || 'No vulnerabilities found'}
             \`\`\`
-            
+
             ---
-            
+
             ### 📦 NPM Frontend Dependencies
-            
+
             #### Available Updates:
             \`\`\`
             ${npmUpdates || 'No updates available'}
             \`\`\`
-            
+
             #### Security Vulnerabilities:
             \`\`\`json
             ${npmVulns || 'No vulnerabilities found'}
             \`\`\`
-            
+
             ---
-            
+
             ### 🐳 Docker Base Images
-            
+
             \`\`\`
             ${dockerInfo || 'No Docker info available'}
             \`\`\`
-            
+
             ---
-            
+
             ### 📝 Action Items
-            
+
             - [ ] Review and test backend dependency updates
             - [ ] Review and test frontend dependency updates
             - [ ] Check Docker base image updates on Docker Hub
             - [ ] Update dependencies manually if needed
             - [ ] Run full test suite after updates
-            
+
             ### 🔗 Useful Links
-            
+
             - [Backend Requirements](https://github.com/Bl4nk44/Audiovault/blob/main/backend/requirements.txt)
             - [Frontend Package.json](https://github.com/Bl4nk44/Audiovault/blob/main/frontend/package.json)
             - [Security Alerts](https://github.com/Bl4nk44/Audiovault/security/dependabot)
-            
+
             ---
-            
+
             *This report is automatically generated every Monday at 9:00 AM CET*
             *Close this issue after reviewing and updating dependencies*
             `;
