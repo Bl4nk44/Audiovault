@@ -41,9 +41,7 @@ def upgrade():
         )
 
     existing_indexes = (
-        {idx["name"] for idx in inspector.get_indexes("playlists")}
-        if "playlists" in existing_tables
-        else set()
+        {idx["name"] for idx in inspector.get_indexes("playlists")} if "playlists" in existing_tables else set()
     )
     if "ix_playlists_id" not in existing_indexes:
         op.create_index(op.f("ix_playlists_id"), "playlists", ["id"], unique=False)
