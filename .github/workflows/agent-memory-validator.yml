@@ -1,15 +1,17 @@
-# Validate agent memory files for consistency and quality
-name: Agent Memory Validator
+# Validate Claude Code configuration files for consistency and quality
+name: Claude Code Config Validator
 
 on:
   pull_request:
     paths:
-      - '.antigravity/**'
+      - 'CLAUDE.md'
+      - '.claude/**'
   push:
     branches:
       - main
     paths:
-      - '.antigravity/**'
+      - 'CLAUDE.md'
+      - '.claude/**'
 
 jobs:
   validate:
@@ -17,73 +19,65 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Check memory file structure
+      - name: Check CLAUDE.md exists and is substantial
         run: |
-          echo "Checking memory bank structure..."
-          test -f .antigravity/memory-bank/core/current-state.md
-          test -f .antigravity/memory-bank/core/projectbrief.md
-          test -f .antigravity/memory-bank/core/productContext.md
-          test -f .antigravity/memory-bank/core/techContext.md
-          echo "✅ Memory bank structure valid"
-
-      - name: Check skills directory
-        run: |
-          echo "Checking skills..."
-          test -f .antigravity/SKILLS/memory-bank-protocol.md
-          test -f .antigravity/SKILLS/audiovault-developer.md
-          test -f .antigravity/SKILLS/backend-specialist.md
-          test -f .antigravity/SKILLS/frontend-specialist.md
-          echo "✅ Skills valid"
-
-      - name: Check workflows directory
-        run: |
-          echo "Checking workflows..."
-          test -f .antigravity/WORKFLOWS/feature-development.md
-          test -f .antigravity/WORKFLOWS/bug-fix.md
-          test -f .antigravity/WORKFLOWS/code-review.md
-          echo "✅ Workflows valid"
-
-      - name: Validate YAML configuration
-        run: |
-          echo "Validating agent.yaml..."
-          if command -v yamllint &> /dev/null; then
-            yamllint .antigravity/agent.yaml
-          else
-            echo "yamllint not installed, skipping"
+          echo "Checking CLAUDE.md..."
+          test -f CLAUDE.md || { echo "❌ CLAUDE.md missing"; exit 1; }
+          lines=$(wc -l < CLAUDE.md)
+          if [ "$lines" -lt 50 ]; then
+            echo "⚠️ Warning: CLAUDE.md seems very short ($lines lines)"
           fi
-          echo "✅ YAML configuration valid"
+          echo "✅ CLAUDE.md present ($lines lines)"
 
-      - name: Check markdown formatting
+      - name: Check slash commands exist
         run: |
-          echo "Checking markdown files..."
-          # Count lines in current-state.md to ensure it's updated
-          lines=$(wc -l < .antigravity/memory-bank/core/current-state.md)
-          if [ "$lines" -lt 10 ]; then
-            echo "⚠️ Warning: current-state.md seems very short"
-          fi
-          echo "✅ Markdown files present"
+          echo "Checking .claude/commands/..."
+          test -f .claude/commands/feature.md  || { echo "❌ Missing: .claude/commands/feature.md"; exit 1; }
+          test -f .claude/commands/bugfix.md   || { echo "❌ Missing: .claude/commands/bugfix.md"; exit 1; }
+          test -f .claude/commands/review.md   || { echo "❌ Missing: .claude/commands/review.md"; exit 1; }
+          echo "✅ All slash commands present"
 
-      - name: Verify no actual secrets in memory files
+      - name: Check required sections in CLAUDE.md
         run: |
-          echo "Checking for actual secrets in memory files..."
-          # Look for actual secret patterns (values, not just keywords in documentation)
-          # Exclude code examples in markdown (lines with ```, code blocks)
-          if grep -r -E "(api[_-]?key|API[_-]?KEY)\s*[:=]\s*['\"]?[a-zA-Z0-9]{20,}" .antigravity/memory-bank/ --exclude="*.md" 2>/dev/null; then
+          echo "Checking required sections..."
+          grep -q "## Stack"                        CLAUDE.md || { echo "❌ Missing section: Stack"; exit 1; }
+          grep -q "## Struktura"                    CLAUDE.md || { echo "❌ Missing section: Struktura"; exit 1; }
+          grep -q "## Komendy"                      CLAUDE.md || { echo "❌ Missing section: Komendy"; exit 1; }
+          grep -q "## Język"                        CLAUDE.md || { echo "❌ Missing section: Język"; exit 1; }
+          grep -q "## Wzorce i konwencje"           CLAUDE.md || { echo "❌ Missing section: Wzorce i konwencje"; exit 1; }
+          grep -q "## Komendy projektu"             CLAUDE.md || { echo "❌ Missing section: Komendy projektu"; exit 1; }
+          echo "✅ All required sections present"
+
+      - name: Verify no secrets in Claude config files
+        run: |
+          echo "Checking for secrets in .claude/ and CLAUDE.md..."
+          files="CLAUDE.md $(find .claude/ -name '*.md' -o -name '*.json' 2>/dev/null | tr '\n' ' ')"
+
+          if echo "$files" | xargs grep -rE "(api[_-]?key|API[_-]?KEY)\s*[:=]\s*['\"]?[a-zA-Z0-9]{20,}" 2>/dev/null; then
             echo "❌ Found potential API keys!"
             exit 1
           fi
-          if grep -r -E "(password|PASSWORD)\s*[:=]\s*['\"]?[^\s]{8,}" .antigravity/memory-bank/ --exclude="*.md" 2>/dev/null; then
-            echo "❌ Found potential passwords!"
-            exit 1
-          fi
-          # Check for AWS keys
-          if grep -r -E "AKIA[0-9A-Z]{16}" .antigravity/memory-bank/ 2>/dev/null; then
+          if echo "$files" | xargs grep -rE "AKIA[0-9A-Z]{16}" 2>/dev/null; then
             echo "❌ Found potential AWS keys!"
             exit 1
           fi
-          # Check for private keys
-          if grep -r "BEGIN.*PRIVATE KEY" .antigravity/memory-bank/ 2>/dev/null; then
+          if echo "$files" | xargs grep -r "BEGIN.*PRIVATE KEY" 2>/dev/null; then
             echo "❌ Found private keys!"
             exit 1
           fi
-          echo "✅ No actual secrets found (documentation keywords are OK)"
+          echo "✅ No secrets found"
+
+      - name: Check markdown structure of slash commands
+        run: |
+          echo "Checking slash command structure..."
+          for f in .claude/commands/*.md; do
+            lines=$(wc -l < "$f")
+            if [ "$lines" -lt 10 ]; then
+              echo "⚠️ Warning: $f seems very short ($lines lines)"
+            fi
+            # Each command should have at least one checklist
+            if ! grep -q "^\- \[" "$f"; then
+              echo "⚠️ Warning: $f has no checklist items"
+            fi
+            echo "✅ $f OK ($lines lines)"
+          done

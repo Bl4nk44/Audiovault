@@ -19,12 +19,9 @@ updates:
       timezone: "Europe/Berlin"
     # Disable automatic PRs - only show alerts
     open-pull-requests-limit: 0
-    # Still check for updates but don't create PRs
     labels:
       - "dependencies"
       - "frontend"
-    reviewers:
-      - "Bl4nk44"
 
   # Backend Dependencies (PIP)
   - package-ecosystem: "pip"
@@ -39,8 +36,6 @@ updates:
     labels:
       - "dependencies"
       - "backend"
-    reviewers:
-      - "Bl4nk44"
 
   # Backend Docker Base Image
   - package-ecosystem: "docker"

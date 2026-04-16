@@ -47,13 +47,13 @@ Closes #
 
 - [ ] My code follows the style guidelines of this project
 - [ ] I have performed a self-review of my own code
-- [ ] I have commented my code, particularly in hard-to-understand areas
+- [ ] I have added comments only where the WHY is non-obvious (not what the code does)
 - [ ] I have made corresponding changes to the documentation
 - [ ] My changes generate no new warnings
 - [ ] I have added tests that prove my fix is effective or that my feature works
 - [ ] New and existing unit tests pass locally with my changes
 - [ ] Any dependent changes have been merged and published
-- [ ] I have updated the CHANGELOG.md (if applicable)
+- [ ] N/A — CHANGELOG.md is auto-generated on release tags
 
 ## Breaking Changes
 

@@ -22,11 +22,10 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
-        with:
-          driver-options: image=moby/buildkit:master
+        uses: docker/setup-buildx-action@v4.0.0
 
       - name: Login to Docker Hub
+        if: github.event_name != 'pull_request'
         uses: docker/login-action@v3
         with:
           username: ${{ secrets.DOCKER_USERNAME }}
@@ -57,7 +56,7 @@ jobs:
             type=raw,value=latest,enable={{is_default_branch}}
 
       - name: Build and push Docker image (Backend)
-        uses: docker/build-push-action@v5
+        uses: docker/build-push-action@v7.1.0
         with:
           context: .
           file: ./backend/Dockerfile
@@ -68,7 +67,7 @@ jobs:
           cache-to: type=gha,mode=max,scope=backend
 
       - name: Build and push Docker image (Frontend)
-        uses: docker/build-push-action@v5
+        uses: docker/build-push-action@v7.1.0
         with:
           context: .
           file: ./frontend/Dockerfile
@@ -80,37 +79,22 @@ jobs:
           build-args: |
             BUILDKIT_INLINE_CACHE=1
 
-      - name: Docker Hub Description
-        uses: peter-evans/dockerhub-description@v4
+      - name: Docker Hub Description (Backend)
+        uses: peter-evans/dockerhub-description@v5.0.0
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         with:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
           repository: bl4nk404/audiovault
           short-description: Your Personal Music Sanctuary - Self-hosted music downloader
-          description: |
-            Audiovault is a powerful, self-hosted application designed to import, manage, and download your music libraries from any major streaming platform directly to your local server.
+          readme-filepath: ./README.md
 
-            ## Supported Platforms
-            - Spotify
-            - YouTube
-            - Deezer
-            - SoundCloud
-            - Apple Music
-            - Tidal
-            - Amazon Music
-
-            ## Features
-            - Download music from multiple streaming services
-            - Personal Subsonic API server
-            - Stream to mobile apps (Symfonium, Amperfy, DSub)
-            - Auto-sync playlists
-            - Smart fallback system
-
-            ## Documentation
-            Visit the wiki for complete documentation: https://github.com/Bl4nk44/Audiovault/wiki
-
-            ## Support
-            - GitHub Issues: https://github.com/Bl4nk44/Audiovault/issues
-            - GitHub Discussions: https://github.com/Bl4nk44/Audiovault/discussions
-            - Contributing: https://github.com/Bl4nk44/Audiovault/blob/main/CONTRIBUTING.md
+      - name: Docker Hub Description (Frontend)
+        uses: peter-evans/dockerhub-description@v5.0.0
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+          repository: bl4nk404/audiovault-frontend
+          short-description: Audiovault Frontend - React UI for self-hosted music manager
+          readme-filepath: ./frontend/README.md
