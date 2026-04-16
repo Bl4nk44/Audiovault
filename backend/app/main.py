@@ -169,6 +169,19 @@ def _run_alembic_upgrade():
     return result.stdout
 
 
+def _run_alembic_stamp_head():
+    """Stamp the DB to head so Alembic won't re-run migrations after create_all."""
+    import subprocess
+    import sys
+
+    subprocess.run(
+        [sys.executable, "-m", "alembic", "stamp", "head"],
+        capture_output=True,
+        text=True,
+        cwd="/app",
+    )
+
+
 @application.on_event("startup")
 async def startup_event():
     banner = r"""
@@ -195,6 +208,9 @@ async def startup_event():
                 logger.warning(f"⚠️ Alembic migration failed: {e}. Falling back to create_all.")
                 async with engine.begin() as conn:
                     await conn.run_sync(Base.metadata.create_all)
+                # Stamp to head so subsequent restarts don't re-run failed migrations.
+                _run_alembic_stamp_head()
+                logger.info("✅ DB stamped to head after create_all fallback")
             else:
                 logger.info(f"Database not ready, retrying in 2 seconds... ({i + 1}/{retries})")
                 await asyncio.sleep(2)
