@@ -75,9 +75,7 @@ async def get_user_by_username(
     username: str,
 ) -> User | None:
     """Get user by username or email."""
-    result = await db.execute(
-        select(User).where((User.username == username) | (User.email == username))
-    )
+    result = await db.execute(select(User).where((User.username == username) | (User.email == username)))
     return result.scalar_one_or_none()
 
 
