@@ -17,7 +17,6 @@ class YouTubeService(BaseMusicService):
     def search(self, query: str, limit: int = 20, type: str = "song") -> list[dict[str, Any]]:
         logger.info(f"YouTube search query: {query}, type: {type}")
 
-        # Regex matching
         video_match = re.search(
             r"(?:youtube\.com/(?:watch\?v=|shorts/)|youtu\.be/|music\.youtube\.com/watch\?v=)([a-zA-Z0-9_-]+)",
             query,
@@ -28,28 +27,26 @@ class YouTubeService(BaseMusicService):
             query,
         )
 
-        # 1. Video Search Priority
-        if video_match and (type in ["song", "track", "all"]) and not playlist_match:
+        result = self._try_direct_match(query, video_match, playlist_match, channel_match, type)
+        if result is not None:
+            return result
+        return self._search_keywords(query, limit, type)
+
+    def _try_direct_match(self, query, video_match, playlist_match, channel_match, search_type):
+        if video_match and search_type in ["song", "track", "all"] and not playlist_match:
             res = self._search_video(video_match.group(1))
             if res:
                 return res
-
-        # 2. Playlist Search Priority
-        if playlist_match and (type in ["playlist", "all"]):
+        if playlist_match and search_type in ["playlist", "all"]:
             res = self._search_playlist(playlist_match.group(1))
             if res:
                 return res
-
-        # 3. Channel Search Priority
-        if channel_match and (type in ["artist", "all"]):
-            # Additional check to ensuring it looks like a URL if strictly matching regex
+        if channel_match and search_type in ["artist", "all"]:
             if query.startswith("http") or "youtube.com" in query:
                 res = self._search_channel(channel_match.group(1))
                 if res:
                     return res
-
-        # 4. Keyword Search (Fallback)
-        return self._search_keywords(query, limit, type)
+        return None
 
     def _search_video(self, video_id: str) -> list[dict[str, Any]]:
         try:

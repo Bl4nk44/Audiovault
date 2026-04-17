@@ -55,31 +55,9 @@ class SoundCloudService:
                 entries = [info]
 
             for entry in entries:
-                if not entry:
-                    continue
-
-                # SoundCloud specific: id usually exists
-                track_id = entry.get("id")
-                title = entry.get("title")
-                uploader = entry.get("uploader") or entry.get("artist") or "Unknown Artist"
-
-                if not title:
-                    continue
-
-                # For SoundCloud, web_url or url is critical for direct download
-                source_url = entry.get("webpage_url") or entry.get("url") or url
-
-                track = {
-                    "id": str(track_id) if track_id else None,
-                    "title": title,
-                    "artist": uploader,
-                    "album": "SoundCloud",  # SoundCloud rarely has albums in typical sense
-                    "duration_ms": int(entry.get("duration", 0) * 1000) if entry.get("duration") else None,
-                    "image_url": entry.get("thumbnail"),
-                    "source": "soundcloud",
-                    "source_url": source_url,
-                }
-                tracks.append(track)
+                track = self._format_entry(entry, url)
+                if track:
+                    tracks.append(track)
 
             logger.info(f"Extracted {len(tracks)} tracks from SoundCloud")
             return tracks
@@ -139,6 +117,28 @@ class SoundCloudService:
         except Exception as e:
             logger.error(f"Error extracting SoundCloud playlist info: {e}")
             return None
+
+
+    def _format_entry(self, entry: dict, fallback_url: str) -> dict | None:
+        if not entry:
+            return None
+        title = entry.get("title")
+        if not title:
+            return None
+        track_id = entry.get("id")
+        uploader = entry.get("uploader") or entry.get("artist") or "Unknown Artist"
+        source_url = entry.get("webpage_url") or entry.get("url") or fallback_url
+        duration = entry.get("duration")
+        return {
+            "id": str(track_id) if track_id else None,
+            "title": title,
+            "artist": uploader,
+            "album": "SoundCloud",
+            "duration_ms": int(duration * 1000) if duration else None,
+            "image_url": entry.get("thumbnail"),
+            "source": "soundcloud",
+            "source_url": source_url,
+        }
 
 
 soundcloud_service = SoundCloudService()
