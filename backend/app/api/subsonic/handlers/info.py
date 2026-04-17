@@ -7,7 +7,7 @@ Handles info/metadata endpoints:
 - getPodcasts.view
 """
 
-from typing import Any
+from typing import Annotated, Any
 from uuid import UUID
 
 from app.api.subsonic.auth import subsonic_auth
@@ -24,6 +24,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 router = APIRouter()
 
+_RESPONSE_FORMAT = "Response format"
+
 
 @router.get("/getArtistInfo.view")
 @router.post("/getArtistInfo.view")
@@ -31,9 +33,9 @@ async def get_artist_info(
     id: str = Query(..., description="Artist ID"),
     count: int = Query(20, description="Max similar artists"),
     include_not_present: bool = Query(False, alias="includeNotPresent", description="Include non-present artists"),
-    f: str = Query("xml", description="Response format"),
-    current_user: User = Depends(subsonic_auth),
-    db: AsyncSession = Depends(get_db),
+    f: Annotated[str, Query(description=_RESPONSE_FORMAT)] = "xml",
+    current_user: Annotated[User, Depends(subsonic_auth)] = ...,
+    db: Annotated[AsyncSession, Depends(get_db)] = ...,
 ):
     """
     Get metadata for an artist (folder view format).
@@ -74,9 +76,9 @@ async def get_artist_info2(
     id: str = Query(..., description="Artist ID"),
     count: int = Query(20, description="Max similar artists"),
     include_not_present: bool = Query(False, alias="includeNotPresent", description="Include non-present artists"),
-    f: str = Query("xml", description="Response format"),
-    current_user: User = Depends(subsonic_auth),
-    db: AsyncSession = Depends(get_db),
+    f: Annotated[str, Query(description=_RESPONSE_FORMAT)] = "xml",
+    current_user: Annotated[User, Depends(subsonic_auth)] = ...,
+    db: Annotated[AsyncSession, Depends(get_db)] = ...,
 ):
     """
     Get metadata for an artist (ID3 format).
@@ -116,9 +118,9 @@ async def get_artist_info2(
 async def get_similar_songs2(
     id: str = Query(..., description="Song or Artist ID"),
     count: int = Query(50, description="Number of songs"),
-    f: str = Query("xml", description="Response format"),
-    current_user: User = Depends(subsonic_auth),
-    db: AsyncSession = Depends(get_db),
+    f: Annotated[str, Query(description=_RESPONSE_FORMAT)] = "xml",
+    current_user: Annotated[User, Depends(subsonic_auth)] = ...,
+    db: Annotated[AsyncSession, Depends(get_db)] = ...,
 ):
     """
     Get similar songs (ID3 format).
@@ -170,9 +172,9 @@ async def get_similar_songs2(
 async def get_podcasts(
     include_episodes: bool = Query(True, alias="includeEpisodes", description="Include episodes"),
     id: str = Query(None, description="Podcast ID"),
-    f: str = Query("xml", description="Response format"),
-    current_user: User = Depends(subsonic_auth),
-    db: AsyncSession = Depends(get_db),
+    f: Annotated[str, Query(description=_RESPONSE_FORMAT)] = "xml",
+    current_user: Annotated[User, Depends(subsonic_auth)] = ...,
+    db: Annotated[AsyncSession, Depends(get_db)] = ...,
 ):
     """
     Get all podcasts.
@@ -186,9 +188,9 @@ async def get_podcasts(
 @router.post("/getNewestPodcasts.view")
 async def get_newest_podcasts(
     count: int = Query(20, description="Count"),
-    f: str = Query("xml", description="Response format"),
-    current_user: User = Depends(subsonic_auth),
-    db: AsyncSession = Depends(get_db),
+    f: Annotated[str, Query(description=_RESPONSE_FORMAT)] = "xml",
+    current_user: Annotated[User, Depends(subsonic_auth)] = ...,
+    db: Annotated[AsyncSession, Depends(get_db)] = ...,
 ):
     """
     Get newest podcast episodes.
@@ -201,9 +203,9 @@ async def get_newest_podcasts(
 @router.get("/getBookmarks.view")
 @router.post("/getBookmarks.view")
 async def get_bookmarks(
-    f: str = Query("xml", description="Response format"),
-    current_user: User = Depends(subsonic_auth),
-    db: AsyncSession = Depends(get_db),
+    f: Annotated[str, Query(description=_RESPONSE_FORMAT)] = "xml",
+    current_user: Annotated[User, Depends(subsonic_auth)] = ...,
+    db: Annotated[AsyncSession, Depends(get_db)] = ...,
 ):
     """
     Get all bookmarks.
@@ -216,9 +218,9 @@ async def get_bookmarks(
 @router.get("/getInternetRadioStations.view")
 @router.post("/getInternetRadioStations.view")
 async def get_internet_radio_stations(
-    f: str = Query("xml", description="Response format"),
-    current_user: User = Depends(subsonic_auth),
-    db: AsyncSession = Depends(get_db),
+    f: Annotated[str, Query(description=_RESPONSE_FORMAT)] = "xml",
+    current_user: Annotated[User, Depends(subsonic_auth)] = ...,
+    db: Annotated[AsyncSession, Depends(get_db)] = ...,
 ):
     """
     Get all internet radio stations.

@@ -11,6 +11,7 @@ Handles library browsing endpoints:
 - getMusicDirectory.view
 """
 
+from typing import Annotated
 from uuid import UUID
 
 from app.api.subsonic.auth import subsonic_auth
@@ -37,8 +38,8 @@ router = APIRouter()
 @router.post("/getMusicFolders.view")
 async def get_music_folders(
     f: str = "xml",
-    current_user: User = Depends(subsonic_auth),
-    db: AsyncSession = Depends(get_db),
+    current_user: Annotated[User, Depends(subsonic_auth)] = ...,
+    db: Annotated[AsyncSession, Depends(get_db)] = ...,
 ):
     """
     Get list of music folders.
@@ -54,11 +55,11 @@ async def get_music_folders(
 @router.get("/getIndexes.view")
 @router.post("/getIndexes.view")
 async def get_indexes(
-    music_folder_id: str = Query("1", alias="musicFolderId", description="Music folder ID"),
-    if_modified_since: int = Query(0, alias="ifModifiedSince", description="Return if modified after this timestamp"),
+    music_folder_id: Annotated[str, Query(alias="musicFolderId", description="Music folder ID")] = "1",
+    if_modified_since: Annotated[int, Query(alias="ifModifiedSince", description="Return if modified after this timestamp")] = 0,
     f: str = "xml",
-    current_user: User = Depends(subsonic_auth),
-    db: AsyncSession = Depends(get_db),
+    current_user: Annotated[User, Depends(subsonic_auth)] = ...,
+    db: Annotated[AsyncSession, Depends(get_db)] = ...,
 ):
     """
     Get indexed list of all artists.
@@ -140,10 +141,10 @@ async def get_indexes(
 @router.get("/getArtists.view")
 @router.post("/getArtists.view")
 async def get_artists(
-    music_folder_id: str = Query(None, alias="musicFolderId", description="Music folder ID"),
+    music_folder_id: Annotated[str | None, Query(alias="musicFolderId", description="Music folder ID")] = None,
     f: str = "xml",
-    current_user: User = Depends(subsonic_auth),
-    db: AsyncSession = Depends(get_db),
+    current_user: Annotated[User, Depends(subsonic_auth)] = ...,
+    db: Annotated[AsyncSession, Depends(get_db)] = ...,
 ):
     """
     Get all artists (similar to getIndexes but for ID3 view).
@@ -216,8 +217,8 @@ async def get_artists(
 async def get_artist(
     id: str = Query(..., description="Artist ID"),
     f: str = "xml",
-    current_user: User = Depends(subsonic_auth),
-    db: AsyncSession = Depends(get_db),
+    current_user: Annotated[User, Depends(subsonic_auth)] = ...,
+    db: Annotated[AsyncSession, Depends(get_db)] = ...,
 ):
     """
     Get artist details including albums.
@@ -317,8 +318,8 @@ async def get_artist(
 async def get_album(
     id: str = Query(..., description="Album ID"),
     f: str = "xml",
-    current_user: User = Depends(subsonic_auth),
-    db: AsyncSession = Depends(get_db),
+    current_user: Annotated[User, Depends(subsonic_auth)] = ...,
+    db: Annotated[AsyncSession, Depends(get_db)] = ...,
 ):
     """
     Get album details including songs.
@@ -403,8 +404,8 @@ async def get_album(
 async def get_song(
     id: str = Query(..., description="Song ID"),
     f: str = "xml",
-    current_user: User = Depends(subsonic_auth),
-    db: AsyncSession = Depends(get_db),
+    current_user: Annotated[User, Depends(subsonic_auth)] = ...,
+    db: Annotated[AsyncSession, Depends(get_db)] = ...,
 ):
     """
     Get song metadata.
@@ -446,8 +447,8 @@ async def get_song(
 async def get_music_directory(
     id: str = Query(..., description="Directory ID"),
     f: str = "xml",
-    current_user: User = Depends(subsonic_auth),
-    db: AsyncSession = Depends(get_db),
+    current_user: Annotated[User, Depends(subsonic_auth)] = ...,
+    db: Annotated[AsyncSession, Depends(get_db)] = ...,
 ):
     """
     Get contents of a music directory.

@@ -10,6 +10,7 @@ Handles playlist CRUD operations:
 """
 
 from datetime import UTC, datetime
+from typing import Annotated
 from uuid import UUID
 
 from app.api.subsonic.auth import subsonic_auth
@@ -32,6 +33,7 @@ router = APIRouter()
 
 # Error message constants
 ERR_INVALID_PLAYLIST_ID = "Invalid playlist ID"
+_PLAYLIST_ID_DESC = "Playlist ID"
 ERR_PLAYLIST_NOT_FOUND = "Playlist not found"
 ERR_ACCESS_DENIED = "Access denied"
 
@@ -41,8 +43,8 @@ ERR_ACCESS_DENIED = "Access denied"
 async def get_playlists(
     username: str | None = Query(None, description="Get playlists for specific user"),
     f: str = "xml",
-    current_user: User = Depends(subsonic_auth),
-    db: AsyncSession = Depends(get_db),
+    current_user: Annotated[User, Depends(subsonic_auth)] = ...,
+    db: Annotated[AsyncSession, Depends(get_db)] = ...,
 ):
     """
     Get all playlists.
@@ -102,10 +104,10 @@ async def get_playlists(
 @router.get("/getPlaylist.view")
 @router.post("/getPlaylist.view")
 async def get_playlist(
-    id: str = Query(..., description="Playlist ID"),
+    id: str = Query(..., description=_PLAYLIST_ID_DESC),
     f: str = "xml",
-    current_user: User = Depends(subsonic_auth),
-    db: AsyncSession = Depends(get_db),
+    current_user: Annotated[User, Depends(subsonic_auth)] = ...,
+    db: Annotated[AsyncSession, Depends(get_db)] = ...,
 ):
     """
     Get playlist details including all tracks.
@@ -200,8 +202,8 @@ async def create_playlist(
     name: str | None = Query(None, description="Playlist name"),
     song_id: list[str] | None = Query(None, alias="songId", description="Song IDs to add"),
     f: str = "xml",
-    current_user: User = Depends(subsonic_auth),
-    db: AsyncSession = Depends(get_db),
+    current_user: Annotated[User, Depends(subsonic_auth)] = ...,
+    db: Annotated[AsyncSession, Depends(get_db)] = ...,
 ):
     """
     Create or update playlist.
@@ -294,7 +296,7 @@ async def create_playlist(
 @router.get("/updatePlaylist.view")
 @router.post("/updatePlaylist.view")
 async def update_playlist(
-    playlist_id_param: str = Query(..., alias="playlistId", description="Playlist ID"),
+    playlist_id_param: str = Query(..., alias="playlistId", description=_PLAYLIST_ID_DESC),
     name: str | None = Query(None, description="New name"),
     comment: str | None = Query(None, description="New comment"),
     public: bool | None = Query(None, description="Public flag"),
@@ -303,8 +305,8 @@ async def update_playlist(
         None, alias="songIndexToRemove", description="Song indices to remove"
     ),
     f: str = "xml",
-    current_user: User = Depends(subsonic_auth),
-    db: AsyncSession = Depends(get_db),
+    current_user: Annotated[User, Depends(subsonic_auth)] = ...,
+    db: Annotated[AsyncSession, Depends(get_db)] = ...,
 ):
     """
     Update playlist metadata and contents.
@@ -393,10 +395,10 @@ async def update_playlist(
 @router.get("/deletePlaylist.view")
 @router.post("/deletePlaylist.view")
 async def delete_playlist(
-    id: str = Query(..., description="Playlist ID"),
+    id: str = Query(..., description=_PLAYLIST_ID_DESC),
     f: str = "xml",
-    current_user: User = Depends(subsonic_auth),
-    db: AsyncSession = Depends(get_db),
+    current_user: Annotated[User, Depends(subsonic_auth)] = ...,
+    db: Annotated[AsyncSession, Depends(get_db)] = ...,
 ):
     """
     Delete playlist.

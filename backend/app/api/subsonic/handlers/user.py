@@ -10,6 +10,7 @@ Handles user interactions:
 """
 
 from datetime import UTC, datetime
+from typing import Annotated
 from uuid import UUID
 
 from app.api.subsonic.auth import subsonic_auth
@@ -33,6 +34,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 router = APIRouter()
 
+_MUSIC_FOLDER_ID_DESC = "Music folder ID"
+
 
 @router.get("/star.view")
 @router.post("/star.view")
@@ -41,8 +44,8 @@ async def star(
     album_id: list[str] = Query(None, alias="albumId", description="Album IDs to star"),
     artist_id: list[str] = Query(None, alias="artistId", description="Artist IDs to star"),
     f: str = "xml",
-    current_user: User = Depends(subsonic_auth),
-    db: AsyncSession = Depends(get_db),
+    current_user: Annotated[User, Depends(subsonic_auth)] = ...,
+    db: Annotated[AsyncSession, Depends(get_db)] = ...,
 ):
     """
     Add items to starred/favorites.
@@ -133,8 +136,8 @@ async def unstar(
     album_id: list[str] = Query(None, alias="albumId", description="Album IDs to unstar"),
     artist_id: list[str] = Query(None, alias="artistId", description="Artist IDs to unstar"),
     f: str = "xml",
-    current_user: User = Depends(subsonic_auth),
-    db: AsyncSession = Depends(get_db),
+    current_user: Annotated[User, Depends(subsonic_auth)] = ...,
+    db: Annotated[AsyncSession, Depends(get_db)] = ...,
 ):
     """
     Remove items from starred/favorites.
@@ -196,10 +199,10 @@ async def unstar(
 @router.get("/getStarred.view")
 @router.post("/getStarred.view")
 async def get_starred(
-    music_folder_id: str = Query(None, alias="musicFolderId", description="Music folder ID"),
+    music_folder_id: str = Query(None, alias="musicFolderId", description=_MUSIC_FOLDER_ID_DESC),
     f: str = "xml",
-    current_user: User = Depends(subsonic_auth),
-    db: AsyncSession = Depends(get_db),
+    current_user: Annotated[User, Depends(subsonic_auth)] = ...,
+    db: Annotated[AsyncSession, Depends(get_db)] = ...,
 ):
     """
     Get all starred items (folder view format).
@@ -287,10 +290,10 @@ async def get_starred(
 @router.get("/getStarred2.view")
 @router.post("/getStarred2.view")
 async def get_starred2(
-    music_folder_id: str = Query(None, alias="musicFolderId", description="Music folder ID"),
+    music_folder_id: str = Query(None, alias="musicFolderId", description=_MUSIC_FOLDER_ID_DESC),
     f: str = "xml",
-    current_user: User = Depends(subsonic_auth),
-    db: AsyncSession = Depends(get_db),
+    current_user: Annotated[User, Depends(subsonic_auth)] = ...,
+    db: Annotated[AsyncSession, Depends(get_db)] = ...,
 ):
     """
     Get all starred items (ID3 format).
@@ -320,8 +323,8 @@ async def set_rating(
     id: str = Query(..., description="Song ID"),
     rating: int = Query(..., description="Rating (0-5)"),
     f: str = "xml",
-    current_user: User = Depends(subsonic_auth),
-    db: AsyncSession = Depends(get_db),
+    current_user: Annotated[User, Depends(subsonic_auth)] = ...,
+    db: Annotated[AsyncSession, Depends(get_db)] = ...,
 ):
     """
     Set rating for a song.
@@ -378,8 +381,8 @@ async def scrobble(
     time: int = Query(None, description="Time played (Unix timestamp in ms)"),
     submission: bool = Query(True, description="True for scrobble, false for now playing"),
     f: str = "xml",
-    current_user: User = Depends(subsonic_auth),
-    db: AsyncSession = Depends(get_db),
+    current_user: Annotated[User, Depends(subsonic_auth)] = ...,
+    db: Annotated[AsyncSession, Depends(get_db)] = ...,
 ):
     """
     Record play/scrobble.
@@ -475,8 +478,8 @@ async def scrobble(
 @router.post("/getNowPlaying.view")
 async def get_now_playing(
     f: str = "xml",
-    current_user: User = Depends(subsonic_auth),
-    db: AsyncSession = Depends(get_db),
+    current_user: Annotated[User, Depends(subsonic_auth)] = ...,
+    db: Annotated[AsyncSession, Depends(get_db)] = ...,
 ):
     """
     Get currently playing tracks across all users.
@@ -527,10 +530,10 @@ async def get_random_songs(
     genre: str = Query(None, description="Filter by genre"),
     from_year: int = Query(None, alias="fromYear", description="Filter from year"),
     to_year: int = Query(None, alias="toYear", description="Filter to year"),
-    music_folder_id: str = Query(None, alias="musicFolderId", description="Music folder ID"),
+    music_folder_id: str = Query(None, alias="musicFolderId", description=_MUSIC_FOLDER_ID_DESC),
     f: str = "xml",
-    current_user: User = Depends(subsonic_auth),
-    db: AsyncSession = Depends(get_db),
+    current_user: Annotated[User, Depends(subsonic_auth)] = ...,
+    db: Annotated[AsyncSession, Depends(get_db)] = ...,
 ):
     """
     Get random songs.

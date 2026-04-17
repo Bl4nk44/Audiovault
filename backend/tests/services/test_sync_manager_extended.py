@@ -1,6 +1,8 @@
 import os
 import shutil
 import uuid
+
+import anyio
 from unittest.mock import AsyncMock, patch
 
 import pytest
@@ -63,8 +65,7 @@ async def test_sync_manager_execute_success(db_session):
     temp_dir = f"/tmp/sync_test_{uuid.uuid4()}"
     os.makedirs(temp_dir, exist_ok=True)
     file_path = os.path.join(temp_dir, "test.mp3")
-    with open(file_path, "w") as f:
-        f.write("test")
+    await anyio.Path(file_path).write_text("test")
 
     download = Download(user_id=user_id, track_id=track_id, status="completed", file_path=file_path)
     db_session.add(download)

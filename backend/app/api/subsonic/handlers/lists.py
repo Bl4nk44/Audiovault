@@ -9,6 +9,7 @@ Handles list-based endpoints:
 - getSimilarSongs.view
 """
 
+from typing import Annotated
 from uuid import UUID
 
 from app.api.subsonic.auth import subsonic_auth
@@ -29,13 +30,15 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 router = APIRouter()
 
+_RESPONSE_FORMAT = "Response format"
+
 
 @router.get("/getGenres.view")
 @router.post("/getGenres.view")
 async def get_genres(
-    f: str = Query("xml", description="Response format"),
-    current_user: User = Depends(subsonic_auth),
-    db: AsyncSession = Depends(get_db),
+    f: Annotated[str, Query(description=_RESPONSE_FORMAT)] = "xml",
+    current_user: Annotated[User, Depends(subsonic_auth)] = ...,
+    db: Annotated[AsyncSession, Depends(get_db)] = ...,
 ):
     """
     Get genres.
@@ -107,9 +110,9 @@ async def get_album_list(
     toYear: int = Query(None, description="Filter to year"),
     genre: str = Query(None, description="Filter by genre"),
     musicFolderId: str = Query(None, description="Music folder ID"),
-    f: str = Query("xml", description="Response format"),
-    current_user: User = Depends(subsonic_auth),
-    db: AsyncSession = Depends(get_db),
+    f: Annotated[str, Query(description=_RESPONSE_FORMAT)] = "xml",
+    current_user: Annotated[User, Depends(subsonic_auth)] = ...,
+    db: Annotated[AsyncSession, Depends(get_db)] = ...,
 ):
     """
     Get list of albums.
@@ -198,9 +201,9 @@ async def get_random_songs(
     fromYear: int = Query(None, description="From year"),
     toYear: int = Query(None, description="To year"),
     musicFolderId: str = Query(None, description="Folder ID"),
-    f: str = Query("xml", description="Response format"),
-    current_user: User = Depends(subsonic_auth),
-    db: AsyncSession = Depends(get_db),
+    f: Annotated[str, Query(description=_RESPONSE_FORMAT)] = "xml",
+    current_user: Annotated[User, Depends(subsonic_auth)] = ...,
+    db: Annotated[AsyncSession, Depends(get_db)] = ...,
 ):
     """
     Get random songs.
@@ -229,9 +232,9 @@ async def get_random_songs(
 async def get_top_songs(
     artist: str = Query(None, description="Artist name"),
     count: int = Query(50, description="Count"),
-    f: str = Query("xml", description="Response format"),
-    current_user: User = Depends(subsonic_auth),
-    db: AsyncSession = Depends(get_db),
+    f: Annotated[str, Query(description=_RESPONSE_FORMAT)] = "xml",
+    current_user: Annotated[User, Depends(subsonic_auth)] = ...,
+    db: Annotated[AsyncSession, Depends(get_db)] = ...,
 ):
     """
     Get top songs (not really tracking play counts per song globally yet).
@@ -261,9 +264,9 @@ async def get_top_songs(
 async def get_similar_songs(
     id: str = Query(..., description="Song ID"),
     count: int = Query(50, description="Count"),
-    f: str = Query("xml", description="Response format"),
-    current_user: User = Depends(subsonic_auth),
-    db: AsyncSession = Depends(get_db),
+    f: Annotated[str, Query(description=_RESPONSE_FORMAT)] = "xml",
+    current_user: Annotated[User, Depends(subsonic_auth)] = ...,
+    db: Annotated[AsyncSession, Depends(get_db)] = ...,
 ):
     """
     Get similar songs. Returns random songs from same genre or artist.

@@ -1,6 +1,8 @@
 import os
+import tempfile
 from uuid import uuid4
 
+import anyio
 import pytest
 from app.models.download import Download
 from app.models.user import User
@@ -21,12 +23,10 @@ async def test_subsonic_download_path_traversal_db_poisoning(
     outside the allowed DOWNLOAD_DIR, the /download.view endpoint refuses
     to serve it.
     """
-    import tempfile
-
     # Create a secret file outside DOWNLOAD_DIR
-    with tempfile.NamedTemporaryFile(delete=False, suffix=".txt") as secret_file:
-        secret_file.write(b"SECRET DATA")
-        secret_file_path = secret_file.name
+    _fd, secret_file_path = tempfile.mkstemp(suffix=".txt")
+    os.close(_fd)
+    await anyio.Path(secret_file_path).write_bytes(b"SECRET DATA")
 
     try:
         # Poison DB
@@ -74,11 +74,9 @@ async def test_downloads_remove_path_traversal(
     """
     Test that deleting a download prevents deleting files outside the allowed directory.
     """
-    import tempfile
-
-    with tempfile.NamedTemporaryFile(delete=False, suffix=".txt") as secret_file:
-        secret_file.write(b"SHOULD NOT BE DELETED")
-        secret_file_path = secret_file.name
+    _fd, secret_file_path = tempfile.mkstemp(suffix=".txt")
+    os.close(_fd)
+    await anyio.Path(secret_file_path).write_bytes(b"SHOULD NOT BE DELETED")
 
     try:
         # Poison DB

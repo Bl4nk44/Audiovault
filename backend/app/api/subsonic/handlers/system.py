@@ -9,6 +9,7 @@ Handles authentication and system info endpoints:
 """
 
 from datetime import UTC, datetime
+from typing import Annotated
 
 from app.api.subsonic.auth import (
     create_auth_token,
@@ -24,12 +25,14 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 router = APIRouter()
 
+_RESPONSE_FORMAT = "Response format"
+
 
 @router.get("/ping.view")
 @router.post("/ping.view")
 async def ping(
-    f: str = Query("xml", description="Response format"),
-    current_user: User = Depends(subsonic_auth),
+    f: Annotated[str, Query(description=_RESPONSE_FORMAT)] = "xml",
+    current_user: Annotated[User, Depends(subsonic_auth)] = ...,
 ):
     """
     Test connectivity and authentication.
@@ -45,8 +48,8 @@ async def ping(
 @router.get("/getLicense.view")
 @router.post("/getLicense.view")
 async def get_license(
-    f: str = Query("xml", description="Response format"),
-    current_user: User = Depends(subsonic_auth),
+    f: Annotated[str, Query(description=_RESPONSE_FORMAT)] = "xml",
+    current_user: Annotated[User, Depends(subsonic_auth)] = ...,
 ):
     """
     Get license information.
@@ -72,9 +75,9 @@ async def get_license(
 @router.post("/getUser.view")
 async def get_user(
     username: str = Query(None, description="Username to get info for"),
-    f: str = Query("xml", description="Response format"),
-    current_user: User = Depends(subsonic_auth),
-    db: AsyncSession = Depends(get_db),
+    f: Annotated[str, Query(description=_RESPONSE_FORMAT)] = "xml",
+    current_user: Annotated[User, Depends(subsonic_auth)] = ...,
+    db: Annotated[AsyncSession, Depends(get_db)] = ...,
 ):
     """
     Get information about a user.
@@ -135,8 +138,8 @@ async def get_token(
     p: str = Query(..., description="Password"),
     c: str = Query(..., description="Client name"),
     v: str = Query("1.16.1", description="API version"),
-    f: str = Query("xml", description="Response format"),
-    db: AsyncSession = Depends(get_db),
+    f: Annotated[str, Query(description=_RESPONSE_FORMAT)] = "xml",
+    db: Annotated[AsyncSession, Depends(get_db)] = ...,
 ):
     """
     Get authentication token for subsequent requests.
@@ -197,8 +200,8 @@ async def get_token(
 @router.get("/getScanStatus.view")
 @router.post("/getScanStatus.view")
 async def get_scan_status(
-    f: str = Query("xml", description="Response format"),
-    current_user: User = Depends(subsonic_auth),
+    f: Annotated[str, Query(description=_RESPONSE_FORMAT)] = "xml",
+    current_user: Annotated[User, Depends(subsonic_auth)] = ...,
 ):
     """
     Get current library scan status.
@@ -225,8 +228,8 @@ async def get_scan_status(
 @router.get("/getOpenSubsonicExtensions.view")
 @router.post("/getOpenSubsonicExtensions.view")
 async def get_open_subsonic_extensions(
-    f: str = Query("xml", description="Response format"),
-    current_user: User = Depends(subsonic_auth),
+    f: Annotated[str, Query(description=_RESPONSE_FORMAT)] = "xml",
+    current_user: Annotated[User, Depends(subsonic_auth)] = ...,
 ):
     """
     Get supported OpenSubsonic extensions.

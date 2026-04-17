@@ -13,6 +13,7 @@ Endpoints:
 """
 
 import logging
+from typing import Annotated
 
 from app.core.dependencies import get_current_active_user
 from app.models.user import User
@@ -30,7 +31,7 @@ async def browse_search(
     limit: int = 20,
     offset: int = 0,
     type: str = "track",
-    current_user: User = Depends(get_current_active_user),
+    current_user: Annotated[User, Depends(get_current_active_user)] = ...,
 ):
     """
     Search across multiple music providers (Deezer, MusicBrainz, Spotify if configured).
@@ -58,7 +59,7 @@ async def browse_search(
 async def browse_track(
     source: str,
     track_id: str,
-    current_user: User = Depends(get_current_active_user),
+    current_user: Annotated[User, Depends(get_current_active_user)] = ...,
 ):
     """Get track details from a specific provider (deezer, spotify, musicbrainz)."""
     result = await search_orchestrator.get_track_details(source, track_id)
@@ -71,7 +72,7 @@ async def browse_track(
 async def browse_artist(
     source: str,
     artist_id: str,
-    current_user: User = Depends(get_current_active_user),
+    current_user: Annotated[User, Depends(get_current_active_user)] = ...,
 ):
     """Get artist details from a specific provider."""
     result = await search_orchestrator.get_artist_details(source, artist_id)
@@ -84,7 +85,7 @@ async def browse_artist(
 async def browse_album(
     source: str,
     album_id: str,
-    current_user: User = Depends(get_current_active_user),
+    current_user: Annotated[User, Depends(get_current_active_user)] = ...,
 ):
     """Get album details from a specific provider."""
     result = await search_orchestrator.get_album_details(source, album_id)
@@ -97,7 +98,7 @@ async def browse_album(
 async def browse_playlist(
     source: str,
     playlist_id: str,
-    current_user: User = Depends(get_current_active_user),
+    current_user: Annotated[User, Depends(get_current_active_user)] = ...,
 ):
     """Get playlist details from a specific provider."""
     result = await search_orchestrator.get_playlist_details(source, playlist_id)

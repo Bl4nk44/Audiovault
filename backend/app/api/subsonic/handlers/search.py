@@ -6,6 +6,8 @@ Handles search endpoints:
 - search3.view (API 1.8+)
 """
 
+from typing import Annotated
+
 from app.api.subsonic.auth import subsonic_auth
 from app.api.subsonic.utils import (
     build_song_response,
@@ -25,6 +27,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 router = APIRouter()
 
+_RESPONSE_FORMAT = "Response format"
+
 
 @router.get("/search.view")
 @router.post("/search.view")
@@ -35,10 +39,10 @@ async def search_legacy(
     any: str = Query(None, description="Search any field"),
     count: int = Query(20, description="Max results"),
     offset: int = Query(0, description="Result offset"),
-    newer_than: int = Query(None, alias="newerThan", description="Only return newer than timestamp"),
-    f: str = Query("xml", description="Response format"),
-    current_user: User = Depends(subsonic_auth),
-    db: AsyncSession = Depends(get_db),
+    newer_than: Annotated[int | None, Query(alias="newerThan", description="Only return newer than timestamp")] = None,
+    f: Annotated[str, Query(description=_RESPONSE_FORMAT)] = "xml",
+    current_user: Annotated[User, Depends(subsonic_auth)] = ...,
+    db: Annotated[AsyncSession, Depends(get_db)] = ...,
 ):
     """
     Legacy search (API 1.0).
@@ -83,16 +87,16 @@ async def search_legacy(
 @router.post("/search2.view")
 async def search2(
     query: str = Query(..., description="Search query"),
-    artist_count: int = Query(20, alias="artistCount", description="Max artists to return"),
-    artist_offset: int = Query(0, alias="artistOffset", description="Artist offset"),
-    album_count: int = Query(20, alias="albumCount", description="Max albums to return"),
-    album_offset: int = Query(0, alias="albumOffset", description="Album offset"),
-    song_count: int = Query(20, alias="songCount", description="Max songs to return"),
-    song_offset: int = Query(0, alias="songOffset", description="Song offset"),
-    music_folder_id: str = Query(None, alias="musicFolderId", description="Music folder ID"),
-    f: str = Query("xml", description="Response format"),
-    current_user: User = Depends(subsonic_auth),
-    db: AsyncSession = Depends(get_db),
+    artist_count: Annotated[int, Query(alias="artistCount", description="Max artists to return")] = 20,
+    artist_offset: Annotated[int, Query(alias="artistOffset", description="Artist offset")] = 0,
+    album_count: Annotated[int, Query(alias="albumCount", description="Max albums to return")] = 20,
+    album_offset: Annotated[int, Query(alias="albumOffset", description="Album offset")] = 0,
+    song_count: Annotated[int, Query(alias="songCount", description="Max songs to return")] = 20,
+    song_offset: Annotated[int, Query(alias="songOffset", description="Song offset")] = 0,
+    music_folder_id: Annotated[str | None, Query(alias="musicFolderId", description="Music folder ID")] = None,
+    f: Annotated[str, Query(description=_RESPONSE_FORMAT)] = "xml",
+    current_user: Annotated[User, Depends(subsonic_auth)] = ...,
+    db: Annotated[AsyncSession, Depends(get_db)] = ...,
 ):
     """
     Enhanced search (API 1.4+).
@@ -235,16 +239,16 @@ async def search2(
 @router.post("/search3.view")
 async def search3(
     query: str = Query(..., description="Search query"),
-    artist_count: int = Query(20, alias="artistCount", description="Max artists to return"),
-    artist_offset: int = Query(0, alias="artistOffset", description="Artist offset"),
-    album_count: int = Query(20, alias="albumCount", description="Max albums to return"),
-    album_offset: int = Query(0, alias="albumOffset", description="Album offset"),
-    song_count: int = Query(20, alias="songCount", description="Max songs to return"),
-    song_offset: int = Query(0, alias="songOffset", description="Song offset"),
-    music_folder_id: str = Query(None, alias="musicFolderId", description="Music folder ID"),
-    f: str = Query("xml", description="Response format"),
-    current_user: User = Depends(subsonic_auth),
-    db: AsyncSession = Depends(get_db),
+    artist_count: Annotated[int, Query(alias="artistCount", description="Max artists to return")] = 20,
+    artist_offset: Annotated[int, Query(alias="artistOffset", description="Artist offset")] = 0,
+    album_count: Annotated[int, Query(alias="albumCount", description="Max albums to return")] = 20,
+    album_offset: Annotated[int, Query(alias="albumOffset", description="Album offset")] = 0,
+    song_count: Annotated[int, Query(alias="songCount", description="Max songs to return")] = 20,
+    song_offset: Annotated[int, Query(alias="songOffset", description="Song offset")] = 0,
+    music_folder_id: Annotated[str | None, Query(alias="musicFolderId", description="Music folder ID")] = None,
+    f: Annotated[str, Query(description=_RESPONSE_FORMAT)] = "xml",
+    current_user: Annotated[User, Depends(subsonic_auth)] = ...,
+    db: Annotated[AsyncSession, Depends(get_db)] = ...,
 ):
     """
     Latest search (API 1.8+).
