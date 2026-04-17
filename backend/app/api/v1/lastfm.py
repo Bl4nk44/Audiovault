@@ -41,7 +41,7 @@ async def connect_lastfm(
     return {"auth_url": service.get_auth_url(base_url=base_url)}
 
 
-@router.get("/callback")
+@router.get("/callback", responses={400: {"description": "Bad request"}})
 async def lastfm_callback(
     token: str,
     db: Annotated[AsyncSession, Depends(get_db)],
@@ -153,7 +153,7 @@ async def lastfm_status(current_user: Annotated[User, Depends(get_current_user)]
     return {"connected": current_user.lastfm_session_key is not None, "username": current_user.lastfm_username}
 
 
-@router.get("/profile")
+@router.get("/profile", responses={400: {"description": "Bad request"}, 500: {"description": "Internal server error"}})
 async def get_lastfm_profile(
     current_user: Annotated[User, Depends(get_current_user)],
     service: Annotated[LastfmService, Depends(get_lastfm_service)],

@@ -50,7 +50,7 @@ class AuditLogListResponse(BaseModel):
     has_more: bool
 
 
-@router.get("", response_model=AuditLogListResponse)
+@router.get("", response_model=AuditLogListResponse, responses={403: {"description": "Forbidden"}})
 async def list_audit_logs(
     page: Annotated[int, Query(ge=1)] = 1,
     page_size: Annotated[int, Query(ge=1, le=100)] = 50,
@@ -104,7 +104,7 @@ async def list_audit_logs(
     )
 
 
-@router.get("/actions", response_model=list[str])
+@router.get("/actions", response_model=list[str], responses={403: {"description": "Forbidden"}})
 async def list_action_types(
     current_user: Annotated[User, Depends(get_current_active_user)] = ...,
     db: Annotated[AsyncSession, Depends(get_db)] = ...,
@@ -120,7 +120,7 @@ async def list_action_types(
     return actions
 
 
-@router.get("/resources", response_model=list[str])
+@router.get("/resources", response_model=list[str], responses={403: {"description": "Forbidden"}})
 async def list_resource_types(
     current_user: Annotated[User, Depends(get_current_active_user)] = ...,
     db: Annotated[AsyncSession, Depends(get_db)] = ...,

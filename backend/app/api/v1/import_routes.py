@@ -57,7 +57,7 @@ class ImportRequest(BaseModel):
         return self
 
 
-@router.post("/playlist", response_model=PlaylistMetadata)
+@router.post("/playlist", response_model=PlaylistMetadata, responses={404: {"description": "Not found"}, 500: {"description": "Internal server error"}})
 async def import_playlist(request: ImportRequest):
     """
     Import a playlist from a URL (Tidal, SoundCloud, Apple Music, etc.)

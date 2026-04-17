@@ -33,7 +33,7 @@ class VerifyYouTube(BaseModel):
     apiKey: str
 
 
-@router.post("/verify/spotify")
+@router.post("/verify/spotify", responses={400: {"description": "Bad request"}})
 async def verify_spotify(creds: VerifySpotify):
     import asyncio
 
@@ -54,7 +54,7 @@ async def verify_spotify(creds: VerifySpotify):
         raise HTTPException(status_code=400, detail=str(e)) from e
 
 
-@router.post("/verify/youtube")
+@router.post("/verify/youtube", responses={400: {"description": "Bad request"}})
 async def verify_youtube(creds: VerifyYouTube):
     import httpx
 

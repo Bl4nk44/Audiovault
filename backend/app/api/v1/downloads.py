@@ -156,7 +156,7 @@ class TrackResponse(BaseModel):
     image_url: str | None = None
 
 
-@router.post("/add")
+@router.post("/add", responses={404: {"description": "Not found"}, 400: {"description": "Bad request"}})
 async def add_download(
     request: DownloadRequest,
     current_user: Annotated[User, Depends(get_current_active_user)] = ...,
@@ -200,7 +200,7 @@ async def retry_download(
     return {"status": "success"}
 
 
-@router.delete("/{download_id}")  # Standardized path
+@router.delete("/{download_id}", responses={404: {"description": "Not found"}})  # Standardized path
 async def remove_download(
     download_id: UUID,
     current_user: Annotated[User, Depends(get_current_active_user)] = ...,
@@ -259,7 +259,7 @@ class ArtistDownloadRequest(BaseModel):
     source: str = "deezer"
 
 
-@router.post("/artist/{artist_id}/download-all")
+@router.post("/artist/{artist_id}/download-all", responses={404: {"description": "Not found"}, 400: {"description": "Bad request"}})
 async def download_all_artist_tracks(
     artist_id: str,
     request: ArtistDownloadRequest,
@@ -399,7 +399,7 @@ async def download_all_artist_tracks(
     }
 
 
-@router.post("/album/{album_id}/download")
+@router.post("/album/{album_id}/download", responses={404: {"description": "Not found"}, 400: {"description": "Bad request"}})
 async def download_album(
     album_id: str,
     request: ArtistDownloadRequest,  # reusing this model as it just has 'source'
@@ -639,7 +639,7 @@ class BulkUpdateRequest(BaseModel):
     updates: dict  # Fields to update: artist, title, album, genre, year
 
 
-@router.put("/library/bulk-update")
+@router.put("/library/bulk-update", responses={400: {"description": "Bad request"}})
 async def bulk_update_library_items(
     request: BulkUpdateRequest,
     current_user: Annotated[User, Depends(get_current_active_user)] = ...,
@@ -684,7 +684,7 @@ async def bulk_update_library_items(
     }
 
 
-@router.put("/library/{download_id}")
+@router.put("/library/{download_id}", responses={404: {"description": "Not found"}, 400: {"description": "Bad request"}})
 async def update_library_item(
     download_id: UUID,
     updates: dict,
@@ -726,7 +726,7 @@ async def fix_legacy_data(
     return {"status": "success", "fixed_count": fixed_count}
 
 
-@router.post("/maintenance/scan-library")
+@router.post("/maintenance/scan-library", responses={403: {"description": "Forbidden"}})
 async def scan_library(
     scan_path: str | None = None,
     current_user: Annotated[User, Depends(get_current_active_user)] = ...,

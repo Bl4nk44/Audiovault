@@ -19,7 +19,7 @@ async def search_deezer(
     return await service.search(q, limit, offset)
 
 
-@router.get("/playlist/{playlist_id}")
+@router.get("/playlist/{playlist_id}", responses={404: {"description": "Not found"}})
 async def get_deezer_playlist(playlist_id: str, current_user: Annotated[User, Depends(get_current_active_user)] = ...):
     service = DeezerService()
     from fastapi import HTTPException
@@ -30,7 +30,7 @@ async def get_deezer_playlist(playlist_id: str, current_user: Annotated[User, De
     return playlist
 
 
-@router.get("/artist/{artist_id}")
+@router.get("/artist/{artist_id}", responses={404: {"description": "Not found"}})
 async def get_deezer_artist(artist_id: str, current_user: Annotated[User, Depends(get_current_active_user)] = ...):
     service = DeezerService()
     from fastapi import HTTPException

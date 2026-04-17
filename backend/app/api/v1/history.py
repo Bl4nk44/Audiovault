@@ -18,7 +18,7 @@ class HistoryRecord(BaseModel):
     duration_played: int
 
 
-@router.post("/record")
+@router.post("/record", responses={404: {"description": "Not found"}})
 async def record_history(
     record: HistoryRecord,
     current_user: Annotated[User, Depends(get_current_active_user)] = ...,

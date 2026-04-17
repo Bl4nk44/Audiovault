@@ -25,7 +25,7 @@ async def search_youtube(
     return service.search(q, limit, type)
 
 
-@router.get("/playlist/{playlist_id}")
+@router.get("/playlist/{playlist_id}", responses={404: {"description": "Not found"}})
 async def get_youtube_playlist(playlist_id: str, current_user: Annotated[User, Depends(get_current_active_user)] = ...):
     service = YouTubeService()
     playlist = service.get_playlist_details(playlist_id)

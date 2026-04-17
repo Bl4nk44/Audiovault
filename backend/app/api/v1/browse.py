@@ -25,7 +25,7 @@ logger = logging.getLogger(__name__)
 router = APIRouter()
 
 
-@router.get("/search")
+@router.get("/search", responses={500: {"description": "Internal server error"}})
 async def browse_search(
     q: str,
     limit: int = 20,
@@ -55,7 +55,7 @@ async def browse_search(
         raise HTTPException(status_code=500, detail=str(e)) from e
 
 
-@router.get("/track/{source}/{track_id}")
+@router.get("/track/{source}/{track_id}", responses={404: {"description": "Not found"}})
 async def browse_track(
     source: str,
     track_id: str,
@@ -68,7 +68,7 @@ async def browse_track(
     return result
 
 
-@router.get("/artist/{source}/{artist_id}")
+@router.get("/artist/{source}/{artist_id}", responses={404: {"description": "Not found"}})
 async def browse_artist(
     source: str,
     artist_id: str,
@@ -81,7 +81,7 @@ async def browse_artist(
     return result
 
 
-@router.get("/album/{source}/{album_id}")
+@router.get("/album/{source}/{album_id}", responses={404: {"description": "Not found"}})
 async def browse_album(
     source: str,
     album_id: str,
@@ -94,7 +94,7 @@ async def browse_album(
     return result
 
 
-@router.get("/playlist/{source}/{playlist_id}")
+@router.get("/playlist/{source}/{playlist_id}", responses={404: {"description": "Not found"}})
 async def browse_playlist(
     source: str,
     playlist_id: str,

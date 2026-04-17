@@ -11,7 +11,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 router = APIRouter()
 
 
-@router.post("/{watchlist_id}/analyze")
+@router.post("/{watchlist_id}/analyze", responses={404: {"description": "Not found"}, 500: {"description": "Internal server error"}})
 async def analyze_sync(
     watchlist_id: UUID,
     current_user: Annotated[User, Depends(get_current_active_user)] = ...,
@@ -33,7 +33,7 @@ async def analyze_sync(
         raise HTTPException(status_code=500, detail=str(e)) from e
 
 
-@router.post("/{watchlist_id}/execute")
+@router.post("/{watchlist_id}/execute", responses={400: {"description": "Bad request"}, 500: {"description": "Internal server error"}})
 async def execute_sync(
     watchlist_id: UUID,
     payload: Annotated[dict, Body()],

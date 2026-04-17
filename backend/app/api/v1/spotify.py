@@ -10,7 +10,7 @@ router = APIRouter()
 SPOTIFY_NOT_CONFIGURED_MSG = "Spotify service not configured"
 
 
-@router.get("/search")
+@router.get("/search", responses={500: {"description": "Internal server error"}})
 async def search_spotify(
     q: str,
     limit: int = 20,
@@ -31,7 +31,7 @@ async def search_spotify(
         raise HTTPException(status_code=500, detail=str(e)) from e
 
 
-@router.get("/track/{track_id}")
+@router.get("/track/{track_id}", responses={404: {"description": "Not found"}})
 async def get_spotify_track(track_id: str, current_user: Annotated[User, Depends(get_current_active_user)] = ...):
     service = SpotifyService()
 
@@ -42,7 +42,7 @@ async def get_spotify_track(track_id: str, current_user: Annotated[User, Depends
     return track
 
 
-@router.get("/playlist/{playlist_id}")
+@router.get("/playlist/{playlist_id}", responses={404: {"description": "Not found"}})
 async def get_spotify_playlist(playlist_id: str, current_user: Annotated[User, Depends(get_current_active_user)] = ...):
     service = SpotifyService()
 
@@ -53,7 +53,7 @@ async def get_spotify_playlist(playlist_id: str, current_user: Annotated[User, D
     return playlist
 
 
-@router.get("/artist/{artist_id}")
+@router.get("/artist/{artist_id}", responses={404: {"description": "Not found"}})
 async def get_spotify_artist(artist_id: str, current_user: Annotated[User, Depends(get_current_active_user)] = ...):
     service = SpotifyService()
 
@@ -64,7 +64,7 @@ async def get_spotify_artist(artist_id: str, current_user: Annotated[User, Depen
     return artist
 
 
-@router.get("/album/{album_id}")
+@router.get("/album/{album_id}", responses={404: {"description": "Not found"}})
 async def get_spotify_album(album_id: str, current_user: Annotated[User, Depends(get_current_active_user)] = ...):
     """Get album details with all tracks."""
     service = SpotifyService()

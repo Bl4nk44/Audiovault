@@ -31,7 +31,7 @@ def _read_last_lines(file_path: Path, lines_count: int) -> list[str]:
         raise e
 
 
-@router.get("/logs", response_model=list[str])
+@router.get("/logs", response_model=list[str], responses={500: {"description": "Internal server error"}})
 async def get_system_logs(lines: Annotated[int, Query(ge=1, le=5000)] = 500):
     """
     Retrieve the last N lines of the system log asynchronously.
@@ -49,7 +49,7 @@ async def get_system_logs(lines: Annotated[int, Query(ge=1, le=5000)] = 500):
         raise HTTPException(status_code=500, detail="Failed to read logs")
 
 
-@router.get("/logs/download")
+@router.get("/logs/download", responses={404: {"description": "Not found"}})
 async def download_system_logs():
     """
     Download the full system log file.
@@ -178,7 +178,7 @@ async def check_for_updates():
         return await _check_development_update()
 
 
-@router.get("/stats")
+@router.get("/stats", responses={503: {"description": "Service unavailable"}, 500: {"description": "Internal server error"}})
 async def get_system_stats():
     """
     Get system statistics (CPU, RAM, Disk, Network).

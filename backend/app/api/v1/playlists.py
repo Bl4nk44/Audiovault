@@ -134,7 +134,7 @@ async def get_playlists(
     return responses
 
 
-@router.get("/{playlist_id}", response_model=PlaylistResponse)
+@router.get("/{playlist_id}", response_model=PlaylistResponse, responses={404: {"description": "Not found"}})
 async def get_playlist(
     playlist_id: UUID,
     current_user: Annotated[User, Depends(get_current_active_user)] = ...,
@@ -185,7 +185,7 @@ async def get_playlist(
     )
 
 
-@router.put("/{playlist_id}", response_model=PlaylistResponse)
+@router.put("/{playlist_id}", response_model=PlaylistResponse, responses={404: {"description": "Not found"}})
 async def update_playlist(
     playlist_id: UUID,
     playlist_in: PlaylistUpdate,
@@ -226,7 +226,7 @@ async def update_playlist(
     )
 
 
-@router.delete("/{playlist_id}", status_code=status.HTTP_204_NO_CONTENT)
+@router.delete("/{playlist_id}", status_code=status.HTTP_204_NO_CONTENT, responses={404: {"description": "Not found"}})
 async def delete_playlist(
     playlist_id: UUID,
     current_user: Annotated[User, Depends(get_current_active_user)] = ...,
@@ -314,7 +314,7 @@ async def _resolve_track_ids(
     return resolved_ids
 
 
-@router.post("/{playlist_id}/tracks", status_code=status.HTTP_201_CREATED)
+@router.post("/{playlist_id}/tracks", status_code=status.HTTP_201_CREATED, responses={404: {"description": "Not found"}, 400: {"description": "Bad request"}, 500: {"description": "Internal server error"}})
 async def add_tracks_to_playlist(
     playlist_id: UUID,
     tracks_in: PlaylistTrackAdd,
@@ -382,7 +382,7 @@ async def add_tracks_to_playlist(
     )
 
 
-@router.delete("/{playlist_id}/tracks", status_code=status.HTTP_204_NO_CONTENT)
+@router.delete("/{playlist_id}/tracks", status_code=status.HTTP_204_NO_CONTENT, responses={404: {"description": "Not found"}})
 async def remove_tracks_from_playlist(
     playlist_id: UUID,
     tracks_in: PlaylistTrackAdd,
@@ -415,7 +415,7 @@ async def remove_tracks_from_playlist(
     await db.commit()
 
 
-@router.get("/{playlist_id}/export")
+@router.get("/{playlist_id}/export", responses={404: {"description": "Not found"}})
 async def export_playlist(
     playlist_id: UUID,
     current_user: Annotated[User, Depends(get_current_active_user)] = ...,
@@ -499,7 +499,7 @@ class PlaylistVersionResponse(BaseModel):
         from_attributes = True
 
 
-@router.get("/{playlist_id}/versions", response_model=list[PlaylistVersionResponse])
+@router.get("/{playlist_id}/versions", response_model=list[PlaylistVersionResponse], responses={404: {"description": "Not found"}, 403: {"description": "Forbidden"}})
 async def get_playlist_versions(
     playlist_id: UUID,
     limit: int = 50,
@@ -536,7 +536,7 @@ async def get_playlist_versions(
     ]
 
 
-@router.post("/{playlist_id}/rollback/{version_number}")
+@router.post("/{playlist_id}/rollback/{version_number}", responses={404: {"description": "Not found"}, 403: {"description": "Forbidden"}})
 async def rollback_playlist(
     playlist_id: UUID,
     version_number: int,

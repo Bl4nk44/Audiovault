@@ -45,7 +45,7 @@ async def get_watchlist(
     return await watchlist_engine.get_watchlist(db, current_user.id)
 
 
-@router.delete("/remove/{watchlist_id}")
+@router.delete("/remove/{watchlist_id}", responses={404: {"description": "Not found"}})
 async def remove_from_watchlist(
     watchlist_id: UUID,
     current_user: Annotated[User, Depends(get_current_active_user)] = ...,
@@ -61,7 +61,7 @@ class WatchlistUpdateRequest(BaseModel):
     auto_download: bool
 
 
-@router.patch("/{watchlist_id}")
+@router.patch("/{watchlist_id}", responses={404: {"description": "Not found"}})
 async def update_watchlist_item(
     watchlist_id: UUID,
     request: WatchlistUpdateRequest,

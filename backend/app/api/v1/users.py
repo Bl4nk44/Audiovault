@@ -100,7 +100,7 @@ async def update_user_me(
     }
 
 
-@router.put("/me/password", response_model=dict)
+@router.put("/me/password", response_model=dict, responses={400: {"description": "Bad request"}})
 async def update_password_me(
     password_update: PasswordUpdate,
     current_user: Annotated[User, Depends(get_current_active_user)],
