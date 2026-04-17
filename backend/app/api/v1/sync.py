@@ -36,7 +36,7 @@ async def analyze_sync(
 @router.post("/{watchlist_id}/execute")
 async def execute_sync(
     watchlist_id: UUID,
-    payload: dict = Body(...),
+    payload: Annotated[dict, Body()],
     current_user: Annotated[User, Depends(get_current_active_user)] = ...,
     db: Annotated[AsyncSession, Depends(get_db)] = ...,
 ):
