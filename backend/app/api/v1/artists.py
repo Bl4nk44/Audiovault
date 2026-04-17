@@ -1,3 +1,4 @@
+from typing import Annotated
 from uuid import UUID
 
 from app.db.database import get_db
@@ -12,7 +13,7 @@ router = APIRouter()
 
 
 @router.get("/", response_model=list[ArtistResponse])
-async def get_artists(skip: int = 0, limit: int = 100, db: AsyncSession = Depends(get_db)):
+async def get_artists(skip: int = 0, limit: int = 100, db: Annotated[AsyncSession, Depends(get_db)] = ...):
     result = await db.execute(
         select(Artist).offset(skip).limit(limit)
     )  # nosemgrep: python.fastapi.db.generic-sql-fastapi.generic-sql-fastapi
@@ -20,7 +21,7 @@ async def get_artists(skip: int = 0, limit: int = 100, db: AsyncSession = Depend
 
 
 @router.get("/{artist_id}", response_model=ArtistResponse)
-async def get_artist(artist_id: UUID, db: AsyncSession = Depends(get_db)):
+async def get_artist(artist_id: UUID, db: Annotated[AsyncSession, Depends(get_db)] = ...):
     result = await db.execute(
         select(Artist).options(selectinload(Artist.albums), selectinload(Artist.tracks)).where(Artist.id == artist_id)
     )

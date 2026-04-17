@@ -65,7 +65,9 @@ application.add_middleware(TrustedHostMiddleware, allowed_hosts=settings.ALLOWED
 
 application.add_middleware(ProxyHeadersMiddleware, trusted_hosts="*")
 
-# CORS
+application.add_middleware(GZipMiddleware, minimum_size=1000)
+
+# CORS must be added last so it runs first in the middleware chain
 origins = settings.BACKEND_CORS_ORIGINS
 
 application.add_middleware(
@@ -75,8 +77,6 @@ application.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-
-application.add_middleware(GZipMiddleware, minimum_size=1000)
 
 # Include Routers
 application.include_router(auth.router, prefix="/api/v1/auth", tags=["auth"])

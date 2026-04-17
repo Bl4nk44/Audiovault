@@ -122,8 +122,8 @@ async def list_action_types(
 
 @router.get("/resources", response_model=list[str])
 async def list_resource_types(
-    current_user: User = Depends(get_current_active_user),
-    db: AsyncSession = Depends(get_db),
+    current_user: Annotated[User, Depends(get_current_active_user)] = ...,
+    db: Annotated[AsyncSession, Depends(get_db)] = ...,
 ):
     """
     Get list of all resource types in audit logs.

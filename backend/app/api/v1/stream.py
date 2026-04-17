@@ -1,7 +1,7 @@
 import asyncio
 import logging
 import os
-from typing import Optional
+from typing import Annotated, Optional
 from urllib.parse import urlparse
 
 import aiofiles
@@ -140,7 +140,7 @@ async def _resolve_track_path(db: AsyncSession, track_id: str) -> tuple[Optional
 
 
 @router.get("/{track_id}/cover")
-async def get_track_cover(track_id: str, db: AsyncSession = Depends(get_db)):
+async def get_track_cover(track_id: str, db: Annotated[AsyncSession, Depends(get_db)] = ...):
     """
     Get cover art for a track.
     Priority: Local File -> Embedded Art -> Linked Album Art
@@ -181,7 +181,7 @@ async def get_track_cover(track_id: str, db: AsyncSession = Depends(get_db)):
 
 
 @router.get("/album/{album_id}/cover")
-async def get_album_cover(album_id: str, db: AsyncSession = Depends(get_db)):
+async def get_album_cover(album_id: str, db: Annotated[AsyncSession, Depends(get_db)] = ...):
     """Get cover art for an album."""
     import uuid
 

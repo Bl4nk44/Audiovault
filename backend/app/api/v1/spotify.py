@@ -1,3 +1,5 @@
+from typing import Annotated
+
 from app.core.dependencies import get_current_active_user
 from app.models.user import User
 from app.services.spotify_service import SpotifyService
@@ -14,7 +16,7 @@ async def search_spotify(
     limit: int = 20,
     offset: int = 0,
     type: str = "track",
-    current_user: User = Depends(get_current_active_user),
+    current_user: Annotated[User, Depends(get_current_active_user)] = ...,
 ):
     import logging
 
@@ -30,7 +32,7 @@ async def search_spotify(
 
 
 @router.get("/track/{track_id}")
-async def get_spotify_track(track_id: str, current_user: User = Depends(get_current_active_user)):
+async def get_spotify_track(track_id: str, current_user: Annotated[User, Depends(get_current_active_user)] = ...):
     service = SpotifyService()
 
     track = await service.get_track(track_id)
@@ -41,7 +43,7 @@ async def get_spotify_track(track_id: str, current_user: User = Depends(get_curr
 
 
 @router.get("/playlist/{playlist_id}")
-async def get_spotify_playlist(playlist_id: str, current_user: User = Depends(get_current_active_user)):
+async def get_spotify_playlist(playlist_id: str, current_user: Annotated[User, Depends(get_current_active_user)] = ...):
     service = SpotifyService()
 
     playlist = await service.get_playlist_details(playlist_id)
@@ -52,7 +54,7 @@ async def get_spotify_playlist(playlist_id: str, current_user: User = Depends(ge
 
 
 @router.get("/artist/{artist_id}")
-async def get_spotify_artist(artist_id: str, current_user: User = Depends(get_current_active_user)):
+async def get_spotify_artist(artist_id: str, current_user: Annotated[User, Depends(get_current_active_user)] = ...):
     service = SpotifyService()
 
     artist = await service.get_artist_details(artist_id)
@@ -63,7 +65,7 @@ async def get_spotify_artist(artist_id: str, current_user: User = Depends(get_cu
 
 
 @router.get("/album/{album_id}")
-async def get_spotify_album(album_id: str, current_user: User = Depends(get_current_active_user)):
+async def get_spotify_album(album_id: str, current_user: Annotated[User, Depends(get_current_active_user)] = ...):
     """Get album details with all tracks."""
     service = SpotifyService()
 

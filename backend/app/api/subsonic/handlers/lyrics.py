@@ -1,4 +1,5 @@
 import logging
+from typing import Annotated
 from uuid import UUID
 
 from app.api.subsonic.auth import subsonic_auth
@@ -17,12 +18,12 @@ router = APIRouter()
 @router.get("/getLyrics.view")
 @router.post("/getLyrics.view")
 async def get_lyrics(
-    artist: str = Query(None),
-    title: str = Query(None),
-    id: str = Query(None, description="Song ID"),  # Subsonic spec says 'id' is optional if artist/title provided
-    f: str = "xml",
-    current_user: User = Depends(subsonic_auth),
-    db: AsyncSession = Depends(get_db),
+    artist: Annotated[str | None, Query()] = None,
+    title: Annotated[str | None, Query()] = None,
+    id: Annotated[str | None, Query(description="Song ID")] = None,
+    f: Annotated[str, Query()] = "xml",
+    current_user: Annotated[User, Depends(subsonic_auth)] = ...,
+    db: Annotated[AsyncSession, Depends(get_db)] = ...,
 ):
     """
     Get lyrics for a song.

@@ -101,15 +101,13 @@ async def get_genres(
 @router.get("/getAlbumList2.view")
 @router.post("/getAlbumList2.view")
 async def get_album_list(
-    type: str = Query(
-        ..., description="List type: random, newest, frequent, recent, starred, alphabetical, byName, byYear"
-    ),
-    size: int = Query(10, description="Return size"),
-    offset: int = Query(0, description="Offset"),
-    fromYear: int = Query(None, description="Filter from year"),
-    toYear: int = Query(None, description="Filter to year"),
-    genre: str = Query(None, description="Filter by genre"),
-    musicFolderId: str = Query(None, description="Music folder ID"),
+    type: Annotated[str, Query(description="List type: random, newest, frequent, recent, starred, alphabetical, byName, byYear")],
+    size: Annotated[int, Query(description="Return size")] = 10,
+    offset: Annotated[int, Query(description="Offset")] = 0,
+    fromYear: Annotated[int | None, Query(description="Filter from year")] = None,
+    toYear: Annotated[int | None, Query(description="Filter to year")] = None,
+    genre: Annotated[str | None, Query(description="Filter by genre")] = None,
+    musicFolderId: Annotated[str | None, Query(description="Music folder ID")] = None,
     f: Annotated[str, Query(description=_RESPONSE_FORMAT)] = "xml",
     current_user: Annotated[User, Depends(subsonic_auth)] = ...,
     db: Annotated[AsyncSession, Depends(get_db)] = ...,
@@ -196,11 +194,11 @@ async def get_album_list(
 @router.get("/getRandomSongs.view")
 @router.post("/getRandomSongs.view")
 async def get_random_songs(
-    size: int = Query(10, description="Count"),
-    genre: str = Query(None, description="Genre"),
-    fromYear: int = Query(None, description="From year"),
-    toYear: int = Query(None, description="To year"),
-    musicFolderId: str = Query(None, description="Folder ID"),
+    size: Annotated[int, Query(description="Count")] = 10,
+    genre: Annotated[str | None, Query(description="Genre")] = None,
+    fromYear: Annotated[int | None, Query(description="From year")] = None,
+    toYear: Annotated[int | None, Query(description="To year")] = None,
+    musicFolderId: Annotated[str | None, Query(description="Folder ID")] = None,
     f: Annotated[str, Query(description=_RESPONSE_FORMAT)] = "xml",
     current_user: Annotated[User, Depends(subsonic_auth)] = ...,
     db: Annotated[AsyncSession, Depends(get_db)] = ...,
@@ -230,8 +228,8 @@ async def get_random_songs(
 @router.get("/getTopSongs.view")
 @router.post("/getTopSongs.view")
 async def get_top_songs(
-    artist: str = Query(None, description="Artist name"),
-    count: int = Query(50, description="Count"),
+    artist: Annotated[str | None, Query(description="Artist name")] = None,
+    count: Annotated[int, Query(description="Count")] = 50,
     f: Annotated[str, Query(description=_RESPONSE_FORMAT)] = "xml",
     current_user: Annotated[User, Depends(subsonic_auth)] = ...,
     db: Annotated[AsyncSession, Depends(get_db)] = ...,
@@ -262,8 +260,8 @@ async def get_top_songs(
 @router.get("/getSimilarSongs.view")
 @router.post("/getSimilarSongs.view")
 async def get_similar_songs(
-    id: str = Query(..., description="Song ID"),
-    count: int = Query(50, description="Count"),
+    id: Annotated[str, Query(description="Song ID")],
+    count: Annotated[int, Query(description="Count")] = 50,
     f: Annotated[str, Query(description=_RESPONSE_FORMAT)] = "xml",
     current_user: Annotated[User, Depends(subsonic_auth)] = ...,
     db: Annotated[AsyncSession, Depends(get_db)] = ...,

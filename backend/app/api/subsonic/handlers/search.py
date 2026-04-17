@@ -33,12 +33,12 @@ _RESPONSE_FORMAT = "Response format"
 @router.get("/search.view")
 @router.post("/search.view")
 async def search_legacy(
-    artist: str = Query(None, description="Artist to search"),
-    album: str = Query(None, description="Album to search"),
-    title: str = Query(None, description="Song title to search"),
-    any: str = Query(None, description="Search any field"),
-    count: int = Query(20, description="Max results"),
-    offset: int = Query(0, description="Result offset"),
+    artist: Annotated[str | None, Query(description="Artist to search")] = None,
+    album: Annotated[str | None, Query(description="Album to search")] = None,
+    title: Annotated[str | None, Query(description="Song title to search")] = None,
+    any: Annotated[str | None, Query(description="Search any field")] = None,
+    count: Annotated[int, Query(description="Max results")] = 20,
+    offset: Annotated[int, Query(description="Result offset")] = 0,
     newer_than: Annotated[int | None, Query(alias="newerThan", description="Only return newer than timestamp")] = None,
     f: Annotated[str, Query(description=_RESPONSE_FORMAT)] = "xml",
     current_user: Annotated[User, Depends(subsonic_auth)] = ...,
@@ -86,7 +86,7 @@ async def search_legacy(
 @router.get("/search2.view")
 @router.post("/search2.view")
 async def search2(
-    query: str = Query(..., description="Search query"),
+    query: Annotated[str, Query(description="Search query")],
     artist_count: Annotated[int, Query(alias="artistCount", description="Max artists to return")] = 20,
     artist_offset: Annotated[int, Query(alias="artistOffset", description="Artist offset")] = 0,
     album_count: Annotated[int, Query(alias="albumCount", description="Max albums to return")] = 20,
@@ -238,7 +238,7 @@ async def search2(
 @router.get("/search3.view")
 @router.post("/search3.view")
 async def search3(
-    query: str = Query(..., description="Search query"),
+    query: Annotated[str, Query(description="Search query")],
     artist_count: Annotated[int, Query(alias="artistCount", description="Max artists to return")] = 20,
     artist_offset: Annotated[int, Query(alias="artistOffset", description="Artist offset")] = 0,
     album_count: Annotated[int, Query(alias="albumCount", description="Max albums to return")] = 20,

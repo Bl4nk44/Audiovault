@@ -11,6 +11,7 @@ import hashlib
 import logging
 import os
 import tempfile
+from typing import Annotated
 from urllib.parse import quote, urlparse
 from uuid import UUID
 
@@ -32,6 +33,8 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 logger = logging.getLogger(__name__)
+
+_RESPONSE_FORMAT = "Response format"
 
 # Constants
 MIME_JPEG = "image/jpeg"
@@ -162,15 +165,15 @@ def parse_range_header(range_header: str | None, file_size: int) -> tuple[int, i
 @router.post("/stream.view")
 async def stream(
     request: Request,
-    id: str = Query(..., description=DESC_SONG_ID),
-    max_bit_rate: int = Query(None, description="Max bitrate in kbps", alias="maxBitRate"),
-    format: str = Query(None, description="Preferred format"),
-    time_offset: int = Query(None, description="Offset in seconds", alias="timeOffset"),
-    size: str = Query(None, description="Video size (ignored)"),
-    estimate_content_length: bool = Query(False, description="Estimate content length", alias="estimateContentLength"),
-    f: str = "xml",
-    current_user: User = Depends(subsonic_auth),
-    db: AsyncSession = Depends(get_db),
+    id: Annotated[str, Query(description=DESC_SONG_ID)],
+    max_bit_rate: Annotated[int | None, Query(description="Max bitrate in kbps", alias="maxBitRate")] = None,
+    format: Annotated[str | None, Query(description="Preferred format")] = None,
+    time_offset: Annotated[int | None, Query(description="Offset in seconds", alias="timeOffset")] = None,
+    size: Annotated[str | None, Query(description="Video size (ignored)")] = None,
+    estimate_content_length: Annotated[bool, Query(description="Estimate content length", alias="estimateContentLength")] = False,
+    f: Annotated[str, Query(description=_RESPONSE_FORMAT)] = "xml",
+    current_user: Annotated[User, Depends(subsonic_auth)] = ...,
+    db: Annotated[AsyncSession, Depends(get_db)] = ...,
 ):
     """
     Stream audio file.
@@ -257,10 +260,10 @@ async def stream(
 @router.get("/download.view")
 @router.post("/download.view")
 async def download_file(
-    id: str = Query(..., description=DESC_SONG_ID),
-    f: str = "xml",
-    current_user: User = Depends(subsonic_auth),
-    db: AsyncSession = Depends(get_db),
+    id: Annotated[str, Query(description=DESC_SONG_ID)],
+    f: Annotated[str, Query(description=_RESPONSE_FORMAT)] = "xml",
+    current_user: Annotated[User, Depends(subsonic_auth)] = ...,
+    db: Annotated[AsyncSession, Depends(get_db)] = ...,
 ):
     try:
         track_id = UUID(id)
@@ -509,11 +512,11 @@ async def _resolve_image_url(db: AsyncSession, item_type: str, item_id_str: str)
 @router.get("/getCoverArt.view")
 @router.post("/getCoverArt.view")
 async def get_cover_art(
-    id: str = Query(..., description="Cover art ID"),
-    size: int = Query(None, description="Preferred image size"),
-    f: str = "xml",
-    current_user: User = Depends(subsonic_auth),
-    db: AsyncSession = Depends(get_db),
+    id: Annotated[str, Query(description="Cover art ID")],
+    size: Annotated[int | None, Query(description="Preferred image size")] = None,
+    f: Annotated[str, Query(description=_RESPONSE_FORMAT)] = "xml",
+    current_user: Annotated[User, Depends(subsonic_auth)] = ...,
+    db: Annotated[AsyncSession, Depends(get_db)] = ...,
 ):
     """
     Get cover art for album, track, or artist.
@@ -562,9 +565,9 @@ async def get_cover_art(
 
 @router.get("/hls.view")
 async def hls_stream(
-    id: str = Query(..., description=DESC_SONG_ID),
-    bit_rate: str = Query(None, description="Bitrate list", alias="bitRate"),
-    f: str = "xml",
-    current_user: User = Depends(subsonic_auth),
+    id: Annotated[str, Query(description=DESC_SONG_ID)],
+    bit_rate: Annotated[str | None, Query(description="Bitrate list", alias="bitRate")] = None,
+    f: Annotated[str, Query(description=_RESPONSE_FORMAT)] = "xml",
+    current_user: Annotated[User, Depends(subsonic_auth)] = ...,
 ):
     return subsonic_error(0, "HLS streaming not supported. Use stream.view instead.", f=f)

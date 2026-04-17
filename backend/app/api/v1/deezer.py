@@ -1,3 +1,5 @@
+from typing import Annotated
+
 from app.core.dependencies import get_current_active_user
 from app.models.user import User
 from app.services.deezer_service import DeezerService
@@ -11,14 +13,14 @@ async def search_deezer(
     q: str,
     limit: int = 20,
     offset: int = 0,
-    current_user: User = Depends(get_current_active_user),
+    current_user: Annotated[User, Depends(get_current_active_user)] = ...,
 ):
     service = DeezerService()
     return await service.search(q, limit, offset)
 
 
 @router.get("/playlist/{playlist_id}")
-async def get_deezer_playlist(playlist_id: str, current_user: User = Depends(get_current_active_user)):
+async def get_deezer_playlist(playlist_id: str, current_user: Annotated[User, Depends(get_current_active_user)] = ...):
     service = DeezerService()
     from fastapi import HTTPException
 
@@ -29,7 +31,7 @@ async def get_deezer_playlist(playlist_id: str, current_user: User = Depends(get
 
 
 @router.get("/artist/{artist_id}")
-async def get_deezer_artist(artist_id: str, current_user: User = Depends(get_current_active_user)):
+async def get_deezer_artist(artist_id: str, current_user: Annotated[User, Depends(get_current_active_user)] = ...):
     service = DeezerService()
     from fastapi import HTTPException
 

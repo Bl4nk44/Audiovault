@@ -74,7 +74,7 @@ async def get_license(
 @router.get("/getUser.view")
 @router.post("/getUser.view")
 async def get_user(
-    username: str = Query(None, description="Username to get info for"),
+    username: Annotated[str | None, Query(description="Username to get info for")] = None,
     f: Annotated[str, Query(description=_RESPONSE_FORMAT)] = "xml",
     current_user: Annotated[User, Depends(subsonic_auth)] = ...,
     db: Annotated[AsyncSession, Depends(get_db)] = ...,
@@ -134,10 +134,10 @@ async def get_user(
 @router.get("/getToken.view")
 @router.post("/getToken.view")
 async def get_token(
-    u: str = Query(..., description="Username"),
-    p: str = Query(..., description="Password"),
-    c: str = Query(..., description="Client name"),
-    v: str = Query("1.16.1", description="API version"),
+    u: Annotated[str, Query(description="Username")],
+    p: Annotated[str, Query(description="Password")],
+    c: Annotated[str, Query(description="Client name")],
+    v: Annotated[str, Query(description="API version")] = "1.16.1",
     f: Annotated[str, Query(description=_RESPONSE_FORMAT)] = "xml",
     db: Annotated[AsyncSession, Depends(get_db)] = ...,
 ):

@@ -1,3 +1,5 @@
+from typing import Annotated
+
 from app.core.dependencies import get_current_active_user
 from app.models.user import User
 from app.services.youtube_service import YouTubeService
@@ -12,7 +14,7 @@ async def search_youtube(
     limit: int = 20,
     offset: int = 0,
     type: str = "song",
-    current_user: User = Depends(get_current_active_user),
+    current_user: Annotated[User, Depends(get_current_active_user)] = ...,
 ):
     # YouTube Music API doesn't support simple offset pagination for search
     # So we only return results for the first page to avoid duplicates
@@ -24,7 +26,7 @@ async def search_youtube(
 
 
 @router.get("/playlist/{playlist_id}")
-async def get_youtube_playlist(playlist_id: str, current_user: User = Depends(get_current_active_user)):
+async def get_youtube_playlist(playlist_id: str, current_user: Annotated[User, Depends(get_current_active_user)] = ...):
     service = YouTubeService()
     playlist = service.get_playlist_details(playlist_id)
 

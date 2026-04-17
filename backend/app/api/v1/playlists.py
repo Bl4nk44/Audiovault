@@ -2,7 +2,7 @@ import json
 import logging
 from datetime import datetime as dt
 from datetime import timezone
-from typing import Optional
+from typing import Annotated, Optional
 from uuid import UUID
 
 from app.core.dependencies import get_current_active_user
@@ -37,8 +37,8 @@ PLAYLIST_NOT_FOUND = "Playlist not found"
 @router.post("/", response_model=PlaylistResponse, status_code=status.HTTP_201_CREATED)
 async def create_playlist(
     playlist_in: PlaylistCreate,
-    current_user: User = Depends(get_current_active_user),
-    db: AsyncSession = Depends(get_db),
+    current_user: Annotated[User, Depends(get_current_active_user)] = ...,
+    db: Annotated[AsyncSession, Depends(get_db)] = ...,
 ):
     """
     Create a new playlist for the current user.
@@ -70,8 +70,8 @@ async def create_playlist(
 async def get_playlists(
     skip: int = 0,
     limit: int = 100,
-    current_user: User = Depends(get_current_active_user),
-    db: AsyncSession = Depends(get_db),
+    current_user: Annotated[User, Depends(get_current_active_user)] = ...,
+    db: Annotated[AsyncSession, Depends(get_db)] = ...,
 ):
     """
     Get all playlists owned by the current user.
@@ -137,8 +137,8 @@ async def get_playlists(
 @router.get("/{playlist_id}", response_model=PlaylistResponse)
 async def get_playlist(
     playlist_id: UUID,
-    current_user: User = Depends(get_current_active_user),
-    db: AsyncSession = Depends(get_db),
+    current_user: Annotated[User, Depends(get_current_active_user)] = ...,
+    db: Annotated[AsyncSession, Depends(get_db)] = ...,
 ):
     """
     Get specific playlist details.
@@ -189,8 +189,8 @@ async def get_playlist(
 async def update_playlist(
     playlist_id: UUID,
     playlist_in: PlaylistUpdate,
-    current_user: User = Depends(get_current_active_user),
-    db: AsyncSession = Depends(get_db),
+    current_user: Annotated[User, Depends(get_current_active_user)] = ...,
+    db: Annotated[AsyncSession, Depends(get_db)] = ...,
 ):
     """
     Update playlist metadata.
@@ -229,8 +229,8 @@ async def update_playlist(
 @router.delete("/{playlist_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_playlist(
     playlist_id: UUID,
-    current_user: User = Depends(get_current_active_user),
-    db: AsyncSession = Depends(get_db),
+    current_user: Annotated[User, Depends(get_current_active_user)] = ...,
+    db: Annotated[AsyncSession, Depends(get_db)] = ...,
 ):
     """
     Delete a playlist.
@@ -318,8 +318,8 @@ async def _resolve_track_ids(
 async def add_tracks_to_playlist(
     playlist_id: UUID,
     tracks_in: PlaylistTrackAdd,
-    current_user: User = Depends(get_current_active_user),
-    db: AsyncSession = Depends(get_db),
+    current_user: Annotated[User, Depends(get_current_active_user)] = ...,
+    db: Annotated[AsyncSession, Depends(get_db)] = ...,
 ):
     """Add tracks to playlist."""
     # 1. Verify playlist ownership
@@ -386,8 +386,8 @@ async def add_tracks_to_playlist(
 async def remove_tracks_from_playlist(
     playlist_id: UUID,
     tracks_in: PlaylistTrackAdd,
-    current_user: User = Depends(get_current_active_user),
-    db: AsyncSession = Depends(get_db),
+    current_user: Annotated[User, Depends(get_current_active_user)] = ...,
+    db: Annotated[AsyncSession, Depends(get_db)] = ...,
 ):
     """
     Remove tracks from playlist.
@@ -418,8 +418,8 @@ async def remove_tracks_from_playlist(
 @router.get("/{playlist_id}/export")
 async def export_playlist(
     playlist_id: UUID,
-    current_user: User = Depends(get_current_active_user),
-    db: AsyncSession = Depends(get_db),
+    current_user: Annotated[User, Depends(get_current_active_user)] = ...,
+    db: Annotated[AsyncSession, Depends(get_db)] = ...,
 ):
     """
     Export playlist metadata and tracks as a downloadable JSON file.
@@ -503,8 +503,8 @@ class PlaylistVersionResponse(BaseModel):
 async def get_playlist_versions(
     playlist_id: UUID,
     limit: int = 50,
-    current_user: User = Depends(get_current_active_user),
-    db: AsyncSession = Depends(get_db),
+    current_user: Annotated[User, Depends(get_current_active_user)] = ...,
+    db: Annotated[AsyncSession, Depends(get_db)] = ...,
 ):
     """
     Get version history for a playlist.
@@ -540,8 +540,8 @@ async def get_playlist_versions(
 async def rollback_playlist(
     playlist_id: UUID,
     version_number: int,
-    current_user: User = Depends(get_current_active_user),
-    db: AsyncSession = Depends(get_db),
+    current_user: Annotated[User, Depends(get_current_active_user)] = ...,
+    db: Annotated[AsyncSession, Depends(get_db)] = ...,
 ):
     """
     Rollback a playlist to a previous version.

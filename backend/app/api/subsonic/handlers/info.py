@@ -187,7 +187,7 @@ async def get_podcasts(
 @router.get("/getNewestPodcasts.view")
 @router.post("/getNewestPodcasts.view")
 async def get_newest_podcasts(
-    count: int = Query(20, description="Count"),
+    count: Annotated[int, Query(description="Count")] = 20,
     f: Annotated[str, Query(description=_RESPONSE_FORMAT)] = "xml",
     current_user: Annotated[User, Depends(subsonic_auth)] = ...,
     db: Annotated[AsyncSession, Depends(get_db)] = ...,

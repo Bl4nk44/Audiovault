@@ -33,6 +33,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 router = APIRouter()
 
+_RESPONSE_FORMAT = "Response format"
+
 
 @router.get("/getMusicFolders.view")
 @router.post("/getMusicFolders.view")
@@ -215,8 +217,8 @@ async def get_artists(
 @router.get("/getArtist.view")
 @router.post("/getArtist.view")
 async def get_artist(
-    id: str = Query(..., description="Artist ID"),
-    f: str = "xml",
+    id: Annotated[str, Query(description="Artist ID")],
+    f: Annotated[str, Query(description=_RESPONSE_FORMAT)] = "xml",
     current_user: Annotated[User, Depends(subsonic_auth)] = ...,
     db: Annotated[AsyncSession, Depends(get_db)] = ...,
 ):
@@ -316,8 +318,8 @@ async def get_artist(
 @router.get("/getAlbum.view")
 @router.post("/getAlbum.view")
 async def get_album(
-    id: str = Query(..., description="Album ID"),
-    f: str = "xml",
+    id: Annotated[str, Query(description="Album ID")],
+    f: Annotated[str, Query(description=_RESPONSE_FORMAT)] = "xml",
     current_user: Annotated[User, Depends(subsonic_auth)] = ...,
     db: Annotated[AsyncSession, Depends(get_db)] = ...,
 ):
@@ -402,8 +404,8 @@ async def get_album(
 @router.get("/getSong.view")
 @router.post("/getSong.view")
 async def get_song(
-    id: str = Query(..., description="Song ID"),
-    f: str = "xml",
+    id: Annotated[str, Query(description="Song ID")],
+    f: Annotated[str, Query(description=_RESPONSE_FORMAT)] = "xml",
     current_user: Annotated[User, Depends(subsonic_auth)] = ...,
     db: Annotated[AsyncSession, Depends(get_db)] = ...,
 ):
@@ -445,8 +447,8 @@ async def get_song(
 @router.get("/getMusicDirectory.view")
 @router.post("/getMusicDirectory.view")
 async def get_music_directory(
-    id: str = Query(..., description="Directory ID"),
-    f: str = "xml",
+    id: Annotated[str, Query(description="Directory ID")],
+    f: Annotated[str, Query(description=_RESPONSE_FORMAT)] = "xml",
     current_user: Annotated[User, Depends(subsonic_auth)] = ...,
     db: Annotated[AsyncSession, Depends(get_db)] = ...,
 ):

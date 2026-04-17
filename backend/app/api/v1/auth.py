@@ -1,3 +1,5 @@
+from typing import Annotated
+
 from app.core.dependencies import get_current_active_user
 from app.db.database import get_db
 from app.models.schemas import (
@@ -49,11 +51,11 @@ async def login(user_in: UserLogin, db: AsyncSession = Depends(get_db)):
 
 
 @router.post("/refresh", response_model=Token)
-async def refresh_token(request: RefreshTokenRequest, db: AsyncSession = Depends(get_db)):
+async def refresh_token(request: RefreshTokenRequest, db: Annotated[AsyncSession, Depends(get_db)] = ...):
     auth_manager = AuthManager(db)
     return await auth_manager.refresh_access_token(request.refresh_token)
 
 
 @router.get("/me", response_model=UserResponse)
-async def read_users_me(current_user: User = Depends(get_current_active_user)):
+async def read_users_me(current_user: Annotated[User, Depends(get_current_active_user)] = ...):
     return current_user

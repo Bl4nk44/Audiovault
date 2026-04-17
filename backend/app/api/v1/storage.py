@@ -5,6 +5,7 @@ Provides disk usage, library stats, and growth trends.
 
 import os
 from datetime import UTC, datetime, timedelta
+from typing import Annotated
 
 from app.core.config import settings
 from app.core.dependencies import get_current_active_user
@@ -55,8 +56,8 @@ def get_file_size(file_path: str) -> int:
 
 @router.get("/stats", response_model=StorageStats)
 async def get_storage_stats(
-    current_user: User = Depends(get_current_active_user),
-    db: AsyncSession = Depends(get_db),
+    current_user: Annotated[User, Depends(get_current_active_user)] = ...,
+    db: Annotated[AsyncSession, Depends(get_db)] = ...,
 ):
     """
     Get storage statistics for the current user.
@@ -152,8 +153,8 @@ async def get_storage_stats(
 
 @router.get("/summary")
 async def get_storage_summary(
-    current_user: User = Depends(get_current_active_user),
-    db: AsyncSession = Depends(get_db),
+    current_user: Annotated[User, Depends(get_current_active_user)] = ...,
+    db: Annotated[AsyncSession, Depends(get_db)] = ...,
 ):
     """
     Get a quick summary of storage usage.

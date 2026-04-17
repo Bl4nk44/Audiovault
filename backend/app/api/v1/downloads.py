@@ -1,4 +1,5 @@
 import os
+from typing import Annotated
 from uuid import UUID
 
 from app.core.dependencies import get_current_active_user
@@ -158,8 +159,8 @@ class TrackResponse(BaseModel):
 @router.post("/add")
 async def add_download(
     request: DownloadRequest,
-    current_user: User = Depends(get_current_active_user),
-    db: AsyncSession = Depends(get_db),
+    current_user: Annotated[User, Depends(get_current_active_user)] = ...,
+    db: Annotated[AsyncSession, Depends(get_db)] = ...,
 ):
     local_track_id = await _resolve_track_to_local_id(db, request.track_id, request.source)
 
@@ -174,7 +175,7 @@ async def add_download(
 
 
 @router.post("/{download_id}/pause")
-async def pause_download(download_id: UUID, current_user: User = Depends(get_current_active_user)):
+async def pause_download(download_id: UUID, current_user: Annotated[User, Depends(get_current_active_user)] = ...):
     await download_manager.pause_download(str(download_id))
     return {"status": "success"}
 
@@ -182,8 +183,8 @@ async def pause_download(download_id: UUID, current_user: User = Depends(get_cur
 @router.post("/{download_id}/resume")
 async def resume_download(
     download_id: UUID,
-    current_user: User = Depends(get_current_active_user),
-    db: AsyncSession = Depends(get_db),
+    current_user: Annotated[User, Depends(get_current_active_user)] = ...,
+    db: Annotated[AsyncSession, Depends(get_db)] = ...,
 ):
     await download_manager.resume_download(db, str(download_id))
     return {"status": "success"}
@@ -192,8 +193,8 @@ async def resume_download(
 @router.post("/{download_id}/retry")
 async def retry_download(
     download_id: UUID,
-    current_user: User = Depends(get_current_active_user),
-    db: AsyncSession = Depends(get_db),
+    current_user: Annotated[User, Depends(get_current_active_user)] = ...,
+    db: Annotated[AsyncSession, Depends(get_db)] = ...,
 ):
     await download_manager.resume_download(db, str(download_id))
     return {"status": "success"}
@@ -202,8 +203,8 @@ async def retry_download(
 @router.delete("/{download_id}")  # Standardized path
 async def remove_download(
     download_id: UUID,
-    current_user: User = Depends(get_current_active_user),
-    db: AsyncSession = Depends(get_db),
+    current_user: Annotated[User, Depends(get_current_active_user)] = ...,
+    db: Annotated[AsyncSession, Depends(get_db)] = ...,
 ):
     # First check if file exists to delete it (as cancel_download deletes the DB record)
     result = await db.execute(select(Download).where(Download.id == download_id, Download.user_id == current_user.id))
@@ -246,8 +247,8 @@ async def remove_download(
 async def delete_playlist(
     source: str,
     playlist_name: str,
-    current_user: User = Depends(get_current_active_user),
-    db: AsyncSession = Depends(get_db),
+    current_user: Annotated[User, Depends(get_current_active_user)] = ...,
+    db: Annotated[AsyncSession, Depends(get_db)] = ...,
 ):
     """Delete an entire playlist and its contents."""
     await download_manager.delete_playlist(db, str(current_user.id), source, playlist_name)
@@ -262,8 +263,8 @@ class ArtistDownloadRequest(BaseModel):
 async def download_all_artist_tracks(
     artist_id: str,
     request: ArtistDownloadRequest,
-    current_user: User = Depends(get_current_active_user),
-    db: AsyncSession = Depends(get_db),
+    current_user: Annotated[User, Depends(get_current_active_user)] = ...,
+    db: Annotated[AsyncSession, Depends(get_db)] = ...,
 ):
     """
     Download all tracks from an artist's discography.
@@ -402,8 +403,8 @@ async def download_all_artist_tracks(
 async def download_album(
     album_id: str,
     request: ArtistDownloadRequest,  # reusing this model as it just has 'source'
-    current_user: User = Depends(get_current_active_user),
-    db: AsyncSession = Depends(get_db),
+    current_user: Annotated[User, Depends(get_current_active_user)] = ...,
+    db: Annotated[AsyncSession, Depends(get_db)] = ...,
 ):
     """
     Download all tracks from a specific album.
@@ -534,8 +535,8 @@ async def download_album(
 
 @router.post("/rescan")
 async def rescan_library(
-    current_user: User = Depends(get_current_active_user),
-    db: AsyncSession = Depends(get_db),
+    current_user: Annotated[User, Depends(get_current_active_user)] = ...,
+    db: Annotated[AsyncSession, Depends(get_db)] = ...,
 ):
     from app.services.library_maintenance import library_maintenance_service
 
@@ -545,8 +546,8 @@ async def rescan_library(
 
 @router.post("/clear-history")
 async def clear_history(
-    current_user: User = Depends(get_current_active_user),
-    db: AsyncSession = Depends(get_db),
+    current_user: Annotated[User, Depends(get_current_active_user)] = ...,
+    db: Annotated[AsyncSession, Depends(get_db)] = ...,
 ):
     from app.services.library_maintenance import library_maintenance_service
 
@@ -556,8 +557,8 @@ async def clear_history(
 
 @router.post("/restart-all")
 async def restart_all(
-    current_user: User = Depends(get_current_active_user),
-    db: AsyncSession = Depends(get_db),
+    current_user: Annotated[User, Depends(get_current_active_user)] = ...,
+    db: Annotated[AsyncSession, Depends(get_db)] = ...,
 ):
     """Restart all failed/cancelled downloads."""
     count = await download_manager.restart_all_downloads(db, str(current_user.id))
@@ -566,8 +567,8 @@ async def restart_all(
 
 @router.get("/library/folders")
 async def get_library_folders(
-    current_user: User = Depends(get_current_active_user),
-    db: AsyncSession = Depends(get_db),
+    current_user: Annotated[User, Depends(get_current_active_user)] = ...,
+    db: Annotated[AsyncSession, Depends(get_db)] = ...,
 ):
     """
     Returns the folder structure for the library: Service -> Playlists
@@ -612,8 +613,8 @@ async def get_library(
     artist: str | None = None,
     min_duration: int | None = None,
     max_duration: int | None = None,
-    current_user: User = Depends(get_current_active_user),
-    db: AsyncSession = Depends(get_db),
+    current_user: Annotated[User, Depends(get_current_active_user)] = ...,
+    db: Annotated[AsyncSession, Depends(get_db)] = ...,
 ):
     from app.services.library_data import library_data_service
 
@@ -641,8 +642,8 @@ class BulkUpdateRequest(BaseModel):
 @router.put("/library/bulk-update")
 async def bulk_update_library_items(
     request: BulkUpdateRequest,
-    current_user: User = Depends(get_current_active_user),
-    db: AsyncSession = Depends(get_db),
+    current_user: Annotated[User, Depends(get_current_active_user)] = ...,
+    db: Annotated[AsyncSession, Depends(get_db)] = ...,
 ):
     """
     Bulk update metadata for multiple library items at once.
@@ -687,8 +688,8 @@ async def bulk_update_library_items(
 async def update_library_item(
     download_id: UUID,
     updates: dict,
-    current_user: User = Depends(get_current_active_user),
-    db: AsyncSession = Depends(get_db),
+    current_user: Annotated[User, Depends(get_current_active_user)] = ...,
+    db: Annotated[AsyncSession, Depends(get_db)] = ...,
 ):
     from app.services.library_maintenance import library_maintenance_service
 
@@ -703,8 +704,8 @@ async def update_library_item(
 
 @router.get("/queue")
 async def get_queue(
-    current_user: User = Depends(get_current_active_user),
-    db: AsyncSession = Depends(get_db),
+    current_user: Annotated[User, Depends(get_current_active_user)] = ...,
+    db: Annotated[AsyncSession, Depends(get_db)] = ...,
 ):
     from app.services.library_data import library_data_service
 
@@ -713,8 +714,8 @@ async def get_queue(
 
 @router.post("/maintenance/fix-legacy-data")
 async def fix_legacy_data(
-    current_user: User = Depends(get_current_active_user),
-    db: AsyncSession = Depends(get_db),
+    current_user: Annotated[User, Depends(get_current_active_user)] = ...,
+    db: Annotated[AsyncSession, Depends(get_db)] = ...,
 ):
     """
     Diagnose and fix legacy data.
@@ -728,8 +729,8 @@ async def fix_legacy_data(
 @router.post("/maintenance/scan-library")
 async def scan_library(
     scan_path: str | None = None,
-    current_user: User = Depends(get_current_active_user),
-    db: AsyncSession = Depends(get_db),
+    current_user: Annotated[User, Depends(get_current_active_user)] = ...,
+    db: Annotated[AsyncSession, Depends(get_db)] = ...,
 ):
     """
     Scans the DOWNLOAD_DIR (or custom scan_path) for mp3 files.
