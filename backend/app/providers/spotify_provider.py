@@ -26,7 +26,7 @@ class SpotifyProvider(MusicProvider):
 
         playlist_id = url
         if self.SPOTIFY_DOMAIN in url or self.SPOTIFY_URI_PREFIX in url:
-            match = re.search(r"(?:playlist[:/])([a-zA-Z0-9_-]+)", url)
+            match = re.search(r"playlist[:/]([a-zA-Z0-9_-]+)", url)
             if match:
                 playlist_id = match.group(1)
 
@@ -64,7 +64,7 @@ class SpotifyProvider(MusicProvider):
 
         track_id = url
         if self.SPOTIFY_DOMAIN in url or self.SPOTIFY_URI_PREFIX in url:
-            match = re.search(r"(?:track[:/])([a-zA-Z0-9_-]+)", url)
+            match = re.search(r"track[:/]([a-zA-Z0-9_-]+)", url)
             if match:
                 track_id = match.group(1)
 

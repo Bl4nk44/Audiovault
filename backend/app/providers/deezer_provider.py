@@ -26,18 +26,18 @@ class DeezerProvider(MusicProvider):
         if not url_match:
             return None
 
-        kind, id = url_match.groups()
+        kind, item_id = url_match.groups()
         tracks_data = []
         title = "Deezer Import"
 
         if kind == "playlist":
-            tracks_data = await deezer_service.get_playlist_tracks(id)
+            tracks_data = await deezer_service.get_playlist_tracks(item_id)
             title = "Deezer Playlist"
         elif kind == "album":
-            tracks_data = await deezer_service.get_album_tracks(id)
+            tracks_data = await deezer_service.get_album_tracks(item_id)
             title = "Deezer Album"
         elif kind == "track":
-            t = await deezer_service.get_track(id)
+            t = await deezer_service.get_track(item_id)
             if t:
                 tracks_data = [t]
             title = "Deezer Track"

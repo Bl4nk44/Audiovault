@@ -22,6 +22,9 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.db.base import Base
 
+_USERS_FK = "users.id"
+_TRACKS_FK = "tracks.id"
+
 if TYPE_CHECKING:
     from app.models.track import Track
     from app.models.user import User
@@ -45,7 +48,7 @@ class SubsonicAuthToken(Base):
     id: Mapped[UUID] = mapped_column(Uuid(as_uuid=True), primary_key=True, default=uuid4)
     user_id: Mapped[UUID] = mapped_column(
         Uuid(as_uuid=True),
-        ForeignKey("users.id", ondelete="CASCADE"),
+        ForeignKey(_USERS_FK, ondelete="CASCADE"),
         nullable=False,
     )
 
@@ -92,12 +95,12 @@ class SubsonicRating(Base):
     id: Mapped[UUID] = mapped_column(Uuid(as_uuid=True), primary_key=True, default=uuid4)
     user_id: Mapped[UUID] = mapped_column(
         Uuid(as_uuid=True),
-        ForeignKey("users.id", ondelete="CASCADE"),
+        ForeignKey(_USERS_FK, ondelete="CASCADE"),
         nullable=False,
     )
     track_id: Mapped[UUID] = mapped_column(
         Uuid(as_uuid=True),
-        ForeignKey("tracks.id", ondelete="CASCADE"),
+        ForeignKey(_TRACKS_FK, ondelete="CASCADE"),
         nullable=False,
     )
 
@@ -129,12 +132,12 @@ class SubsonicNowPlaying(Base):
     id: Mapped[UUID] = mapped_column(Uuid(as_uuid=True), primary_key=True, default=uuid4)
     user_id: Mapped[UUID] = mapped_column(
         Uuid(as_uuid=True),
-        ForeignKey("users.id", ondelete="CASCADE"),
+        ForeignKey(_USERS_FK, ondelete="CASCADE"),
         nullable=False,
     )
     track_id: Mapped[UUID] = mapped_column(
         Uuid(as_uuid=True),
-        ForeignKey("tracks.id", ondelete="CASCADE"),
+        ForeignKey(_TRACKS_FK, ondelete="CASCADE"),
         nullable=False,
     )
 

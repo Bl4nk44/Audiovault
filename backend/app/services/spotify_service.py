@@ -315,7 +315,7 @@ class SpotifyService:
         formatted_artist["albums"] = formatted_albums
         return formatted_artist
 
-    async def search(self, query: str, limit: int = 10, offset: int = 0, type: str = "track") -> list[dict[str, Any]]:
+    async def search(self, query: str, _limit: int = 10, _offset: int = 0, _type: str = "track") -> list[dict[str, Any]]:
         """Overrides generic search. Returns results ONLY if it's a Spotify link resolver."""
         logger.info(f"Spotify async search for: {query}")
 

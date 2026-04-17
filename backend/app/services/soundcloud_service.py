@@ -9,7 +9,7 @@ logger = logging.getLogger(__name__)
 
 class SoundCloudService:
     def __init__(self):
-        pass
+        pass  # No state required
 
     def can_handle(self, url: str) -> bool:
         return "soundcloud.com" in url or "on.soundcloud.com" in url

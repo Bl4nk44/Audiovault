@@ -442,7 +442,7 @@ class DownloadManager:
                     await self._execute_download_task(loop, ydl_opts, url, download_id)
                     await self._handle_completion(db, download, final_filename_container, output_template)
                 else:
-                    raise Exception("Could not resolve download URL")
+                    raise ValueError("Could not resolve download URL")
 
             except Exception as e:
                 await self._handle_error(db, download, e)
