@@ -2,7 +2,7 @@
 Lyrics API endpoint.
 """
 
-from typing import Optional
+from typing import Annotated, Optional
 from uuid import UUID
 
 from app.core.dependencies import get_current_active_user
@@ -43,9 +43,9 @@ class LyricsSearchRequest(BaseModel):
 @router.get("/track/{track_id}", response_model=LyricsResponse)
 async def get_lyrics_by_track(
     track_id: UUID,
-    use_cache: bool = Query(True, description=USE_CACHE_DESCRIPTION),
-    current_user: User = Depends(get_current_active_user),
-    db: AsyncSession = Depends(get_db),
+    use_cache: Annotated[bool, Query(description=USE_CACHE_DESCRIPTION)] = True,
+    current_user: Annotated[User, Depends(get_current_active_user)] = ...,
+    db: Annotated[AsyncSession, Depends(get_db)] = ...,
 ):
     """
     Get lyrics for a track by its ID.
@@ -84,8 +84,8 @@ async def get_lyrics_by_track(
 @router.post("/search", response_model=LyricsResponse)
 async def search_lyrics(
     request: LyricsSearchRequest,
-    use_cache: bool = Query(True, description=USE_CACHE_DESCRIPTION),
-    current_user: User = Depends(get_current_active_user),
+    use_cache: Annotated[bool, Query(description=USE_CACHE_DESCRIPTION)] = True,
+    current_user: Annotated[User, Depends(get_current_active_user)] = ...,
 ):
     """
     Search for lyrics by artist and title.
@@ -110,10 +110,10 @@ async def search_lyrics(
 
 @router.get("/search", response_model=LyricsResponse)
 async def search_lyrics_get(
-    artist: str = Query(..., description="Artist name"),
-    title: str = Query(..., description="Song title"),
-    use_cache: bool = Query(True, description=USE_CACHE_DESCRIPTION),
-    current_user: User = Depends(get_current_active_user),
+    artist: Annotated[str, Query(description="Artist name")],
+    title: Annotated[str, Query(description="Song title")],
+    use_cache: Annotated[bool, Query(description=USE_CACHE_DESCRIPTION)] = True,
+    current_user: Annotated[User, Depends(get_current_active_user)] = ...,
 ):
     """
     Search for lyrics by artist and title (GET version for easy testing).

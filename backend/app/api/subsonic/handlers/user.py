@@ -34,16 +34,17 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 router = APIRouter()
 
+_RESPONSE_FORMAT = "Response format"
 _MUSIC_FOLDER_ID_DESC = "Music folder ID"
 
 
 @router.get("/star.view")
 @router.post("/star.view")
 async def star(
-    id: list[str] = Query(None, description="Song IDs to star"),
-    album_id: list[str] = Query(None, alias="albumId", description="Album IDs to star"),
-    artist_id: list[str] = Query(None, alias="artistId", description="Artist IDs to star"),
-    f: str = "xml",
+    id: Annotated[list[str] | None, Query(description="Song IDs to star")] = None,
+    album_id: Annotated[list[str] | None, Query(alias="albumId", description="Album IDs to star")] = None,
+    artist_id: Annotated[list[str] | None, Query(alias="artistId", description="Artist IDs to star")] = None,
+    f: Annotated[str, Query(description=_RESPONSE_FORMAT)] = "xml",
     current_user: Annotated[User, Depends(subsonic_auth)] = ...,
     db: Annotated[AsyncSession, Depends(get_db)] = ...,
 ):
@@ -132,10 +133,10 @@ async def star(
 @router.get("/unstar.view")
 @router.post("/unstar.view")
 async def unstar(
-    id: list[str] = Query(None, description="Song IDs to unstar"),
-    album_id: list[str] = Query(None, alias="albumId", description="Album IDs to unstar"),
-    artist_id: list[str] = Query(None, alias="artistId", description="Artist IDs to unstar"),
-    f: str = "xml",
+    id: Annotated[list[str] | None, Query(description="Song IDs to unstar")] = None,
+    album_id: Annotated[list[str] | None, Query(alias="albumId", description="Album IDs to unstar")] = None,
+    artist_id: Annotated[list[str] | None, Query(alias="artistId", description="Artist IDs to unstar")] = None,
+    f: Annotated[str, Query(description=_RESPONSE_FORMAT)] = "xml",
     current_user: Annotated[User, Depends(subsonic_auth)] = ...,
     db: Annotated[AsyncSession, Depends(get_db)] = ...,
 ):
@@ -199,8 +200,8 @@ async def unstar(
 @router.get("/getStarred.view")
 @router.post("/getStarred.view")
 async def get_starred(
-    music_folder_id: str = Query(None, alias="musicFolderId", description=_MUSIC_FOLDER_ID_DESC),
-    f: str = "xml",
+    music_folder_id: Annotated[str | None, Query(alias="musicFolderId", description=_MUSIC_FOLDER_ID_DESC)] = None,
+    f: Annotated[str, Query(description=_RESPONSE_FORMAT)] = "xml",
     current_user: Annotated[User, Depends(subsonic_auth)] = ...,
     db: Annotated[AsyncSession, Depends(get_db)] = ...,
 ):
@@ -290,8 +291,8 @@ async def get_starred(
 @router.get("/getStarred2.view")
 @router.post("/getStarred2.view")
 async def get_starred2(
-    music_folder_id: str = Query(None, alias="musicFolderId", description=_MUSIC_FOLDER_ID_DESC),
-    f: str = "xml",
+    music_folder_id: Annotated[str | None, Query(alias="musicFolderId", description=_MUSIC_FOLDER_ID_DESC)] = None,
+    f: Annotated[str, Query(description=_RESPONSE_FORMAT)] = "xml",
     current_user: Annotated[User, Depends(subsonic_auth)] = ...,
     db: Annotated[AsyncSession, Depends(get_db)] = ...,
 ):
@@ -320,9 +321,9 @@ async def get_starred2(
 @router.get("/setRating.view")
 @router.post("/setRating.view")
 async def set_rating(
-    id: str = Query(..., description="Song ID"),
-    rating: int = Query(..., description="Rating (0-5)"),
-    f: str = "xml",
+    id: Annotated[str, Query(description="Song ID")],
+    rating: Annotated[int, Query(description="Rating (0-5)")],
+    f: Annotated[str, Query(description=_RESPONSE_FORMAT)] = "xml",
     current_user: Annotated[User, Depends(subsonic_auth)] = ...,
     db: Annotated[AsyncSession, Depends(get_db)] = ...,
 ):
@@ -377,10 +378,10 @@ async def set_rating(
 @router.get("/scrobble.view")
 @router.post("/scrobble.view")
 async def scrobble(
-    id: str = Query(..., description="Song ID"),
-    time: int = Query(None, description="Time played (Unix timestamp in ms)"),
-    submission: bool = Query(True, description="True for scrobble, false for now playing"),
-    f: str = "xml",
+    id: Annotated[str, Query(description="Song ID")],
+    time: Annotated[int | None, Query(description="Time played (Unix timestamp in ms)")] = None,
+    submission: Annotated[bool, Query(description="True for scrobble, false for now playing")] = True,
+    f: Annotated[str, Query(description=_RESPONSE_FORMAT)] = "xml",
     current_user: Annotated[User, Depends(subsonic_auth)] = ...,
     db: Annotated[AsyncSession, Depends(get_db)] = ...,
 ):
@@ -477,7 +478,7 @@ async def scrobble(
 @router.get("/getNowPlaying.view")
 @router.post("/getNowPlaying.view")
 async def get_now_playing(
-    f: str = "xml",
+    f: Annotated[str, Query(description=_RESPONSE_FORMAT)] = "xml",
     current_user: Annotated[User, Depends(subsonic_auth)] = ...,
     db: Annotated[AsyncSession, Depends(get_db)] = ...,
 ):
@@ -526,12 +527,12 @@ async def get_now_playing(
 @router.get("/getRandomSongs.view")
 @router.post("/getRandomSongs.view")
 async def get_random_songs(
-    size: int = Query(10, description="Number of songs"),
-    genre: str = Query(None, description="Filter by genre"),
-    from_year: int = Query(None, alias="fromYear", description="Filter from year"),
-    to_year: int = Query(None, alias="toYear", description="Filter to year"),
-    music_folder_id: str = Query(None, alias="musicFolderId", description=_MUSIC_FOLDER_ID_DESC),
-    f: str = "xml",
+    size: Annotated[int, Query(description="Number of songs")] = 10,
+    genre: Annotated[str | None, Query(description="Filter by genre")] = None,
+    from_year: Annotated[int | None, Query(alias="fromYear", description="Filter from year")] = None,
+    to_year: Annotated[int | None, Query(alias="toYear", description="Filter to year")] = None,
+    music_folder_id: Annotated[str | None, Query(alias="musicFolderId", description=_MUSIC_FOLDER_ID_DESC)] = None,
+    f: Annotated[str, Query(description=_RESPONSE_FORMAT)] = "xml",
     current_user: Annotated[User, Depends(subsonic_auth)] = ...,
     db: Annotated[AsyncSession, Depends(get_db)] = ...,
 ):

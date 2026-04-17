@@ -30,9 +30,9 @@ _RESPONSE_FORMAT = "Response format"
 @router.get("/getArtistInfo.view")
 @router.post("/getArtistInfo.view")
 async def get_artist_info(
-    id: str = Query(..., description="Artist ID"),
-    count: int = Query(20, description="Max similar artists"),
-    include_not_present: bool = Query(False, alias="includeNotPresent", description="Include non-present artists"),
+    id: Annotated[str, Query(description="Artist ID")],
+    count: Annotated[int, Query(description="Max similar artists")] = 20,
+    include_not_present: Annotated[bool, Query(alias="includeNotPresent", description="Include non-present artists")] = False,
     f: Annotated[str, Query(description=_RESPONSE_FORMAT)] = "xml",
     current_user: Annotated[User, Depends(subsonic_auth)] = ...,
     db: Annotated[AsyncSession, Depends(get_db)] = ...,
@@ -73,9 +73,9 @@ async def get_artist_info(
 @router.get("/getArtistInfo2.view")
 @router.post("/getArtistInfo2.view")
 async def get_artist_info2(
-    id: str = Query(..., description="Artist ID"),
-    count: int = Query(20, description="Max similar artists"),
-    include_not_present: bool = Query(False, alias="includeNotPresent", description="Include non-present artists"),
+    id: Annotated[str, Query(description="Artist ID")],
+    count: Annotated[int, Query(description="Max similar artists")] = 20,
+    include_not_present: Annotated[bool, Query(alias="includeNotPresent", description="Include non-present artists")] = False,
     f: Annotated[str, Query(description=_RESPONSE_FORMAT)] = "xml",
     current_user: Annotated[User, Depends(subsonic_auth)] = ...,
     db: Annotated[AsyncSession, Depends(get_db)] = ...,
@@ -116,8 +116,8 @@ async def get_artist_info2(
 @router.get("/getSimilarSongs2.view")
 @router.post("/getSimilarSongs2.view")
 async def get_similar_songs2(
-    id: str = Query(..., description="Song or Artist ID"),
-    count: int = Query(50, description="Number of songs"),
+    id: Annotated[str, Query(description="Song or Artist ID")],
+    count: Annotated[int, Query(description="Number of songs")] = 50,
     f: Annotated[str, Query(description=_RESPONSE_FORMAT)] = "xml",
     current_user: Annotated[User, Depends(subsonic_auth)] = ...,
     db: Annotated[AsyncSession, Depends(get_db)] = ...,
@@ -170,8 +170,8 @@ async def get_similar_songs2(
 @router.get("/getPodcasts.view")
 @router.post("/getPodcasts.view")
 async def get_podcasts(
-    include_episodes: bool = Query(True, alias="includeEpisodes", description="Include episodes"),
-    id: str = Query(None, description="Podcast ID"),
+    include_episodes: Annotated[bool, Query(alias="includeEpisodes", description="Include episodes")] = True,
+    id: Annotated[str | None, Query(description="Podcast ID")] = None,
     f: Annotated[str, Query(description=_RESPONSE_FORMAT)] = "xml",
     current_user: Annotated[User, Depends(subsonic_auth)] = ...,
     db: Annotated[AsyncSession, Depends(get_db)] = ...,

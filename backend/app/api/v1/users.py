@@ -125,9 +125,9 @@ async def update_password_me(
 
 @router.post("/me/avatar", response_model=dict)
 async def upload_user_avatar(
-    current_user: Annotated[User, Depends(get_current_active_user)],
-    db: Annotated[AsyncSession, Depends(get_db)],
-    file: UploadFile = File(...),
+    current_user: Annotated[User, Depends(get_current_active_user)] = ...,
+    db: Annotated[AsyncSession, Depends(get_db)] = ...,
+    file: Annotated[UploadFile, File()] = ...,
 ):
     # Create avatars directory if not exists
     # Create avatars directory if not exists

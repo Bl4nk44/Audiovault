@@ -31,6 +31,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 router = APIRouter()
 
+_RESPONSE_FORMAT = "Response format"
+
 # Error message constants
 ERR_INVALID_PLAYLIST_ID = "Invalid playlist ID"
 _PLAYLIST_ID_DESC = "Playlist ID"
@@ -41,8 +43,8 @@ ERR_ACCESS_DENIED = "Access denied"
 @router.get("/getPlaylists.view")
 @router.post("/getPlaylists.view")
 async def get_playlists(
-    username: str | None = Query(None, description="Get playlists for specific user"),
-    f: str = "xml",
+    username: Annotated[str | None, Query(description="Get playlists for specific user")] = None,
+    f: Annotated[str, Query(description=_RESPONSE_FORMAT)] = "xml",
     current_user: Annotated[User, Depends(subsonic_auth)] = ...,
     db: Annotated[AsyncSession, Depends(get_db)] = ...,
 ):
@@ -104,8 +106,8 @@ async def get_playlists(
 @router.get("/getPlaylist.view")
 @router.post("/getPlaylist.view")
 async def get_playlist(
-    id: str = Query(..., description=_PLAYLIST_ID_DESC),
-    f: str = "xml",
+    id: Annotated[str, Query(description=_PLAYLIST_ID_DESC)],
+    f: Annotated[str, Query(description=_RESPONSE_FORMAT)] = "xml",
     current_user: Annotated[User, Depends(subsonic_auth)] = ...,
     db: Annotated[AsyncSession, Depends(get_db)] = ...,
 ):
@@ -198,10 +200,10 @@ async def get_playlist(
 @router.get("/createPlaylist.view")
 @router.post("/createPlaylist.view")
 async def create_playlist(
-    playlist_id_param: str | None = Query(None, alias="playlistId", description="Playlist ID (for update)"),
-    name: str | None = Query(None, description="Playlist name"),
-    song_id: list[str] | None = Query(None, alias="songId", description="Song IDs to add"),
-    f: str = "xml",
+    playlist_id_param: Annotated[str | None, Query(alias="playlistId", description="Playlist ID (for update)")] = None,
+    name: Annotated[str | None, Query(description="Playlist name")] = None,
+    song_id: Annotated[list[str] | None, Query(alias="songId", description="Song IDs to add")] = None,
+    f: Annotated[str, Query(description=_RESPONSE_FORMAT)] = "xml",
     current_user: Annotated[User, Depends(subsonic_auth)] = ...,
     db: Annotated[AsyncSession, Depends(get_db)] = ...,
 ):
@@ -296,15 +298,13 @@ async def create_playlist(
 @router.get("/updatePlaylist.view")
 @router.post("/updatePlaylist.view")
 async def update_playlist(
-    playlist_id_param: str = Query(..., alias="playlistId", description=_PLAYLIST_ID_DESC),
-    name: str | None = Query(None, description="New name"),
-    comment: str | None = Query(None, description="New comment"),
-    public: bool | None = Query(None, description="Public flag"),
-    song_id_to_add: list[str] | None = Query(None, alias="songIdToAdd", description="Songs to add"),
-    song_index_to_remove: list[int] | None = Query(
-        None, alias="songIndexToRemove", description="Song indices to remove"
-    ),
-    f: str = "xml",
+    playlist_id_param: Annotated[str, Query(alias="playlistId", description=_PLAYLIST_ID_DESC)],
+    name: Annotated[str | None, Query(description="New name")] = None,
+    comment: Annotated[str | None, Query(description="New comment")] = None,
+    public: Annotated[bool | None, Query(description="Public flag")] = None,
+    song_id_to_add: Annotated[list[str] | None, Query(alias="songIdToAdd", description="Songs to add")] = None,
+    song_index_to_remove: Annotated[list[int] | None, Query(alias="songIndexToRemove", description="Song indices to remove")] = None,
+    f: Annotated[str, Query(description=_RESPONSE_FORMAT)] = "xml",
     current_user: Annotated[User, Depends(subsonic_auth)] = ...,
     db: Annotated[AsyncSession, Depends(get_db)] = ...,
 ):
@@ -395,8 +395,8 @@ async def update_playlist(
 @router.get("/deletePlaylist.view")
 @router.post("/deletePlaylist.view")
 async def delete_playlist(
-    id: str = Query(..., description=_PLAYLIST_ID_DESC),
-    f: str = "xml",
+    id: Annotated[str, Query(description=_PLAYLIST_ID_DESC)],
+    f: Annotated[str, Query(description=_RESPONSE_FORMAT)] = "xml",
     current_user: Annotated[User, Depends(subsonic_auth)] = ...,
     db: Annotated[AsyncSession, Depends(get_db)] = ...,
 ):

@@ -4,7 +4,7 @@ Admin-only access to view audit logs.
 """
 
 from datetime import datetime
-from typing import Optional
+from typing import Annotated, Optional
 from uuid import UUID
 
 from app.core.dependencies import get_current_active_user
@@ -52,13 +52,13 @@ class AuditLogListResponse(BaseModel):
 
 @router.get("", response_model=AuditLogListResponse)
 async def list_audit_logs(
-    page: int = Query(1, ge=1),
-    page_size: int = Query(50, ge=1, le=100),
-    action: Optional[str] = Query(None, description="Filter by action type"),
-    resource_type: Optional[str] = Query(None, description="Filter by resource type"),
-    user_id: Optional[UUID] = Query(None, description="Filter by user ID"),
-    current_user: User = Depends(get_current_active_user),
-    db: AsyncSession = Depends(get_db),
+    page: Annotated[int, Query(ge=1)] = 1,
+    page_size: Annotated[int, Query(ge=1, le=100)] = 50,
+    action: Annotated[Optional[str], Query(description="Filter by action type")] = None,
+    resource_type: Annotated[Optional[str], Query(description="Filter by resource type")] = None,
+    user_id: Annotated[Optional[UUID], Query(description="Filter by user ID")] = None,
+    current_user: Annotated[User, Depends(get_current_active_user)] = ...,
+    db: Annotated[AsyncSession, Depends(get_db)] = ...,
 ):
     """
     List audit logs with pagination and filtering.
@@ -106,8 +106,8 @@ async def list_audit_logs(
 
 @router.get("/actions", response_model=list[str])
 async def list_action_types(
-    current_user: User = Depends(get_current_active_user),
-    db: AsyncSession = Depends(get_db),
+    current_user: Annotated[User, Depends(get_current_active_user)] = ...,
+    db: Annotated[AsyncSession, Depends(get_db)] = ...,
 ):
     """
     Get list of all action types in audit logs.
