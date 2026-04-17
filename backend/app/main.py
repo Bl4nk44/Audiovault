@@ -129,7 +129,7 @@ def setup_static_dirs(app: FastAPI):
         if not os.path.exists(settings.DOWNLOAD_DIR):
             os.makedirs(settings.DOWNLOAD_DIR, exist_ok=True)
         # nosemgrep: python.lang.security.audit.insecure-file-permissions.insecure-file-permissions
-        os.chmod(settings.DOWNLOAD_DIR, 0o755)  # nosec B103
+        os.chmod(settings.DOWNLOAD_DIR, 0o755)  # nosec B103  # NOSONAR
     except Exception as e:
         logger.warning(f"Could not setup {settings.DOWNLOAD_DIR}: {e}")
 

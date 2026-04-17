@@ -48,8 +48,10 @@ async def get_lyrics(
         # Subsonic expects a 'lyrics' object
         # If not found, some servers return empty content or error.
         # Let's return empty structure.
-        artist_value = artist if artist else (track.artist if track else "")
-        title_value = title if title else (track.title if track else "")
+        fallback_artist = track.artist if track else ""
+        artist_value = artist if artist else fallback_artist
+        fallback_title = track.title if track else ""
+        title_value = title if title else fallback_title
         return subsonic_response(
             {
                 "lyrics": {
