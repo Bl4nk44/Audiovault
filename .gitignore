@@ -83,5 +83,5 @@ backend/app/debug_genres.py
 
 # Agentic AI
 .claude
-agent_docks
+agent_docs
 CLAUDE.md
