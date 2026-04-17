@@ -1,3 +1,4 @@
+from typing import Annotated
 from uuid import UUID
 
 from app.core.dependencies import get_current_active_user
@@ -13,8 +14,8 @@ router = APIRouter()
 @router.post("/{watchlist_id}/analyze")
 async def analyze_sync(
     watchlist_id: UUID,
-    current_user: User = Depends(get_current_active_user),
-    db: AsyncSession = Depends(get_db),
+    current_user: Annotated[User, Depends(get_current_active_user)] = ...,
+    db: Annotated[AsyncSession, Depends(get_db)] = ...,
 ):
     """
     Analyzes watchlist synchronization status.
@@ -36,8 +37,8 @@ async def analyze_sync(
 async def execute_sync(
     watchlist_id: UUID,
     payload: dict = Body(...),
-    current_user: User = Depends(get_current_active_user),
-    db: AsyncSession = Depends(get_db),
+    current_user: Annotated[User, Depends(get_current_active_user)] = ...,
+    db: Annotated[AsyncSession, Depends(get_db)] = ...,
 ):
     """
     Executes synchronization (deletion).

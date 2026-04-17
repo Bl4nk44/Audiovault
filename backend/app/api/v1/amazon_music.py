@@ -1,3 +1,5 @@
+from typing import Annotated
+
 from app.core.dependencies import get_current_active_user
 from app.models.user import User
 from app.services.amazon_music_service import amazon_music_service
@@ -11,7 +13,7 @@ async def search_amazon_music(
     q: str,
     limit: int = 20,
     offset: int = 0,
-    current_user: User = Depends(get_current_active_user),
+    current_user: Annotated[User, Depends(get_current_active_user)] = ...,
 ):
     # Amazon Music Service currently only supports URL extraction via yt-dlp
     if amazon_music_service.can_handle(q):

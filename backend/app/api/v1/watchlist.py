@@ -1,3 +1,4 @@
+from typing import Annotated
 from uuid import UUID
 
 from app.core.dependencies import get_current_active_user
@@ -24,8 +25,8 @@ class WatchlistAddRequest(BaseModel):
 @router.post("/add")
 async def add_to_watchlist(
     request: WatchlistAddRequest,
-    current_user: User = Depends(get_current_active_user),
-    db: AsyncSession = Depends(get_db),
+    current_user: Annotated[User, Depends(get_current_active_user)] = ...,
+    db: Annotated[AsyncSession, Depends(get_db)] = ...,
 ):
     import logging
 
@@ -38,8 +39,8 @@ async def add_to_watchlist(
 
 @router.get("/list")
 async def get_watchlist(
-    current_user: User = Depends(get_current_active_user),
-    db: AsyncSession = Depends(get_db),
+    current_user: Annotated[User, Depends(get_current_active_user)] = ...,
+    db: Annotated[AsyncSession, Depends(get_db)] = ...,
 ):
     return await watchlist_engine.get_watchlist(db, current_user.id)
 
@@ -47,8 +48,8 @@ async def get_watchlist(
 @router.delete("/remove/{watchlist_id}")
 async def remove_from_watchlist(
     watchlist_id: UUID,
-    current_user: User = Depends(get_current_active_user),
-    db: AsyncSession = Depends(get_db),
+    current_user: Annotated[User, Depends(get_current_active_user)] = ...,
+    db: Annotated[AsyncSession, Depends(get_db)] = ...,
 ):
     success = await watchlist_engine.remove_from_watchlist(db, watchlist_id, current_user.id)
     if not success:
@@ -64,8 +65,8 @@ class WatchlistUpdateRequest(BaseModel):
 async def update_watchlist_item(
     watchlist_id: UUID,
     request: WatchlistUpdateRequest,
-    current_user: User = Depends(get_current_active_user),
-    db: AsyncSession = Depends(get_db),
+    current_user: Annotated[User, Depends(get_current_active_user)] = ...,
+    db: Annotated[AsyncSession, Depends(get_db)] = ...,
 ):
     item = await watchlist_engine.update_watchlist_item(
         db, watchlist_id, current_user.id, request.dict(exclude_unset=True)
@@ -77,8 +78,8 @@ async def update_watchlist_item(
 
 @router.post("/check-updates")
 async def check_updates(
-    current_user: User = Depends(get_current_active_user),
-    db: AsyncSession = Depends(get_db),
+    current_user: Annotated[User, Depends(get_current_active_user)] = ...,
+    db: Annotated[AsyncSession, Depends(get_db)] = ...,
 ):
     count = await watchlist_engine.check_for_updates(db, current_user.id)
     return {"status": "success", "new_downloads": count}

@@ -1,3 +1,5 @@
+from typing import Annotated
+
 from app.core.dependencies import get_current_active_user
 from app.db.database import get_db
 from app.models.credentials import ServiceCredentials
@@ -74,8 +76,8 @@ async def verify_youtube(creds: VerifyYouTube):
 
 @router.get("/")
 async def get_settings(
-    current_user: User = Depends(get_current_active_user),
-    db: AsyncSession = Depends(get_db),
+    current_user: Annotated[User, Depends(get_current_active_user)] = ...,
+    db: Annotated[AsyncSession, Depends(get_db)] = ...,
 ):
     # Get credentials
     stmt = select(ServiceCredentials).where(ServiceCredentials.user_id == current_user.id)
@@ -103,8 +105,8 @@ async def get_settings(
 @router.post("/")
 async def update_settings(
     settings: SettingsUpdate,
-    current_user: User = Depends(get_current_active_user),
-    db: AsyncSession = Depends(get_db),
+    current_user: Annotated[User, Depends(get_current_active_user)] = ...,
+    db: Annotated[AsyncSession, Depends(get_db)] = ...,
 ):
     _update_user_preferences(current_user, settings)
 

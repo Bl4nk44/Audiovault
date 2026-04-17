@@ -1,3 +1,5 @@
+from typing import Annotated
+
 from app.core.dependencies import get_current_active_user
 from app.models.user import User
 from app.services.soundcloud_service import soundcloud_service
@@ -11,7 +13,7 @@ async def search_soundcloud(
     q: str,
     limit: int = 20,
     offset: int = 0,
-    current_user: User = Depends(get_current_active_user),
+    current_user: Annotated[User, Depends(get_current_active_user)] = ...,
 ):
     # SoundCloud via yt-dlp primarily works with URLs
     if soundcloud_service.can_handle(q):

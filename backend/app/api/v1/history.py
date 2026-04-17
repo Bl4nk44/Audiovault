@@ -1,3 +1,4 @@
+from typing import Annotated
 from uuid import UUID
 
 from app.core.dependencies import get_current_active_user
@@ -20,8 +21,8 @@ class HistoryRecord(BaseModel):
 @router.post("/record")
 async def record_history(
     record: HistoryRecord,
-    current_user: User = Depends(get_current_active_user),
-    db: AsyncSession = Depends(get_db),
+    current_user: Annotated[User, Depends(get_current_active_user)] = ...,
+    db: Annotated[AsyncSession, Depends(get_db)] = ...,
 ):
     # Verify track exists
     track = await db.get(Track, record.track_id)

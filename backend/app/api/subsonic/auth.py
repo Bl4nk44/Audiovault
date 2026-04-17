@@ -16,6 +16,7 @@ import hashlib
 import logging
 import secrets
 from datetime import UTC, datetime, timedelta
+from typing import Annotated
 
 from app.core.security import verify_password
 from app.db.database import get_db
@@ -186,14 +187,14 @@ def decode_hex_password(password: str) -> str:
 
 
 async def subsonic_auth(
-    u: str = Query(..., description="Username"),
-    p: str | None = Query(None, description="Password (plaintext or enc:hex)"),
-    t: str | None = Query(None, description="MD5(password+salt) token"),
-    s: str | None = Query(None, description="Salt for token auth"),
-    _c: str = Query(..., alias="c", description="Client name"),
-    _v: str = Query("1.16.1", alias="v", description="API version"),
-    _f: str = Query("json", alias="f", description="Response format (json/xml)"),
-    db: AsyncSession = Depends(get_db),
+    u: Annotated[str, Query(description="Username")],
+    _c: Annotated[str, Query(alias="c", description="Client name")],
+    p: Annotated[str | None, Query(description="Password (plaintext or enc:hex)")] = None,
+    t: Annotated[str | None, Query(description="MD5(password+salt) token")] = None,
+    s: Annotated[str | None, Query(description="Salt for token auth")] = None,
+    _v: Annotated[str, Query(alias="v", description="API version")] = "1.16.1",
+    _f: Annotated[str, Query(alias="f", description="Response format (json/xml)")] = "json",
+    db: Annotated[AsyncSession, Depends(get_db)] = ...,
 ) -> User:
     """
     Subsonic authentication dependency.
@@ -281,10 +282,10 @@ class SubsonicParams:
 
     def __init__(
         self,
-        u: str = Query(..., description="Username"),
-        c: str = Query(..., description="Client name"),
-        v: str = Query("1.16.1", description="API version"),
-        f: str = Query("json", description="Response format"),
+        u: Annotated[str, Query(description="Username")],
+        c: Annotated[str, Query(description="Client name")],
+        v: Annotated[str, Query(description="API version")] = "1.16.1",
+        f: Annotated[str, Query(description="Response format")] = "json",
     ):
         self.username = u
         self.client = c

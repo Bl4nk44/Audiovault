@@ -1,3 +1,5 @@
+from typing import Annotated
+
 from app.core.dependencies import get_current_active_user
 from app.models.user import User
 from app.services.tidal_service import tidal_service
@@ -11,7 +13,7 @@ async def search_tidal(
     q: str,
     limit: int = 20,
     offset: int = 0,
-    current_user: User = Depends(get_current_active_user),
+    current_user: Annotated[User, Depends(get_current_active_user)] = ...,
 ):
     # Tidal Service currently only supports URL extraction via yt-dlp
     if "tidal.com" in q:

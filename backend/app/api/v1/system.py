@@ -3,6 +3,8 @@ import logging
 from collections import deque
 from pathlib import Path
 
+from typing import Annotated
+
 from fastapi import APIRouter, HTTPException, Query
 from fastapi.responses import FileResponse
 
@@ -30,7 +32,7 @@ def _read_last_lines(file_path: Path, lines_count: int) -> list[str]:
 
 
 @router.get("/logs", response_model=list[str])
-async def get_system_logs(lines: int = Query(500, ge=1, le=5000)):
+async def get_system_logs(lines: Annotated[int, Query(ge=1, le=5000)] = 500):
     """
     Retrieve the last N lines of the system log asynchronously.
     """

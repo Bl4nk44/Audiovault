@@ -28,7 +28,7 @@ router = APIRouter()
     status_code=status.HTTP_201_CREATED,
     dependencies=[Depends(register_limiter)],
 )
-async def register(user_in: UserCreate, db: AsyncSession = Depends(get_db)):
+async def register(user_in: UserCreate, db: Annotated[AsyncSession, Depends(get_db)] = ...):
     auth_manager = AuthManager(db)
     return await auth_manager.register_user(user_in)
 
@@ -38,7 +38,7 @@ async def register(user_in: UserCreate, db: AsyncSession = Depends(get_db)):
     response_model=Token,
     dependencies=[Depends(login_limiter)],
 )
-async def login(user_in: UserLogin, db: AsyncSession = Depends(get_db)):
+async def login(user_in: UserLogin, db: Annotated[AsyncSession, Depends(get_db)] = ...):
     auth_manager = AuthManager(db)
     user = await auth_manager.authenticate_user(user_in)
     if not user:

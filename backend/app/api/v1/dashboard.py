@@ -1,7 +1,7 @@
 import os
 import shutil
 from datetime import UTC, datetime
-from typing import Any, Optional
+from typing import Annotated, Any, Optional
 from uuid import UUID
 
 from app.core.config import settings
@@ -20,8 +20,8 @@ router = APIRouter()
 
 @router.get("/stats")
 async def get_dashboard_stats(
-    current_user: User = Depends(get_current_active_user),
-    db: AsyncSession = Depends(get_db),
+    current_user: Annotated[User, Depends(get_current_active_user)] = ...,
+    db: Annotated[AsyncSession, Depends(get_db)] = ...,
 ):
     total_downloads = await _get_count(db, current_user.id)
     tracks_in_library = await _get_count(db, current_user.id, status="completed")
