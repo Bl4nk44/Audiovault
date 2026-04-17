@@ -64,9 +64,6 @@ db:
   # Update database on startup
   download-db-only: false
 
-# Output settings
-format: json
-
 # Cache settings
 cache:
   # Enable cache
@@ -76,10 +73,6 @@ cache:
 
 # Ignore file
 ignorefile: .trivyignore
-
-# Exit code
-# Exit with code 1 if vulnerabilities are found
-exit-code: 0  # Set to 1 in CI to fail on vulnerabilities
 
 # Timeout
 timeout: 5m

@@ -25,7 +25,7 @@ patch_tags = ["fix", "perf", "chore"]
 
 [project]
 name = "audiovault"
-description = "CI issue resolution and stability improvements"
+description = "Self-hosted application for importing, managing, and downloading music from major streaming platforms"
 version = "0.10.4"
 
 [tool.ruff]
