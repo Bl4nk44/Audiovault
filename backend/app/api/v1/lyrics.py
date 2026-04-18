@@ -40,7 +40,11 @@ class LyricsSearchRequest(BaseModel):
     title: str
 
 
-@router.get("/track/{track_id}", response_model=LyricsResponse, responses={404: {"description": "Not found"}, 400: {"description": "Bad request"}})
+@router.get(
+    "/track/{track_id}",
+    response_model=LyricsResponse,
+    responses={404: {"description": "Not found"}, 400: {"description": "Bad request"}},
+)
 async def get_lyrics_by_track(
     track_id: UUID,
     use_cache: Annotated[bool, Query(description=USE_CACHE_DESCRIPTION)] = True,

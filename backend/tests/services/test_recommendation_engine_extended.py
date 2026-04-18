@@ -1,7 +1,6 @@
 """Extended tests covering uncovered branches in HybridRecommendationEngine."""
 
-from datetime import datetime
-from unittest.mock import AsyncMock, MagicMock, Mock, patch
+from unittest.mock import AsyncMock, Mock, patch
 from uuid import uuid4
 
 import pytest
@@ -9,7 +8,6 @@ from app.models.user import User
 from app.schemas.recommendation import RecommendedArtist, RecommendedTrack
 from app.services.lastfm_service import LastfmService
 from app.services.recommendation_engine import HybridRecommendationEngine, _is_missing_image
-
 
 # ─── _is_missing_image ────────────────────────────────────────────────────────
 
@@ -176,7 +174,7 @@ async def test_fetch_playlists_fallback_to_recent_tracks(engine, mock_lastfm, us
     mock_deezer.search.return_value = []
 
     with patch("app.services.recommendation_engine.DeezerService", return_value=mock_deezer):
-        result = await engine._fetch_playlists(user_lf)
+        await engine._fetch_playlists(user_lf)
 
     # Should have called deezer for deduplicated artists
     assert mock_deezer.search.call_count >= 0  # 2 unique artists → searches

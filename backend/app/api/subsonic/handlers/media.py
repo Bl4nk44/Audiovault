@@ -170,7 +170,9 @@ async def stream(
     format: Annotated[str | None, Query(description="Preferred format")] = None,
     time_offset: Annotated[int | None, Query(description="Offset in seconds", alias="timeOffset")] = None,
     size: Annotated[str | None, Query(description="Video size (ignored)")] = None,
-    estimate_content_length: Annotated[bool, Query(description="Estimate content length", alias="estimateContentLength")] = False,
+    estimate_content_length: Annotated[
+        bool, Query(description="Estimate content length", alias="estimateContentLength")
+    ] = False,
     f: Annotated[str, Query(description=_RESPONSE_FORMAT)] = "xml",
     current_user: Annotated[User, Depends(subsonic_auth)] = ...,
     db: Annotated[AsyncSession, Depends(get_db)] = ...,

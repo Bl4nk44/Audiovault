@@ -330,7 +330,11 @@ class SpotifyService:
         if resource_type == "track":
             track = await self.get_track(resource_id)
             return [track] if track else []
-        endpoint_map = {"artist": f"artists/{resource_id}", "playlist": f"playlists/{resource_id}", "album": f"albums/{resource_id}"}
+        endpoint_map = {
+            "artist": f"artists/{resource_id}",
+            "playlist": f"playlists/{resource_id}",
+            "album": f"albums/{resource_id}",
+        }
         endpoint = endpoint_map.get(resource_type)
         if not endpoint:
             return []
@@ -344,7 +348,9 @@ class SpotifyService:
         except Exception:
             return []
 
-    async def search(self, query: str, _limit: int = 10, _offset: int = 0, _type: str = "track") -> list[dict[str, Any]]:
+    async def search(
+        self, query: str, _limit: int = 10, _offset: int = 0, _type: str = "track"
+    ) -> list[dict[str, Any]]:
         """Overrides generic search. Returns results ONLY if it's a Spotify link resolver."""
         logger.info(f"Spotify async search for: {query}")
         if "spotify.link" in query or "spoti.fi" in query:

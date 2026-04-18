@@ -1,11 +1,10 @@
 """Extended tests for uncovered branches in AuthManager."""
 
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock
 from uuid import uuid4
 
 import pytest
 from app.models.schemas import UserCreate
-from app.models.user import User
 from app.services.auth_manager import AuthManager
 from fastapi import HTTPException
 

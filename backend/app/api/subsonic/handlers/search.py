@@ -93,7 +93,11 @@ async def _search2_albums(
             "isDir": True,
             "coverArt": f"al-{album_obj.id}",
             "songCount": sc,
-            "year": int(album_obj.release_date[:4]) if album_obj.release_date and len(album_obj.release_date) >= 4 else None,
+            "year": (
+                int(album_obj.release_date[:4])
+                if album_obj.release_date and len(album_obj.release_date) >= 4
+                else None
+            ),
         })
     return out
 
@@ -137,7 +141,11 @@ async def _search3_albums(
             "songCount": sc,
             "duration": format_duration(total_ms),
             "created": format_subsonic_date(album_obj.created_at),
-            "year": int(album_obj.release_date[:4]) if album_obj.release_date and len(album_obj.release_date) >= 4 else None,
+            "year": (
+                int(album_obj.release_date[:4])
+                if album_obj.release_date and len(album_obj.release_date) >= 4
+                else None
+            ),
         })
     return out
 
@@ -150,7 +158,13 @@ async def _search_songs(
             # nosemgrep: python.fastapi.db.generic-sql-fastapi.generic-sql-fastapi
             select(Track, Download)
             .outerjoin(Download, (Download.track_id == Track.id) & (Download.user_id == current_user.id))
-            .where(or_(func.lower(Track.title).like(search_term), func.lower(Track.artist).like(search_term), func.lower(Track.album).like(search_term)))
+            .where(
+                or_(
+                    func.lower(Track.title).like(search_term),
+                    func.lower(Track.artist).like(search_term),
+                    func.lower(Track.album).like(search_term),
+                )
+            )
             .offset(offset)
             .limit(count)
         )
@@ -161,7 +175,11 @@ async def _search_songs(
             .where(
                 Download.user_id == current_user.id,
                 Download.status == "completed",
-                or_(func.lower(Track.title).like(search_term), func.lower(Track.artist).like(search_term), func.lower(Track.album).like(search_term)),
+                or_(
+                    func.lower(Track.title).like(search_term),
+                    func.lower(Track.artist).like(search_term),
+                    func.lower(Track.album).like(search_term),
+                ),
             )
             .offset(offset)
             .limit(count)
@@ -259,10 +277,18 @@ async def search2(
         Search results with artists, albums, and songs
     """
     search_term = f"%{query.lower()}%"
-    artists_result = await _search_artists(db, current_user, search_term, artist_count, artist_offset) if artist_count > 0 else []
-    albums_result = await _search2_albums(db, current_user, search_term, album_count, album_offset) if album_count > 0 else []
-    songs_result = await _search_songs(db, current_user, search_term, song_count, song_offset) if song_count > 0 else []
-    return subsonic_response({"searchResult2": {"artist": artists_result, "album": albums_result, "song": songs_result}}, f=f)
+    artists_result = (
+        await _search_artists(db, current_user, search_term, artist_count, artist_offset) if artist_count > 0 else []
+    )
+    albums_result = (
+        await _search2_albums(db, current_user, search_term, album_count, album_offset) if album_count > 0 else []
+    )
+    songs_result = (
+        await _search_songs(db, current_user, search_term, song_count, song_offset) if song_count > 0 else []
+    )
+    return subsonic_response(
+        {"searchResult2": {"artist": artists_result, "album": albums_result, "song": songs_result}}, f=f
+    )
 
 
 @router.get("/search3.view")
@@ -295,7 +321,19 @@ async def search3(
         Search results in ID3 format
     """
     search_term = f"%{query.lower()}%"
-    artists_result = await _search_artists(db, current_user, search_term, artist_count, artist_offset, id3=True) if artist_count > 0 else []
-    albums_result = await _search3_albums(db, current_user, search_term, album_count, album_offset) if album_count > 0 else []
-    songs_result = await _search_songs(db, current_user, search_term, song_count, song_offset, id3=True) if song_count > 0 else []
-    return subsonic_response({"searchResult3": {"artist": artists_result, "album": albums_result, "song": songs_result}}, f=f)
+    artists_result = (
+        await _search_artists(db, current_user, search_term, artist_count, artist_offset, id3=True)
+        if artist_count > 0
+        else []
+    )
+    albums_result = (
+        await _search3_albums(db, current_user, search_term, album_count, album_offset) if album_count > 0 else []
+    )
+    songs_result = (
+        await _search_songs(db, current_user, search_term, song_count, song_offset, id3=True)
+        if song_count > 0
+        else []
+    )
+    return subsonic_response(
+        {"searchResult3": {"artist": artists_result, "album": albums_result, "song": songs_result}}, f=f
+    )

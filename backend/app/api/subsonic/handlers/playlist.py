@@ -290,7 +290,9 @@ async def update_playlist(
     comment: Annotated[str | None, Query(description="New comment")] = None,
     public: Annotated[bool | None, Query(description="Public flag")] = None,
     song_id_to_add: Annotated[list[str] | None, Query(alias="songIdToAdd", description="Songs to add")] = None,
-    song_index_to_remove: Annotated[list[int] | None, Query(alias="songIndexToRemove", description="Song indices to remove")] = None,
+    song_index_to_remove: Annotated[
+        list[int] | None, Query(alias="songIndexToRemove", description="Song indices to remove")
+    ] = None,
     f: Annotated[str, Query(description=_RESPONSE_FORMAT)] = "xml",
     current_user: Annotated[User, Depends(subsonic_auth)] = ...,
     db: Annotated[AsyncSession, Depends(get_db)] = ...,
@@ -335,7 +337,9 @@ async def update_playlist(
         await _remove_playlist_tracks_by_index(db, playlist_id, song_index_to_remove)
 
     if song_id_to_add:
-        max_order_val = await db.scalar(select(func.max(PlaylistTrack.order)).where(PlaylistTrack.playlist_id == playlist_id))
+        max_order_val = await db.scalar(
+            select(func.max(PlaylistTrack.order)).where(PlaylistTrack.playlist_id == playlist_id)
+        )
         start = (int(max_order_val) + 1) if isinstance(max_order_val, (int, float, str)) else 0
         _add_tracks_to_playlist(db, playlist_id, song_id_to_add, start_order=start)
 

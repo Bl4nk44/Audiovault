@@ -2,7 +2,6 @@ import asyncio
 import logging
 from collections import deque
 from pathlib import Path
-
 from typing import Annotated
 
 from fastapi import APIRouter, HTTPException, Query
@@ -178,7 +177,10 @@ async def check_for_updates():
         return await _check_development_update()
 
 
-@router.get("/stats", responses={503: {"description": "Service unavailable"}, 500: {"description": "Internal server error"}})
+@router.get(
+    "/stats",
+    responses={503: {"description": "Service unavailable"}, 500: {"description": "Internal server error"}},
+)
 async def get_system_stats():
     """
     Get system statistics (CPU, RAM, Disk, Network).

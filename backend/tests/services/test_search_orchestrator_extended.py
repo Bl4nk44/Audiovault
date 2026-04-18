@@ -57,7 +57,7 @@ async def test_get_track_details_musicbrainz(orchestrator):
     orchestrator.musicbrainz = AsyncMock()
     orchestrator.musicbrainz.get_track_by_isrc.return_value = {"id": "mb1", "source": "musicbrainz"}
 
-    result = await orchestrator.get_track_details("musicbrainz", "mb1")
+    await orchestrator.get_track_details("musicbrainz", "mb1")
 
     orchestrator.musicbrainz.get_track_by_isrc.assert_called_once_with("mb1")
 
@@ -79,7 +79,7 @@ async def test_get_artist_details_spotify(orchestrator):
     orchestrator.spotify = AsyncMock()
     orchestrator.spotify.get_artist_details.return_value = {"id": "sp1", "name": "A"}
 
-    result = await orchestrator.get_artist_details("spotify", "sp1")
+    await orchestrator.get_artist_details("spotify", "sp1")
 
     orchestrator.spotify.get_artist_details.assert_called_once_with("sp1")
 
@@ -89,7 +89,7 @@ async def test_get_artist_details_musicbrainz(orchestrator):
     orchestrator.musicbrainz = AsyncMock()
     orchestrator.musicbrainz.get_artist.return_value = {"id": "mb1"}
 
-    result = await orchestrator.get_artist_details("musicbrainz", "mb1")
+    await orchestrator.get_artist_details("musicbrainz", "mb1")
 
     orchestrator.musicbrainz.get_artist.assert_called_once_with("mb1")
 
@@ -100,7 +100,7 @@ async def test_get_artist_details_auto_deezer_first(orchestrator):
     orchestrator.deezer.get_artist_details.return_value = {"id": "dz1"}
     orchestrator.musicbrainz = AsyncMock()
 
-    result = await orchestrator.get_artist_details("auto", "dz1")
+    await orchestrator.get_artist_details("auto", "dz1")
 
     orchestrator.deezer.get_artist_details.assert_called_once()
     orchestrator.musicbrainz.get_artist.assert_not_called()
@@ -113,7 +113,7 @@ async def test_get_artist_details_auto_falls_back_to_musicbrainz(orchestrator):
     orchestrator.musicbrainz = AsyncMock()
     orchestrator.musicbrainz.get_artist.return_value = {"id": "mb1"}
 
-    result = await orchestrator.get_artist_details("auto", "mb1")
+    await orchestrator.get_artist_details("auto", "mb1")
 
     orchestrator.musicbrainz.get_artist.assert_called_once_with("mb1")
 
@@ -153,7 +153,7 @@ async def test_get_album_details_spotify(orchestrator):
     orchestrator.spotify = AsyncMock()
     orchestrator.spotify.get_album_details.return_value = {"id": "sp1", "tracks": []}
 
-    result = await orchestrator.get_album_details("spotify", "sp1")
+    await orchestrator.get_album_details("spotify", "sp1")
 
     orchestrator.spotify.get_album_details.assert_called_once_with("sp1")
 
@@ -181,7 +181,7 @@ async def test_get_playlist_details_spotify(orchestrator):
     orchestrator.spotify = AsyncMock()
     orchestrator.spotify.get_playlist_details.return_value = {"id": "pl1"}
 
-    result = await orchestrator.get_playlist_details("spotify", "pl1")
+    await orchestrator.get_playlist_details("spotify", "pl1")
 
     orchestrator.spotify.get_playlist_details.assert_called_once_with("pl1")
 
@@ -266,7 +266,7 @@ async def test_search_musicbrainz_albums(orchestrator):
     orchestrator.musicbrainz = AsyncMock()
     orchestrator.musicbrainz.search_album.return_value = [{"id": "mb1", "title": "Nevermind"}]
 
-    result = await orchestrator._search_musicbrainz_albums("Nevermind", limit=5)
+    await orchestrator._search_musicbrainz_albums("Nevermind", limit=5)
 
     orchestrator.musicbrainz.search_album.assert_called_once_with("Nevermind", limit=5)
 

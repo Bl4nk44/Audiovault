@@ -182,7 +182,10 @@ async def get_track_cover(track_id: str, db: Annotated[AsyncSession, Depends(get
     raise HTTPException(status_code=404, detail="No cover art found")
 
 
-@router.get("/album/{album_id}/cover", responses={400: {"description": "Bad request"}, 404: {"description": "Not found"}})
+@router.get(
+    "/album/{album_id}/cover",
+    responses={400: {"description": "Bad request"}, 404: {"description": "Not found"}},
+)
 async def get_album_cover(album_id: str, db: Annotated[AsyncSession, Depends(get_db)] = ...):
     """Get cover art for an album."""
     import uuid
@@ -261,7 +264,10 @@ async def _extract_direct_url(youtube_url: str) -> tuple[str, dict]:
         return info["url"], info.get("http_headers", {})
 
 
-@router.get("/{track_id}.mp3", responses={404: {"description": "Not found"}, 500: {"description": "Internal server error"}})
+@router.get(
+    "/{track_id}.mp3",
+    responses={404: {"description": "Not found"}, 500: {"description": "Internal server error"}},
+)
 async def stream_track(track_id: str, request: Request):
     try:
         youtube_url = await _resolve_stream_url(track_id)

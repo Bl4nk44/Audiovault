@@ -1,5 +1,4 @@
 import xml.etree.ElementTree as ET
-import os
 
 tree = ET.parse('backend/coverage.xml')
 root = tree.getroot()

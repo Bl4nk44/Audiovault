@@ -314,7 +314,15 @@ async def _resolve_track_ids(
     return resolved_ids
 
 
-@router.post("/{playlist_id}/tracks", status_code=status.HTTP_201_CREATED, responses={404: {"description": "Not found"}, 400: {"description": "Bad request"}, 500: {"description": "Internal server error"}})
+@router.post(
+    "/{playlist_id}/tracks",
+    status_code=status.HTTP_201_CREATED,
+    responses={
+        404: {"description": "Not found"},
+        400: {"description": "Bad request"},
+        500: {"description": "Internal server error"},
+    },
+)
 async def add_tracks_to_playlist(
     playlist_id: UUID,
     tracks_in: PlaylistTrackAdd,
@@ -382,7 +390,11 @@ async def add_tracks_to_playlist(
     )
 
 
-@router.delete("/{playlist_id}/tracks", status_code=status.HTTP_204_NO_CONTENT, responses={404: {"description": "Not found"}})
+@router.delete(
+    "/{playlist_id}/tracks",
+    status_code=status.HTTP_204_NO_CONTENT,
+    responses={404: {"description": "Not found"}},
+)
 async def remove_tracks_from_playlist(
     playlist_id: UUID,
     tracks_in: PlaylistTrackAdd,
@@ -499,7 +511,11 @@ class PlaylistVersionResponse(BaseModel):
         from_attributes = True
 
 
-@router.get("/{playlist_id}/versions", response_model=list[PlaylistVersionResponse], responses={404: {"description": "Not found"}, 403: {"description": "Forbidden"}})
+@router.get(
+    "/{playlist_id}/versions",
+    response_model=list[PlaylistVersionResponse],
+    responses={404: {"description": "Not found"}, 403: {"description": "Forbidden"}},
+)
 async def get_playlist_versions(
     playlist_id: UUID,
     limit: int = 50,
@@ -536,7 +552,10 @@ async def get_playlist_versions(
     ]
 
 
-@router.post("/{playlist_id}/rollback/{version_number}", responses={404: {"description": "Not found"}, 403: {"description": "Forbidden"}})
+@router.post(
+    "/{playlist_id}/rollback/{version_number}",
+    responses={404: {"description": "Not found"}, 403: {"description": "Forbidden"}},
+)
 async def rollback_playlist(
     playlist_id: UUID,
     version_number: int,

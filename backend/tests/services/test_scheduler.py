@@ -215,7 +215,7 @@ async def test_scheduled_retry_downloads_success(scheduler_svc):
 async def test_scheduled_retry_downloads_error_does_not_raise(scheduler_svc):
     with (
         patch("app.services.scheduler.AsyncSessionLocal") as mock_session_cls,
-        patch("app.services.scheduler.download_manager") as mock_dm,
+        patch("app.services.scheduler.download_manager"),
     ):
         mock_session_cls.return_value.__aenter__ = AsyncMock(side_effect=RuntimeError("db down"))
         mock_session_cls.return_value.__aexit__ = AsyncMock(return_value=False)

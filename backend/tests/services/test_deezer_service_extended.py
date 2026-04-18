@@ -32,7 +32,9 @@ def service():
 
 @pytest.mark.asyncio
 async def test_search_routes_album_url(service):
-    album_tracks = [{"id": 1, "title": "T", "artist": {"name": "A"}, "album": {"title": "AL"}, "duration": 100, "rank": 0}]
+    album_tracks = [
+        {"id": 1, "title": "T", "artist": {"name": "A"}, "album": {"title": "AL"}, "duration": 100, "rank": 0}
+    ]
     with patch.object(service, "get_album_tracks", new_callable=AsyncMock, return_value=album_tracks):
         result = await service.search("https://www.deezer.com/album/12345")
     assert result == album_tracks
@@ -40,7 +42,9 @@ async def test_search_routes_album_url(service):
 
 @pytest.mark.asyncio
 async def test_search_routes_playlist_url(service):
-    pl_tracks = [{"id": 2, "title": "T2", "artist": {"name": "B"}, "album": {"title": "AL"}, "duration": 200, "rank": 0}]
+    pl_tracks = [
+        {"id": 2, "title": "T2", "artist": {"name": "B"}, "album": {"title": "AL"}, "duration": 200, "rank": 0}
+    ]
     with patch.object(service, "get_playlist_tracks", new_callable=AsyncMock, return_value=pl_tracks):
         result = await service.search("https://www.deezer.com/playlist/99")
     assert result == pl_tracks
@@ -99,7 +103,9 @@ async def test_get_album_tracks_non_200_returns_empty(service):
 
 @pytest.mark.asyncio
 async def test_get_album_tracks_success(service):
-    track_data = {"data": [{"id": 1, "title": "T", "artist": {"name": "A"}, "album": {"title": "AL"}, "duration": 100, "rank": 0}]}
+    track_data = {"data": [
+        {"id": 1, "title": "T", "artist": {"name": "A"}, "album": {"title": "AL"}, "duration": 100, "rank": 0}
+    ]}
     resp = _mock_aiohttp_response(status=200, json_data=track_data)
     with patch("aiohttp.ClientSession", return_value=_mock_session(resp)):
         result = await service.get_album_tracks("123")
@@ -118,7 +124,9 @@ async def test_get_playlist_tracks_non_200_returns_empty(service):
 
 @pytest.mark.asyncio
 async def test_get_playlist_tracks_success(service):
-    data = {"data": [{"id": 2, "title": "T2", "artist": {"name": "B"}, "album": {"title": "AL"}, "duration": 200, "rank": 0}]}
+    data = {"data": [
+        {"id": 2, "title": "T2", "artist": {"name": "B"}, "album": {"title": "AL"}, "duration": 200, "rank": 0}
+    ]}
     resp = _mock_aiohttp_response(status=200, json_data=data)
     with patch("aiohttp.ClientSession", return_value=_mock_session(resp)):
         result = await service.get_playlist_tracks("123")

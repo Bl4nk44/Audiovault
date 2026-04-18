@@ -32,7 +32,9 @@ _RESPONSE_FORMAT = "Response format"
 async def get_artist_info(
     id: Annotated[str, Query(description="Artist ID")],
     count: Annotated[int, Query(description="Max similar artists")] = 20,
-    include_not_present: Annotated[bool, Query(alias="includeNotPresent", description="Include non-present artists")] = False,
+    include_not_present: Annotated[
+        bool, Query(alias="includeNotPresent", description="Include non-present artists")
+    ] = False,
     f: Annotated[str, Query(description=_RESPONSE_FORMAT)] = "xml",
     current_user: Annotated[User, Depends(subsonic_auth)] = ...,
     db: Annotated[AsyncSession, Depends(get_db)] = ...,
@@ -75,7 +77,9 @@ async def get_artist_info(
 async def get_artist_info2(
     id: Annotated[str, Query(description="Artist ID")],
     count: Annotated[int, Query(description="Max similar artists")] = 20,
-    include_not_present: Annotated[bool, Query(alias="includeNotPresent", description="Include non-present artists")] = False,
+    include_not_present: Annotated[
+        bool, Query(alias="includeNotPresent", description="Include non-present artists")
+    ] = False,
     f: Annotated[str, Query(description=_RESPONSE_FORMAT)] = "xml",
     current_user: Annotated[User, Depends(subsonic_auth)] = ...,
     db: Annotated[AsyncSession, Depends(get_db)] = ...,

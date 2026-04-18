@@ -87,7 +87,12 @@ class SyncManager:
                 to_keep_uuids.add(track.id)
             else:
                 to_delete_candidates.append(
-                    {"track_id": str(track.id), "title": track.title, "artist": track.artist, "reason": "Missing from remote source"}
+                    {
+                        "track_id": str(track.id),
+                        "title": track.title,
+                        "artist": track.artist,
+                        "reason": "Missing from remote source",
+                    }
                 )
 
         remove_count = len(to_delete_candidates)

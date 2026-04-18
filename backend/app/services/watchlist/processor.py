@@ -71,7 +71,8 @@ class WatchlistItemProcessor:
         if item.source == "spotify":
             return await self._fetch_spotify_artist_tracks(item.source_id, target_artist)
         if item.source == "youtube":
-            return [t for t in self.youtube_service.get_artist_tracks(item.source_id) or [] if self._matches_target_artist(t, target_artist)]
+            tracks = self.youtube_service.get_artist_tracks(item.source_id) or []
+            return [t for t in tracks if self._matches_target_artist(t, target_artist)]
         if item.source == "deezer":
             logger.warning(f"Deezer artist fetching not implemented for {item.source_id}")
         return []

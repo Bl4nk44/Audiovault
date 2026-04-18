@@ -104,9 +104,12 @@ async def test_get_artist_top_releases_no_data_returns_empty(service):
 async def test_get_artist_top_releases_deduplicates_by_title(service):
     data = {
         "releases": [
-            {"id": "r1", "title": "Nevermind", "date": "1991", "status": "Official", "release-group": {"primary-type": "Album"}},
-            {"id": "r2", "title": "Nevermind", "date": "1992", "status": "Official", "release-group": {"primary-type": "Album"}},
-            {"id": "r3", "title": "In Utero", "date": "1993", "status": "Official", "release-group": {"primary-type": "Album"}},
+            {"id": "r1", "title": "Nevermind", "date": "1991", "status": "Official",
+             "release-group": {"primary-type": "Album"}},
+            {"id": "r2", "title": "Nevermind", "date": "1992", "status": "Official",
+             "release-group": {"primary-type": "Album"}},
+            {"id": "r3", "title": "In Utero", "date": "1993", "status": "Official",
+             "release-group": {"primary-type": "Album"}},
         ]
     }
     with patch.object(service, "_get", new_callable=AsyncMock, return_value=data):

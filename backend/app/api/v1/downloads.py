@@ -1,3 +1,4 @@
+import logging
 import os
 from typing import Annotated
 from uuid import UUID
@@ -12,8 +13,6 @@ from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
-
-import logging
 
 router = APIRouter()
 
@@ -61,10 +60,13 @@ async def _queue_tracks(db: AsyncSession, user_id, tracks: list, source: str, pl
     for track_data in tracks:
         track_obj = await _ensure_track_in_db(db, track_data, source)
         try:
-            await download_manager.add_download(db, user_id, DownloadCreate(track_id=track_obj.id, source=source, playlist_name=playlist_name))
+            await download_manager.add_download(
+                db, user_id, DownloadCreate(track_id=track_obj.id, source=source, playlist_name=playlist_name)
+            )
             count += 1
         except Exception as e:
-            _logger.warning(f"Failed to queue track {track_data.get('title')}: {e}")  # nosemgrep: python.fastapi.log.tainted-log-injection-stdlib-fastapi.tainted-log-injection-stdlib-fastapi
+            # nosemgrep: python.fastapi.log.tainted-log-injection-stdlib-fastapi.tainted-log-injection-stdlib-fastapi
+            _logger.warning(f"Failed to queue track {track_data.get('title')}: {e}")
     return count
 
 
@@ -120,7 +122,10 @@ async def _resolve_youtube_id(db: AsyncSession, track_id_str: str) -> UUID:
     track_obj = result.scalar_one_or_none()
     if track_obj:
         return track_obj.id
-    raise HTTPException(status_code=400, detail="YouTube track resolution from ID not yet implemented. Please add to library from search results first.")
+    raise HTTPException(
+        status_code=400,
+        detail="YouTube track resolution from ID not yet implemented. Please add to library from search results first.",
+    )
 
 
 async def _resolve_track_to_local_id(db: AsyncSession, track_id_str: str, source: str) -> UUID:
@@ -136,10 +141,18 @@ async def _resolve_track_to_local_id(db: AsyncSession, track_id_str: str, source
     except (ValueError, AttributeError):
         pass
 
-    resolvers = {"spotify": _resolve_spotify_id, "deezer": _resolve_deezer_id, "musicbrainz": _resolve_musicbrainz_id, "youtube": _resolve_youtube_id}
+    resolvers = {
+        "spotify": _resolve_spotify_id,
+        "deezer": _resolve_deezer_id,
+        "musicbrainz": _resolve_musicbrainz_id,
+        "youtube": _resolve_youtube_id,
+    }
     resolver = resolvers.get(source)
     if not resolver:
-        raise HTTPException(status_code=400, detail=f"Track ID {track_id_str} not found and source {source} does not support resolution")
+        raise HTTPException(
+        status_code=400,
+        detail=f"Track ID {track_id_str} not found and source {source} does not support resolution",
+    )
     return await resolver(db, track_id_str)
 
 
@@ -259,7 +272,10 @@ class ArtistDownloadRequest(BaseModel):
     source: str = "deezer"
 
 
-@router.post("/artist/{artist_id}/download-all", responses={404: {"description": "Not found"}, 400: {"description": "Bad request"}})
+@router.post(
+    "/artist/{artist_id}/download-all",
+    responses={404: {"description": "Not found"}, 400: {"description": "Bad request"}},
+)
 async def download_all_artist_tracks(
     artist_id: str,
     request: ArtistDownloadRequest,
@@ -297,10 +313,18 @@ async def download_all_artist_tracks(
 
     queued_count = await _queue_tracks(db, current_user.id, all_tracks, request.source, artist_name)
     await db.commit()
-    return {"status": "success", "artist": artist_name, "queued_count": queued_count, "message": f"Queued {queued_count} tracks from {artist_name}"}
+    return {
+        "status": "success",
+        "artist": artist_name,
+        "queued_count": queued_count,
+        "message": f"Queued {queued_count} tracks from {artist_name}",
+    }
 
 
-@router.post("/album/{album_id}/download", responses={404: {"description": "Not found"}, 400: {"description": "Bad request"}})
+@router.post(
+    "/album/{album_id}/download",
+    responses={404: {"description": "Not found"}, 400: {"description": "Bad request"}},
+)
 async def download_album(
     album_id: str,
     request: ArtistDownloadRequest,  # reusing this model as it just has 'source'
@@ -331,7 +355,8 @@ async def download_album(
         except HTTPException:
             raise
         except Exception as e:
-            _logger.error(f"Error fetching album {album_id}: {e}")  # nosemgrep: python.fastapi.log.tainted-log-injection-stdlib-fastapi.tainted-log-injection-stdlib-fastapi
+            # nosemgrep: python.fastapi.log.tainted-log-injection-stdlib-fastapi.tainted-log-injection-stdlib-fastapi
+            _logger.error(f"Error fetching album {album_id}: {e}")
             raise HTTPException(status_code=404, detail="Album not found")
         tracks = await service.get_album_tracks(album_id)
     else:
@@ -339,7 +364,12 @@ async def download_album(
 
     queued_count = await _queue_tracks(db, current_user.id, tracks, request.source, album_name)
     await db.commit()
-    return {"status": "success", "album": album_name, "queued_count": queued_count, "message": f"Queued {queued_count} tracks from {album_name}"}
+    return {
+        "status": "success",
+        "album": album_name,
+        "queued_count": queued_count,
+        "message": f"Queued {queued_count} tracks from {album_name}",
+    }
 
 
 @router.post("/rescan")
@@ -493,7 +523,10 @@ async def bulk_update_library_items(
     }
 
 
-@router.put("/library/{download_id}", responses={404: {"description": "Not found"}, 400: {"description": "Bad request"}})
+@router.put(
+    "/library/{download_id}",
+    responses={404: {"description": "Not found"}, 400: {"description": "Bad request"}},
+)
 async def update_library_item(
     download_id: UUID,
     updates: dict,

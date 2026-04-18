@@ -259,7 +259,9 @@ class DownloadManager:
             download.track.album_id = album_id
             download.track.metadata_content = meta
             db.add(download.track)
-            logger.info(f"Updated Track metadata for {download.track.id}: {title} - {artist} [Duration: {duration_ms}ms]")
+            logger.info(
+                f"Updated Track metadata for {download.track.id}: {title} - {artist} [Duration: {duration_ms}ms]"
+            )
         except Exception as e:
             logger.error(f"Failed to update track metadata from file: {e}")
 

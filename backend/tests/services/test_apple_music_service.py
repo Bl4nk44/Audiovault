@@ -45,7 +45,11 @@ async def test_get_tracks_resolves_short_link_then_delegates(service):
     ]
     with (
         patch.object(service, "_resolve_url", new_callable=AsyncMock, return_value=resolved),
-        patch("app.services.base_music_service.BaseMusicService.get_tracks", new_callable=AsyncMock, return_value=mock_tracks),
+        patch(
+            "app.services.base_music_service.BaseMusicService.get_tracks",
+            new_callable=AsyncMock,
+            return_value=mock_tracks,
+        ),
     ):
         tracks = await service.get_tracks("https://apple.co/3xyz")
 
@@ -56,7 +60,11 @@ async def test_get_tracks_resolves_short_link_then_delegates(service):
 async def test_get_tracks_full_url_skips_redirect(service):
     url = "https://music.apple.com/us/album/abc"
     mock_tracks = [{"id": "t1", "title": "T", "artist": "A", "source": "apple_music"}]
-    with patch("app.services.base_music_service.BaseMusicService.get_tracks", new_callable=AsyncMock, return_value=mock_tracks):
+    with patch(
+        "app.services.base_music_service.BaseMusicService.get_tracks",
+        new_callable=AsyncMock,
+        return_value=mock_tracks,
+    ):
         tracks = await service.get_tracks(url)
     assert tracks == mock_tracks
 
@@ -67,7 +75,11 @@ async def test_get_playlist_info_resolves_short_link(service):
     mock_info = {"id": resolved, "title": "My Playlist", "source": "apple_music"}
     with (
         patch.object(service, "_resolve_url", new_callable=AsyncMock, return_value=resolved),
-        patch("app.services.base_music_service.BaseMusicService.get_playlist_info", new_callable=AsyncMock, return_value=mock_info),
+        patch(
+            "app.services.base_music_service.BaseMusicService.get_playlist_info",
+            new_callable=AsyncMock,
+            return_value=mock_info,
+        ),
     ):
         result = await service.get_playlist_info("https://apple.co/3xyz")
 
@@ -78,6 +90,10 @@ async def test_get_playlist_info_resolves_short_link(service):
 async def test_get_playlist_info_full_url(service):
     url = "https://music.apple.com/us/playlist/my-list"
     mock_info = {"id": url, "title": "PL", "source": "apple_music"}
-    with patch("app.services.base_music_service.BaseMusicService.get_playlist_info", new_callable=AsyncMock, return_value=mock_info):
+    with patch(
+        "app.services.base_music_service.BaseMusicService.get_playlist_info",
+        new_callable=AsyncMock,
+        return_value=mock_info,
+    ):
         result = await service.get_playlist_info(url)
     assert result == mock_info

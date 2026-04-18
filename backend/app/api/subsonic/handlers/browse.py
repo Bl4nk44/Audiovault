@@ -58,7 +58,9 @@ async def get_music_folders(
 @router.post("/getIndexes.view")
 async def get_indexes(
     music_folder_id: Annotated[str, Query(alias="musicFolderId", description="Music folder ID")] = "1",
-    if_modified_since: Annotated[int, Query(alias="ifModifiedSince", description="Return if modified after this timestamp")] = 0,
+    if_modified_since: Annotated[
+        int, Query(alias="ifModifiedSince", description="Return if modified after this timestamp")
+    ] = 0,
     f: str = "xml",
     current_user: Annotated[User, Depends(subsonic_auth)] = ...,
     db: Annotated[AsyncSession, Depends(get_db)] = ...,
@@ -547,7 +549,10 @@ async def _get_artist_directory(db: AsyncSession, current_user: User, artist_ite
             "songCount": song_count,
             "year": int(album.release_date[:4]) if album.release_date and len(album.release_date) >= 4 else None,
         })
-    return subsonic_response({"directory": {"id": str(artist_item.id), "parent": "1", "name": artist_item.name, "child": children}}, f=f)
+    return subsonic_response(
+        {"directory": {"id": str(artist_item.id), "parent": "1", "name": artist_item.name, "child": children}},
+        f=f,
+    )
 
 
 async def _get_album_directory(db: AsyncSession, current_user: User, album_item: Album, f: str):

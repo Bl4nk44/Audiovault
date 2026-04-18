@@ -46,13 +46,13 @@ def test_search_channel_non_uc_returns_empty(service):
 
 def test_search_routes_to_keyword_for_artist_type(service):
     service.yt.search.return_value = []
-    results = service.search("nirvana", type="artist")
+    service.search("nirvana", type="artist")
     service.yt.search.assert_called_with("nirvana", filter="artists", limit=20)
 
 
 def test_search_routes_to_keyword_for_playlist_type(service):
     service.yt.search.return_value = []
-    results = service.search("chill mix", type="playlist")
+    service.search("chill mix", type="playlist")
     service.yt.search.assert_called_with("chill mix", filter="community_playlists", limit=20)
 
 

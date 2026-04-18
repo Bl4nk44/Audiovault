@@ -136,7 +136,10 @@ async def get_genres(
 @router.get("/getAlbumList2.view")
 @router.post("/getAlbumList2.view")
 async def get_album_list(
-    type: Annotated[str, Query(description="List type: random, newest, frequent, recent, starred, alphabetical, byName, byYear")],
+    type: Annotated[
+        str,
+        Query(description="List type: random, newest, frequent, recent, starred, alphabetical, byName, byYear"),
+    ],
     size: Annotated[int, Query(description="Return size")] = 10,
     offset: Annotated[int, Query(description="Offset")] = 0,
     from_year: Annotated[int | None, Query(alias="fromYear", description="Filter from year")] = None,
