@@ -40,9 +40,7 @@ async def test_resolve_url_short_link_resolved(service):
 @pytest.mark.asyncio
 async def test_get_tracks_resolves_short_link_then_delegates(service):
     resolved = "https://music.apple.com/us/playlist/my-list"
-    mock_tracks = [
-        {"id": "t1", "title": "Track", "artist": "Artist", "source": "apple_music"}
-    ]
+    mock_tracks = [{"id": "t1", "title": "Track", "artist": "Artist", "source": "apple_music"}]
     with (
         patch.object(service, "_resolve_url", new_callable=AsyncMock, return_value=resolved),
         patch(

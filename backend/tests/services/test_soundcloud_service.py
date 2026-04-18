@@ -113,12 +113,19 @@ async def test_get_tracks_resolves_short_link(service):
     mock_info = {
         "_type": "playlist",
         "entries": [
-            {"id": "1", "title": "Track", "uploader": "Artist", "duration": 100, "webpage_url": "https://soundcloud.com/a/t"},
+            {
+                "id": "1",
+                "title": "Track",
+                "uploader": "Artist",
+                "duration": 100,
+                "webpage_url": "https://soundcloud.com/a/t",
+            },
         ],
     }
-    with patch("app.services.soundcloud_service.yt_dlp.YoutubeDL") as mock_ydl, patch(
-        "app.utils.url_helper.resolve_redirects", new_callable=AsyncMock
-    ) as mock_resolve:
+    with (
+        patch("app.services.soundcloud_service.yt_dlp.YoutubeDL") as mock_ydl,
+        patch("app.utils.url_helper.resolve_redirects", new_callable=AsyncMock) as mock_resolve,
+    ):
         mock_resolve.return_value = "https://soundcloud.com/artist/track"
         mock_ydl.return_value.extract_info.return_value = mock_info
 

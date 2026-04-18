@@ -24,6 +24,7 @@ TRACK = {
 
 # ─── search_albums ────────────────────────────────────────────────────────────
 
+
 @pytest.mark.asyncio
 async def test_search_albums(orchestrator):
     with (
@@ -40,6 +41,7 @@ async def test_search_albums(orchestrator):
 
 
 # ─── get_track_details ────────────────────────────────────────────────────────
+
 
 @pytest.mark.asyncio
 async def test_get_track_details_spotify(orchestrator):
@@ -63,6 +65,7 @@ async def test_get_track_details_musicbrainz(orchestrator):
 
 
 # ─── get_artist_details ───────────────────────────────────────────────────────
+
 
 @pytest.mark.asyncio
 async def test_get_artist_details_deezer(orchestrator):
@@ -126,6 +129,7 @@ async def test_get_artist_details_unknown_source_returns_none(orchestrator):
 
 # ─── get_album_details ────────────────────────────────────────────────────────
 
+
 @pytest.mark.asyncio
 async def test_get_album_details_deezer_with_tracks(orchestrator):
     orchestrator.deezer = AsyncMock()
@@ -166,6 +170,7 @@ async def test_get_album_details_unknown_source_returns_none(orchestrator):
 
 # ─── get_playlist_details ─────────────────────────────────────────────────────
 
+
 @pytest.mark.asyncio
 async def test_get_playlist_details_deezer(orchestrator):
     orchestrator.deezer = AsyncMock()
@@ -194,6 +199,7 @@ async def test_get_playlist_details_unknown_returns_none(orchestrator):
 
 # ─── _search_spotify ─────────────────────────────────────────────────────────
 
+
 @pytest.mark.asyncio
 async def test_search_spotify_exception_returns_empty(orchestrator):
     orchestrator.spotify = AsyncMock()
@@ -215,6 +221,7 @@ async def test_search_spotify_caps_limit_at_10(orchestrator):
 
 
 # ─── _search_deezer_artists ──────────────────────────────────────────────────
+
 
 @pytest.mark.asyncio
 async def test_search_deezer_artists_deduplicates(orchestrator):
@@ -245,6 +252,7 @@ async def test_search_musicbrainz_artists(orchestrator):
 
 # ─── _search_deezer_albums ───────────────────────────────────────────────────
 
+
 @pytest.mark.asyncio
 async def test_search_deezer_albums_deduplicates(orchestrator):
     orchestrator.deezer = AsyncMock()
@@ -273,6 +281,7 @@ async def test_search_musicbrainz_albums(orchestrator):
 
 # ─── _deduplicate_results (image preference) ─────────────────────────────────
 
+
 def test_deduplicate_results_replaces_with_image_version(orchestrator):
     """When duplicate ISRC found and existing has no image, replace with image version."""
     no_image = {"id": "1", "title": "T", "artist": "A", "isrc": "ISRC001", "image_url": None, "source": "mb"}
@@ -297,6 +306,7 @@ def test_deduplicate_results_title_dedup_replaces_with_image(orchestrator):
 
 # ─── _deduplicate_by_name ─────────────────────────────────────────────────────
 
+
 def test_deduplicate_by_name_replaces_no_image(orchestrator):
     no_img = {"name": "Nirvana", "image_url": None, "source": "mb"}
     with_img = {"name": "Nirvana", "image_url": "http://img", "source": "dz"}
@@ -319,6 +329,7 @@ def test_deduplicate_by_name_uses_title_key_for_albums(orchestrator):
 
 # ─── _search_musicbrainz single-word query ────────────────────────────────────
 
+
 @pytest.mark.asyncio
 async def test_search_musicbrainz_single_word_query(orchestrator):
     orchestrator.musicbrainz = AsyncMock()
@@ -340,6 +351,7 @@ async def test_search_musicbrainz_two_word_query(orchestrator):
 
 
 # ─── resolve_isrc exception ───────────────────────────────────────────────────
+
 
 @pytest.mark.asyncio
 async def test_resolve_isrc_exception_returns_none(orchestrator):

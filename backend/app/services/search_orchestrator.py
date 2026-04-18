@@ -209,9 +209,7 @@ class SearchOrchestrator:
 
     # --- Deduplication ---
 
-    def _replace_if_better_image(
-        self, unique: list, seen_map: dict, key: str, result: dict[str, Any]
-    ) -> None:
+    def _replace_if_better_image(self, unique: list, seen_map: dict, key: str, result: dict[str, Any]) -> None:
         existing = seen_map[key]
         if not existing.get("image_url") and result.get("image_url"):
             unique[unique.index(existing)] = result

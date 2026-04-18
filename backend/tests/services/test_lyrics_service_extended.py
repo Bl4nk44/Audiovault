@@ -13,6 +13,7 @@ def service():
 
 # ─── get_lyrics early return ──────────────────────────────────────────────────
 
+
 @pytest.mark.asyncio
 async def test_get_lyrics_empty_artist_returns_none(service):
     result = await service.get_lyrics("", "Song Title")
@@ -26,6 +27,7 @@ async def test_get_lyrics_empty_title_returns_none(service):
 
 
 # ─── _get_genius_client ───────────────────────────────────────────────────────
+
 
 def test_get_genius_client_no_token_returns_none(service):
     with patch("app.services.lyrics_service.settings") as mock_settings:
@@ -63,6 +65,7 @@ def test_get_genius_client_returns_cached_instance(service):
 
 
 # ─── _get_from_lrclib ─────────────────────────────────────────────────────────
+
 
 @pytest.mark.asyncio
 async def test_get_from_lrclib_200_response(service):
@@ -104,6 +107,7 @@ async def test_get_from_lrclib_exception(service):
 
 # ─── _get_from_cache ─────────────────────────────────────────────────────────
 
+
 @pytest.mark.asyncio
 async def test_get_from_cache_exception_returns_none(service):
     with patch("app.services.lyrics_service.cache_manager") as mock_cache:
@@ -113,6 +117,7 @@ async def test_get_from_cache_exception_returns_none(service):
 
 
 # ─── _fetch_and_cache_genius ─────────────────────────────────────────────────
+
 
 @pytest.mark.asyncio
 async def test_fetch_and_cache_genius_exception_returns_none(service):
@@ -125,6 +130,7 @@ async def test_fetch_and_cache_genius_exception_returns_none(service):
 
 # ─── _cache_result ────────────────────────────────────────────────────────────
 
+
 @pytest.mark.asyncio
 async def test_cache_result_exception_doesnt_raise(service):
     with patch("app.services.lyrics_service.cache_manager") as mock_cache:
@@ -133,6 +139,7 @@ async def test_cache_result_exception_doesnt_raise(service):
 
 
 # ─── clear_cache ─────────────────────────────────────────────────────────────
+
 
 @pytest.mark.asyncio
 async def test_clear_cache_no_redis_returns_false(service):
@@ -153,11 +160,10 @@ async def test_clear_cache_exception_returns_false(service):
 
 # ─── get_lyrics lrclib found → cache then return ─────────────────────────────
 
+
 @pytest.mark.asyncio
 async def test_get_lyrics_lrclib_found_caches_result(service):
-    lrclib_result = {
-        "found": True, "lyrics": "Line 1", "synced_lyrics": "[00:01]Line 1", "source": "lrclib"
-    }
+    lrclib_result = {"found": True, "lyrics": "Line 1", "synced_lyrics": "[00:01]Line 1", "source": "lrclib"}
     with (
         patch.object(service, "_get_from_cache", new_callable=AsyncMock, return_value=None),
         patch.object(service, "_get_from_lrclib", new_callable=AsyncMock, return_value=lrclib_result),
@@ -170,6 +176,7 @@ async def test_get_lyrics_lrclib_found_caches_result(service):
 
 
 # ─── get_lyrics with track_id (DB metadata path) ─────────────────────────────
+
 
 @pytest.mark.asyncio
 async def test_get_lyrics_db_metadata_found_synced(service):

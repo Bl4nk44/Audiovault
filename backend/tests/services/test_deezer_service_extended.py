@@ -30,6 +30,7 @@ def service():
 
 # ─── search: URL routing ──────────────────────────────────────────────────────
 
+
 @pytest.mark.asyncio
 async def test_search_routes_album_url(service):
     album_tracks = [
@@ -75,6 +76,7 @@ async def test_search_non_200_returns_empty(service):
 
 # ─── get_track error paths ────────────────────────────────────────────────────
 
+
 @pytest.mark.asyncio
 async def test_get_track_non_200_returns_none(service):
     resp = _mock_aiohttp_response(status=404)
@@ -93,6 +95,7 @@ async def test_get_track_error_in_response_returns_none(service):
 
 # ─── get_album_tracks error paths ────────────────────────────────────────────
 
+
 @pytest.mark.asyncio
 async def test_get_album_tracks_non_200_returns_empty(service):
     resp = _mock_aiohttp_response(status=404)
@@ -103,9 +106,9 @@ async def test_get_album_tracks_non_200_returns_empty(service):
 
 @pytest.mark.asyncio
 async def test_get_album_tracks_success(service):
-    track_data = {"data": [
-        {"id": 1, "title": "T", "artist": {"name": "A"}, "album": {"title": "AL"}, "duration": 100, "rank": 0}
-    ]}
+    track_data = {
+        "data": [{"id": 1, "title": "T", "artist": {"name": "A"}, "album": {"title": "AL"}, "duration": 100, "rank": 0}]
+    }
     resp = _mock_aiohttp_response(status=200, json_data=track_data)
     with patch("aiohttp.ClientSession", return_value=_mock_session(resp)):
         result = await service.get_album_tracks("123")
@@ -113,6 +116,7 @@ async def test_get_album_tracks_success(service):
 
 
 # ─── get_playlist_tracks error paths ─────────────────────────────────────────
+
 
 @pytest.mark.asyncio
 async def test_get_playlist_tracks_non_200_returns_empty(service):
@@ -124,9 +128,11 @@ async def test_get_playlist_tracks_non_200_returns_empty(service):
 
 @pytest.mark.asyncio
 async def test_get_playlist_tracks_success(service):
-    data = {"data": [
-        {"id": 2, "title": "T2", "artist": {"name": "B"}, "album": {"title": "AL"}, "duration": 200, "rank": 0}
-    ]}
+    data = {
+        "data": [
+            {"id": 2, "title": "T2", "artist": {"name": "B"}, "album": {"title": "AL"}, "duration": 200, "rank": 0}
+        ]
+    }
     resp = _mock_aiohttp_response(status=200, json_data=data)
     with patch("aiohttp.ClientSession", return_value=_mock_session(resp)):
         result = await service.get_playlist_tracks("123")
@@ -134,6 +140,7 @@ async def test_get_playlist_tracks_success(service):
 
 
 # ─── get_playlist_details error paths ────────────────────────────────────────
+
 
 @pytest.mark.asyncio
 async def test_get_playlist_details_non_200_returns_none(service):
@@ -152,6 +159,7 @@ async def test_get_playlist_details_error_in_response_returns_none(service):
 
 
 # ─── get_artist_details error paths ──────────────────────────────────────────
+
 
 @pytest.mark.asyncio
 async def test_get_artist_details_non_200_returns_none(service):
@@ -180,6 +188,7 @@ async def test_get_artist_details_error_in_artist_response_returns_none(service)
 
 
 # ─── _format_track fallback image paths ──────────────────────────────────────
+
 
 def test_format_track_cover_big_fallback(service):
     item = {

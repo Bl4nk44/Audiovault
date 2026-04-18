@@ -11,6 +11,7 @@ from app.services.recommendation_engine import HybridRecommendationEngine, _is_m
 
 # ─── _is_missing_image ────────────────────────────────────────────────────────
 
+
 def test_is_missing_image_none():
     assert _is_missing_image(None) is True
 
@@ -38,6 +39,7 @@ def test_is_missing_image_real_url():
 
 
 # ─── Fixtures ─────────────────────────────────────────────────────────────────
+
 
 @pytest.fixture
 def mock_lastfm():
@@ -80,6 +82,7 @@ def user_no_lf():
 
 
 # ─── _fetch_lastfm_recommendations ────────────────────────────────────────────
+
 
 @pytest.mark.asyncio
 async def test_fetch_lastfm_missing_images_triggers_deezer(engine, mock_lastfm):
@@ -155,6 +158,7 @@ async def test_fetch_lastfm_non_auto_source_still_calls_lastfm(engine, mock_last
 
 # ─── _fetch_playlists ─────────────────────────────────────────────────────────
 
+
 @pytest.mark.asyncio
 async def test_fetch_playlists_no_lastfm_returns_empty(engine, user_no_lf):
     result = await engine._fetch_playlists(user_no_lf)
@@ -217,6 +221,7 @@ async def test_fetch_playlists_exception_returns_empty(engine, mock_lastfm, user
 
 # ─── _fetch_artists ───────────────────────────────────────────────────────────
 
+
 @pytest.mark.asyncio
 async def test_fetch_artists_no_target_user_returns_empty(engine):
     user = User(id=uuid4(), username="u", lastfm_session_key=None, lastfm_username=None)
@@ -262,6 +267,7 @@ async def test_fetch_artists_exception_returns_empty(engine, mock_lastfm, user_l
 
 
 # ─── get_recommendations cache error ─────────────────────────────────────────
+
 
 @pytest.mark.asyncio
 async def test_get_recommendations_cache_set_exception_doesnt_raise(engine, mock_lastfm, mock_cache, user_lf):

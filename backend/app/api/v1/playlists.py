@@ -260,9 +260,7 @@ async def _resolve_external_track(
     from app.services.download_manager import download_manager
 
     find_result = await db.execute(
-        select(Track)
-        .where(Track.title.ilike(f"%{track_name}%"), Track.artist.ilike(f"%{artist_name}%"))
-        .limit(1)
+        select(Track).where(Track.title.ilike(f"%{track_name}%"), Track.artist.ilike(f"%{artist_name}%")).limit(1)
     )
     existing_track = find_result.scalar_one_or_none()
     if existing_track:
@@ -302,9 +300,7 @@ async def _resolve_track_ids(
         if track_id_str.startswith("external:"):
             parts = track_id_str.split(":", 2)
             if len(parts) >= 3:
-                track_uuid = await _resolve_external_track(
-                    db, parts[1], parts[2], user_id, playlist_id, playlist_name
-                )
+                track_uuid = await _resolve_external_track(db, parts[1], parts[2], user_id, playlist_id, playlist_name)
                 resolved_ids.append(track_uuid)
         else:
             try:

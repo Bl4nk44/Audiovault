@@ -110,7 +110,7 @@ class LibraryDataService:
             normalized = file_path.replace("\\", "/")
             for prefix in ["/downloads/", "/app/downloads/"]:
                 if normalized.startswith(prefix):
-                    candidate = os.path.join(settings.DOWNLOAD_DIR, normalized[len(prefix):])
+                    candidate = os.path.join(settings.DOWNLOAD_DIR, normalized[len(prefix) :])
                     if os.path.exists(candidate):
                         current_path = candidate
                     break

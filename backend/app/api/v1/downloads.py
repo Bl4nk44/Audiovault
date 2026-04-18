@@ -72,10 +72,12 @@ async def _queue_tracks(db: AsyncSession, user_id, tracks: list, source: str, pl
 
 async def _resolve_spotify_id(db: AsyncSession, track_id_str: str) -> UUID:
     from app.models.track import Track
+
     result = await db.execute(select(Track).where(Track.spotify_id == track_id_str))
     track_obj = result.scalar_one_or_none()
     if not track_obj:
         from app.services.spotify_service import SpotifyService
+
         track_data = await SpotifyService().get_track(track_id_str)
         if not track_data:
             raise HTTPException(status_code=404, detail="Track not found on Spotify")
@@ -85,10 +87,12 @@ async def _resolve_spotify_id(db: AsyncSession, track_id_str: str) -> UUID:
 
 async def _resolve_deezer_id(db: AsyncSession, track_id_str: str) -> UUID:
     from app.models.track import Track
+
     result = await db.execute(select(Track).where(Track.deezer_id == track_id_str))
     track_obj = result.scalar_one_or_none()
     if not track_obj:
         from app.services.deezer_service import DeezerService
+
         track_data = await DeezerService().get_track(track_id_str)
         if not track_data:
             raise HTTPException(status_code=404, detail="Track not found on Deezer")
@@ -98,17 +102,22 @@ async def _resolve_deezer_id(db: AsyncSession, track_id_str: str) -> UUID:
 
 async def _resolve_musicbrainz_id(db: AsyncSession, track_id_str: str) -> UUID:
     from app.models.track import Track
+
     result = await db.execute(select(Track).where(Track.musicbrainz_id == track_id_str))
     track_obj = result.scalar_one_or_none()
     if not track_obj:
         from app.services.musicbrainz_service import MusicBrainzService
+
         track_data = await MusicBrainzService().get_track_by_isrc(track_id_str)
         if not track_data:
             raise HTTPException(status_code=404, detail="Track not found on MusicBrainz")
         track_obj = Track(
-            title=track_data["title"], artist=track_data["artist"],
-            musicbrainz_id=track_data.get("id"), isrc=track_data.get("isrc"),
-            duration_ms=track_data.get("duration_ms"), metadata_source="musicbrainz",
+            title=track_data["title"],
+            artist=track_data["artist"],
+            musicbrainz_id=track_data.get("id"),
+            isrc=track_data.get("isrc"),
+            duration_ms=track_data.get("duration_ms"),
+            metadata_source="musicbrainz",
             metadata_content={"album": track_data.get("album")},
         )
         db.add(track_obj)
@@ -118,6 +127,7 @@ async def _resolve_musicbrainz_id(db: AsyncSession, track_id_str: str) -> UUID:
 
 async def _resolve_youtube_id(db: AsyncSession, track_id_str: str) -> UUID:
     from app.models.track import Track
+
     result = await db.execute(select(Track).where(Track.youtube_id == track_id_str))
     track_obj = result.scalar_one_or_none()
     if track_obj:
@@ -150,9 +160,9 @@ async def _resolve_track_to_local_id(db: AsyncSession, track_id_str: str, source
     resolver = resolvers.get(source)
     if not resolver:
         raise HTTPException(
-        status_code=400,
-        detail=f"Track ID {track_id_str} not found and source {source} does not support resolution",
-    )
+            status_code=400,
+            detail=f"Track ID {track_id_str} not found and source {source} does not support resolution",
+        )
     return await resolver(db, track_id_str)
 
 
@@ -291,6 +301,7 @@ async def download_all_artist_tracks(
 
     if request.source == "deezer":
         from app.services.deezer_service import DeezerService
+
         service = DeezerService()
         artist = await service.get_artist_details(artist_id)
         if not artist:
@@ -301,6 +312,7 @@ async def download_all_artist_tracks(
             all_tracks.extend(await service.get_album_tracks(album["id"]))
     elif request.source == "spotify":
         from app.services.spotify_service import SpotifyService
+
         service_sp = SpotifyService()
         artist = await service_sp.get_artist_details(artist_id)
         if not artist:
@@ -340,12 +352,14 @@ async def download_album(
 
     if request.source == "deezer":
         from app.services.deezer_service import DeezerService
+
         tracks = await DeezerService().get_album_tracks(album_id)
         if not tracks:
             raise HTTPException(status_code=404, detail="Album not found on Deezer")
         album_name = tracks[0].get("album", "Unknown Album") if tracks else album_id
     elif request.source == "spotify":
         from app.services.spotify_service import SpotifyService
+
         service = SpotifyService()
         try:
             album_data = await service.get_album_details(album_id)

@@ -192,9 +192,7 @@ class LastfmService:
 
     async def _fetch_raw_artists_authenticated(self, session_key: str, limit: int) -> list:
         try:
-            data = await self._request(
-                "user.getRecommendedArtists", {"sk": session_key, "limit": limit}, signed=True
-            )
+            data = await self._request("user.getRecommendedArtists", {"sk": session_key, "limit": limit}, signed=True)
             raw = data.get("recommendations", {}).get("artist", [])
             return [raw] if isinstance(raw, dict) else raw
         except Exception as e:

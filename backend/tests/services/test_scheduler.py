@@ -13,6 +13,7 @@ def scheduler_svc():
 
 # ─── start / stop ─────────────────────────────────────────────────────────────
 
+
 def test_start_registers_jobs_and_starts(scheduler_svc):
     scheduler_svc.scheduler.running = False
 
@@ -48,6 +49,7 @@ def test_stop_skips_when_not_running(scheduler_svc):
 
 
 # ─── scheduled_watchlist_sync ─────────────────────────────────────────────────
+
 
 @pytest.mark.asyncio
 async def test_scheduled_watchlist_sync_no_redis(scheduler_svc):
@@ -135,6 +137,7 @@ async def test_scheduled_watchlist_sync_user_error_continues(scheduler_svc):
 
 # ─── scheduled_recommendation_refresh ────────────────────────────────────────
 
+
 @pytest.mark.asyncio
 async def test_scheduled_recommendation_refresh_success(scheduler_svc):
     mock_user = MagicMock()
@@ -195,6 +198,7 @@ async def test_scheduled_recommendation_refresh_db_error(scheduler_svc):
 
 # ─── scheduled_retry_downloads ────────────────────────────────────────────────
 
+
 @pytest.mark.asyncio
 async def test_scheduled_retry_downloads_success(scheduler_svc):
     with (
@@ -224,6 +228,7 @@ async def test_scheduled_retry_downloads_error_does_not_raise(scheduler_svc):
 
 
 # ─── check_stuck_downloads ────────────────────────────────────────────────────
+
 
 @pytest.mark.asyncio
 async def test_check_stuck_downloads_is_noop(scheduler_svc):

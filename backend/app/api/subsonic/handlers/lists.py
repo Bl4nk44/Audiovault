@@ -49,11 +49,14 @@ async def _build_album_list_item(db: AsyncSession, album: Album, current_user: U
         artist_obj = await db.get(Artist, album.artist_id)
         if artist_obj:
             artist_name = artist_obj.name
-    sc = await db.scalar(
-        select(func.count(Track.id))
-        .join(Download, Download.track_id == Track.id)
-        .where(Track.album_id == album.id, Download.user_id == current_user.id, Download.status == "completed")
-    ) or 0
+    sc = (
+        await db.scalar(
+            select(func.count(Track.id))
+            .join(Download, Download.track_id == Track.id)
+            .where(Track.album_id == album.id, Download.user_id == current_user.id, Download.status == "completed")
+        )
+        or 0
+    )
     return {
         "id": str(album.id),
         "parent": str(album.artist_id) if album.artist_id else None,

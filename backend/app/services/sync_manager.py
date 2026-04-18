@@ -37,9 +37,7 @@ class SyncManager:
             return track.metadata_content[f"{watchlist.source}_id"] in remote_ids
         return False
 
-    def _compute_safety_warning(
-        self, remove_count: int, local_count: int, remote_ids: set
-    ) -> tuple[bool, str | None]:
+    def _compute_safety_warning(self, remove_count: int, local_count: int, remote_ids: set) -> tuple[bool, str | None]:
         if local_count > 0 and (remove_count / local_count) > 0.10:
             return True, f"High deletion ratio detected ({int(remove_count / local_count * 100)}%). Please verify."
         if remove_count > 20:
@@ -115,9 +113,7 @@ class SyncManager:
         self._pending_reports[sync_token] = report
         return report
 
-    async def _remove_download_if_unreferenced(
-        self, db: AsyncSession, u_uuid: UUID, track_uuid: UUID
-    ) -> int:
+    async def _remove_download_if_unreferenced(self, db: AsyncSession, u_uuid: UUID, track_uuid: UUID) -> int:
         ref_count = await db.scalar(
             select(func.count(WatchlistItem.id))
             .join(Watchlist)
@@ -125,9 +121,7 @@ class SyncManager:
         )
         if ref_count:
             return 0
-        d_result = await db.execute(
-            select(Download).where(Download.user_id == u_uuid, Download.track_id == track_uuid)
-        )
+        d_result = await db.execute(select(Download).where(Download.user_id == u_uuid, Download.track_id == track_uuid))
         download = d_result.scalar_one_or_none()
         if not download:
             return 0

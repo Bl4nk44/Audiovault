@@ -14,6 +14,7 @@ def service():
 
 # ─── get_anonymous_token ─────────────────────────────────────────────────────
 
+
 @pytest.mark.asyncio
 async def test_token_reused_when_not_expired(service):
     service._token = "cached_token"
@@ -38,6 +39,7 @@ async def test_token_fetch_exception_returns_empty(service):
 
 
 # ─── _request ────────────────────────────────────────────────────────────────
+
 
 @pytest.mark.asyncio
 async def test_request_no_token_returns_none(service):
@@ -91,6 +93,7 @@ async def test_request_exception_returns_none(service):
 
 # ─── _format_track album_obj ─────────────────────────────────────────────────
 
+
 def test_format_track_with_album_obj(service):
     item = {
         "id": "t1",
@@ -117,6 +120,7 @@ def test_format_track_album_obj_no_images(service):
 
 # ─── get_track ────────────────────────────────────────────────────────────────
 
+
 @pytest.mark.asyncio
 async def test_get_track_returns_none_when_no_data(service):
     with patch.object(service, "_request", new_callable=AsyncMock, return_value=None):
@@ -125,6 +129,7 @@ async def test_get_track_returns_none_when_no_data(service):
 
 
 # ─── get_playlist_tracks ─────────────────────────────────────────────────────
+
 
 @pytest.mark.asyncio
 async def test_get_playlist_tracks_breaks_on_no_data(service):
@@ -145,6 +150,7 @@ async def test_get_playlist_tracks_breaks_on_no_data(service):
 
 # ─── get_playlist_details ─────────────────────────────────────────────────────
 
+
 @pytest.mark.asyncio
 async def test_get_playlist_details_returns_none_when_no_data(service):
     with patch.object(service, "_request", new_callable=AsyncMock, return_value=None):
@@ -163,9 +169,7 @@ async def test_get_playlist_details_pagination(service):
             "items": [{"track": {"id": "t1", "name": "T1", "artists": [], "duration_ms": 0}}] * 100,
         },
     }
-    second_response = {
-        "items": [{"track": {"id": "t2", "name": "T2", "artists": [], "duration_ms": 0}}] * 10
-    }
+    second_response = {"items": [{"track": {"id": "t2", "name": "T2", "artists": [], "duration_ms": 0}}] * 10}
 
     call_count = 0
 
@@ -185,6 +189,7 @@ async def test_get_playlist_details_pagination(service):
 
 # ─── get_album_tracks ─────────────────────────────────────────────────────────
 
+
 @pytest.mark.asyncio
 async def test_get_album_tracks_no_album_data(service):
     with patch.object(service, "_request", new_callable=AsyncMock, return_value=None):
@@ -203,9 +208,7 @@ async def test_get_album_tracks_pagination(service):
             "items": [{"id": f"t{i}", "name": f"T{i}", "artists": [], "duration_ms": 0} for i in range(50)],
         },
     }
-    second_page = {
-        "items": [{"id": f"t{i}", "name": f"T{i}", "artists": [], "duration_ms": 0} for i in range(50, 60)]
-    }
+    second_page = {"items": [{"id": f"t{i}", "name": f"T{i}", "artists": [], "duration_ms": 0} for i in range(50, 60)]}
 
     call_count = 0
 
@@ -224,6 +227,7 @@ async def test_get_album_tracks_pagination(service):
 
 # ─── get_album ────────────────────────────────────────────────────────────────
 
+
 @pytest.mark.asyncio
 async def test_get_album_returns_none(service):
     with patch.object(service, "_request", new_callable=AsyncMock, return_value=None):
@@ -233,6 +237,7 @@ async def test_get_album_returns_none(service):
 
 # ─── get_album_details ────────────────────────────────────────────────────────
 
+
 @pytest.mark.asyncio
 async def test_get_album_details_no_album_returns_none(service):
     with patch.object(service, "get_album", new_callable=AsyncMock, return_value=None):
@@ -241,6 +246,7 @@ async def test_get_album_details_no_album_returns_none(service):
 
 
 # ─── get_artist_top_tracks ────────────────────────────────────────────────────
+
 
 @pytest.mark.asyncio
 async def test_get_artist_top_tracks_no_tracks_key(service):
@@ -257,6 +263,7 @@ async def test_get_artist_top_tracks_returns_empty_on_no_data(service):
 
 
 # ─── get_artist_albums (filtering) ───────────────────────────────────────────
+
 
 @pytest.mark.asyncio
 async def test_get_artist_albums_filters_compilations(service):
@@ -302,6 +309,7 @@ async def test_get_artist_albums_breaks_on_no_data(service):
 
 # ─── get_artist_details ───────────────────────────────────────────────────────
 
+
 @pytest.mark.asyncio
 async def test_get_artist_details_no_data_returns_none(service):
     with patch.object(service, "_request", new_callable=AsyncMock, return_value=None):
@@ -312,10 +320,26 @@ async def test_get_artist_details_no_data_returns_none(service):
 @pytest.mark.asyncio
 async def test_get_artist_details_deduplicates_albums(service):
     artist_data = {"id": "a1", "name": "Artist", "images": []}
-    album1 = {"id": "alb1", "name": "Album", "album_type": "album", "images": [],
-               "artists": [{"name": "Artist"}], "release_date": "2020", "total_tracks": 10, "type": "album"}
-    album2 = {"id": "alb2", "name": "Album", "album_type": "album", "images": [],
-               "artists": [{"name": "Artist"}], "release_date": "2020", "total_tracks": 10, "type": "album"}
+    album1 = {
+        "id": "alb1",
+        "name": "Album",
+        "album_type": "album",
+        "images": [],
+        "artists": [{"name": "Artist"}],
+        "release_date": "2020",
+        "total_tracks": 10,
+        "type": "album",
+    }
+    album2 = {
+        "id": "alb2",
+        "name": "Album",
+        "album_type": "album",
+        "images": [],
+        "artists": [{"name": "Artist"}],
+        "release_date": "2020",
+        "total_tracks": 10,
+        "type": "album",
+    }
 
     with (
         patch.object(service, "_request", new_callable=AsyncMock, return_value=artist_data),
@@ -329,6 +353,7 @@ async def test_get_artist_details_deduplicates_albums(service):
 
 
 # ─── search() URL routing ─────────────────────────────────────────────────────
+
 
 @pytest.mark.asyncio
 async def test_search_resolves_short_link(service):
@@ -366,8 +391,9 @@ async def test_search_resolves_short_link_exception_continues(service):
 
 @pytest.mark.asyncio
 async def test_search_url_artist_type(service):
-    with patch.object(service, "_request", new_callable=AsyncMock,
-                      return_value={"id": "a1", "name": "Artist", "images": []}):
+    with patch.object(
+        service, "_request", new_callable=AsyncMock, return_value={"id": "a1", "name": "Artist", "images": []}
+    ):
         result = await service.search("https://open.spotify.com/artist/a1")
     assert len(result) == 1
     assert result[0]["type"] == "artist"
@@ -382,8 +408,12 @@ async def test_search_url_artist_exception_returns_empty(service):
 
 @pytest.mark.asyncio
 async def test_search_url_playlist_type(service):
-    with patch.object(service, "_request", new_callable=AsyncMock,
-                      return_value={"id": "pl1", "name": "PL", "images": [], "tracks": {"total": 5}}):
+    with patch.object(
+        service,
+        "_request",
+        new_callable=AsyncMock,
+        return_value={"id": "pl1", "name": "PL", "images": [], "tracks": {"total": 5}},
+    ):
         result = await service.search("https://open.spotify.com/playlist/pl1")
     assert len(result) == 1
     assert result[0]["type"] == "playlist"
@@ -398,8 +428,12 @@ async def test_search_url_playlist_exception_returns_empty(service):
 
 @pytest.mark.asyncio
 async def test_search_url_album_type(service):
-    with patch.object(service, "_request", new_callable=AsyncMock,
-                      return_value={"id": "al1", "name": "AL", "images": [], "total_tracks": 10}):
+    with patch.object(
+        service,
+        "_request",
+        new_callable=AsyncMock,
+        return_value={"id": "al1", "name": "AL", "images": [], "total_tracks": 10},
+    ):
         result = await service.search("https://open.spotify.com/album/al1")
     assert len(result) == 1
     assert result[0]["type"] == "album"

@@ -25,15 +25,16 @@ async def test_validate_url_dns_failure():
 @pytest.mark.asyncio
 async def test_validate_url_private_ip_blocked():
     """When DNS resolves to a private IP, URL should be blocked."""
-    with patch("app.utils.url_helper.socket.getaddrinfo", return_value=[
-        (None, None, None, None, ("192.168.1.1", 443))
-    ]):
+    with patch(
+        "app.utils.url_helper.socket.getaddrinfo", return_value=[(None, None, None, None, ("192.168.1.1", 443))]
+    ):
         is_valid, error = await validate_url("https://open.spotify.com/track/abc")
     assert is_valid is False
     assert "Private IP" in error
 
 
 # ─── resolve_redirects ────────────────────────────────────────────────────────
+
 
 @pytest.mark.asyncio
 async def test_resolve_redirects_ssrf_blocked_on_initial_url():

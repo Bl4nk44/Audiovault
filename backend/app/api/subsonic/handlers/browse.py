@@ -538,17 +538,26 @@ async def _get_artist_directory(db: AsyncSession, current_user: User, artist_ite
     albums = result.scalars().all()
     children = []
     for album in albums:
-        song_count = await db.scalar(
-            select(func.count(Track.id))
-            .join(Download, Download.track_id == Track.id)
-            .where(Track.album_id == album.id, Download.user_id == current_user.id, Download.status == "completed")
-        ) or 0
-        children.append({
-            "id": str(album.id), "parent": str(artist_item.id), "title": album.title,
-            "artist": artist_item.name, "isDir": True, "coverArt": f"al-{album.id}",
-            "songCount": song_count,
-            "year": int(album.release_date[:4]) if album.release_date and len(album.release_date) >= 4 else None,
-        })
+        song_count = (
+            await db.scalar(
+                select(func.count(Track.id))
+                .join(Download, Download.track_id == Track.id)
+                .where(Track.album_id == album.id, Download.user_id == current_user.id, Download.status == "completed")
+            )
+            or 0
+        )
+        children.append(
+            {
+                "id": str(album.id),
+                "parent": str(artist_item.id),
+                "title": album.title,
+                "artist": artist_item.name,
+                "isDir": True,
+                "coverArt": f"al-{album.id}",
+                "songCount": song_count,
+                "year": int(album.release_date[:4]) if album.release_date and len(album.release_date) >= 4 else None,
+            }
+        )
     return subsonic_response(
         {"directory": {"id": str(artist_item.id), "parent": "1", "name": artist_item.name, "child": children}},
         f=f,
@@ -575,6 +584,15 @@ async def _get_album_directory(db: AsyncSession, current_user: User, album_item:
         song["parent"] = str(album_item.id)
         children.append(song)
     return subsonic_response(
-        {"directory": {"id": str(album_item.id), "parent": parent_id, "name": album_item.title,
-                       "artist": artist_name, "coverArt": f"al-{album_item.id}", "child": children}}, f=f
+        {
+            "directory": {
+                "id": str(album_item.id),
+                "parent": parent_id,
+                "name": album_item.title,
+                "artist": artist_name,
+                "coverArt": f"al-{album_item.id}",
+                "child": children,
+            }
+        },
+        f=f,
     )

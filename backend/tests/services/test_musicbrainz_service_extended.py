@@ -16,6 +16,7 @@ def service():
 
 # ─── _get exception handling ──────────────────────────────────────────────────
 
+
 @pytest.mark.asyncio
 async def test_get_request_exception_returns_none(service):
     with patch("aiohttp.ClientSession") as mock_cls:
@@ -31,6 +32,7 @@ async def test_get_request_exception_returns_none(service):
 
 # ─── search_artist no data ────────────────────────────────────────────────────
 
+
 @pytest.mark.asyncio
 async def test_search_artist_no_data_returns_empty(service):
     with patch.object(service, "_get", new_callable=AsyncMock, return_value=None):
@@ -40,6 +42,7 @@ async def test_search_artist_no_data_returns_empty(service):
 
 # ─── search_album no data ─────────────────────────────────────────────────────
 
+
 @pytest.mark.asyncio
 async def test_search_album_no_data_returns_empty(service):
     with patch.object(service, "_get", new_callable=AsyncMock, return_value=None):
@@ -48,6 +51,7 @@ async def test_search_album_no_data_returns_empty(service):
 
 
 # ─── get_track_by_isrc no data ────────────────────────────────────────────────
+
 
 @pytest.mark.asyncio
 async def test_get_track_by_isrc_no_data_returns_none(service):
@@ -65,6 +69,7 @@ async def test_get_track_by_isrc_empty_recordings_returns_none(service):
 
 # ─── get_cover_art fallbacks ──────────────────────────────────────────────────
 
+
 @pytest.mark.asyncio
 async def test_get_cover_art_no_data_returns_none(service):
     with patch.object(service, "_get", new_callable=AsyncMock, return_value=None):
@@ -74,11 +79,7 @@ async def test_get_cover_art_no_data_returns_none(service):
 
 @pytest.mark.asyncio
 async def test_get_cover_art_no_front_uses_first_image(service):
-    data = {
-        "images": [
-            {"front": False, "thumbnails": {"500": "http://500.jpg"}, "image": "http://full.jpg"}
-        ]
-    }
+    data = {"images": [{"front": False, "thumbnails": {"500": "http://500.jpg"}, "image": "http://full.jpg"}]}
     with patch.object(service, "_get", new_callable=AsyncMock, return_value=data):
         result = await service.get_cover_art("mbid-123")
     assert result == "http://500.jpg"
@@ -93,6 +94,7 @@ async def test_get_cover_art_no_images_returns_none(service):
 
 # ─── get_artist_top_releases ──────────────────────────────────────────────────
 
+
 @pytest.mark.asyncio
 async def test_get_artist_top_releases_no_data_returns_empty(service):
     with patch.object(service, "_get", new_callable=AsyncMock, return_value=None):
@@ -104,12 +106,27 @@ async def test_get_artist_top_releases_no_data_returns_empty(service):
 async def test_get_artist_top_releases_deduplicates_by_title(service):
     data = {
         "releases": [
-            {"id": "r1", "title": "Nevermind", "date": "1991", "status": "Official",
-             "release-group": {"primary-type": "Album"}},
-            {"id": "r2", "title": "Nevermind", "date": "1992", "status": "Official",
-             "release-group": {"primary-type": "Album"}},
-            {"id": "r3", "title": "In Utero", "date": "1993", "status": "Official",
-             "release-group": {"primary-type": "Album"}},
+            {
+                "id": "r1",
+                "title": "Nevermind",
+                "date": "1991",
+                "status": "Official",
+                "release-group": {"primary-type": "Album"},
+            },
+            {
+                "id": "r2",
+                "title": "Nevermind",
+                "date": "1992",
+                "status": "Official",
+                "release-group": {"primary-type": "Album"},
+            },
+            {
+                "id": "r3",
+                "title": "In Utero",
+                "date": "1993",
+                "status": "Official",
+                "release-group": {"primary-type": "Album"},
+            },
         ]
     }
     with patch.object(service, "_get", new_callable=AsyncMock, return_value=data):
@@ -121,6 +138,7 @@ async def test_get_artist_top_releases_deduplicates_by_title(service):
 
 
 # ─── _format_recording joinphrase ─────────────────────────────────────────────
+
 
 def test_format_recording_with_joinphrase(service):
     rec = {

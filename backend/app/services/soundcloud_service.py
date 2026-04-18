@@ -112,7 +112,6 @@ class SoundCloudService:
             logger.error(f"Error extracting SoundCloud playlist info: {e}")
             return None
 
-
     def _format_entry(self, entry: dict, fallback_url: str) -> dict | None:
         if not entry:
             return None

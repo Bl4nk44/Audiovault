@@ -16,6 +16,7 @@ def service():
 
 # ─── search() routing ─────────────────────────────────────────────────────────
 
+
 def test_search_routes_to_playlist_search(service):
     service.yt.get_playlist.return_value = {
         "id": "pl1",
@@ -58,6 +59,7 @@ def test_search_routes_to_keyword_for_playlist_type(service):
 
 # ─── _search_video ─────────────────────────────────────────────────────────────
 
+
 def test_search_video_exception_returns_empty(service):
     service.yt.search.side_effect = RuntimeError("API error")
     result = service._search_video("vidId")
@@ -71,6 +73,7 @@ def test_search_video_empty_results_returns_empty(service):
 
 
 # ─── _search_playlist ─────────────────────────────────────────────────────────
+
 
 def test_search_playlist_success(service):
     service.yt.get_playlist.return_value = {
@@ -104,6 +107,7 @@ def test_search_playlist_exception_returns_empty(service):
 
 # ─── _search_channel ─────────────────────────────────────────────────────────
 
+
 def test_search_channel_uc_success(service):
     service.yt.get_artist.return_value = {
         "browseId": "UCabc",
@@ -133,6 +137,7 @@ def test_search_channel_no_thumbnails(service):
 
 # ─── _search_keywords ─────────────────────────────────────────────────────────
 
+
 def test_search_keywords_exception_returns_empty(service):
     service.yt.search.side_effect = RuntimeError("API down")
     result = service._search_keywords("query", 10, "song")
@@ -140,6 +145,7 @@ def test_search_keywords_exception_returns_empty(service):
 
 
 # ─── _map_search_result ───────────────────────────────────────────────────────
+
 
 def test_map_search_result_artist_type(service):
     item = {
@@ -197,6 +203,7 @@ def test_map_search_result_unknown_type_returns_none(service):
 
 # ─── get_artist_tracks ────────────────────────────────────────────────────────
 
+
 def test_get_artist_tracks_success(service):
     service.yt.get_artist.return_value = {
         "songs": {"browseId": "PLsongs"},
@@ -225,6 +232,7 @@ def test_get_artist_tracks_exception_returns_empty(service):
 
 # ─── get_playlist_details ─────────────────────────────────────────────────────
 
+
 def test_get_playlist_details_exception_returns_none(service):
     service.yt.get_playlist.side_effect = RuntimeError("error")
     result = service.get_playlist_details("PL1")
@@ -232,6 +240,7 @@ def test_get_playlist_details_exception_returns_none(service):
 
 
 # ─── _format_track ────────────────────────────────────────────────────────────
+
 
 def test_format_track_with_duration_seconds(service):
     item = {

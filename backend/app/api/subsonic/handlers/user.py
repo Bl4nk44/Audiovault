@@ -317,8 +317,11 @@ async def _record_submission(db, scrobbler_service, current_user, track_id, trac
     if track_obj:
         try:
             await scrobbler_service.scrobble_track(
-                user=current_user, track=track_obj.title, artist=track_obj.artist or "Unknown",
-                album=track_obj.album, timestamp=int(played_at.timestamp()),
+                user=current_user,
+                track=track_obj.title,
+                artist=track_obj.artist or "Unknown",
+                album=track_obj.album,
+                timestamp=int(played_at.timestamp()),
             )
         except Exception:  # nosec B110
             pass

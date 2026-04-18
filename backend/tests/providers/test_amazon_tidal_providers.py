@@ -6,6 +6,7 @@ from app.providers.tidal_provider import TidalProvider
 
 # ─── Fixtures ────────────────────────────────────────────────────────────────
 
+
 @pytest.fixture
 def amazon():
     return AmazonMusicProvider()
@@ -28,6 +29,7 @@ TRACK_DICT = {
 
 
 # ─── AmazonMusicProvider ─────────────────────────────────────────────────────
+
 
 def test_amazon_name(amazon):
     assert amazon.name == "amazon_music"
@@ -121,6 +123,7 @@ async def test_amazon_get_track_not_found(amazon):
 
 
 # ─── TidalProvider ───────────────────────────────────────────────────────────
+
 
 def test_tidal_name(tidal):
     assert tidal.name == "tidal"

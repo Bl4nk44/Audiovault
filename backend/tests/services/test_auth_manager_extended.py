@@ -28,6 +28,7 @@ def _mock_query_result(value):
 
 # ─── register_user error paths ────────────────────────────────────────────────
 
+
 @pytest.mark.asyncio
 async def test_register_email_already_registered(manager, mock_db):
     existing_user = MagicMock()
@@ -56,6 +57,7 @@ async def test_register_username_already_taken(manager, mock_db):
 
 
 # ─── refresh_access_token error paths ────────────────────────────────────────
+
 
 @pytest.mark.asyncio
 async def test_refresh_wrong_token_type_raises_401(manager, mock_db):
