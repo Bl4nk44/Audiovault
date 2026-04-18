@@ -139,6 +139,22 @@ async def _resolve_track_path(db: AsyncSession, track_id: str) -> tuple[Optional
     return track, file_path
 
 
+async def _get_album_art_redirect(track: Track, db: AsyncSession) -> Optional[RedirectResponse]:
+    if not track.album_id:
+        return None
+    result = await db.execute(select(Album).where(Album.id == track.album_id))
+    album = result.scalar_one_or_none()
+    if not (album and album.images):
+        return None
+    url = (album.images or {}).get("300") or (album.images or {}).get("640")
+    if not url:
+        return None
+    parsed = urlparse(url)
+    if parsed.netloc in ALLOWED_IMAGE_DOMAINS:
+        return RedirectResponse(url)  # nosemgrep: python.fastapi.web.tainted-redirect-fastapi.tainted-redirect-fastapi
+    return None
+
+
 @router.get("/{track_id}/cover", responses={404: {"description": "Not found"}})
 async def get_track_cover(track_id: str, db: Annotated[AsyncSession, Depends(get_db)] = ...):
     """
@@ -152,31 +168,17 @@ async def get_track_cover(track_id: str, db: Annotated[AsyncSession, Depends(get
 
     if file_path:
         directory = os.path.dirname(file_path)
-
-        # 1. Local Files
         content, mime = await _resolve_local_cover_file(directory)
         if content:
             return Response(content=content, media_type=mime)
-
-        # 2. Embedded Art
         content, mime = await _extract_embedded_cover_art(file_path)
         if content:
             return Response(content=content, media_type=mime)
 
-    # 3. Fallback to Album art if linked
-    if track.album_id:
-        result = await db.execute(select(Album).where(Album.id == track.album_id))
-        album = result.scalar_one_or_none()
-        if album and album.images:
-            url = (album.images or {}).get("300") or (album.images or {}).get("640")
-            if url:
-                parsed = urlparse(url)
-                if parsed.netloc in ALLOWED_IMAGE_DOMAINS:
-                    return RedirectResponse(
-                        url
-                    )  # nosemgrep: python.fastapi.web.tainted-redirect-fastapi.tainted-redirect-fastapi
+    redirect = await _get_album_art_redirect(track, db)
+    if redirect:
+        return redirect
 
-    # 404 if no file source or art found
     raise HTTPException(status_code=404, detail="No cover art found")
 
 

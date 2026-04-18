@@ -209,6 +209,14 @@ class SearchOrchestrator:
 
     # --- Deduplication ---
 
+    def _replace_if_better_image(
+        self, unique: list, seen_map: dict, key: str, result: dict[str, Any]
+    ) -> None:
+        existing = seen_map[key]
+        if not existing.get("image_url") and result.get("image_url"):
+            unique[unique.index(existing)] = result
+            seen_map[key] = result
+
     def _deduplicate_results(self, results: list[dict[str, Any]]) -> list[dict[str, Any]]:
         """Deduplicate results by ISRC, preferring entries with cover art."""
         seen_isrcs: dict[str, dict[str, Any]] = {}
@@ -219,28 +227,16 @@ class SearchOrchestrator:
             isrc = result.get("isrc")
             title_key = f"{result.get('title', '').lower()}|{result.get('artist', '').lower()}"
 
-            # ISRC-based dedup
             if isrc:
                 if isrc in seen_isrcs:
-                    # Prefer the one with an image
-                    existing = seen_isrcs[isrc]
-                    if not existing.get("image_url") and result.get("image_url"):
-                        # Replace with the one that has an image
-                        idx = unique.index(existing)
-                        unique[idx] = result
-                        seen_isrcs[isrc] = result
+                    self._replace_if_better_image(unique, seen_isrcs, isrc, result)
                     continue
                 seen_isrcs[isrc] = result
                 seen_titles[title_key] = result
                 unique.append(result)
             else:
-                # Title+artist dedup for results without ISRC
                 if title_key in seen_titles:
-                    existing = seen_titles[title_key]
-                    if not existing.get("image_url") and result.get("image_url"):
-                        idx = unique.index(existing)
-                        unique[idx] = result
-                        seen_titles[title_key] = result
+                    self._replace_if_better_image(unique, seen_titles, title_key, result)
                     continue
                 seen_titles[title_key] = result
                 unique.append(result)

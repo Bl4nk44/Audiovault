@@ -254,58 +254,58 @@ async def delete_playlist(
     await db.commit()
 
 
+async def _resolve_external_track(
+    db: AsyncSession, artist_name: str, track_name: str, user_id: UUID, playlist_id: UUID, playlist_name: str
+) -> UUID:
+    from app.services.download_manager import download_manager
+
+    find_result = await db.execute(
+        select(Track)
+        .where(Track.title.ilike(f"%{track_name}%"), Track.artist.ilike(f"%{artist_name}%"))
+        .limit(1)
+    )
+    existing_track = find_result.scalar_one_or_none()
+    if existing_track:
+        return existing_track.id
+
+    new_track = Track(
+        title=track_name,
+        artist=artist_name,
+        duration_ms=0,
+        metadata_content={"source": "lastfm", "image_url": None},
+    )
+    db.add(new_track)
+    await db.flush()
+
+    try:
+        await download_manager.add_download(
+            db=db,
+            user_id=user_id,
+            download_data=DownloadCreate(
+                track_id=new_track.id,
+                source="lastfm",
+                playlist_id=playlist_id,
+                playlist_name=playlist_name,
+            ),
+        )
+    except Exception as e:
+        logger.error(f"Failed to trigger automatic download: {e}")
+    return new_track.id
+
+
 async def _resolve_track_ids(
     db: AsyncSession, track_ids: list[str], user_id: UUID, playlist_id: UUID, playlist_name: str
 ) -> list[UUID]:
     """Helper to resolve track IDs from various formats."""
-    from app.services.download_manager import download_manager
-
     resolved_ids = []
     for track_id_str in track_ids:
         if track_id_str.startswith("external:"):
             parts = track_id_str.split(":", 2)
             if len(parts) >= 3:
-                artist_name, track_name = parts[1], parts[2]
-
-                # Try to find existing track
-                find_query = (
-                    select(Track)
-                    .where(Track.title.ilike(f"%{track_name}%"), Track.artist.ilike(f"%{artist_name}%"))
-                    .limit(1)
+                track_uuid = await _resolve_external_track(
+                    db, parts[1], parts[2], user_id, playlist_id, playlist_name
                 )
-                find_result = await db.execute(find_query)
-                existing_track = find_result.scalar_one_or_none()
-
-                if existing_track:
-                    resolved_ids.append(existing_track.id)
-                else:
-                    # Create placeholder
-                    new_track = Track(
-                        title=track_name,
-                        artist=artist_name,
-                        duration_ms=0,
-                        metadata_content={"source": "lastfm", "image_url": None},
-                    )
-                    db.add(new_track)
-                    await db.flush()
-                    resolved_ids.append(new_track.id)
-
-                    # Trigger download
-                    try:
-                        await download_manager.add_download(
-                            db=db,
-                            user_id=user_id,
-                            download_data=DownloadCreate(
-                                track_id=new_track.id,
-                                source="lastfm",
-                                playlist_id=playlist_id,
-                                playlist_name=playlist_name,
-                            ),
-                        )
-                    except Exception as e:
-                        from app.api.v1.playlists import logger
-
-                        logger.error(f"Failed to trigger automatic download: {e}")
+                resolved_ids.append(track_uuid)
         else:
             try:
                 resolved_ids.append(UUID(track_id_str))

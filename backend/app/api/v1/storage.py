@@ -34,6 +34,24 @@ class StorageStats(BaseModel):
     recent_growth: list[dict]
 
 
+def _get_disk_stats(download_dir: str) -> tuple[int, int, float]:
+    try:
+        if hasattr(os, "statvfs"):
+            disk_stat = os.statvfs(download_dir)
+            disk_total = disk_stat.f_blocks * disk_stat.f_frsize
+            disk_free = disk_stat.f_bavail * disk_stat.f_frsize
+        else:
+            import shutil
+
+            disk_usage = shutil.disk_usage(download_dir)
+            disk_total = disk_usage.total
+            disk_free = disk_usage.free
+        disk_used_percent = ((disk_total - disk_free) / disk_total * 100) if disk_total > 0 else 0
+        return disk_total, disk_free, disk_used_percent
+    except OSError:
+        return 0, 0, 0
+
+
 def format_bytes(size_bytes: int) -> str:
     """Format bytes to human-readable string."""
     current: float = float(size_bytes)
@@ -101,25 +119,7 @@ async def get_storage_stats(
     for playlist_data in by_playlist.values():
         playlist_data["size_formatted"] = format_bytes(playlist_data["size_bytes"])
 
-    # Get disk usage
-    download_dir = settings.DOWNLOAD_DIR
-    try:
-        disk_stat = os.statvfs(download_dir) if hasattr(os, "statvfs") else None
-        if disk_stat:
-            disk_total = disk_stat.f_blocks * disk_stat.f_frsize
-            disk_free = disk_stat.f_bavail * disk_stat.f_frsize
-        else:
-            # Windows fallback
-            import shutil
-
-            disk_usage = shutil.disk_usage(download_dir)
-            disk_total = disk_usage.total
-            disk_free = disk_usage.free
-        disk_used_percent = ((disk_total - disk_free) / disk_total * 100) if disk_total > 0 else 0
-    except OSError:
-        disk_total = 0
-        disk_free = 0
-        disk_used_percent = 0
+    disk_total, disk_free, disk_used_percent = _get_disk_stats(settings.DOWNLOAD_DIR)
 
     # Get recent growth (downloads per day for last 30 days)
     thirty_days_ago = datetime.now(UTC) - timedelta(days=30)
