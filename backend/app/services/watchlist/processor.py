@@ -52,29 +52,26 @@ class WatchlistItemProcessor:
                 )
         return tracks
 
-    async def _fetch_artist_or_channel_tracks(self, item) -> list:
-        tracks = []
-        target_artist = str(item.source_name).lower() if item.source_name else ""
+    def _matches_target_artist(self, track: dict, target_artist: str) -> bool:
+        return not target_artist or target_artist in (track.get("artist") or "").lower()
 
-        if item.source == "spotify":
-            # Run sync method in executor if it blocks, but here we just wrap it
-            albums = await self.spotify_service.get_artist_albums(item.source_id) or []
-            for album in albums:
-                album_id = album.get("id")
-                if not album_id:
-                    continue
-                # Potentially strictly sync, might block loop but ok for now
-                album_tracks = await self.spotify_service.get_album_tracks(str(album_id)) or []
-                for t in album_tracks:
-                    t_artist = t.get("artist") or ""
-                    if not target_artist or target_artist in t_artist.lower():
-                        tracks.append(t)
-        elif item.source == "youtube":
-            raw_tracks = self.youtube_service.get_artist_tracks(item.source_id) or []
-            for t in raw_tracks:
-                t_artist = t.get("artist") or ""
-                if not target_artist or target_artist in t_artist.lower():
+    async def _fetch_spotify_artist_tracks(self, source_id: str, target_artist: str) -> list:
+        tracks = []
+        for album in await self.spotify_service.get_artist_albums(source_id) or []:
+            album_id = album.get("id")
+            if not album_id:
+                continue
+            for t in await self.spotify_service.get_album_tracks(str(album_id)) or []:
+                if self._matches_target_artist(t, target_artist):
                     tracks.append(t)
-        elif item.source == "deezer":
-            logger.warning(f"Deezer artist fetching not implemented for {item.source_id}")
         return tracks
+
+    async def _fetch_artist_or_channel_tracks(self, item) -> list:
+        target_artist = str(item.source_name).lower() if item.source_name else ""
+        if item.source == "spotify":
+            return await self._fetch_spotify_artist_tracks(item.source_id, target_artist)
+        if item.source == "youtube":
+            return [t for t in self.youtube_service.get_artist_tracks(item.source_id) or [] if self._matches_target_artist(t, target_artist)]
+        if item.source == "deezer":
+            logger.warning(f"Deezer artist fetching not implemented for {item.source_id}")
+        return []

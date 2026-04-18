@@ -92,69 +92,39 @@ class LibraryDataService:
 
         return {"items": items, "total": total, "skip": skip, "limit": limit}
 
-    def _transform_download_item(self, d: Download) -> tuple[dict, bool]:
-        updated = False
-        image_url = None
-        if d.track.metadata_content:
-            image_url = d.track.metadata_content.get("image_url") or d.track.metadata_content.get("album_art")
+    def _fix_extension_mismatch(self, d: Download) -> bool:
+        if not (d.file_path and not os.path.exists(d.file_path)):
+            return False
+        base, ext = os.path.splitext(d.file_path)
+        if ext == ".mp3":
+            return False
+        potential_path = base + ".mp3"
+        if os.path.exists(potential_path):
+            d.file_path = potential_path
+            return True
+        return False
 
-        # Fallback to native cover endpoint if no external URL
-        if not image_url:
-            # Use absolute path or relative? Frontend usually prepends API_URL if relative?
-            # But here we are returning data. Frontend code in PlaylistCard uses `playlist.image_url` directly.
-            # If it starts with http, it uses it. If not?
-            # Let's check api.ts or component.
-            # Actually PlaylistCard just sets src={playlist.image_url}.
-            # If we send "/api/v1/stream/.../cover", browser resolves relative to domain.
-            # That works.
-            image_url = f"{settings.API_V1_STR}/stream/{d.track.id}/cover"
-
-        # Auto-fix for extension mismatch
-        if d.file_path and not os.path.exists(d.file_path):
-            base, ext = os.path.splitext(d.file_path)
-            if ext != ".mp3":
-                potential_path = base + ".mp3"
-                if os.path.exists(potential_path):
-                    d.file_path = potential_path
-                    updated = True
-
-        filename = None
-        if d.file_path:
-            # Smart path resolution for Docker <-> Local Windows mismatch
-            current_path = d.file_path
-
-            # Check if path is valid on current OS
-            if not os.path.exists(current_path):
-                # Helper to guess relative path from absolute DB path
-                # E.g. /downloads/admin/... -> admin/...
-                potential_rel = None
-                normalized_db_path = d.file_path.replace("\\", "/")
-
-                known_prefixes = ["/downloads/", "/app/downloads/"]
-                for prefix in known_prefixes:
-                    if normalized_db_path.startswith(prefix):
-                        potential_rel = normalized_db_path[len(prefix) :]
-                        break
-
-                if potential_rel:
-                    # Check if this relative path exists in current DOWNLOAD_DIR
-                    candidate = os.path.join(settings.DOWNLOAD_DIR, potential_rel)
+    def _resolve_filename(self, file_path: str) -> str:
+        current_path = file_path
+        if not os.path.exists(current_path):
+            normalized = file_path.replace("\\", "/")
+            for prefix in ["/downloads/", "/app/downloads/"]:
+                if normalized.startswith(prefix):
+                    candidate = os.path.join(settings.DOWNLOAD_DIR, normalized[len(prefix):])
                     if os.path.exists(candidate):
-                        # Found it! Use this candidate for rel_path calculation
                         current_path = candidate
+                    break
+        try:
+            rel = os.path.relpath(current_path, settings.DOWNLOAD_DIR).replace("\\", "/")
+            return os.path.basename(current_path) if rel.startswith("..") else rel
+        except (ValueError, Exception):
+            return os.path.basename(current_path)
 
-            try:
-                rel_path = os.path.relpath(current_path, settings.DOWNLOAD_DIR).replace("\\", "/")
-                if rel_path.startswith(".."):
-                    filename = os.path.basename(current_path)
-                else:
-                    filename = rel_path
-            except ValueError:
-                # Different drives on Windows
-                filename = os.path.basename(current_path)
-            except Exception:
-                filename = os.path.basename(current_path)
-
+    def _transform_download_item(self, d: Download) -> tuple[dict, bool]:
+        meta = d.track.metadata_content or {}
+        image_url = meta.get("image_url") or meta.get("album_art") or f"{settings.API_V1_STR}/stream/{d.track.id}/cover"
+        updated = self._fix_extension_mismatch(d)
+        filename = self._resolve_filename(d.file_path) if d.file_path else None
         return {
             "id": str(d.id),
             "track_id": str(d.track_id),
