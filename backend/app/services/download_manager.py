@@ -233,6 +233,36 @@ class DownloadManager:
             },
         )
 
+    async def _update_track_from_file(self, db, download) -> None:
+        if not (download.file_path and os.path.exists(download.file_path)):
+            return
+        try:
+            from app.services.library_scanner import library_scanner_service
+
+            title, artist, album, genre, duration_ms, _ = library_scanner_service._parse_audio_metadata_sync(
+                download.file_path
+            )
+            if not download.track:
+                return
+            download.track.title = title
+            download.track.artist = artist
+            download.track.album = album
+            if duration_ms > 0:
+                download.track.duration_ms = duration_ms
+            meta = download.track.metadata_content or {}
+            if genre:
+                meta["genre"] = genre
+            if "source" not in meta:
+                meta["source"] = download.source
+            artist_id, album_id = await library_scanner_service.resolve_artist_and_album(db, artist, album)
+            download.track.artist_id = artist_id
+            download.track.album_id = album_id
+            download.track.metadata_content = meta
+            db.add(download.track)
+            logger.info(f"Updated Track metadata for {download.track.id}: {title} - {artist} [Duration: {duration_ms}ms]")
+        except Exception as e:
+            logger.error(f"Failed to update track metadata from file: {e}")
+
     async def _handle_completion(self, db, download, final_filename_container, output_template):
         download.status = "completed"
         download.progress = 100
@@ -257,51 +287,7 @@ class DownloadManager:
             except OSError as e:
                 logger.warning(f"Could not get file size: {e}")
 
-        # --- UPDATE TRACK METADATA START ---
-        try:
-            if download.file_path and os.path.exists(download.file_path):
-                # Import here to avoid circular imports if possible, or move to top if safe
-                from app.services.library_scanner import library_scanner_service
-
-                title, artist, album, genre, duration_ms, _ = library_scanner_service._parse_audio_metadata_sync(
-                    download.file_path
-                )
-
-                # Update Track
-                if download.track:
-                    # Update fields if they are generic/unknown
-                    # Or overwrite? Let's overwrite as the file is the source of truth
-                    download.track.title = title
-                    download.track.artist = artist
-                    download.track.album = album
-
-                    # Update duration from file metadata
-                    if duration_ms > 0:
-                        download.track.duration_ms = duration_ms
-
-                    # Update metadata_content
-                    meta = download.track.metadata_content or {}
-                    if genre:
-                        meta["genre"] = genre
-                    # Ensure source is generic if missing
-                    if "source" not in meta:
-                        meta["source"] = download.source
-
-                    # Resolve relationships
-                    artist_id, album_id = await library_scanner_service.resolve_artist_and_album(db, artist, album)
-                    download.track.artist_id = artist_id
-                    download.track.album_id = album_id
-
-                    download.track.metadata_content = meta
-                    db.add(download.track)
-                    logger.info(
-                        f"Updated Track metadata for {download.track.id}: {title} - {artist} "
-                        f"[Duration: {duration_ms}ms]"
-                    )
-
-        except Exception as e:
-            logger.error(f"Failed to update track metadata from file: {e}")
-        # --- UPDATE TRACK METADATA END ---
+        await self._update_track_from_file(db, download)
 
         await db.commit()
 
@@ -310,36 +296,30 @@ class DownloadManager:
         if download.playlist_name:
             await self.update_playlist_m3u(db, download.user_id, download.playlist_name)
 
-    def _set_download_file_path(self, download, final_filename_container, output_template, target_format="mp3"):
-        """Set the final file path for the download.
+    def _validate_download_path(self, path: str) -> str | None:
+        abs_path = os.path.abspath(path)
+        abs_base = os.path.abspath(settings.DOWNLOAD_DIR)
+        try:
+            common = os.path.commonpath([abs_base, abs_path])
+        except ValueError:
+            common = ""
+        if common != abs_base:
+            logger.warning(f"User download path {path!r} escapes DOWNLOAD_DIR, falling back to default")
+            return None
+        return path
 
-        Args:
-            target_format: 'mp3' or 'flac' - determines the file extension
-        """
+    def _set_download_file_path(self, download, final_filename_container, output_template, target_format="mp3"):
         target_ext = f".{target_format}"
 
         if final_filename_container["path"]:
             base, _ = os.path.splitext(final_filename_container["path"])
-            # Always use the target format extension
             download.file_path = base + target_ext
         else:
             download_path = None
             if download.user and download.user.preferences:
-                download_path = download.user.preferences.get("downloadPath")
-
-            # Security: validate download_path stays within DOWNLOAD_DIR
-            if download_path:
-                abs_download_path = os.path.abspath(download_path)
-                abs_base_dir = os.path.abspath(settings.DOWNLOAD_DIR)
-                try:
-                    common = os.path.commonpath([abs_base_dir, abs_download_path])
-                except ValueError:
-                    common = ""
-                if common != abs_base_dir:
-                    logger.warning(
-                        f"User download path {download_path!r} escapes DOWNLOAD_DIR, falling back to default"
-                    )
-                    download_path = None
+                raw = download.user.preferences.get("downloadPath")
+                if raw:
+                    download_path = self._validate_download_path(raw)
 
             if not download_path:
                 sanitized_username = sanitize_filename(download.user.username)
@@ -649,34 +629,58 @@ class DownloadManager:
             await self.start_worker()
             logger.info(f"Scheduled {count} failed downloads for retry")
 
-    def _get_ydl_options(self, download: Download, progress_hook):
-        quality_setting = download.user.preferences.get("quality", "high")
-        quality_map = {
-            "low": "128",
-            "normal": "192",
-            "high": "320",
-            "best": "320",
-            "lossless": "flac",
-        }
-        bitrate_or_format = quality_map.get(quality_setting, "320")
-
-        # Determine postprocessors based on quality setting
+    def _build_postprocessors(self, bitrate_or_format: str) -> list:
         if bitrate_or_format == "flac":
-            # Lossless FLAC - no lossy compression
-            postprocessors = [
+            self._target_format = "flac"
+            return [
                 {"key": "FFmpegExtractAudio", "preferredcodec": "flac"},
                 {"key": "FFmpegMetadata", "add_metadata": True},
                 {"key": "EmbedThumbnail"},
             ]
-            self._target_format = "flac"
-        else:
-            # MP3 with specified bitrate
-            postprocessors = [
-                {"key": "FFmpegExtractAudio", "preferredcodec": "mp3", "preferredquality": bitrate_or_format},
-                {"key": "FFmpegMetadata", "add_metadata": True},
-                {"key": "EmbedThumbnail"},
-            ]
-            self._target_format = "mp3"
+        self._target_format = "mp3"
+        return [
+            {"key": "FFmpegExtractAudio", "preferredcodec": "mp3", "preferredquality": bitrate_or_format},
+            {"key": "FFmpegMetadata", "add_metadata": True},
+            {"key": "EmbedThumbnail"},
+        ]
+
+    def _build_output_template(self, download: Download, filename_schema: str, schema_map: dict) -> str:
+        PLAYLIST_TAG = "{playlist}"
+        tmpl = filename_schema.replace("{service}", download.source)
+        if PLAYLIST_TAG in tmpl:
+            playlist_val = sanitize_filename(download.playlist_name) if download.playlist_name else ""
+            tmpl = tmpl.replace(PLAYLIST_TAG, playlist_val).replace("//", "/")
+        for tag, replacement in schema_map.items():
+            if tag != PLAYLIST_TAG:
+                tmpl = tmpl.replace(tag, replacement)
+        if not tmpl or "%" not in tmpl:
+            logger.warning(f"Output template '{tmpl}' invalid or missing tags. Fallback to default.")
+            tmpl = "%(artist)s - %(title)s"
+        return tmpl
+
+    def _resolve_ydl_download_path(self, download: Download, filename_schema: str) -> str:
+        raw_path = download.user.preferences.get("download_path")
+        download_path = self._validate_download_path(raw_path) if raw_path else None
+        if not download_path:
+            root_norm = os.path.normpath(settings.DOWNLOAD_DIR)
+            if filename_schema.strip().startswith("{user}") or os.path.basename(root_norm) == download.user.username:
+                download_path = settings.DOWNLOAD_DIR
+            else:
+                download_path = os.path.join(settings.DOWNLOAD_DIR, sanitize_filename(download.user.username))
+        logger.info(f"Resolved base download path: {download_path}")
+        if not os.path.exists(download_path):
+            try:
+                os.makedirs(download_path, exist_ok=True)
+                self._ensure_permissions(download_path, is_file=False)
+            except Exception as e:
+                logger.error(f"Failed to create directory {download_path}: {e}")
+                download_path = settings.DOWNLOAD_DIR
+        return download_path
+
+    def _get_ydl_options(self, download: Download, progress_hook):
+        quality_map = {"low": "128", "normal": "192", "high": "320", "best": "320", "lossless": "flac"}
+        bitrate_or_format = quality_map.get(download.user.preferences.get("quality", "high"), "320")
+        postprocessors = self._build_postprocessors(bitrate_or_format)
 
         ydl_opts = {
             "format": "bestaudio/best",
@@ -690,8 +694,7 @@ class DownloadManager:
         }
 
         schema_map = {
-            "{artist}": "%(artist)s",  # Removed fallback to uploader|creator to
-            # correspond with strict filename sanitization
+            "{artist}": "%(artist)s",
             "{title}": "%(title)s",
             "{album}": "%(album|Single)s",
             "{id}": "%(id)s",
@@ -699,94 +702,30 @@ class DownloadManager:
             "{track_number}": "%(playlist_index)s",
             "{user}": download.user.username,
         }
-        # Updated default schema as requested
         filename_schema = download.user.preferences.get("filename_schema", "{artist} - {title}")
-
         logger.info(f"Processing download {download.id} with schema: '{filename_schema}'")
 
-        output_template = filename_schema.replace("{service}", download.source)
+        output_template = self._build_output_template(download, filename_schema, schema_map)
+        download_path = self._resolve_ydl_download_path(download, filename_schema)
 
-        # Pre-process playlist tag manually
-        PLAYLIST_TAG = "{playlist}"
-        if PLAYLIST_TAG in output_template:
-            playlist_val = download.playlist_name
-            if playlist_val:
-                # Sanitize to avoid accidental subdirs and OS restricted chars
-                playlist_val = sanitize_filename(playlist_val)
-            else:
-                playlist_val = ""
-
-            output_template = output_template.replace(PLAYLIST_TAG, playlist_val)
-            # Cleanup double slashes if playlist was empty
-            output_template = output_template.replace("//", "/")
-
-        for tag, replacement in schema_map.items():
-            if tag == PLAYLIST_TAG:
-                continue  # Handled above
-            output_template = output_template.replace(tag, replacement)
-
-        if not output_template or "%" not in output_template:
-            logger.warning(f"Output template '{output_template}' invalid or missing tags. Fallback to default.")
-            output_template = "%(artist)s - %(title)s"
-
-        # Correct key is 'download_path' (snake_case) as stored in DB settings.py
-        download_path = download.user.preferences.get("download_path")
-
-        # Security: validate download_path stays within DOWNLOAD_DIR
-        if download_path:
-            abs_download_path = os.path.abspath(download_path)
-            abs_base_dir = os.path.abspath(settings.DOWNLOAD_DIR)
-            try:
-                common = os.path.commonpath([abs_base_dir, abs_download_path])
-            except ValueError:
-                common = ""
-            if common != abs_base_dir:
-                logger.warning(f"User download_path {download_path!r} escapes DOWNLOAD_DIR, falling back to default")
-                download_path = None
-
-        if not download_path:
-            # Smart logic: If user explicitly wants {user} in their schema at the start,
-            # don't force a user subdirectory to avoid "admin/admin/..."
-            # Also prevent duplication if DOWNLOAD_DIR already ends with username
-            root_norm = os.path.normpath(settings.DOWNLOAD_DIR)
-            # Check if root ends with username (handling potential slash variations)
-            root_ends_with_user = os.path.basename(root_norm) == download.user.username
-
-            if filename_schema.strip().startswith("{user}") or root_ends_with_user:
-                download_path = settings.DOWNLOAD_DIR
-            else:
-                sanitized_username = sanitize_filename(download.user.username)
-                download_path = os.path.join(settings.DOWNLOAD_DIR, sanitized_username)
-
-        logger.info(f"Resolved base download path: {download_path}")
-
-        # Ensure directory exists
-        if not os.path.exists(download_path):
-            try:
-                os.makedirs(download_path, exist_ok=True)
-                self._ensure_permissions(download_path, is_file=False)
-            except Exception as e:
-                logger.error(f"Failed to create directory {download_path}: {e}")
-                download_path = settings.DOWNLOAD_DIR
-
-        final_outtmpl = f"{download_path}/{output_template}.%(ext)s"
-        # Normalize slashes for OS
-        final_outtmpl = os.path.normpath(final_outtmpl).replace("\\", "/")
-
+        final_outtmpl = os.path.normpath(f"{download_path}/{output_template}.%(ext)s").replace("\\", "/")
         logger.info(f"Final yt-dlp outtmpl: {final_outtmpl}")
         ydl_opts["outtmpl"] = final_outtmpl
         return ydl_opts, output_template
 
+    def _resolve_direct_soundcloud(self, download: Download, track_info) -> str:
+        if track_info:
+            meta = track_info.metadata_content or {}
+            if "soundcloud.com" in str(download.track_id):
+                return str(download.track_id)
+            if meta.get("source_url"):
+                return meta["source_url"]
+            return f"scsearch1:{track_info.artist} - {track_info.title}"
+        return ""
+
     async def _resolve_url(self, db: AsyncSession, download: Download) -> str:
-        # Check retry count to determine attempt number
         attempt = (download.retry_count or 0) + 1
-
-        # Get Track info for metadata access
-        track_info = None
-        if download.track_id:
-            track_info = await self.get_track_info(db, str(download.track_id))
-
-        # Get instruction from FallbackService
+        track_info = await self.get_track_info(db, str(download.track_id)) if download.track_id else None
         instruction = fallback_service.get_fallback_instruction(str(download.source or "unknown"), attempt, track_info)
         logger.info(f"Fallback instruction for {download.source} (Attempt {attempt}): {instruction}")
 
@@ -795,38 +734,14 @@ class DownloadManager:
 
         if resp_type == "yt_search":
             return f"ytsearch1:{value}"
-
-        elif resp_type == "sc_search":
+        if resp_type == "sc_search":
             return f"scsearch1:{value}"
-
-        elif resp_type == "direct_youtube":
-            # Original logic for direct YT
-            url = f"https://www.youtube.com/watch?v={download.track_id}"
-            return url
-
-        elif resp_type == "direct_soundcloud":
-            if track_info:
-                # Use metadata if available
-                meta = track_info.metadata_content or {}
-                if "soundcloud.com" in str(download.track_id):
-                    return str(download.track_id)
-
-                # Use metadata if available
-                if meta.get("source_url"):
-                    return meta["source_url"]
-
-            # Fallback to search if direct fails/missing
-            if track_info:
-                return f"scsearch1:{track_info.artist} - {track_info.title}"
-            return ""
-
-        elif resp_type == "none":
-            # Try default legacy logic if no instruction covers it
-            # (shouldn't happen with new logic covering all known sources)
-            # Default for imports etc.
-            if track_info:
-                return f"ytsearch1:{track_info.artist} - {track_info.title}"
-
+        if resp_type == "direct_youtube":
+            return f"https://www.youtube.com/watch?v={download.track_id}"
+        if resp_type == "direct_soundcloud":
+            return self._resolve_direct_soundcloud(download, track_info)
+        if resp_type == "none" and track_info:
+            return f"ytsearch1:{track_info.artist} - {track_info.title}"
         return ""
 
     async def get_track_info(self, db: AsyncSession, track_id: str) -> Track | None:
@@ -996,41 +911,36 @@ class DownloadManager:
                 self.active_tasks[download.id].cancel()
                 self.active_tasks.pop(download.id, None)
 
+    def _get_user_download_dir(self, download, parent_dir: str) -> str:
+        user_dir = os.path.dirname(parent_dir) if parent_dir else None
+        if not user_dir:
+            if download.user and download.user.preferences:
+                user_dir = download.user.preferences.get("downloadPath")
+            if not user_dir:
+                user_dir = os.path.join(settings.DOWNLOAD_DIR, sanitize_filename(download.user.username))
+        return user_dir
+
     def _cleanup_empty_directory(self, downloads, playlist_name):
-        # 3. Clean up empty directory and m3u8 playlist file
-        if downloads and downloads[0].file_path:
-            parent_dir = os.path.dirname(downloads[0].file_path)
+        if not (downloads and downloads[0].file_path):
+            return
+        parent_dir = os.path.dirname(downloads[0].file_path)
+        user_download_dir = self._get_user_download_dir(downloads[0], parent_dir)
 
-            # Delete the .m3u8 playlist file
-            # m3u8 is stored in user's root download folder
-            user_download_dir = os.path.dirname(parent_dir) if parent_dir else None
-            if not user_download_dir:
-                # Fallback: try to get from user preferences or settings
-                if downloads[0].user and downloads[0].user.preferences:
-                    user_download_dir = downloads[0].user.preferences.get("downloadPath")
-                if not user_download_dir:
-                    sanitized_username = sanitize_filename(downloads[0].user.username)
-                    user_download_dir = os.path.join(settings.DOWNLOAD_DIR, sanitized_username)
+        m3u8_path = os.path.join(user_download_dir, f"{sanitize_filename(playlist_name)}.m3u8")
+        if os.path.exists(m3u8_path):
+            try:
+                os.remove(m3u8_path)
+                logger.info(f"Removed playlist file {m3u8_path}")
+            except Exception as e:
+                logger.error(f"Failed to remove playlist file {m3u8_path}: {e}")
 
-            safe_playlist_name = sanitize_filename(playlist_name)
-            m3u8_path = os.path.join(user_download_dir, f"{safe_playlist_name}.m3u8")
-
-            if os.path.exists(m3u8_path):
-                try:
-                    os.remove(m3u8_path)
-                    logger.info(f"Removed playlist file {m3u8_path}")
-                except Exception as e:
-                    logger.error(f"Failed to remove playlist file {m3u8_path}: {e}")
-
-            # Check if this dir name matches playlist name normalized
-            safe_playlist_name_dir = playlist_name.replace("/", "-").replace("\\", "-")
-            if safe_playlist_name_dir in os.path.basename(parent_dir):
-                # Try to remove dir if empty
-                try:
-                    os.rmdir(parent_dir)
-                    logger.info(f"Removed empty directory {parent_dir}")
-                except Exception as e:
-                    logger.debug(f"Failed to remove directory {parent_dir}: {e}")
+        safe_dir_name = playlist_name.replace("/", "-").replace("\\", "-")
+        if safe_dir_name in os.path.basename(parent_dir):
+            try:
+                os.rmdir(parent_dir)
+                logger.info(f"Removed empty directory {parent_dir}")
+            except Exception as e:
+                logger.debug(f"Failed to remove directory {parent_dir}: {e}")
 
     async def _delete_db_records(self, db, downloads):
         # 4. Delete DB records
