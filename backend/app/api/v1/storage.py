@@ -49,7 +49,7 @@ def get_file_size(file_path: str) -> int:
     try:
         if file_path and os.path.exists(file_path):
             return os.path.getsize(file_path)
-    except (OSError, PermissionError):
+    except OSError:
         pass
     return 0
 
@@ -116,7 +116,7 @@ async def get_storage_stats(
             disk_total = disk_usage.total
             disk_free = disk_usage.free
         disk_used_percent = ((disk_total - disk_free) / disk_total * 100) if disk_total > 0 else 0
-    except (OSError, PermissionError):
+    except OSError:
         disk_total = 0
         disk_free = 0
         disk_used_percent = 0

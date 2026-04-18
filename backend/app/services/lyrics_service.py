@@ -72,34 +72,10 @@ class LyricsService:
                 return cached
 
         # 2. Try DB metadata if track_id is provided
-        db_lyrics = None
         if track_id:
-            try:
-                from uuid import UUID
-
-                from app.db.database import AsyncSessionLocal as SessionLocal
-                from app.models.track import Track
-                from sqlalchemy import select
-
-                async with SessionLocal() as db:
-                    result = await db.execute(select(Track).where(Track.id == UUID(str(track_id))))
-                    track = result.scalar_one_or_none()
-                    if track and track.metadata_content and track.metadata_content.get("lyrics"):
-                        # Check if it has synced lyrics format
-                        lyrics_text = track.metadata_content["lyrics"]
-                        is_synced = "[" in lyrics_text and "]" in lyrics_text
-
-                        db_lyrics = {
-                            "found": True,
-                            "lyrics": lyrics_text,
-                            "synced_lyrics": lyrics_text if is_synced else None,
-                            "source": "local",
-                        }
-                        # Cache it for future use without DB lookup
-                        await self._cache_result(cache_key, db_lyrics, LYRICS_CACHE_TTL)
-                        return db_lyrics
-            except Exception as e:
-                logger.warning(f"Failed to fetch lyrics from DB metadata: {e}")
+            db_lyrics = await self._get_from_db_metadata(track_id, cache_key)
+            if db_lyrics:
+                return db_lyrics
 
         # 3. Try LRCLIB for synced lyrics (high priority)
         lrclib_data = await self._get_from_lrclib(artist, title)
@@ -113,6 +89,34 @@ class LyricsService:
             return lrclib_data
 
         return await self._fetch_and_cache_genius(genius, artist, title, cache_key)
+
+    async def _get_from_db_metadata(self, track_id: str, cache_key: str) -> Optional[dict]:
+        """Fetch lyrics stored in track metadata (local DB)."""
+        try:
+            from uuid import UUID
+
+            from sqlalchemy import select
+
+            from app.db.database import AsyncSessionLocal as SessionLocal
+            from app.models.track import Track
+
+            async with SessionLocal() as db:
+                result = await db.execute(select(Track).where(Track.id == UUID(str(track_id))))
+                track = result.scalar_one_or_none()
+                if track and track.metadata_content and track.metadata_content.get("lyrics"):
+                    lyrics_text = track.metadata_content["lyrics"]
+                    is_synced = "[" in lyrics_text and "]" in lyrics_text
+                    db_lyrics = {
+                        "found": True,
+                        "lyrics": lyrics_text,
+                        "synced_lyrics": lyrics_text if is_synced else None,
+                        "source": "local",
+                    }
+                    await self._cache_result(cache_key, db_lyrics, LYRICS_CACHE_TTL)
+                    return db_lyrics
+        except Exception as e:
+            logger.warning(f"Failed to fetch lyrics from DB metadata: {e}")
+        return None
 
     async def _get_from_lrclib(self, artist: str, title: str) -> Optional[dict]:
         """

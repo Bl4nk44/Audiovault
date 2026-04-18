@@ -104,10 +104,10 @@ async def get_album_list(
     type: Annotated[str, Query(description="List type: random, newest, frequent, recent, starred, alphabetical, byName, byYear")],
     size: Annotated[int, Query(description="Return size")] = 10,
     offset: Annotated[int, Query(description="Offset")] = 0,
-    fromYear: Annotated[int | None, Query(description="Filter from year")] = None,
-    toYear: Annotated[int | None, Query(description="Filter to year")] = None,
+    from_year: Annotated[int | None, Query(alias="fromYear", description="Filter from year")] = None,
+    to_year: Annotated[int | None, Query(alias="toYear", description="Filter to year")] = None,
     genre: Annotated[str | None, Query(description="Filter by genre")] = None,
-    musicFolderId: Annotated[str | None, Query(description="Music folder ID")] = None,
+    music_folder_id: Annotated[str | None, Query(alias="musicFolderId", description="Music folder ID")] = None,
     f: Annotated[str, Query(description=_RESPONSE_FORMAT)] = "xml",
     current_user: Annotated[User, Depends(subsonic_auth)] = ...,
     db: Annotated[AsyncSession, Depends(get_db)] = ...,
@@ -147,7 +147,7 @@ async def get_album_list(
         query = query.order_by(Album.created_at.desc())  # Fallback
     elif type == "byYear":
         query = query.order_by(Album.id)  # Fallback if release_date not reliable sort
-        if fromYear:
+        if from_year:
             # We don't have year column easily queryable yet without cast, assume filters applied elsewhere
             pass
 
@@ -196,9 +196,9 @@ async def get_album_list(
 async def get_random_songs(
     size: Annotated[int, Query(description="Count")] = 10,
     genre: Annotated[str | None, Query(description="Genre")] = None,
-    fromYear: Annotated[int | None, Query(description="From year")] = None,
-    toYear: Annotated[int | None, Query(description="To year")] = None,
-    musicFolderId: Annotated[str | None, Query(description="Folder ID")] = None,
+    from_year: Annotated[int | None, Query(alias="fromYear", description="From year")] = None,
+    to_year: Annotated[int | None, Query(alias="toYear", description="To year")] = None,
+    music_folder_id: Annotated[str | None, Query(alias="musicFolderId", description="Folder ID")] = None,
     f: Annotated[str, Query(description=_RESPONSE_FORMAT)] = "xml",
     current_user: Annotated[User, Depends(subsonic_auth)] = ...,
     db: Annotated[AsyncSession, Depends(get_db)] = ...,

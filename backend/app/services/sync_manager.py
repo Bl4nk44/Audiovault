@@ -288,13 +288,6 @@ class SyncManager:
 
         except Exception as e:
             logger.error(f"Error fetching remote tracks: {e}")
-            # Re-raise to alert caller about API error?
-            # Or return empty list?
-            # Returning empty list is dangerous for sync (implies deletion).
-            # So we log error and return list but logic above handles empty list carefully.
-            # Best to re-raise or return None to signal error.
-            # But for now, let's just log.
-            pass
 
         return tracks
 

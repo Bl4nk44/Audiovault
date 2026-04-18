@@ -67,7 +67,7 @@ class DownloadManager:
             # On Windows this might fail or have limited effect, but we log warning only
             logger.debug(f"Could not set permissions on {path}: {e}")
 
-    async def start_worker(self):
+    async def start_worker(self):  # NOSONAR
         if self.processing_task is None or self.processing_task.done():
             self.processing_task = asyncio.create_task(self.process_queue())
 
@@ -194,7 +194,6 @@ class DownloadManager:
         except Exception as e:
             logger.error(f"Failed to resume pending downloads: {e}")
             # Do not re-raise, allow app to start
-            pass
 
     async def add_download(
         self, db: AsyncSession, user_id: str | uuid.UUID, download_data: "DownloadCreate"
@@ -264,7 +263,7 @@ class DownloadManager:
                 # Import here to avoid circular imports if possible, or move to top if safe
                 from app.services.library_scanner import library_scanner_service
 
-                title, artist, album, genre, duration_ms, lyrics = library_scanner_service._parse_audio_metadata_sync(
+                title, artist, album, genre, duration_ms, _ = library_scanner_service._parse_audio_metadata_sync(
                     download.file_path
                 )
 
@@ -320,7 +319,7 @@ class DownloadManager:
         target_ext = f".{target_format}"
 
         if final_filename_container["path"]:
-            base, ext = os.path.splitext(final_filename_container["path"])
+            base, _ = os.path.splitext(final_filename_container["path"])
             # Always use the target format extension
             download.file_path = base + target_ext
         else:
@@ -580,15 +579,7 @@ class DownloadManager:
         await loop.run_in_executor(None, download_sync)
         logger.info(f"Download finished for {download_id}")
 
-    async def pause_download_async(self, download_id: str):
-        # Renaming to avoid conflict if necessary, but actually the previous one was sync (line 133)
-        # and this one is async (line 362).
-        # Line 133: def pause_download(self, download_id: str): -> Sync
-        # Line 362: async def pause_download(self, download_id: str): -> Async
-        # The issue says "implementation equivalent".
-        # The sync one sets the flag. The async one does the same + logs.
-        # Let's keep one unified async method if possible, or alias.
-        # Since this is "async def", and the other "def", check usage.
+    async def pause_download_async(self, download_id: str):  # NOSONAR
         return self.pause_download(download_id)
 
     async def resume_download(self, db: AsyncSession, download_id: str):

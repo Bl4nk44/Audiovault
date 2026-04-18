@@ -37,8 +37,7 @@ async def delete_user_me(
         user_lib_path = os.path.join(settings.DOWNLOAD_DIR, sanitized_username)
 
         if current_user.preferences and "downloadPath" in current_user.preferences:
-            # TODO: Handle custom download paths securely.
-            # For now, we only delete the default directory to avoid deleting external data.
+            # Custom download paths not supported for deletion; only default directory is removed.
             pass
 
         from pathlib import Path

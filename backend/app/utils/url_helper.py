@@ -90,7 +90,7 @@ def is_allowed_domain(url: str) -> bool:
     return False
 
 
-async def validate_url(url: str) -> tuple[bool, str]:
+def validate_url(url: str) -> tuple[bool, str]:
     """
     Validate a URL for SSRF protection.
 
@@ -129,7 +129,7 @@ async def resolve_redirects(url: str) -> str:
     Validates URL for SSRF protection before making requests.
     """
     # Validate initial URL
-    is_valid, error = await validate_url(url)
+    is_valid, error = validate_url(url)
     if not is_valid:
         logger.warning(f"SSRF validation failed for {url}: {error}")
         raise SSRFValidationError(error)

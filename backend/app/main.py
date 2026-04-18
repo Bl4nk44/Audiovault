@@ -222,7 +222,7 @@ async def startup_event():
         await download_manager.resume_pending_downloads(session)
 
     # Connect to Redis
-    await cache_manager.connect()
+    cache_manager.connect()
 
     # Start Scheduler
     scheduler_service.start()
