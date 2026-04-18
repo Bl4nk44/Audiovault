@@ -90,36 +90,36 @@ class TestValidateUrl:
 
     @pytest.mark.asyncio
     async def test_valid_spotify_url(self):
-        is_valid, error = await validate_url("https://open.spotify.com/track/123")
+        is_valid, error = validate_url("https://open.spotify.com/track/123")
         assert is_valid is True
         assert error == ""
 
     @pytest.mark.asyncio
     async def test_invalid_scheme(self):
-        is_valid, error = await validate_url("ftp://spotify.com/file")
+        is_valid, error = validate_url("ftp://spotify.com/file")
         assert is_valid is False
         assert "Invalid URL scheme" in error
 
     @pytest.mark.asyncio
     async def test_blocked_domain(self):
-        is_valid, error = await validate_url("https://evil-site.com/malware")
+        is_valid, error = validate_url("https://evil-site.com/malware")
         assert is_valid is False
         assert "Domain not allowed" in error
 
     @pytest.mark.asyncio
     async def test_no_hostname(self):
-        is_valid, error = await validate_url("https:///path/only")
+        is_valid, error = validate_url("https:///path/only")
         assert is_valid is False
         assert "No hostname" in error
 
     @pytest.mark.asyncio
     async def test_javascript_scheme(self):
-        is_valid, error = await validate_url("javascript:alert(1)")
+        is_valid, error = validate_url("javascript:alert(1)")
         assert is_valid is False
         assert "Invalid URL scheme" in error
 
     @pytest.mark.asyncio
     async def test_data_scheme(self):
-        is_valid, error = await validate_url("data:text/html,<script>alert(1)</script>")
+        is_valid, error = validate_url("data:text/html,<script>alert(1)</script>")
         assert is_valid is False
         assert "Invalid URL scheme" in error

@@ -254,7 +254,7 @@ def test_format_track_with_duration_seconds(service):
 
 
 def test_format_track_duration_none_string(service):
-    item = {
+    item: dict = {
         "videoId": "v1",
         "title": "T",
         "artists": [],

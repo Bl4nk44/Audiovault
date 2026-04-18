@@ -67,27 +67,27 @@ def test_is_allowed_domain_blocked():
 
 @pytest.mark.asyncio
 async def test_validate_url_valid():
-    is_valid, error = await validate_url("https://open.spotify.com/track/abc")
+    is_valid, error = validate_url("https://open.spotify.com/track/abc")
     assert is_valid is True
     assert error == ""
 
 
 @pytest.mark.asyncio
 async def test_validate_url_invalid_scheme():
-    is_valid, error = await validate_url("ftp://open.spotify.com/track/abc")
+    is_valid, error = validate_url("ftp://open.spotify.com/track/abc")
     assert is_valid is False
     assert "Invalid URL scheme" in error
 
 
 @pytest.mark.asyncio
 async def test_validate_url_no_hostname():
-    is_valid, error = await validate_url("https:///path")
+    is_valid, error = validate_url("https:///path")
     assert is_valid is False
     assert "No hostname" in error
 
 
 @pytest.mark.asyncio
 async def test_validate_url_blocked_domain():
-    is_valid, error = await validate_url("https://evil.com/malware")
+    is_valid, error = validate_url("https://evil.com/malware")
     assert is_valid is False
     assert "not allowed" in error

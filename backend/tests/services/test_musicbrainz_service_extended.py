@@ -10,7 +10,7 @@ from app.services.musicbrainz_service import MusicBrainzService
 def service():
     svc = MusicBrainzService()
     # Override rate limit to speed up tests
-    svc._rate_limit = AsyncMock()
+    svc._rate_limit = AsyncMock()  # type: ignore[method-assign]
     return svc
 
 

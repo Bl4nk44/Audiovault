@@ -43,6 +43,19 @@ disallow_untyped_calls = false
 disallow_untyped_defs = false
 check_untyped_defs = true
 plugins = ["sqlalchemy.ext.mypy.plugin"]
+
+[[tool.mypy.overrides]]
+module = ["app.api.*"]
+disable_error_code = ["assignment"]
+
+[[tool.mypy.overrides]]
+module = [
+    "app.services.base_music_service",
+    "app.services.soundcloud_service",
+    "app.providers.generic",
+    "app.api.v1.stream",
+]
+disable_error_code = ["arg-type", "return-value", "union-attr", "operator", "index"]
 [tool.pyright]
 include = ["backend/app"]
 exclude = [

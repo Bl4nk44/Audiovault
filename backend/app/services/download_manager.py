@@ -648,7 +648,7 @@ class DownloadManager:
 
     def _build_output_template(self, download: Download, filename_schema: str, schema_map: dict) -> str:
         PLAYLIST_TAG = "{playlist}"
-        tmpl = filename_schema.replace("{service}", download.source)
+        tmpl = filename_schema.replace("{service}", download.source or "")
         if PLAYLIST_TAG in tmpl:
             playlist_val = sanitize_filename(download.playlist_name) if download.playlist_name else ""
             tmpl = tmpl.replace(PLAYLIST_TAG, playlist_val).replace("//", "/")

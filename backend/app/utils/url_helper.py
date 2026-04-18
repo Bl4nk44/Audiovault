@@ -141,7 +141,7 @@ async def resolve_redirects(url: str) -> str:
                 final_url = str(response.url)
 
                 # Validate final URL too (in case of open redirect)
-                is_valid, error = await validate_url(final_url)
+                is_valid, error = validate_url(final_url)
                 if not is_valid:
                     logger.warning(f"SSRF validation failed for redirect {final_url}: {error}")
                     raise SSRFValidationError(f"Redirect blocked: {error}")
@@ -158,7 +158,7 @@ async def resolve_redirects(url: str) -> str:
                     final_url = str(response.url)
 
                     # Validate final URL
-                    is_valid, error = await validate_url(final_url)
+                    is_valid, error = validate_url(final_url)
                     if not is_valid:
                         raise SSRFValidationError(f"Redirect blocked: {error}")
 

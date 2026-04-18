@@ -195,6 +195,8 @@ class SyncManager:
             return False
 
     async def _fetch_playlist_tracks(self, item: Watchlist) -> list[dict]:
+        if not item.source:
+            return []
         provider = provider_manager.get_provider_by_name(item.source)
         if not (provider and item.source_id):
             return []

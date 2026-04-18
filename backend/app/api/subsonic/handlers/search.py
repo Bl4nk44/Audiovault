@@ -6,7 +6,7 @@ Handles search endpoints:
 - search3.view (API 1.8+)
 """
 
-from typing import Annotated
+from typing import Annotated, Any
 
 from app.api.subsonic.auth import subsonic_auth
 from app.api.subsonic.utils import (
@@ -50,7 +50,7 @@ async def _search_artists(
     out = []
     for artist_obj in result.scalars():
         ac = await db.scalar(select(func.count(Album.id.distinct())).where(Album.artist_id == artist_obj.id)) or 0
-        entry = {
+        entry: dict[str, Any] = {
             "id": str(artist_obj.id),
             "name": artist_obj.name,
             "coverArt": f"ar-{artist_obj.id}" if artist_obj.images else None,

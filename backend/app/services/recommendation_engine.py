@@ -150,7 +150,7 @@ class HybridRecommendationEngine:
             if not artists:
                 return []
 
-            artist_names = [a.get("name") for a in artists if a.get("name")]
+            artist_names: list[str] = [str(a["name"]) for a in artists if a.get("name")]
             logger.info(f"Fetching playlists for artists: {artist_names}")
 
             deezer = DeezerService()

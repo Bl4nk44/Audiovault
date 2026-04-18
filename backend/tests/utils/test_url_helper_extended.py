@@ -17,7 +17,7 @@ def test_extract_domain_no_subdomain():
 async def test_validate_url_dns_failure():
     """DNS resolution failure returns (False, error)."""
     with patch("app.utils.url_helper.socket.getaddrinfo", side_effect=socket.gaierror("NXDOMAIN")):
-        is_valid, error = await validate_url("https://open.spotify.com/track/abc")
+        is_valid, error = validate_url("https://open.spotify.com/track/abc")
     assert is_valid is False
     assert "DNS resolution failed" in error
 
@@ -28,7 +28,7 @@ async def test_validate_url_private_ip_blocked():
     with patch(
         "app.utils.url_helper.socket.getaddrinfo", return_value=[(None, None, None, None, ("192.168.1.1", 443))]
     ):
-        is_valid, error = await validate_url("https://open.spotify.com/track/abc")
+        is_valid, error = validate_url("https://open.spotify.com/track/abc")
     assert is_valid is False
     assert "Private IP" in error
 
