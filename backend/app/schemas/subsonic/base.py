@@ -73,6 +73,15 @@ SUBSONIC_ERROR_CODES = {
 }
 
 
+def _set_xml_attr(parent: ET.Element, key: str, value: Any) -> None:
+    if isinstance(value, bool):
+        parent.set(key, "true" if value else "false")
+    elif isinstance(value, str):
+        parent.set(key, xml_safe_string(value))
+    else:
+        parent.set(key, str(value))
+
+
 def _build_xml_element(parent: ET.Element, data: Any) -> None:
     if isinstance(data, list):
         for item in data:
@@ -90,12 +99,7 @@ def _build_xml_element(parent: ET.Element, data: Any) -> None:
                 child = ET.SubElement(parent, key)
                 _build_xml_element(child, item)
         elif value is not None:
-            if isinstance(value, bool):
-                parent.set(key, "true" if value else "false")
-            elif isinstance(value, str):
-                parent.set(key, xml_safe_string(value))
-            else:
-                parent.set(key, str(value))
+            _set_xml_attr(parent, key, value)
 
 
 def dict_to_xml(tag: str, d: Any) -> str:

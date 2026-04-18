@@ -117,7 +117,7 @@ class LibraryDataService:
         try:
             rel = os.path.relpath(current_path, settings.DOWNLOAD_DIR).replace("\\", "/")
             return os.path.basename(current_path) if rel.startswith("..") else rel
-        except (ValueError, Exception):
+        except Exception:
             return os.path.basename(current_path)
 
     def _transform_download_item(self, d: Download) -> tuple[dict, bool]:

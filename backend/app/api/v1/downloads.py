@@ -68,6 +68,61 @@ async def _queue_tracks(db: AsyncSession, user_id, tracks: list, source: str, pl
     return count
 
 
+async def _resolve_spotify_id(db: AsyncSession, track_id_str: str) -> UUID:
+    from app.models.track import Track
+    result = await db.execute(select(Track).where(Track.spotify_id == track_id_str))
+    track_obj = result.scalar_one_or_none()
+    if not track_obj:
+        from app.services.spotify_service import SpotifyService
+        track_data = await SpotifyService().get_track(track_id_str)
+        if not track_data:
+            raise HTTPException(status_code=404, detail="Track not found on Spotify")
+        track_obj = await _ensure_track_in_db(db, {**track_data, "id": track_id_str}, "spotify")
+    return track_obj.id
+
+
+async def _resolve_deezer_id(db: AsyncSession, track_id_str: str) -> UUID:
+    from app.models.track import Track
+    result = await db.execute(select(Track).where(Track.deezer_id == track_id_str))
+    track_obj = result.scalar_one_or_none()
+    if not track_obj:
+        from app.services.deezer_service import DeezerService
+        track_data = await DeezerService().get_track(track_id_str)
+        if not track_data:
+            raise HTTPException(status_code=404, detail="Track not found on Deezer")
+        track_obj = await _ensure_track_in_db(db, {**track_data, "id": track_id_str}, "deezer")
+    return track_obj.id
+
+
+async def _resolve_musicbrainz_id(db: AsyncSession, track_id_str: str) -> UUID:
+    from app.models.track import Track
+    result = await db.execute(select(Track).where(Track.musicbrainz_id == track_id_str))
+    track_obj = result.scalar_one_or_none()
+    if not track_obj:
+        from app.services.musicbrainz_service import MusicBrainzService
+        track_data = await MusicBrainzService().get_track_by_isrc(track_id_str)
+        if not track_data:
+            raise HTTPException(status_code=404, detail="Track not found on MusicBrainz")
+        track_obj = Track(
+            title=track_data["title"], artist=track_data["artist"],
+            musicbrainz_id=track_data.get("id"), isrc=track_data.get("isrc"),
+            duration_ms=track_data.get("duration_ms"), metadata_source="musicbrainz",
+            metadata_content={"album": track_data.get("album")},
+        )
+        db.add(track_obj)
+        await db.flush()
+    return track_obj.id
+
+
+async def _resolve_youtube_id(db: AsyncSession, track_id_str: str) -> UUID:
+    from app.models.track import Track
+    result = await db.execute(select(Track).where(Track.youtube_id == track_id_str))
+    track_obj = result.scalar_one_or_none()
+    if track_obj:
+        return track_obj.id
+    raise HTTPException(status_code=400, detail="YouTube track resolution from ID not yet implemented. Please add to library from search results first.")
+
+
 async def _resolve_track_to_local_id(db: AsyncSession, track_id_str: str, source: str) -> UUID:
     """Resolve a possibly external track ID to a local UUID."""
     from app.models.track import Track
@@ -81,55 +136,11 @@ async def _resolve_track_to_local_id(db: AsyncSession, track_id_str: str, source
     except (ValueError, AttributeError):
         pass
 
-    if source == "spotify":
-        result = await db.execute(select(Track).where(Track.spotify_id == track_id_str))
-        track_obj = result.scalar_one_or_none()
-        if not track_obj:
-            from app.services.spotify_service import SpotifyService
-            track_data = await SpotifyService().get_track(track_id_str)
-            if not track_data:
-                raise HTTPException(status_code=404, detail="Track not found on Spotify")
-            track_obj = await _ensure_track_in_db(db, {**track_data, "id": track_id_str}, "spotify")
-        return track_obj.id
-
-    if source == "deezer":
-        result = await db.execute(select(Track).where(Track.deezer_id == track_id_str))
-        track_obj = result.scalar_one_or_none()
-        if not track_obj:
-            from app.services.deezer_service import DeezerService
-            track_data = await DeezerService().get_track(track_id_str)
-            if not track_data:
-                raise HTTPException(status_code=404, detail="Track not found on Deezer")
-            track_obj = await _ensure_track_in_db(db, {**track_data, "id": track_id_str}, "deezer")
-        return track_obj.id
-
-    if source == "musicbrainz":
-        result = await db.execute(select(Track).where(Track.musicbrainz_id == track_id_str))
-        track_obj = result.scalar_one_or_none()
-        if not track_obj:
-            from app.services.musicbrainz_service import MusicBrainzService
-            track_data = await MusicBrainzService().get_track_by_isrc(track_id_str)
-            if not track_data:
-                raise HTTPException(status_code=404, detail="Track not found on MusicBrainz")
-            from app.models.track import Track as TrackModel
-            track_obj = TrackModel(
-                title=track_data["title"], artist=track_data["artist"],
-                musicbrainz_id=track_data.get("id"), isrc=track_data.get("isrc"),
-                duration_ms=track_data.get("duration_ms"), metadata_source="musicbrainz",
-                metadata_content={"album": track_data.get("album")},
-            )
-            db.add(track_obj)
-            await db.flush()
-        return track_obj.id
-
-    if source == "youtube":
-        result = await db.execute(select(Track).where(Track.youtube_id == track_id_str))
-        track_obj = result.scalar_one_or_none()
-        if track_obj:
-            return track_obj.id
-        raise HTTPException(status_code=400, detail="YouTube track resolution from ID not yet implemented. Please add to library from search results first.")
-
-    raise HTTPException(status_code=400, detail=f"Track ID {track_id_str} not found and source {source} does not support resolution")
+    resolvers = {"spotify": _resolve_spotify_id, "deezer": _resolve_deezer_id, "musicbrainz": _resolve_musicbrainz_id, "youtube": _resolve_youtube_id}
+    resolver = resolvers.get(source)
+    if not resolver:
+        raise HTTPException(status_code=400, detail=f"Track ID {track_id_str} not found and source {source} does not support resolution")
+    return await resolver(db, track_id_str)
 
 
 class DownloadRequest(BaseModel):

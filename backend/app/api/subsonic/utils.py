@@ -174,26 +174,22 @@ def _apply_metadata_fields(song: dict, metadata: dict) -> None:
 def _apply_file_fields(song: dict, download: Any, include_path: bool) -> None:
     import os
 
-    if download:
-        song["suffix"] = download.file_path.split(".")[-1] if download.file_path else "mp3"
-        file_size = download.file_size or 0
-        if file_size == 0 and download.file_path:
-            try:
-                if os.path.exists(download.file_path):
-                    file_size = os.path.getsize(download.file_path)
-            except OSError:
-                pass
-        song["size"] = file_size
-        song["bitRate"] = 320
-        song["contentType"] = get_content_type(download.file_path) if download.file_path else DEFAULT_AUDIO_MIME
-        if include_path:
-            song["path"] = download.file_path
-    else:
-        song["suffix"] = "mp3"
-        song["size"] = 0
-        song["bitRate"] = 128
-        song["contentType"] = DEFAULT_AUDIO_MIME
-        song["path"] = ""
+    if not download:
+        song.update({"suffix": "mp3", "size": 0, "bitRate": 128, "contentType": DEFAULT_AUDIO_MIME, "path": ""})
+        return
+
+    file_size = download.file_size or 0
+    if file_size == 0 and download.file_path and os.path.exists(download.file_path):
+        try:
+            file_size = os.path.getsize(download.file_path)
+        except OSError:
+            pass
+    song["suffix"] = download.file_path.split(".")[-1] if download.file_path else "mp3"
+    song["size"] = file_size
+    song["bitRate"] = 320
+    song["contentType"] = get_content_type(download.file_path) if download.file_path else DEFAULT_AUDIO_MIME
+    if include_path:
+        song["path"] = download.file_path
 
 
 def build_song_response(

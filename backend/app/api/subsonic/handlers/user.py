@@ -311,6 +311,20 @@ async def set_rating(
     return subsonic_response(f=f)
 
 
+async def _record_submission(db, scrobbler_service, current_user, track_id, track_obj, time_ms):
+    played_at = datetime.fromtimestamp(time_ms / 1000, tz=UTC) if time_ms else datetime.now(UTC)
+    db.add(ListeningHistory(user_id=current_user.id, track_id=track_id, played_at=played_at, duration_played=None))
+    if track_obj:
+        try:
+            await scrobbler_service.scrobble_track(
+                user=current_user, track=track_obj.title, artist=track_obj.artist or "Unknown",
+                album=track_obj.album, timestamp=int(played_at.timestamp()),
+            )
+        except Exception:  # nosec B110
+            pass
+    return played_at
+
+
 @router.get("/scrobble.view")
 @router.post("/scrobble.view")
 async def scrobble(
@@ -350,19 +364,7 @@ async def scrobble(
     track_obj = track_result.scalar_one_or_none()
 
     if submission:
-        played_at = datetime.fromtimestamp(time / 1000, tz=UTC) if time else datetime.now(UTC)
-        db.add(ListeningHistory(user_id=current_user.id, track_id=track_id, played_at=played_at, duration_played=None))
-        if track_obj:
-            try:
-                await scrobbler_service.scrobble_track(
-                    user=current_user,
-                    track=track_obj.title,
-                    artist=track_obj.artist or "Unknown",
-                    album=track_obj.album,
-                    timestamp=int(played_at.timestamp()),
-                )
-            except Exception:  # nosec B110
-                pass
+        await _record_submission(db, scrobbler_service, current_user, track_id, track_obj, time)
 
     result = await db.execute(select(SubsonicNowPlaying).where(SubsonicNowPlaying.user_id == current_user.id))
     now_playing = result.scalar_one_or_none()

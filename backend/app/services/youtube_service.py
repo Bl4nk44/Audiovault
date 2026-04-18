@@ -32,8 +32,13 @@ class YouTubeService(BaseMusicService):
             return result
         return self._search_keywords(query, limit, type)
 
+    def _try_channel_url_match(self, query: str, channel_match) -> list | None:
+        if query.startswith("http") or "youtube.com" in query:
+            return self._search_channel(channel_match.group(1)) or None
+        return None
+
     def _try_direct_match(self, query, video_match, playlist_match, channel_match, search_type):
-        if video_match and search_type in ["song", "track", "all"] and not playlist_match:
+        if video_match and not playlist_match and search_type in ["song", "track", "all"]:
             res = self._search_video(video_match.group(1))
             if res:
                 return res
@@ -42,10 +47,7 @@ class YouTubeService(BaseMusicService):
             if res:
                 return res
         if channel_match and search_type in ["artist", "all"]:
-            if query.startswith("http") or "youtube.com" in query:
-                res = self._search_channel(channel_match.group(1))
-                if res:
-                    return res
+            return self._try_channel_url_match(query, channel_match)
         return None
 
     def _search_video(self, video_id: str) -> list[dict[str, Any]]:

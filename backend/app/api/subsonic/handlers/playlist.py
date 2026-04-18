@@ -40,7 +40,28 @@ ERR_PLAYLIST_NOT_FOUND = "Playlist not found"
 ERR_ACCESS_DENIED = "Access denied"
 
 
-async def _add_tracks_to_playlist(db: AsyncSession, playlist_id: UUID, song_ids: list[str], start_order: int = 0) -> None:
+async def _update_existing_playlist(db: AsyncSession, playlist_id_param: str, name, song_id, current_user, f: str):
+    try:
+        playlist_id = UUID(playlist_id_param)
+    except ValueError:
+        return None, subsonic_error(10, ERR_INVALID_PLAYLIST_ID, f=f)
+    result = await db.execute(select(Playlist).where(Playlist.id == playlist_id))
+    playlist = result.scalar_one_or_none()
+    if not playlist:
+        return None, subsonic_error(70, ERR_PLAYLIST_NOT_FOUND, f=f)
+    if playlist.owner_id != current_user.id:
+        return None, subsonic_error(50, ERR_ACCESS_DENIED, f=f)
+    if name:
+        playlist.name = name
+    if song_id:
+        await db.execute(delete(PlaylistTrack).where(PlaylistTrack.playlist_id == playlist_id))
+        _add_tracks_to_playlist(db, playlist_id, song_id)
+    playlist.updated_at = datetime.now(UTC)
+    await db.commit()
+    return playlist, None
+
+
+def _add_tracks_to_playlist(db: AsyncSession, playlist_id: UUID, song_ids: list[str], start_order: int = 0) -> None:
     for i, song_id_val in enumerate(song_ids):
         try:
             db.add(PlaylistTrack(playlist_id=playlist_id, track_id=UUID(song_id_val), order=start_order + i))
@@ -245,23 +266,9 @@ async def create_playlist(
         Created/updated playlist
     """
     if playlist_id_param:
-        try:
-            playlist_id = UUID(playlist_id_param)
-        except ValueError:
-            return subsonic_error(10, ERR_INVALID_PLAYLIST_ID, f=f)
-        result = await db.execute(select(Playlist).where(Playlist.id == playlist_id))
-        playlist = result.scalar_one_or_none()
-        if not playlist:
-            return subsonic_error(70, ERR_PLAYLIST_NOT_FOUND, f=f)
-        if playlist.owner_id != current_user.id:
-            return subsonic_error(50, ERR_ACCESS_DENIED, f=f)
-        if name:
-            playlist.name = name
-        if song_id:
-            await db.execute(delete(PlaylistTrack).where(PlaylistTrack.playlist_id == playlist_id))
-            await _add_tracks_to_playlist(db, playlist_id, song_id)
-        playlist.updated_at = datetime.now(UTC)
-        await db.commit()
+        playlist, err = await _update_existing_playlist(db, playlist_id_param, name, song_id, current_user, f)
+        if err:
+            return err
     else:
         if not name:
             return subsonic_error(10, "Playlist name is required", f=f)
@@ -269,7 +276,7 @@ async def create_playlist(
         db.add(playlist)
         await db.flush()
         if song_id:
-            await _add_tracks_to_playlist(db, playlist.id, song_id)
+            _add_tracks_to_playlist(db, playlist.id, song_id)
         await db.commit()
 
     return await get_playlist(id=str(playlist.id), f=f, current_user=current_user, db=db)
@@ -330,7 +337,7 @@ async def update_playlist(
     if song_id_to_add:
         max_order_val = await db.scalar(select(func.max(PlaylistTrack.order)).where(PlaylistTrack.playlist_id == playlist_id))
         start = (int(max_order_val) + 1) if isinstance(max_order_val, (int, float, str)) else 0
-        await _add_tracks_to_playlist(db, playlist_id, song_id_to_add, start_order=start)
+        _add_tracks_to_playlist(db, playlist_id, song_id_to_add, start_order=start)
 
     playlist.updated_at = datetime.now(UTC)
     await db.commit()
