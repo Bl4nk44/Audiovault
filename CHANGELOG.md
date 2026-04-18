@@ -1,6 +1,133 @@
 # Changelog
 
 All notable changes to Audiovault will be documented in this file.
+## [0.15.0] - 2026-04-18
+
+### Bug Fixes
+
+- **db**: Make alembic migration fc0ebd8b67a8 idempotent
+- **db**: Make alembic migration a1b2c3d4e5f6 idempotent
+- **db**: Fix ruff E501 line too long in playlists migration
+- **db**: Apply ruff format to playlists migration
+- **subsonic**: Allow login with email in Subsonic auth
+- Correct typo in .gitignore for agent_docs
+- Resolve SonarQube S8410, S1192, S7493 issues across subsonic handlers
+- Convert remaining S8410 Query params to Annotated form
+- Convert all remaining S8410 params to Annotated, fix S8414 CORS ordering
+- **sonar**: S8410 - convert remaining Query/Depends to Annotated form
+- **sonar**: S8410 - convert Body param to Annotated form in sync.py
+- **sonar**: S1192/S1172/S5717/S5806/S6395/S3358/S112/S1186 - misc quality fixes
+- **sonar**: S8415 - document HTTPException responses in route decorators
+- **sonar**: S3358/S2612 - extract nested ternary, suppress chmod false positive
+- **sonar**: S3776 - reduce cognitive complexity in soundcloud/youtube services
+- **sonar**: S7503/S5713/S2772/S1481/S117/S1135 - misc quality fixes
+- **sonar**: S3776 - reduce complexity in deezer/soundcloud/lastfm/recommendation services
+- **sonar**: S3776 - reduce complexity in stream/playlists/storage/sync_manager/search_orchestrator
+- **sonar**: S3776 - reduce cognitive complexity in subsonic utils/user/browse handlers
+- **sonar**: S3776 - reduce cognitive complexity in subsonic search/playlist/lists handlers
+- **sonar**: S3776 - reduce cognitive complexity in download_manager.py
+- **sonar**: S3776 - reduce cognitive complexity in library_data and watchlist/processor
+- **sonar**: S3776 - reduce cognitive complexity in spotify_service, downloads, subsonic/base
+- **sonar**: S3776/S5713/S7503 - fix all 8 remaining SonarQube issues
+
+### Miscellaneous
+
+- **ci**: Fix .github workflows, security pins and CI config
+- Update .gitignore and CHANGELOG for improved project structure
+- Remove unused configuration files and update project description
+- Bump version to 0.15.0
+
+### Styling
+
+- **subsonic**: Apply ruff formatting to auth.py
+
+### Testing
+
+- Add missing tests for soundcloud, base music service, amazon/tidal providers, scheduler
+- Add 176 tests across 10 modules to reach 80% coverage
+
+## [0.14.0] - 2026-04-15
+
+### Bug Fixes
+
+- **db**: Add missing track columns (musicbrainz_id, soundcloud_id, metadata_source, metadata_confidence)
+- Resolve frontend ESLint and TypeScript build errors
+- Resolve remaining Ruff lint errors in backend
+- Resolve Ruff and Mypy type errors in backend
+- Remove unused MagicMock import in test_downloads.py
+- Update spotify mocks to AsyncMock and remove stale tests
+- Update all test mocks to AsyncMock after SpotifyService async refactoring
+- Use dynamic callback URL for Last.fm auth based on request origin
+- Fix.gitignore`.
+- **deps**: Correct pydantic-core version constraint
+- **frontend**: Use ManualChunksFunction syntax in vite.config
+
+### CI/CD
+
+- Enable PR workflows for the dev branch
+- Fix push triggers for dev branch and optimize security scan notifications
+
+### Dependencies
+
+- **deps**: Update Python backend dependencies
+- **deps**: Update frontend npm dependencies
+
+### Documentation
+
+- Update README and migrate WIKI documentation to docs directory
+- **agent**: Add testing and architecture guides to agent_docs
+
+### Features
+
+- **startup**: Auto-run Alembic migrations on backend startup
+- Improve code coverage to 85%+; add tests for Recommendations, Lyrics, and Last.fm profile
+- Migrate Spotify API to anonymous httpx scraper
+
+### Miscellaneous
+
+- **docker**: Update Redis base image to redis:8-alpine
+- **config**: Move code patterns and conventions to agent_docs/
+
+### Styling
+
+- Reformat files with ruff
+- Reformat test files with ruff
+
+## [0.13.0] - 2026-03-04
+
+### Bug Fixes
+
+- Shell syntax in security summary and workflow cleanup
+- Remove trailing whitespace in test_coverage_master_boost.py
+- **agent**: Rewrite memory-bank-protocol SKILL.md with OpenMemory MCP integration and correct paths
+- **ci**: Fix silent mock exceptions causing empty tracklists in watchlist processor
+- **ci**: Resolve mypy typings issue in watchlist processor
+- Resolve all remaining ruff linting errors (E501, F841)
+- **mypy**: Resolve all remaining type hints and signature incompatibilities
+
+### CI/CD
+
+- Migrate security reports to email and fix ruff formatting
+
+### Documentation
+
+- Add reverse proxy and update release workflow
+- Translate REVERSE_PROXY.md from Polish to English
+
+### Miscellaneous
+
+- **tests**: Remove redundant coverage and boost test files
+- **agent**: Sync entire .agent folder from main (with fixed memory-bank-protocol SKILL.md)
+- Bump version to 0.13.0 and update all dependencies
+
+### Styling
+
+- Format test_coverage_master_boost.py with ruff
+
+### Testing
+
+- Improve subsonic search mocks for better coverage and stability
+
 ## [0.12.0] - 2026-02-21
 
 ### Bug Fixes
