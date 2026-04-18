@@ -56,7 +56,7 @@ async def test_resolve_redirects_success_via_head():
     mock_session.__aenter__ = AsyncMock(return_value=mock_session)
     mock_session.__aexit__ = AsyncMock(return_value=False)
 
-    async def fake_validate(url):
+    def fake_validate(url):
         return True, ""
 
     with (
@@ -83,7 +83,7 @@ async def test_resolve_redirects_redirect_to_blocked_url():
 
     call_count = 0
 
-    async def fake_validate(url):
+    def fake_validate(url):
         nonlocal call_count
         call_count += 1
         if call_count == 1:
@@ -119,7 +119,7 @@ async def test_resolve_redirects_head_fails_falls_back_to_get():
     sessions = [mock_head_session, mock_get_session]
     session_iter = iter(sessions)
 
-    async def fake_validate(url):
+    def fake_validate(url):
         return True, ""
 
     with (
@@ -149,7 +149,7 @@ async def test_resolve_redirects_get_also_fails_returns_original():
 
     original = "https://on.soundcloud.com/abc"
 
-    async def fake_validate(url):
+    def fake_validate(url):
         return True, ""
 
     with (
@@ -184,7 +184,7 @@ async def test_resolve_redirects_get_redirect_to_blocked():
 
     call_count = 0
 
-    async def fake_validate(url):
+    def fake_validate(url):
         nonlocal call_count
         call_count += 1
         if call_count <= 1:

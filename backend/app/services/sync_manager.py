@@ -38,12 +38,12 @@ class SyncManager:
         return False
 
     def _compute_safety_warning(self, remove_count: int, local_count: int, remote_ids: set) -> tuple[bool, str | None]:
+        if local_count > 10 and len(remote_ids) == 0:
+            return True, "Remote playlist is empty but local has tracks. Possible API error."
         if local_count > 0 and (remove_count / local_count) > 0.10:
             return True, f"High deletion ratio detected ({int(remove_count / local_count * 100)}%). Please verify."
         if remove_count > 20:
             return True, f"Massive deletion detected ({remove_count} tracks). Verification required."
-        if local_count > 10 and len(remote_ids) == 0:
-            return True, "Remote playlist is empty but local has tracks. Possible API error."
         return False, None
 
     async def analyze_watchlist(self, db: AsyncSession, user_id: str | UUID, watchlist_id: str | UUID) -> dict:
@@ -114,11 +114,12 @@ class SyncManager:
         return report
 
     async def _remove_download_if_unreferenced(self, db: AsyncSession, u_uuid: UUID, track_uuid: UUID) -> int:
-        ref_count = await db.scalar(
+        ref_result = await db.execute(
             select(func.count(WatchlistItem.id))
             .join(Watchlist)
             .where(Watchlist.user_id == u_uuid, WatchlistItem.track_id == track_uuid)
         )
+        ref_count = ref_result.scalar()
         if ref_count:
             return 0
         d_result = await db.execute(select(Download).where(Download.user_id == u_uuid, Download.track_id == track_uuid))

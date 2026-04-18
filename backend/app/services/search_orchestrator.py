@@ -154,7 +154,7 @@ class SearchOrchestrator:
         # Spotify API Feb 2026: search limit reduced to max 10
         spotify_limit = min(limit, 10)
         try:
-            return await self.spotify.search(query, _limit=spotify_limit, _type="track")
+            return await self.spotify.search(query, limit=spotify_limit, type="track")
         except Exception as e:
             logger.warning(f"Spotify async search failed: {e}")
             return []

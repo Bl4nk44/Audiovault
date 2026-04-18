@@ -6,7 +6,7 @@ class CacheManager:
     def __init__(self):
         self.redis: redis.Redis | None = None
 
-    def connect(self):
+    async def connect(self):
         self.redis = redis.from_url(settings.REDIS_URL, encoding="utf-8", decode_responses=True)
 
     async def close(self):
