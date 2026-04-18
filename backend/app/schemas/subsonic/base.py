@@ -73,54 +73,36 @@ SUBSONIC_ERROR_CODES = {
 }
 
 
+def _build_xml_element(parent: ET.Element, data: Any) -> None:
+    if isinstance(data, list):
+        for item in data:
+            child = ET.SubElement(parent, "item")
+            _build_xml_element(child, item)
+        return
+    if not isinstance(data, dict):
+        return
+    for key, value in data.items():
+        if isinstance(value, dict):
+            child = ET.SubElement(parent, key)
+            _build_xml_element(child, value)
+        elif isinstance(value, list):
+            for item in value:
+                child = ET.SubElement(parent, key)
+                _build_xml_element(child, item)
+        elif value is not None:
+            if isinstance(value, bool):
+                parent.set(key, "true" if value else "false")
+            elif isinstance(value, str):
+                parent.set(key, xml_safe_string(value))
+            else:
+                parent.set(key, str(value))
+
+
 def dict_to_xml(tag: str, d: Any) -> str:
-    """
-    Simple dict to XML converter for Subsonic format.
-
-    Audiovault Subsonic XML style:
-    - Lists are children elements
-    - Dicts are attributes if they contain simple values, or nested elements if complex
-    """
+    """Simple dict to XML converter for Subsonic format."""
     elem = ET.Element(tag)
-
-    def build_xml(parent, data):
-        if isinstance(data, dict):
-            for key, value in data.items():
-                if isinstance(value, dict):
-                    # Nested dict -> create single child element
-                    child = ET.SubElement(parent, key)
-                    build_xml(child, value)
-                elif isinstance(value, list):
-                    # List -> create sibling children with the same name (flattened)
-                    # The key of the dict becomes the tag name for EACH item
-                    child_tag = key
-
-                    # Special overrides if needed, but usually exact key match works
-                    # for standard Subsonic JSON (e.g., 'song', 'album', 'child')
-
-                    for item in value:
-                        child = ET.SubElement(parent, child_tag)
-                        build_xml(child, item)
-                elif value is not None:
-                    # Attribute - sanitize strings for XML safety
-                    val_str = str(value)
-                    if isinstance(value, bool):
-                        val_str = "true" if value else "false"
-                    elif isinstance(value, str):
-                        val_str = xml_safe_string(value)
-                    parent.set(key, val_str)
-
-        elif isinstance(data, list):
-            # Should not happen given the structure above, but just in case
-            # If we passed a list to the root or something
-            for item in data:
-                child = ET.SubElement(parent, "item")
-                build_xml(child, item)
-
-    build_xml(elem, d)
-    # Add namespace for subsonic
+    _build_xml_element(elem, d)
     elem.set("xmlns", "http://subsonic.org/restapi")
-
     return ET.tostring(elem, encoding="unicode", method="xml")
 
 

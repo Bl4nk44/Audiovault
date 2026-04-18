@@ -13,19 +13,65 @@ from pydantic import BaseModel
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 
+import logging
+
 router = APIRouter()
 
 SPOTIFY_CONFIG_ERROR = "Spotify service not configured"
+_logger = logging.getLogger(__name__)
+
+
+async def _ensure_track_in_db(db: AsyncSession, track_data: dict, source: str):
+    from app.models.track import Track
+
+    id_field_map = {"deezer": "deezer_id", "spotify": "spotify_id", "youtube": "youtube_id"}
+    id_field = id_field_map.get(source)
+    raw_id = str(track_data.get("id", ""))
+    if id_field:
+        result = await db.execute(select(Track).where(getattr(Track, id_field) == raw_id))
+        track_obj = result.scalar_one_or_none()
+        if track_obj:
+            return track_obj
+
+    meta: dict = {"image_url": track_data.get("image_url"), "album": track_data.get("album")}
+    kwargs: dict = {
+        "title": track_data["title"],
+        "artist": track_data["artist"],
+        "duration_ms": track_data.get("duration_ms"),
+        "metadata_source": source,
+        "metadata_content": meta,
+    }
+    if source == "spotify":
+        meta["album_art"] = track_data.get("image_url")
+        meta["isrc"] = track_data.get("isrc")
+        kwargs["spotify_id"] = raw_id
+    elif source == "deezer":
+        kwargs["deezer_id"] = raw_id
+        kwargs["isrc"] = track_data.get("isrc")
+    elif source == "youtube":
+        kwargs["youtube_id"] = raw_id
+    track_obj = Track(**kwargs)
+    db.add(track_obj)
+    await db.flush()
+    return track_obj
+
+
+async def _queue_tracks(db: AsyncSession, user_id, tracks: list, source: str, playlist_name: str) -> int:
+    count = 0
+    for track_data in tracks:
+        track_obj = await _ensure_track_in_db(db, track_data, source)
+        try:
+            await download_manager.add_download(db, user_id, DownloadCreate(track_id=track_obj.id, source=source, playlist_name=playlist_name))
+            count += 1
+        except Exception as e:
+            _logger.warning(f"Failed to queue track {track_data.get('title')}: {e}")  # nosemgrep: python.fastapi.log.tainted-log-injection-stdlib-fastapi.tainted-log-injection-stdlib-fastapi
+    return count
 
 
 async def _resolve_track_to_local_id(db: AsyncSession, track_id_str: str, source: str) -> UUID:
-    """Helper to resolve a possibly external track ID to a local UUID.
-
-    Supports sources: spotify, youtube, deezer, musicbrainz.
-    """
+    """Resolve a possibly external track ID to a local UUID."""
     from app.models.track import Track
 
-    # 1. Try to see if it's already a local UUID
     try:
         potential_uuid = UUID(track_id_str)
         result = await db.execute(select(Track).where(Track.id == potential_uuid))
@@ -35,112 +81,55 @@ async def _resolve_track_to_local_id(db: AsyncSession, track_id_str: str, source
     except (ValueError, AttributeError):
         pass
 
-    # 2. Try resolution by source
     if source == "spotify":
         result = await db.execute(select(Track).where(Track.spotify_id == track_id_str))
         track_obj = result.scalar_one_or_none()
-
         if not track_obj:
             from app.services.spotify_service import SpotifyService
-
-            spotify = SpotifyService()
-
-            track_data = await spotify.get_track(track_id_str)
+            track_data = await SpotifyService().get_track(track_id_str)
             if not track_data:
                 raise HTTPException(status_code=404, detail="Track not found on Spotify")
-
-            track_obj = Track(
-                title=track_data["title"],
-                artist=track_data["artist"],
-                spotify_id=track_id_str,
-                duration_ms=track_data.get("duration_ms"),
-                metadata_source="spotify",
-                metadata_content={
-                    "image_url": track_data.get("image_url"),
-                    "album": track_data.get("album"),
-                    # Spotify API Feb 2026: isrc no longer returned (external_ids removed)
-                    "isrc": track_data.get("isrc"),
-                },
-            )
-            db.add(track_obj)
-            await db.flush()
-
+            track_obj = await _ensure_track_in_db(db, {**track_data, "id": track_id_str}, "spotify")
         return track_obj.id
 
     if source == "deezer":
         result = await db.execute(select(Track).where(Track.deezer_id == track_id_str))
         track_obj = result.scalar_one_or_none()
-
         if not track_obj:
             from app.services.deezer_service import DeezerService
-
-            deezer = DeezerService()
-            track_data = await deezer.get_track(track_id_str)
+            track_data = await DeezerService().get_track(track_id_str)
             if not track_data:
                 raise HTTPException(status_code=404, detail="Track not found on Deezer")
-
-            track_obj = Track(
-                title=track_data["title"],
-                artist=track_data["artist"],
-                deezer_id=track_id_str,
-                duration_ms=track_data.get("duration_ms"),
-                isrc=track_data.get("isrc"),
-                metadata_source="deezer",
-                metadata_content={
-                    "image_url": track_data.get("image_url"),
-                    "album": track_data.get("album"),
-                },
-            )
-            db.add(track_obj)
-            await db.flush()
-
+            track_obj = await _ensure_track_in_db(db, {**track_data, "id": track_id_str}, "deezer")
         return track_obj.id
 
     if source == "musicbrainz":
         result = await db.execute(select(Track).where(Track.musicbrainz_id == track_id_str))
         track_obj = result.scalar_one_or_none()
-
         if not track_obj:
             from app.services.musicbrainz_service import MusicBrainzService
-
-            mb = MusicBrainzService()
-            track_data = await mb.get_track_by_isrc(track_id_str)
+            track_data = await MusicBrainzService().get_track_by_isrc(track_id_str)
             if not track_data:
                 raise HTTPException(status_code=404, detail="Track not found on MusicBrainz")
-
-            track_obj = Track(
-                title=track_data["title"],
-                artist=track_data["artist"],
-                musicbrainz_id=track_data.get("id"),
-                isrc=track_data.get("isrc"),
-                duration_ms=track_data.get("duration_ms"),
-                metadata_source="musicbrainz",
-                metadata_content={
-                    "album": track_data.get("album"),
-                },
+            from app.models.track import Track as TrackModel
+            track_obj = TrackModel(
+                title=track_data["title"], artist=track_data["artist"],
+                musicbrainz_id=track_data.get("id"), isrc=track_data.get("isrc"),
+                duration_ms=track_data.get("duration_ms"), metadata_source="musicbrainz",
+                metadata_content={"album": track_data.get("album")},
             )
             db.add(track_obj)
             await db.flush()
-
         return track_obj.id
 
     if source == "youtube":
         result = await db.execute(select(Track).where(Track.youtube_id == track_id_str))
         track_obj = result.scalar_one_or_none()
-
         if track_obj:
             return track_obj.id
+        raise HTTPException(status_code=400, detail="YouTube track resolution from ID not yet implemented. Please add to library from search results first.")
 
-        raise HTTPException(
-            status_code=400,
-            detail="YouTube track resolution from ID not yet implemented. "
-            "Please add to library from search results first.",
-        )
-
-    raise HTTPException(
-        status_code=400,
-        detail=f"Track ID {track_id_str} not found and source {source} does not support resolution",
-    )
+    raise HTTPException(status_code=400, detail=f"Track ID {track_id_str} not found and source {source} does not support resolution")
 
 
 class DownloadRequest(BaseModel):
@@ -270,133 +259,34 @@ async def download_all_artist_tracks(
     Download all tracks from an artist's discography.
     Creates a folder with the artist's name and downloads all albums/singles.
     """
-    import logging
+    all_tracks: list = []
+    artist_name: str
 
-    from app.models.track import Track
-
-    logger = logging.getLogger(__name__)
-
-    # Multi-source: support deezer and spotify
     if request.source == "deezer":
         from app.services.deezer_service import DeezerService
-
         service = DeezerService()
-
         artist = await service.get_artist_details(artist_id)
         if not artist:
             raise HTTPException(status_code=404, detail="Artist not found")
-
         artist_name = artist["name"]
-        queued_count = 0
-
-        # Get top tracks for the artist (Deezer provides this directly)
-        top_tracks = artist.get("top_tracks", [])
-
-        # Also get album tracks
+        all_tracks = list(artist.get("top_tracks", []))
         for album in artist.get("albums", []):
-            album_tracks = await service.get_album_tracks(album["id"])
-            top_tracks.extend(album_tracks)
-
-        for track_data in top_tracks:
-            existing = await db.execute(select(Track).where(Track.deezer_id == str(track_data["id"])))
-            track_obj = existing.scalar_one_or_none()
-
-            if not track_obj:
-                track_obj = Track(
-                    title=track_data["title"],
-                    artist=track_data["artist"],
-                    deezer_id=str(track_data["id"]),
-                    duration_ms=track_data.get("duration_ms"),
-                    isrc=track_data.get("isrc"),
-                    metadata_source="deezer",
-                    metadata_content={
-                        "image_url": track_data.get("image_url"),
-                        "album": track_data.get("album"),
-                    },
-                )
-                db.add(track_obj)
-                await db.flush()
-
-            download_data = DownloadCreate(
-                track_id=track_obj.id,
-                source="deezer",
-                playlist_name=artist_name,
-            )
-
-            try:
-                await download_manager.add_download(db, current_user.id, download_data)
-                queued_count += 1
-            except Exception as e:
-                logger.warning(
-                    f"Failed to queue track {track_data['title']}: {e}"
-                )  # nosemgrep: python.fastapi.log.tainted-log-injection-stdlib-fastapi.tainted-log-injection-stdlib-fastapi  # noqa: E501
-                continue
-
+            all_tracks.extend(await service.get_album_tracks(album["id"]))
     elif request.source == "spotify":
         from app.services.spotify_service import SpotifyService
-
         service_sp = SpotifyService()
-
         artist = await service_sp.get_artist_details(artist_id)
         if not artist:
             raise HTTPException(status_code=404, detail="Artist not found")
-
         artist_name = artist["name"]
-        queued_count = 0
-
-        albums = await service_sp.get_artist_albums(artist_id)
-
-        for album in albums:
-            album_id_local = album["id"]
-            tracks = await service_sp.get_album_tracks(album_id_local)
-
-            for track_data in tracks:
-                existing = await db.execute(select(Track).where(Track.spotify_id == track_data["id"]))
-                track_obj = existing.scalar_one_or_none()
-
-                if not track_obj:
-                    track_obj = Track(
-                        title=track_data["title"],
-                        artist=track_data["artist"],
-                        spotify_id=track_data["id"],
-                        duration_ms=track_data.get("duration_ms"),
-                        metadata_source="spotify",
-                        metadata_content={
-                            "image_url": track_data.get("image_url"),
-                            "album_art": track_data.get("image_url"),
-                            "album": track_data.get("album"),
-                            # Spotify API Feb 2026: isrc no longer returned
-                            "isrc": track_data.get("isrc"),
-                        },
-                    )
-                    db.add(track_obj)
-                    await db.flush()
-
-                download_data = DownloadCreate(
-                    track_id=track_obj.id,
-                    source="spotify",
-                    playlist_name=artist_name,
-                )
-
-                try:
-                    await download_manager.add_download(db, current_user.id, download_data)
-                    queued_count += 1
-                except Exception as e:
-                    logger.warning(
-                        f"Failed to queue track {track_data['title']}: {e}"
-                    )  # nosemgrep: python.fastapi.log.tainted-log-injection-stdlib-fastapi.tainted-log-injection-stdlib-fastapi  # noqa: E501
-                    continue
+        for album in await service_sp.get_artist_albums(artist_id):
+            all_tracks.extend(await service_sp.get_album_tracks(album["id"]))
     else:
         raise HTTPException(status_code=400, detail=f"Source '{request.source}' not supported for artist downloads")
 
+    queued_count = await _queue_tracks(db, current_user.id, all_tracks, request.source, artist_name)
     await db.commit()
-
-    return {
-        "status": "success",
-        "artist": artist_name,
-        "queued_count": queued_count,
-        "message": f"Queued {queued_count} tracks from {artist_name}",
-    }
+    return {"status": "success", "artist": artist_name, "queued_count": queued_count, "message": f"Queued {queued_count} tracks from {artist_name}"}
 
 
 @router.post("/album/{album_id}/download", responses={404: {"description": "Not found"}, 400: {"description": "Bad request"}})
@@ -410,127 +300,35 @@ async def download_album(
     Download all tracks from a specific album.
     Creates a folder with the Album name (or Artist/Album structure handled by manager).
     """
-    import logging
-
-    from app.models.track import Track
-
-    logger = logging.getLogger(__name__)
-
-    queued_count = 0
     album_name = "Unknown Album"
+    tracks: list = []
 
     if request.source == "deezer":
         from app.services.deezer_service import DeezerService
-
-        deezer = DeezerService()
-
-        # Get album tracks from Deezer
-        tracks = await deezer.get_album_tracks(album_id)
+        tracks = await DeezerService().get_album_tracks(album_id)
         if not tracks:
             raise HTTPException(status_code=404, detail="Album not found on Deezer")
-
         album_name = tracks[0].get("album", "Unknown Album") if tracks else album_id
-
-        for track_data in tracks:
-            existing = await db.execute(select(Track).where(Track.deezer_id == str(track_data["id"])))
-            track_obj = existing.scalar_one_or_none()
-
-            if not track_obj:
-                track_obj = Track(
-                    title=track_data["title"],
-                    artist=track_data["artist"],
-                    deezer_id=str(track_data["id"]),
-                    duration_ms=track_data.get("duration_ms"),
-                    isrc=track_data.get("isrc"),
-                    metadata_source="deezer",
-                    metadata_content={
-                        "image_url": track_data.get("image_url"),
-                        "album": track_data.get("album"),
-                    },
-                )
-                db.add(track_obj)
-                await db.flush()
-
-            download_data = DownloadCreate(
-                track_id=track_obj.id,
-                source="deezer",
-                playlist_name=album_name,
-            )
-
-            try:
-                await download_manager.add_download(db, current_user.id, download_data)
-                queued_count += 1
-            except Exception as e:
-                logger.warning(
-                    f"Failed to queue track {track_data['title']}: {e}"
-                )  # nosemgrep: python.fastapi.log.tainted-log-injection-stdlib-fastapi.tainted-log-injection-stdlib-fastapi  # noqa: E501
-                continue
-
     elif request.source == "spotify":
         from app.services.spotify_service import SpotifyService
-
         service = SpotifyService()
-
         try:
             album_data = await service.get_album_details(album_id)
             if not album_data:
                 raise HTTPException(status_code=404, detail="Album not found")
             album_name = album_data["name"]
+        except HTTPException:
+            raise
         except Exception as e:
-            logger.error(
-                f"Error fetching album {album_id}: {e}"
-            )  # nosemgrep: python.fastapi.log.tainted-log-injection-stdlib-fastapi.tainted-log-injection-stdlib-fastapi  # noqa: E501
+            _logger.error(f"Error fetching album {album_id}: {e}")  # nosemgrep: python.fastapi.log.tainted-log-injection-stdlib-fastapi.tainted-log-injection-stdlib-fastapi
             raise HTTPException(status_code=404, detail="Album not found")
-
         tracks = await service.get_album_tracks(album_id)
-
-        for track_data in tracks:
-            existing = await db.execute(select(Track).where(Track.spotify_id == track_data["id"]))
-            track_obj = existing.scalar_one_or_none()
-
-            if not track_obj:
-                track_obj = Track(
-                    title=track_data["title"],
-                    artist=track_data["artist"],
-                    spotify_id=track_data["id"],
-                    duration_ms=track_data.get("duration_ms"),
-                    metadata_source="spotify",
-                    metadata_content={
-                        "image_url": track_data.get("image_url"),
-                        "album_art": track_data.get("image_url"),
-                        "album": track_data.get("album"),
-                        # Spotify API Feb 2026: isrc no longer returned
-                        "isrc": track_data.get("isrc"),
-                    },
-                )
-                db.add(track_obj)
-                await db.flush()
-
-            download_data = DownloadCreate(
-                track_id=track_obj.id,
-                source="spotify",
-                playlist_name=album_name,
-            )
-
-            try:
-                await download_manager.add_download(db, current_user.id, download_data)
-                queued_count += 1
-            except Exception as e:
-                logger.warning(
-                    f"Failed to queue track {track_data['title']}: {e}"
-                )  # nosemgrep: python.fastapi.log.tainted-log-injection-stdlib-fastapi.tainted-log-injection-stdlib-fastapi  # noqa: E501
-                continue
     else:
         raise HTTPException(status_code=400, detail=f"Source '{request.source}' not supported for album downloads")
 
+    queued_count = await _queue_tracks(db, current_user.id, tracks, request.source, album_name)
     await db.commit()
-
-    return {
-        "status": "success",
-        "album": album_name,
-        "queued_count": queued_count,
-        "message": f"Queued {queued_count} tracks from {album_name}",
-    }
+    return {"status": "success", "album": album_name, "queued_count": queued_count, "message": f"Queued {queued_count} tracks from {album_name}"}
 
 
 @router.post("/rescan")

@@ -315,57 +315,47 @@ class SpotifyService:
         formatted_artist["albums"] = formatted_albums
         return formatted_artist
 
+    async def _resolve_spotify_short_link(self, url: str) -> str:
+        try:
+            async with httpx.AsyncClient() as client:
+                resp = await client.head(url, follow_redirects=True, timeout=5)
+                resolved = str(resp.url)
+                logger.info(f"Resolved Spotify short link to: {resolved}")
+                return resolved
+        except Exception as e:
+            logger.warning(f"Failed to resolve spotify link {url}: {e}")
+            return url
+
+    async def _fetch_spotify_resource(self, resource_type: str, resource_id: str) -> list[dict[str, Any]]:
+        if resource_type == "track":
+            track = await self.get_track(resource_id)
+            return [track] if track else []
+        endpoint_map = {"artist": f"artists/{resource_id}", "playlist": f"playlists/{resource_id}", "album": f"albums/{resource_id}"}
+        endpoint = endpoint_map.get(resource_type)
+        if not endpoint:
+            return []
+        try:
+            data = await self._request("get", endpoint)
+            if not data:
+                return []
+            if resource_type == "artist":
+                return [self._format_artist(data)]
+            return [self._format_playlist(data, is_album=(resource_type == "album"))]
+        except Exception:
+            return []
+
     async def search(self, query: str, _limit: int = 10, _offset: int = 0, _type: str = "track") -> list[dict[str, Any]]:
         """Overrides generic search. Returns results ONLY if it's a Spotify link resolver."""
         logger.info(f"Spotify async search for: {query}")
-
-        # Only process URLs
         if "spotify.link" in query or "spoti.fi" in query:
-            try:
-                # Resolve short links
-                async with httpx.AsyncClient() as client:
-                    resp = await client.head(query, follow_redirects=True, timeout=5)
-                    query = str(resp.url)
-                    logger.info(f"Resolved Spotify short link to: {query}")
-            except Exception as e:
-                logger.warning(f"Failed to resolve spotify link {query}: {e}")
+            query = await self._resolve_spotify_short_link(query)
 
         url_match = re.search(
             r"(?:https?://)?(?:www\.)?(?:open\.spotify\.com/(?:intl-\w+/)?|spotify:)(track|artist|playlist|album)[:/]([a-zA-Z0-9_-]+)",
             query,
         )
-
         if url_match:
             resource_type, resource_id = url_match.groups()
             logger.info(f"Detected Spotify Async URL: type={resource_type}, id={resource_id}")
-
-            if resource_type == "track":
-                track = await self.get_track(resource_id)
-                return [track] if track else []
-            elif resource_type == "artist":
-                try:
-                    artist_data = await self._request("get", f"artists/{resource_id}")
-                    if artist_data:
-                        return [self._format_artist(artist_data)]
-                except Exception:
-                    pass
-                return []
-            elif resource_type == "playlist":
-                try:
-                    pl_data = await self._request("get", f"playlists/{resource_id}")
-                    if pl_data:
-                        return [self._format_playlist(pl_data)]
-                except Exception:
-                    pass
-                return []
-            elif resource_type == "album":
-                try:
-                    al_data = await self._request("get", f"albums/{resource_id}")
-                    if al_data:
-                        return [self._format_playlist(al_data, is_album=True)]
-                except Exception:
-                    pass
-                return []
-
-        # If not a link, we do NOT perform generic search anymore
+            return await self._fetch_spotify_resource(resource_type, resource_id)
         return []
