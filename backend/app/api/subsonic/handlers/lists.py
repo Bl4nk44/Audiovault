@@ -33,6 +33,41 @@ router = APIRouter()
 _RESPONSE_FORMAT = "Response format"
 
 
+def _apply_album_list_ordering(query, list_type: str):
+    if list_type == "random":
+        return query.order_by(func.random())
+    if list_type == "newest" or list_type == "recent" or list_type == "starred":
+        return query.order_by(Album.created_at.desc())
+    if list_type in ("alphabetical", "byName"):
+        return query.order_by(Album.title)
+    return query.order_by(Album.id)
+
+
+async def _build_album_list_item(db: AsyncSession, album: Album, current_user: User) -> dict:
+    artist_name = "Unknown Artist"
+    if album.artist_id:
+        artist_obj = await db.get(Artist, album.artist_id)
+        if artist_obj:
+            artist_name = artist_obj.name
+    sc = await db.scalar(
+        select(func.count(Track.id))
+        .join(Download, Download.track_id == Track.id)
+        .where(Track.album_id == album.id, Download.user_id == current_user.id, Download.status == "completed")
+    ) or 0
+    return {
+        "id": str(album.id),
+        "parent": str(album.artist_id) if album.artist_id else None,
+        "title": album.title,
+        "artist": artist_name,
+        "artistId": str(album.artist_id) if album.artist_id else None,
+        "isDir": True,
+        "coverArt": f"al-{album.id}",
+        "songCount": sc,
+        "year": int(album.release_date[:4]) if album.release_date and len(album.release_date) >= 4 else None,
+        "created": format_subsonic_date(album.created_at),
+    }
+
+
 @router.get("/getGenres.view")
 @router.post("/getGenres.view")
 async def get_genres(
@@ -118,76 +153,15 @@ async def get_album_list(
     Supports various sorting types.
     """
     size = min(size, 500)
-
-    # Base query: Albums that have at least one downloaded track for this user
-    # This is a bit complex in SQL, so we simplify by querying Albums directly
-    # and filtering by join, making sure we don't return partial albums without checks
-    # For performance, we check Download existence
-
     query = (
         select(Album)
         .join(Track, Track.album_id == Album.id)
         .outerjoin(Download, (Download.track_id == Track.id) & (Download.user_id == current_user.id))
         .group_by(Album.id)
-        .order_by(func.count(Download.id).desc())
     )
-
-    # Apply type sorting
-    if type == "random":
-        query = query.order_by(func.random())
-    elif type == "newest":
-        query = query.order_by(Album.created_at.desc())
-    elif type == "alphabetical" or type == "byName":
-        query = query.order_by(Album.title)
-    elif type == "recent":
-        # Recently played or added? Subsonic usually means recently added
-        query = query.order_by(Album.created_at.desc())
-    elif type == "starred":
-        # Need to join starred tables - skip for now or implement if StarredAlbum is used
-        query = query.order_by(Album.created_at.desc())  # Fallback
-    elif type == "byYear":
-        query = query.order_by(Album.id)  # Fallback if release_date not reliable sort
-        if from_year:
-            # We don't have year column easily queryable yet without cast, assume filters applied elsewhere
-            pass
-
-    # Apply pagination
-    query = query.offset(offset).limit(size)
-
+    query = _apply_album_list_ordering(query, type).offset(offset).limit(size)
     result = await db.execute(query)  # nosemgrep: python.fastapi.db.generic-sql-fastapi.generic-sql-fastapi
-    albums = result.scalars().all()
-
-    album_list = []
-    for album in albums:
-        # Get artist name
-        artist_name = "Unknown Artist"
-        if album.artist_id:
-            artist_res = await db.get(Artist, album.artist_id)
-            if artist_res:
-                artist_name = artist_res.name
-
-        # Count songs
-        song_count = await db.scalar(
-            select(func.count(Track.id))
-            .join(Download, Download.track_id == Track.id)
-            .where(Track.album_id == album.id, Download.user_id == current_user.id, Download.status == "completed")
-        )
-
-        album_list.append(
-            {
-                "id": str(album.id),
-                "parent": str(album.artist_id) if album.artist_id else None,
-                "title": album.title,
-                "artist": artist_name,
-                "artistId": str(album.artist_id) if album.artist_id else None,
-                "isDir": True,
-                "coverArt": f"al-{album.id}",
-                "songCount": song_count or 0,
-                "year": int(album.release_date[:4]) if album.release_date and len(album.release_date) >= 4 else None,
-                "created": format_subsonic_date(album.created_at),
-            }
-        )
-
+    album_list = [await _build_album_list_item(db, album, current_user) for album in result.scalars().all()]
     return subsonic_response({"albumList2": {"album": album_list}}, f=f)
 
 

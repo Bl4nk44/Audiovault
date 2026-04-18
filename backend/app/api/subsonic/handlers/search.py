@@ -30,6 +30,151 @@ router = APIRouter()
 _RESPONSE_FORMAT = "Response format"
 
 
+async def _search_artists(
+    db: AsyncSession, current_user: User, search_term: str, count: int, offset: int, id3: bool = False
+) -> list:
+    result = await db.execute(
+        select(Artist)  # nosemgrep: python.fastapi.db.generic-sql-fastapi.generic-sql-fastapi
+        .join(Track, Track.artist_id == Artist.id)
+        .join(Download, Download.track_id == Track.id)
+        .where(
+            Download.user_id == current_user.id,
+            Download.status == "completed",
+            func.lower(Artist.name).like(search_term),
+        )
+        .group_by(Artist.id)
+        .order_by(Artist.name)
+        .offset(offset)
+        .limit(count)
+    )
+    out = []
+    for artist_obj in result.scalars():
+        ac = await db.scalar(select(func.count(Album.id.distinct())).where(Album.artist_id == artist_obj.id)) or 0
+        entry = {
+            "id": str(artist_obj.id),
+            "name": artist_obj.name,
+            "coverArt": f"ar-{artist_obj.id}" if artist_obj.images else None,
+        }
+        entry["albumCount" if id3 else "album_count"] = ac
+        out.append(entry)
+    return out
+
+
+async def _search2_albums(
+    db: AsyncSession, current_user: User, search_term: str, count: int, offset: int
+) -> list:
+    result = await db.execute(
+        select(Album)  # nosemgrep: python.fastapi.db.generic-sql-fastapi.generic-sql-fastapi
+        .join(Track, Track.album_id == Album.id)
+        .outerjoin(Download, (Download.track_id == Track.id) & (Download.user_id == current_user.id))
+        .where(func.lower(Album.title).like(search_term))
+        .group_by(Album.id)
+        .order_by(Album.title)
+        .offset(offset)
+        .limit(count)
+    )
+    out = []
+    for album_obj in result.scalars():
+        artist_name = "Unknown Artist"
+        if album_obj.artist_id:
+            name = await db.scalar(select(Artist.name).where(Artist.id == album_obj.artist_id))
+            if name:
+                artist_name = name
+        sc = await db.scalar(
+            select(func.count(Track.id))
+            .outerjoin(Download, (Download.track_id == Track.id) & (Download.user_id == current_user.id))
+            .where(Track.album_id == album_obj.id)
+        ) or 0
+        out.append({
+            "id": str(album_obj.id),
+            "parent": str(album_obj.artist_id) if album_obj.artist_id else "1",
+            "title": album_obj.title,
+            "artist": artist_name,
+            "isDir": True,
+            "coverArt": f"al-{album_obj.id}",
+            "songCount": sc,
+            "year": int(album_obj.release_date[:4]) if album_obj.release_date and len(album_obj.release_date) >= 4 else None,
+        })
+    return out
+
+
+async def _search3_albums(
+    db: AsyncSession, current_user: User, search_term: str, count: int, offset: int
+) -> list:
+    result = await db.execute(
+        select(Album)  # nosemgrep: python.fastapi.db.generic-sql-fastapi.generic-sql-fastapi
+        .join(Track, Track.album_id == Album.id)
+        .join(Download, Download.track_id == Track.id)
+        .where(Download.user_id == current_user.id, func.lower(Album.title).like(search_term))
+        .group_by(Album.id)
+        .order_by(Album.title)
+        .offset(offset)
+        .limit(count)
+    )
+    out = []
+    for album_obj in result.scalars():
+        artist_name = "Unknown Artist"
+        if album_obj.artist_id:
+            name = await db.scalar(select(Artist.name).where(Artist.id == album_obj.artist_id))
+            if name:
+                artist_name = name
+        sc = await db.scalar(
+            select(func.count(Track.id))
+            .outerjoin(Download, (Download.track_id == Track.id) & (Download.user_id == current_user.id))
+            .where(Track.album_id == album_obj.id)
+        ) or 0
+        total_ms = await db.scalar(
+            select(func.sum(Track.duration_ms))
+            .outerjoin(Download, (Download.track_id == Track.id) & (Download.user_id == current_user.id))
+            .where(Track.album_id == album_obj.id)
+        ) or 0
+        out.append({
+            "id": str(album_obj.id),
+            "name": album_obj.title,
+            "artist": artist_name,
+            "artistId": str(album_obj.artist_id) if album_obj.artist_id else None,
+            "coverArt": f"al-{album_obj.id}",
+            "songCount": sc,
+            "duration": format_duration(total_ms),
+            "created": format_subsonic_date(album_obj.created_at),
+            "year": int(album_obj.release_date[:4]) if album_obj.release_date and len(album_obj.release_date) >= 4 else None,
+        })
+    return out
+
+
+async def _search_songs(
+    db: AsyncSession, current_user: User, search_term: str, count: int, offset: int, id3: bool = False
+) -> list:
+    if id3:
+        result = await db.execute(
+            # nosemgrep: python.fastapi.db.generic-sql-fastapi.generic-sql-fastapi
+            select(Track, Download)
+            .outerjoin(Download, (Download.track_id == Track.id) & (Download.user_id == current_user.id))
+            .where(or_(func.lower(Track.title).like(search_term), func.lower(Track.artist).like(search_term), func.lower(Track.album).like(search_term)))
+            .offset(offset)
+            .limit(count)
+        )
+    else:
+        result = await db.execute(
+            select(Track, Download)  # nosemgrep: python.fastapi.db.generic-sql-fastapi.generic-sql-fastapi
+            .join(Download, Download.track_id == Track.id)
+            .where(
+                Download.user_id == current_user.id,
+                Download.status == "completed",
+                or_(func.lower(Track.title).like(search_term), func.lower(Track.artist).like(search_term), func.lower(Track.album).like(search_term)),
+            )
+            .offset(offset)
+            .limit(count)
+        )
+    out = []
+    for track, download in result.all():
+        song = build_song_response(track, download)
+        if not id3:
+            song["parent"] = str(track.album_id) if track.album_id else "1"
+        out.append(song)
+    return out
+
+
 @router.get("/search.view")
 @router.post("/search.view")
 async def search_legacy(
@@ -114,125 +259,10 @@ async def search2(
         Search results with artists, albums, and songs
     """
     search_term = f"%{query.lower()}%"
-
-    # Search artists
-    artists_result = []
-    if artist_count > 0:
-        result = await db.execute(
-            select(Artist)  # nosemgrep: python.fastapi.db.generic-sql-fastapi.generic-sql-fastapi
-            .join(Track, Track.artist_id == Artist.id)
-            .join(Download, Download.track_id == Track.id)
-            .where(
-                Download.user_id == current_user.id,
-                Download.status == "completed",
-                func.lower(Artist.name).like(search_term),
-            )
-            .group_by(Artist.id)
-            .order_by(Artist.name)
-            .offset(artist_offset)
-            .limit(artist_count)
-        )
-
-        for artist_obj in result.scalars():
-            # Count albums
-            album_result = await db.execute(
-                select(func.count(Album.id.distinct())).where(Album.artist_id == artist_obj.id)
-            )
-            album_count = album_result.scalar() or 0
-
-            artists_result.append(
-                {
-                    "id": str(artist_obj.id),
-                    "name": artist_obj.name,
-                    "album_count": album_count,
-                    "coverArt": f"ar-{artist_obj.id}" if artist_obj.images else None,
-                }
-            )
-
-    # Search albums
-    albums_result = []
-    if album_count > 0:
-        albums_result_db = await db.execute(
-            select(Album)  # nosemgrep: python.fastapi.db.generic-sql-fastapi.generic-sql-fastapi
-            .join(Track, Track.album_id == Album.id)
-            .outerjoin(Download, (Download.track_id == Track.id) & (Download.user_id == current_user.id))
-            .where(
-                func.lower(Album.title).like(search_term),
-            )
-            .group_by(Album.id)
-            .order_by(Album.title)
-            .offset(album_offset)
-            .limit(album_count)
-        )
-
-        for album_obj in albums_result_db.scalars():
-            # Get artist name
-            artist_name = "Unknown Artist"
-            if album_obj.artist_id:
-                artist_result = await db.execute(select(Artist.name).where(Artist.id == album_obj.artist_id))
-                name = artist_result.scalar()
-                if name:
-                    artist_name = name
-
-            # Count songs
-            song_result = await db.execute(
-                select(func.count(Track.id))
-                .outerjoin(Download, (Download.track_id == Track.id) & (Download.user_id == current_user.id))
-                .where(
-                    Track.album_id == album_obj.id,
-                )
-            )
-            song_count = song_result.scalar() or 0
-
-            albums_result.append(
-                {
-                    "id": str(album_obj.id),
-                    "parent": str(album_obj.artist_id) if album_obj.artist_id else "1",
-                    "title": album_obj.title,
-                    "artist": artist_name,
-                    "isDir": True,
-                    "coverArt": f"al-{album_obj.id}",
-                    "songCount": song_count,
-                    "year": int(album_obj.release_date[:4])
-                    if album_obj.release_date and len(album_obj.release_date) >= 4
-                    else None,
-                }
-            )
-
-    # Search songs
-    songs_result = []
-    if song_count > 0:
-        songs_result_db = await db.execute(
-            select(Track, Download)  # nosemgrep: python.fastapi.db.generic-sql-fastapi.generic-sql-fastapi
-            .join(Download, Download.track_id == Track.id)
-            .where(
-                Download.user_id == current_user.id,
-                Download.status == "completed",
-                or_(
-                    func.lower(Track.title).like(search_term),
-                    func.lower(Track.artist).like(search_term),
-                    func.lower(Track.album).like(search_term),
-                ),
-            )
-            .offset(song_offset)
-            .limit(song_count)
-        )
-
-        for track, download in songs_result_db.all():
-            song = build_song_response(track, download)
-            song["parent"] = str(track.album_id) if track.album_id else "1"
-            songs_result.append(song)
-
-    return subsonic_response(
-        {
-            "searchResult2": {
-                "artist": artists_result,
-                "album": albums_result,
-                "song": songs_result,
-            }
-        },
-        f=f,
-    )
+    artists_result = await _search_artists(db, current_user, search_term, artist_count, artist_offset) if artist_count > 0 else []
+    albums_result = await _search2_albums(db, current_user, search_term, album_count, album_offset) if album_count > 0 else []
+    songs_result = await _search_songs(db, current_user, search_term, song_count, song_offset) if song_count > 0 else []
+    return subsonic_response({"searchResult2": {"artist": artists_result, "album": albums_result, "song": songs_result}}, f=f)
 
 
 @router.get("/search3.view")
@@ -265,129 +295,7 @@ async def search3(
         Search results in ID3 format
     """
     search_term = f"%{query.lower()}%"
-
-    # Search artists (ID3 format)
-    artists_result = []
-    if artist_count > 0:
-        artists_result_db = await db.execute(
-            select(Artist)  # nosemgrep: python.fastapi.db.generic-sql-fastapi.generic-sql-fastapi
-            .join(Track, Track.artist_id == Artist.id)
-            .join(Download, Download.track_id == Track.id)
-            .where(
-                Download.user_id == current_user.id,
-                Download.status == "completed",
-                func.lower(Artist.name).like(search_term),
-            )
-            .group_by(Artist.id)
-            .order_by(Artist.name)
-            .offset(artist_offset)
-            .limit(artist_count)
-        )
-
-        for artist_obj in artists_result_db.scalars():
-            album_result = await db.execute(
-                select(func.count(Album.id.distinct())).where(Album.artist_id == artist_obj.id)
-            )
-            album_count = album_result.scalar() or 0
-
-            artists_result.append(
-                {
-                    "id": str(artist_obj.id),
-                    "name": artist_obj.name,
-                    "albumCount": album_count,
-                    "coverArt": f"ar-{artist_obj.id}" if artist_obj.images else None,
-                }
-            )
-
-    # Search albums (ID3 format)
-    albums_result = []
-    if album_count > 0:
-        albums_result_db = await db.execute(
-            select(Album)  # nosemgrep: python.fastapi.db.generic-sql-fastapi.generic-sql-fastapi
-            .join(Track, Track.album_id == Album.id)
-            .join(Download, Download.track_id == Track.id)
-            .where(
-                Download.user_id == current_user.id,
-                func.lower(Album.title).like(search_term),
-            )
-            .group_by(Album.id)
-            .order_by(Album.title)
-            .offset(album_offset)
-            .limit(album_count)
-        )
-
-        for album_obj in albums_result_db.scalars():
-            artist_name = "Unknown Artist"
-            if album_obj.artist_id:
-                artist_result = await db.execute(select(Artist.name).where(Artist.id == album_obj.artist_id))
-                name = artist_result.scalar()
-                if name:
-                    artist_name = name
-
-            song_result = await db.execute(
-                select(func.count(Track.id))
-                .outerjoin(Download, (Download.track_id == Track.id) & (Download.user_id == current_user.id))
-                .where(
-                    Track.album_id == album_obj.id,
-                )
-            )
-            song_count = song_result.scalar() or 0
-
-            # Sum duration
-            duration_result = await db.execute(
-                select(func.sum(Track.duration_ms))
-                .outerjoin(Download, (Download.track_id == Track.id) & (Download.user_id == current_user.id))
-                .where(
-                    Track.album_id == album_obj.id,
-                )
-            )
-            total_duration = duration_result.scalar() or 0
-
-            albums_result.append(
-                {
-                    "id": str(album_obj.id),
-                    "name": album_obj.title,
-                    "artist": artist_name,
-                    "artistId": str(album_obj.artist_id) if album_obj.artist_id else None,
-                    "coverArt": f"al-{album_obj.id}",
-                    "songCount": song_count,
-                    "duration": format_duration(total_duration),
-                    "created": format_subsonic_date(album_obj.created_at),
-                    "year": int(album_obj.release_date[:4])
-                    if album_obj.release_date and len(album_obj.release_date) >= 4
-                    else None,
-                }
-            )
-
-    # Search songs (same as search2)
-    songs_result = []
-    if song_count > 0:
-        # nosemgrep: python.fastapi.db.generic-sql-fastapi.generic-sql-fastapi
-        songs_result_db = await db.execute(
-            select(Track, Download)
-            .outerjoin(Download, (Download.track_id == Track.id) & (Download.user_id == current_user.id))
-            .where(
-                # Download.user_id == current_user.id,
-                or_(
-                    func.lower(Track.title).like(search_term),
-                    func.lower(Track.artist).like(search_term),
-                    func.lower(Track.album).like(search_term),
-                )
-            )
-            .offset(song_offset)
-            .limit(song_count)
-        )
-
-        for track, download in songs_result_db.all():
-            songs_result.append(build_song_response(track, download))
-
-    return subsonic_response(
-        {
-            "searchResult3": {
-                "artist": artists_result,
-                "album": albums_result,
-                "song": songs_result,
-            }
-        },
-        f=f,
-    )
+    artists_result = await _search_artists(db, current_user, search_term, artist_count, artist_offset, id3=True) if artist_count > 0 else []
+    albums_result = await _search3_albums(db, current_user, search_term, album_count, album_offset) if album_count > 0 else []
+    songs_result = await _search_songs(db, current_user, search_term, song_count, song_offset, id3=True) if song_count > 0 else []
+    return subsonic_response({"searchResult3": {"artist": artists_result, "album": albums_result, "song": songs_result}}, f=f)
