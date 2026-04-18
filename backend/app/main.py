@@ -1,6 +1,7 @@
 import asyncio
 import logging
 import os
+import sys
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
@@ -182,18 +183,22 @@ def _run_alembic_stamp_head():
     )
 
 
+_BANNER = (
+    "\n"
+    "  " + "─" * 54 + "\n"
+    r"        _             _ _                       _ _" + "\n"
+    r"       / \  _   _  __| (_) _____   ____ _ _   _| | |_" + "\n"
+    r"      / _ \| | | |/ _` | |/ _ \ \ / / _` | | | | | __|" + "\n"
+    r"     / ___ \ |_| | (_| | | (_) \ V / (_| | |_| | | |_" + "\n"
+    r"    /_/   \_\__,_|\__,_|_|\___/ \_/ \__,_|\__,_|_|\__|" + "\n"
+    "  " + "─" * 54 + "\n"
+)
+
+
 @application.on_event("startup")
 async def startup_event():
-    banner = r"""
-        _             _ _                       _ _
-       / \  _   _  __| (_) _____   ____ _ _   _| | |_
-      / _ \| | | |/ _` | |/ _ \ \ / / _` | | | | | __|
-     / ___ \ |_| | (_| | | (_) \ V / (_| | |_| | | |_
-    /_/   \_\__,_|\__,_|_|\___/ \_/ \__,_|\__,_|_|\__|
-
-    """
-    logger.info(banner)
-    print(banner)  # Ensure it prints to console even if logs are diverted
+    sys.stdout.write(_BANNER)
+    sys.stdout.flush()
 
     # Database setup with retry logic
     retries = 5
