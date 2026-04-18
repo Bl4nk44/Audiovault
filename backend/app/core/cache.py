@@ -15,19 +15,19 @@ class CacheManager:
 
     async def get(self, key: str) -> str | None:
         if self.redis is None:
-            self.connect()
+            await self.connect()
         assert self.redis is not None
         return await self.redis.get(key)
 
     async def set(self, key: str, value: str, expire: int = 3600):
         if self.redis is None:
-            self.connect()
+            await self.connect()
         assert self.redis is not None
         await self.redis.set(key, value, ex=expire)
 
     async def delete(self, key: str):
         if self.redis is None:
-            self.connect()
+            await self.connect()
         assert self.redis is not None
         await self.redis.delete(key)
 
