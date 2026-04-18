@@ -14,6 +14,12 @@ class SoundCloudService:
     def can_handle(self, url: str) -> bool:
         return "soundcloud.com" in url or "on.soundcloud.com" in url
 
+    def _extract_tracks_from_info(self, info: dict, url: str) -> list[dict[str, Any]]:
+        entries = info.get("entries", [])
+        if not entries and info.get("_type") != "playlist":
+            entries = [info]
+        return [t for e in entries if (t := self._format_entry(e, url))]
+
     async def get_tracks(self, url: str) -> list[dict[str, Any]]:
         """
         Extract tracks from SoundCloud URL using yt-dlp.
@@ -30,7 +36,6 @@ class SoundCloudService:
         try:
             logger.info(f"Extracting SoundCloud metadata from: {url}")
 
-            # Resolve short links
             if "on.soundcloud.com" in url:
                 from app.utils.url_helper import resolve_redirects
 
@@ -47,18 +52,7 @@ class SoundCloudService:
                 logger.warning("No info extracted from SoundCloud URL")
                 return []
 
-            entries = info.get("entries", [])
-            tracks = []
-
-            # If it's a single track, entries might be empty but info contains the track
-            if not entries and info.get("_type") != "playlist":
-                entries = [info]
-
-            for entry in entries:
-                track = self._format_entry(entry, url)
-                if track:
-                    tracks.append(track)
-
+            tracks = self._extract_tracks_from_info(info, url)
             logger.info(f"Extracted {len(tracks)} tracks from SoundCloud")
             return tracks
 

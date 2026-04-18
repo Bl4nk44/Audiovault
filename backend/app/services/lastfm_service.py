@@ -190,61 +190,57 @@ class LastfmService:
         except Exception:
             return []
 
+    async def _fetch_raw_artists_authenticated(self, session_key: str, limit: int) -> list:
+        try:
+            data = await self._request(
+                "user.getRecommendedArtists", {"sk": session_key, "limit": limit}, signed=True
+            )
+            raw = data.get("recommendations", {}).get("artist", [])
+            return [raw] if isinstance(raw, dict) else raw
+        except Exception as e:
+            logger.warning(f"Authenticated artist fetch failed: {e}")
+            return []
+
+    async def _fetch_raw_top_artists(self, user_name: str, limit: int) -> list:
+        try:
+            data = await self._request("user.getTopArtists", {"user": user_name, "limit": limit})
+            raw = data.get("topartists", {}).get("artist", [])
+            return [raw] if isinstance(raw, dict) else raw
+        except Exception as e:
+            logger.error(f"Top artists fetch also failed: {e}")
+            return []
+
+    def _build_recommended_artist(self, a: dict) -> Optional[RecommendedArtist]:
+        name = a.get("name")
+        if not name:
+            return None
+        return RecommendedArtist(
+            name=name,
+            url=a.get("url", ""),
+            image_url=self._extract_best_image(a.get("image", [])),
+            mbid=a.get("mbid"),
+            match=float(a.get("match") or a.get("playcount") or 0.0),
+        )
+
     async def get_recommended_artists(
         self, session_key: Optional[str], limit: int = 20, user_name: Optional[str] = None
     ) -> List[RecommendedArtist]:
         """Get recommended artists for a user. Falls back to Top Artists if recommendations empty."""
-        raw_artists = []
+        raw_artists: list = []
 
-        # Path 1: Try authenticated recommendations if session_key available
         if session_key:
-            try:
-                logger.info("Fetching authenticated artist recommendations...")
-                data = await self._request(
-                    "user.getRecommendedArtists", {"sk": session_key, "limit": limit}, signed=True
-                )
-                raw_artists = data.get("recommendations", {}).get("artist", [])
-                if isinstance(raw_artists, dict):
-                    raw_artists = [raw_artists]
-                logger.info(f"Authenticated recommendations returned {len(raw_artists)} artists")
-            except Exception as e:
-                logger.warning(f"Authenticated artist fetch failed: {e}")
+            raw_artists = await self._fetch_raw_artists_authenticated(session_key, limit)
 
-        # Path 2: Fallback to Top Artists (ALWAYS if empty, works without auth)
         if not raw_artists and user_name:
             logger.info(f"Falling back to user.getTopArtists for {user_name}")
-            try:
-                top_data = await self._request("user.getTopArtists", {"user": user_name, "limit": limit})
-                raw_artists = top_data.get("topartists", {}).get("artist", [])
-                if isinstance(raw_artists, dict):
-                    raw_artists = [raw_artists]
-                logger.info(f"Top artists returned {len(raw_artists)} artists")
-            except Exception as e:
-                logger.error(f"Top artists fetch also failed: {e}")
+            raw_artists = await self._fetch_raw_top_artists(user_name, limit)
 
         if not raw_artists:
             logger.warning(f"No artists found for user_name={user_name}, session_key={bool(session_key)}")
             return []
 
         logger.info(f"Processing {len(raw_artists)} raw artist items")
-        results = []
-        for a in raw_artists:
-            name = a.get("name")
-            if not name:
-                continue
-
-            image_url = self._extract_best_image(a.get("image", []))
-
-            results.append(
-                RecommendedArtist(
-                    name=name,
-                    url=a.get("url", ""),
-                    image_url=image_url,
-                    mbid=a.get("mbid"),
-                    match=float(a.get("match") or a.get("playcount") or 0.0),
-                )
-            )
-
+        results = [r for a in raw_artists if (r := self._build_recommended_artist(a))]
         logger.info(f"Returning {len(results)} processed artists")
         return results
 
@@ -328,18 +324,26 @@ class LastfmService:
             return artist_data.name
         return None
 
+    def _add_track_seeds(self, result: Any, seed_tracks: list) -> None:
+        if isinstance(result, Exception):
+            return
+        for t in cast(List[Dict[str, Any]], result):
+            artist = self._parse_artist_name(t.get("artist"))
+            if t.get("name") and artist:
+                seed_tracks.append((t["name"], artist))
+
+    def _add_artist_seeds(self, result: Any, seed_artists: set) -> None:
+        if isinstance(result, Exception):
+            return
+        for item in result:
+            if name := self._parse_artist_name(item):
+                seed_artists.add(name)
+
     async def _gather_seeds(self, user_id: str, session_key: Optional[str]) -> tuple[List[tuple[str, str]], set[str]]:
         """Gather seed tracks and artists from multiple sources."""
-        seed_tracks = []
-        seed_artists = set()
+        seed_tracks: list = []
+        seed_artists: set = set()
 
-        # Helper to safely add track seeds
-        def add_track(name, artist_data):
-            artist = self._parse_artist_name(artist_data)
-            if name and artist:
-                seed_tracks.append((name, artist))
-
-        # Sources: Top, Recent, Top Artists, Recommended Artists
         sources: List[Coroutine[Any, Any, Any]] = [
             self.get_user_top_tracks(user_id, period="1month", limit=10),
             self.get_user_recent_tracks(user_id, limit=10),
@@ -352,27 +356,11 @@ class LastfmService:
             List[Any], await asyncio.gather(*[asyncio.create_task(s) for s in sources], return_exceptions=True)
         )
 
-        # Results indices match sources: 0=TopTracks, 1=RecentTracks, 2=TopArtists, 3=RecArtists
-        if not isinstance(results[0], Exception):
-            res0 = cast(List[Dict[str, Any]], results[0])
-            for t in res0:
-                add_track(t.get("name"), t.get("artist"))
-        if not isinstance(results[1], Exception):
-            res1 = cast(List[Dict[str, Any]], results[1])
-            for t in res1:
-                add_track(t.get("name"), t.get("artist"))
-        if not isinstance(results[2], Exception):
-            res2 = cast(List[Dict[str, Any]], results[2])
-            for a in res2:
-                name = self._parse_artist_name(a)
-                if name:
-                    seed_artists.add(name)
-        if session_key and len(results) > 3 and not isinstance(results[3], Exception):
-            res3 = cast(List[RecommendedArtist], results[3])
-            for artist_obj in res3:
-                name = self._parse_artist_name(artist_obj)
-                if name:
-                    seed_artists.add(name)
+        self._add_track_seeds(results[0], seed_tracks)
+        self._add_track_seeds(results[1], seed_tracks)
+        self._add_artist_seeds(results[2], seed_artists)
+        if session_key and len(results) > 3:
+            self._add_artist_seeds(results[3], seed_artists)
 
         return seed_tracks, seed_artists
 

@@ -14,20 +14,29 @@ class DeezerService:
     def __init__(self):
         """Initialize DeezerService — stateless, no configuration required."""
 
-    async def search(self, query: str, limit: int = 20, offset: int = 0) -> list[dict[str, Any]]:
-        # Resolve short links (deezer.page.link)
-        if (
-            "deezer.page.link" in query or "deezer.com" in query
-        ):  # check generic deezer too just in case of weird redirects
+    async def _maybe_resolve_short_link(self, query: str) -> str:
+        if "page.link" in query:
             from app.utils.url_helper import resolve_redirects
 
-            if "page.link" in query:
-                resolved = await resolve_redirects(query)
-                if resolved != query:
-                    logger.info(f"Resolved Deezer short link to: {resolved}")
-                    query = resolved
+            resolved = await resolve_redirects(query)
+            if resolved != query:
+                logger.info(f"Resolved Deezer short link to: {resolved}")
+                return resolved
+        return query
 
-        # Check if query is a URL
+    async def _handle_direct_url(self, kind: str, deezer_id: str) -> list[dict[str, Any]] | None:
+        if kind == "track":
+            track = await self.get_track(deezer_id)
+            return [track] if track else []
+        if kind == "album":
+            return await self.get_album_tracks(deezer_id)
+        if kind == "playlist":
+            return await self.get_playlist_tracks(deezer_id)
+        return None
+
+    async def search(self, query: str, limit: int = 20, offset: int = 0) -> list[dict[str, Any]]:
+        query = await self._maybe_resolve_short_link(query)
+
         url_match = re.search(
             r"(?:https?://)?(?:www\.)?deezer\.com/(?:\w{2}/)?(track|album|playlist)/(\d+)",
             query,
@@ -35,13 +44,9 @@ class DeezerService:
         if url_match:
             kind, deezer_id = url_match.groups()
             logger.info(f"Detected Deezer URL: kind={kind}, id={deezer_id}")
-            if kind == "track":
-                track = await self.get_track(deezer_id)
-                return [track] if track else []
-            elif kind == "album":
-                return await self.get_album_tracks(deezer_id)
-            elif kind == "playlist":
-                return await self.get_playlist_tracks(deezer_id)
+            result = await self._handle_direct_url(kind, deezer_id)
+            if result is not None:
+                return result
 
         async with aiohttp.ClientSession() as session:
             async with session.get(
@@ -50,14 +55,8 @@ class DeezerService:
             ) as response:
                 if response.status != 200:
                     return []
-
                 data = await response.json()
-                tracks = []
-
-                for item in data.get("data", []):
-                    tracks.append(self._format_track(item))
-
-                return tracks
+                return [self._format_track(item) for item in data.get("data", [])]
 
     async def get_track(self, track_id: str) -> dict[str, Any] | None:
         async with aiohttp.ClientSession() as session:

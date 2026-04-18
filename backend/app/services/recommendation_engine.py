@@ -101,6 +101,38 @@ class HybridRecommendationEngine:
             logger.warning(f"Last.fm failed for user {user.id}: {e}")
             return []
 
+    async def _search_deezer_playlists_for_artist(self, deezer: DeezerService, artist_name: str) -> list:
+        results = []
+        try:
+            r1 = await deezer.search(f"This Is {artist_name}", limit=2)
+            if r1:
+                results.extend(r1)
+            r2 = await deezer.search(f"{artist_name} Mix", limit=2)
+            if r2:
+                results.extend(r2)
+        except Exception as e:
+            logger.warning(f"Playlist search failed for {artist_name}: {e}")
+        return results
+
+    def _collect_unique_playlists(self, search_results: list) -> List[RecommendedPlaylist]:
+        seen_ids: set = set()
+        playlists = []
+        for results_batch in search_results:
+            for p in results_batch:
+                if p["id"] not in seen_ids:
+                    playlists.append(
+                        RecommendedPlaylist(
+                            id=p["id"],
+                            title=p.get("title", ""),
+                            image_url=p.get("image_url"),
+                            track_count=p.get("track_count", 0),
+                            source="deezer",
+                            url=f"https://www.deezer.com/track/{p['id']}",
+                        )
+                    )
+                    seen_ids.add(p["id"])
+        return playlists
+
     async def _fetch_playlists(self, user: User) -> List[RecommendedPlaylist]:
         """Fetch recommended playlists based on user's top artists."""
         if not self._user_has_lastfm(user):
@@ -108,25 +140,12 @@ class HybridRecommendationEngine:
 
         try:
             target_user = user.lastfm_username or user.username
-            # Use Top Artists instead of Tags for better relevance
-            # Tags often result in generic or regionally irrelevant lists (e.g. "Mix" -> "Uzbek Mix")
             artists = await self.lastfm.get_user_top_artists(target_user, limit=5, period="1month")
 
             if not artists:
-                # Fallback to recent tracks artists if no top artists (new account)
                 recent = await self.lastfm.get_user_recent_tracks(target_user, limit=10)
-                artists = [
-                    {"name": r.get("artist", {}).get("#text") or r.get("artist", {}).get("name")} for r in recent
-                ]
-                # Deduplicate preserving order
-                seen = set()
-                deduped = []
-                for a in artists:
-                    name = a.get("name")
-                    if name and name not in seen:
-                        deduped.append(a)
-                        seen.add(name)
-                artists = deduped[:5]
+                raw = [{"name": r.get("artist", {}).get("#text") or r.get("artist", {}).get("name")} for r in recent]
+                artists = list({a["name"]: a for a in raw if a.get("name")}.values())[:5]
 
             if not artists:
                 return []
@@ -135,52 +154,25 @@ class HybridRecommendationEngine:
             logger.info(f"Fetching playlists for artists: {artist_names}")
 
             deezer = DeezerService()
-            playlists = []
-
-            async def search_artist_playlists(artist_name):
-                results = []
-                try:
-                    # Search Deezer for playlists related to the artist
-                    q1 = f"This Is {artist_name}"
-                    r1 = await deezer.search(q1, limit=2)
-                    if r1:
-                        results.extend(r1)
-
-                    q2 = f"{artist_name} Mix"
-                    r2 = await deezer.search(q2, limit=2)
-                    if r2:
-                        results.extend(r2)
-                except Exception as e:
-                    logger.warning(f"Playlist search failed for {artist_name}: {e}")
-                return results
-
-            search_tasks = [search_artist_playlists(name) for name in artist_names]
+            search_tasks = [self._search_deezer_playlists_for_artist(deezer, name) for name in artist_names]
             search_results = await asyncio.gather(*search_tasks)
-
-            seen_ids = set()
-            for results in search_results:
-                for p in results:
-                    if p["id"] not in seen_ids:
-                        playlists.append(
-                            RecommendedPlaylist(
-                                id=p["id"],
-                                title=p.get("title", ""),
-                                image_url=p.get("image_url"),
-                                track_count=p.get("track_count", 0),
-                                source="deezer",
-                                url=f"https://www.deezer.com/track/{p['id']}",
-                            )
-                        )
-                        seen_ids.add(p["id"])
-
-            return playlists[:15]
+            return self._collect_unique_playlists(search_results)[:15]
         except Exception as e:
             logger.error(f"Failed to fetch playlist recommendations: {e}")
             return []
 
+    async def _fill_artist_image(self, deezer: DeezerService, artist: RecommendedArtist) -> None:
+        try:
+            results = await deezer.search(artist.name, limit=1)
+            if results and results[0].get("image_url"):
+                artist.image_url = results[0]["image_url"]
+                return
+            logger.warning(f"✗ No image on Deezer for artist: {artist.name}")
+        except Exception as e:
+            logger.error(f"Deezer artist search error for {artist.name}: {e}")
+
     async def _fetch_artists(self, user: User) -> List[RecommendedArtist]:
         """Fetch recommended artists with Spotify image fallback."""
-        artists = []
         target_user = user.lastfm_username or user.username
         session_key = user.lastfm_session_key
 
@@ -193,28 +185,13 @@ class HybridRecommendationEngine:
             artists = await self.lastfm.get_recommended_artists(session_key, limit=20, user_name=target_user)
             logger.info(f"Fetched {len(artists)} recommended artists")
 
-            # FORCE SPOTIFY IMAGES: Last.fm images are unreliable/deprecated for artists.
             for a in artists:
                 a.image_url = None
 
             if artists:
                 logger.info(f"Searching Deezer for images of {len(artists)} artists...")
                 deezer = DeezerService()
-
-                async def fetch_artist_image(artist):
-                    try:
-                        results = await deezer.search(artist.name, limit=1)
-                        if results and len(results) > 0:
-                            img = results[0].get("image_url")
-                            if img:
-                                artist.image_url = img
-                                return
-                        logger.warning(f"✗ No image on Deezer for artist: {artist.name}")
-                    except Exception as e:
-                        logger.error(f"Deezer artist search error for {artist.name}: {e}")
-
-                # Process all artists (up to 20)
-                await asyncio.gather(*[fetch_artist_image(a) for a in artists[:20]])
+                await asyncio.gather(*[self._fill_artist_image(deezer, a) for a in artists[:20]])
             return artists
         except Exception as e:
             logger.warning(f"Failed to fetch artists for user {user.id}: {e}")
