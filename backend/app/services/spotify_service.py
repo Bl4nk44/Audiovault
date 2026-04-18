@@ -348,9 +348,7 @@ class SpotifyService:
         except Exception:
             return []
 
-    async def search(
-        self, query: str, limit: int = 10, offset: int = 0, type: str = "track"
-    ) -> list[dict[str, Any]]:
+    async def search(self, query: str, limit: int = 10, offset: int = 0, type: str = "track") -> list[dict[str, Any]]:
         """Overrides generic search. Returns results ONLY if it's a Spotify link resolver."""
         logger.info(f"Spotify async search for: {query}")
         if "spotify.link" in query or "spoti.fi" in query:
