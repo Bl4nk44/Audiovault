@@ -38,6 +38,28 @@ _RESPONSE_FORMAT = "Response format"
 _MUSIC_FOLDER_ID_DESC = "Music folder ID"
 
 
+async def _star_item(db: AsyncSession, model, user_id, field_name: str, id_str: str) -> None:
+    try:
+        item_uuid = UUID(id_str)
+        existing = await db.execute(
+            select(model).where(getattr(model, "user_id") == user_id, getattr(model, field_name) == item_uuid)
+        )
+        if not existing.scalar_one_or_none():
+            db.add(model(**{"user_id": user_id, field_name: item_uuid}))
+    except ValueError:
+        pass
+
+
+async def _unstar_item(db: AsyncSession, model, user_id, field_name: str, id_str: str) -> None:
+    try:
+        item_uuid = UUID(id_str)
+        await db.execute(
+            delete(model).where(getattr(model, "user_id") == user_id, getattr(model, field_name) == item_uuid)
+        )
+    except ValueError:
+        pass
+
+
 @router.get("/star.view")
 @router.post("/star.view")
 async def star(
@@ -62,69 +84,15 @@ async def star(
     Returns:
         Empty success response
     """
-    # Star tracks
     if id:
         for track_id_str in id:
-            try:
-                track_id = UUID(track_id_str)
-
-                # Check if already starred
-                track_result = await db.execute(
-                    select(StarredTrack).where(
-                        StarredTrack.user_id == current_user.id,
-                        StarredTrack.track_id == track_id,
-                    )
-                )
-                if not track_result.scalar_one_or_none():
-                    new_starred_track = StarredTrack(
-                        user_id=current_user.id,
-                        track_id=track_id,
-                    )
-                    db.add(new_starred_track)
-            except ValueError:
-                continue
-
-    # Star albums
+            await _star_item(db, StarredTrack, current_user.id, "track_id", track_id_str)
     if album_id:
         for album_id_str in album_id:
-            try:
-                album_uuid = UUID(album_id_str)
-
-                album_result = await db.execute(
-                    select(StarredAlbum).where(
-                        StarredAlbum.user_id == current_user.id,
-                        StarredAlbum.album_id == album_uuid,
-                    )
-                )
-                if not album_result.scalar_one_or_none():
-                    new_starred_album = StarredAlbum(
-                        user_id=current_user.id,
-                        album_id=album_uuid,
-                    )
-                    db.add(new_starred_album)
-            except ValueError:
-                continue
-
-    # Star artists
+            await _star_item(db, StarredAlbum, current_user.id, "album_id", album_id_str)
     if artist_id:
         for artist_id_str in artist_id:
-            try:
-                artist_uuid = UUID(artist_id_str)
-
-                artist_result = await db.execute(
-                    select(StarredArtist).where(
-                        StarredArtist.user_id == current_user.id,
-                        StarredArtist.artist_id == artist_uuid,
-                    )
-                )
-                if not artist_result.scalar_one_or_none():
-                    new_starred_artist = StarredArtist(
-                        user_id=current_user.id,
-                        artist_id=artist_uuid,
-                    )
-                    db.add(new_starred_artist)
-            except ValueError:
-                continue
+            await _star_item(db, StarredArtist, current_user.id, "artist_id", artist_id_str)
 
     await db.commit()
     return subsonic_response(f=f)
@@ -151,47 +119,15 @@ async def unstar(
     Returns:
         Empty success response
     """
-    # Unstar tracks
     if id:
         for track_id_str in id:
-            try:
-                track_id = UUID(track_id_str)
-                await db.execute(
-                    delete(StarredTrack).where(
-                        StarredTrack.user_id == current_user.id,
-                        StarredTrack.track_id == track_id,
-                    )
-                )
-            except ValueError:
-                continue
-
-    # Unstar albums
+            await _unstar_item(db, StarredTrack, current_user.id, "track_id", track_id_str)
     if album_id:
         for album_id_str in album_id:
-            try:
-                album_uuid = UUID(album_id_str)
-                await db.execute(
-                    delete(StarredAlbum).where(
-                        StarredAlbum.user_id == current_user.id,
-                        StarredAlbum.album_id == album_uuid,
-                    )
-                )
-            except ValueError:
-                continue
-
-    # Unstar artists
+            await _unstar_item(db, StarredAlbum, current_user.id, "album_id", album_id_str)
     if artist_id:
         for artist_id_str in artist_id:
-            try:
-                artist_uuid = UUID(artist_id_str)
-                await db.execute(
-                    delete(StarredArtist).where(
-                        StarredArtist.user_id == current_user.id,
-                        StarredArtist.artist_id == artist_uuid,
-                    )
-                )
-            except ValueError:
-                continue
+            await _unstar_item(db, StarredArtist, current_user.id, "artist_id", artist_id_str)
 
     await db.commit()
     return subsonic_response(f=f)
@@ -414,25 +350,10 @@ async def scrobble(
     track_obj = track_result.scalar_one_or_none()
 
     if submission:
-        # Record in listening history
-        played_at = datetime.now(UTC)
-        if time:
-            played_at = datetime.fromtimestamp(time / 1000, tz=UTC)
-
-        history_entry = ListeningHistory(
-            user_id=current_user.id,
-            track_id=track_id,
-            played_at=played_at,
-            duration_played=None,  # Could track this with now_playing
-        )
-        db.add(history_entry)
-
-        # Last.fm Scrobble
+        played_at = datetime.fromtimestamp(time / 1000, tz=UTC) if time else datetime.now(UTC)
+        db.add(ListeningHistory(user_id=current_user.id, track_id=track_id, played_at=played_at, duration_played=None))
         if track_obj:
             try:
-                # Fire and forget (or await if fast enough, usually better to await in handler to ensure it happens)
-                # But for Subsonic responsiveness, better to let it float or handle quickly.
-                # Since scrobbler methods are async, we await them.
                 await scrobbler_service.scrobble_track(
                     user=current_user,
                     track=track_obj.title,
@@ -441,28 +362,16 @@ async def scrobble(
                     timestamp=int(played_at.timestamp()),
                 )
             except Exception:  # nosec B110
-                # Log but don't fail the request
                 pass
 
-    # Update now playing regardless
-    result = await db.execute(
-        select(SubsonicNowPlaying).where(
-            SubsonicNowPlaying.user_id == current_user.id,
-        )
-    )
+    result = await db.execute(select(SubsonicNowPlaying).where(SubsonicNowPlaying.user_id == current_user.id))
     now_playing = result.scalar_one_or_none()
-
     if now_playing:
         now_playing.track_id = track_id
         now_playing.updated_at = datetime.now(UTC)
     else:
-        now_playing = SubsonicNowPlaying(
-            user_id=current_user.id,
-            track_id=track_id,
-        )
-        db.add(now_playing)
+        db.add(SubsonicNowPlaying(user_id=current_user.id, track_id=track_id))
 
-    # Last.fm Now Playing
     if not submission and track_obj and track_obj.artist:
         try:
             await scrobbler_service.update_now_playing(

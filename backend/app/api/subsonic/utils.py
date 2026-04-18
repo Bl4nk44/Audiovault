@@ -156,22 +156,52 @@ def get_content_type(file_path: str) -> str:
     return mime_types.get(ext, "application/octet-stream")
 
 
+def _apply_metadata_fields(song: dict, metadata: dict) -> None:
+    if metadata.get("genre"):
+        song["genre"] = metadata["genre"]
+    if metadata.get("year"):
+        try:
+            song["year"] = int(metadata["year"])
+        except (ValueError, TypeError):
+            song["year"] = metadata["year"]
+    if metadata.get("track"):
+        try:
+            song["track"] = int(metadata["track"])
+        except (ValueError, TypeError):
+            pass
+
+
+def _apply_file_fields(song: dict, download: Any, include_path: bool) -> None:
+    import os
+
+    if download:
+        song["suffix"] = download.file_path.split(".")[-1] if download.file_path else "mp3"
+        file_size = download.file_size or 0
+        if file_size == 0 and download.file_path:
+            try:
+                if os.path.exists(download.file_path):
+                    file_size = os.path.getsize(download.file_path)
+            except OSError:
+                pass
+        song["size"] = file_size
+        song["bitRate"] = 320
+        song["contentType"] = get_content_type(download.file_path) if download.file_path else DEFAULT_AUDIO_MIME
+        if include_path:
+            song["path"] = download.file_path
+    else:
+        song["suffix"] = "mp3"
+        song["size"] = 0
+        song["bitRate"] = 128
+        song["contentType"] = DEFAULT_AUDIO_MIME
+        song["path"] = ""
+
+
 def build_song_response(
     track: Any,
     download: Any | None = None,
     include_path: bool = False,
 ) -> dict:
-    """
-    Build Subsonic song/child response from Track.
-
-    Args:
-        track: Track model instance
-        download: Optional Download model with file info
-        include_path: Include file path in response
-
-    Returns:
-        Dict with Subsonic song fields
-    """
+    """Build Subsonic song/child response from Track."""
     metadata = track.metadata_content or {}
 
     song = {
@@ -186,18 +216,15 @@ def build_song_response(
         "created": format_subsonic_date(track.created_at),
     }
 
-    # Optional fields
     if track.artist_id:
         song["artistId"] = str(track.artist_id)
 
-    # -- Album & Cover Art --
     if track.album_id:
         song["albumId"] = str(track.album_id)
         song["coverArt"] = f"al-{track.album_id}"
     elif metadata.get("image_url"):
         song["coverArt"] = str(track.id)
 
-    # -- Parent (Mandatory) --
     if track.album_id:
         song["parent"] = str(track.album_id)
     elif track.artist_id:
@@ -205,55 +232,11 @@ def build_song_response(
     else:
         song["parent"] = "root"
 
-    if metadata.get("genre"):
-        song["genre"] = metadata["genre"]
-
-    if metadata.get("year"):
-        # Subsonic expects integer year
-        try:
-            song["year"] = int(metadata["year"])
-        except (ValueError, TypeError):
-            song["year"] = metadata["year"]
-
-    if metadata.get("track"):
-        # Subsonic expects integer track number
-        try:
-            song["track"] = int(metadata["track"])
-        except (ValueError, TypeError):
-            pass
-
     if track.isrc:
-        song["musicBrainzId"] = track.isrc  # Not exact but useful
+        song["musicBrainzId"] = track.isrc
 
-    # File info from download
-    if download:
-        song["suffix"] = download.file_path.split(".")[-1] if download.file_path else "mp3"
-
-        # Get file size - fallback to reading from disk if DB has 0
-        file_size = download.file_size or 0
-        if file_size == 0 and download.file_path:
-            import os
-
-            try:
-                if os.path.exists(download.file_path):
-                    file_size = os.path.getsize(download.file_path)
-            except OSError:
-                pass
-        song["size"] = file_size
-
-        song["bitRate"] = 320  # Default, could be detected
-        song["contentType"] = get_content_type(download.file_path) if download.file_path else DEFAULT_AUDIO_MIME
-
-        if include_path:
-            song["path"] = download.file_path
-    else:
-        # Default values if not downloaded (so it appears in list)
-        song["suffix"] = "mp3"
-        song["size"] = 0
-        song["bitRate"] = 128
-        song["contentType"] = DEFAULT_AUDIO_MIME
-        song["path"] = ""  # Explicit empty path
-
+    _apply_metadata_fields(song, metadata)
+    _apply_file_fields(song, download, include_path)
     return song
 
 
