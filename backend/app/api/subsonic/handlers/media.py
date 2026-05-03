@@ -157,7 +157,7 @@ def parse_range_header(range_header: str | None, file_size: int) -> tuple[int, i
             start = int(parts[0])
             end = int(parts[1]) if len(parts) > 1 and parts[1] else file_size - 1
             return start, min(end, file_size - 1)
-    except (ValueError, IndexError):
+    except ValueError, IndexError:
         return 0, file_size - 1
 
 

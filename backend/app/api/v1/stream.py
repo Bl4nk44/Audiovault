@@ -1,7 +1,7 @@
 import asyncio
 import logging
 import os
-from typing import Annotated, Optional
+from typing import Annotated
 from urllib.parse import urlparse
 
 import aiofiles
@@ -28,7 +28,7 @@ router = APIRouter()
 logger = logging.getLogger(__name__)
 
 
-async def _resolve_local_cover_file(directory: str) -> tuple[Optional[bytes], Optional[str]]:
+async def _resolve_local_cover_file(directory: str) -> tuple[bytes | None, str | None]:
     """Check for local cover files and return content + mime type."""
     cover_names = ["cover.jpg", "folder.jpg", "cover.png", "folder.png", "artwork.jpg", "artwork.png"]
     for name in cover_names:
@@ -44,14 +44,14 @@ async def _resolve_local_cover_file(directory: str) -> tuple[Optional[bytes], Op
     return None, None
 
 
-def _extract_art_flac(audio) -> tuple[Optional[bytes], Optional[str]]:
+def _extract_art_flac(audio) -> tuple[bytes | None, str | None]:
     if hasattr(audio, "pictures") and audio.pictures:
         p = audio.pictures[0]
         return p.data, p.mime
     return None, None
 
 
-def _extract_art_id3(audio) -> tuple[Optional[bytes], Optional[str]]:
+def _extract_art_id3(audio) -> tuple[bytes | None, str | None]:
     if hasattr(audio, "tags") and isinstance(audio.tags, ID3):
         for tag in audio.tags.values():
             if isinstance(tag, APIC):
@@ -59,7 +59,7 @@ def _extract_art_id3(audio) -> tuple[Optional[bytes], Optional[str]]:
     return None, None
 
 
-def _extract_art_mp4(audio) -> tuple[Optional[bytes], Optional[str]]:
+def _extract_art_mp4(audio) -> tuple[bytes | None, str | None]:
     if hasattr(audio, "tags") and "covr" in audio.tags:
         covers = audio.tags["covr"]
         if covers:
@@ -71,7 +71,7 @@ def _extract_art_mp4(audio) -> tuple[Optional[bytes], Optional[str]]:
     return None, None
 
 
-def _extract_art_sync(path: str) -> tuple[Optional[bytes], Optional[str]]:
+def _extract_art_sync(path: str) -> tuple[bytes | None, str | None]:
     """Synchronous mutagen extraction logic."""
     try:
         audio = MutagenFile(path)
@@ -97,7 +97,7 @@ def _extract_art_sync(path: str) -> tuple[Optional[bytes], Optional[str]]:
     return None, None
 
 
-async def _extract_embedded_cover_art(file_path: str) -> tuple[Optional[bytes], Optional[str]]:
+async def _extract_embedded_cover_art(file_path: str) -> tuple[bytes | None, str | None]:
     """Run mutagen extraction in executor."""
     import functools
 
@@ -105,27 +105,31 @@ async def _extract_embedded_cover_art(file_path: str) -> tuple[Optional[bytes], 
     return await loop.run_in_executor(stream_executor, functools.partial(_extract_art_sync, file_path))
 
 
-async def _resolve_track_path(db: AsyncSession, track_id: str) -> tuple[Optional[Track], Optional[str]]:
+async def _resolve_track_path(db: AsyncSession, track_id: str) -> tuple[Track | None, str | None]:
     """Resolve Track and filesystem path."""
     import uuid
 
+    track: Track | None = None
+
     try:
         t_uuid = uuid.UUID(str(track_id))
-    except ValueError:
-        return None, None
+        # 1. Try to find track by local UUID
+        result = await db.execute(select(Track).where(Track.id == t_uuid))
+        track = result.scalar_one_or_none()
 
-    # 1. Try to find track content
-    result = await db.execute(select(Track).where(Track.id == t_uuid))
-    track: Track | None = result.scalar_one_or_none()
+        if not track:
+            # Try finding by download if track_id is actually download_id
+            result_dl = await db.execute(select(Download).where(Download.id == t_uuid))
+            dl_found: Download | None = result_dl.scalar_one_or_none()
+            if dl_found and dl_found.track:
+                track = dl_found.track
+    except ValueError:
+        # Not a UUID — try matching by deezer_id (numeric string from browse results)
+        result = await db.execute(select(Track).where(Track.deezer_id == track_id))
+        track = result.scalar_one_or_none()
 
     if not track:
-        # Try finding by download if track_id is actually download_id
-        result_dl = await db.execute(select(Download).where(Download.id == t_uuid))
-        dl_found: Download | None = result_dl.scalar_one_or_none()
-        if dl_found and dl_found.track:
-            track = dl_found.track
-        else:
-            return None, None
+        return None, None
 
     # 2. Resolve local file path via Download
     file_path: str | None = None
@@ -139,7 +143,7 @@ async def _resolve_track_path(db: AsyncSession, track_id: str) -> tuple[Optional
     return track, file_path
 
 
-async def _get_album_art_redirect(track: Track, db: AsyncSession) -> Optional[RedirectResponse]:
+async def _get_album_art_redirect(track: Track, db: AsyncSession) -> RedirectResponse | None:
     if not track.album_id:
         return None
     result = await db.execute(select(Album).where(Album.id == track.album_id))

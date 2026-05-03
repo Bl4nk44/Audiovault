@@ -1,15 +1,15 @@
 > from uuid import UUID
-  
+
 > from app.core.dependencies import get_current_active_user
 > from app.db.database import get_db
 > from app.models.user import User
 > from app.services.sync_manager import sync_manager
 > from fastapi import APIRouter, Body, Depends, HTTPException
 > from sqlalchemy.ext.asyncio import AsyncSession
-  
+
 > router = APIRouter()
-  
-  
+
+
 > @router.post("/{watchlist_id}/analyze")
 > async def analyze_sync(
 >     watchlist_id: UUID,
@@ -27,11 +27,11 @@
 !         raise HTTPException(status_code=404, detail=str(e)) from e
 !     except Exception as e:
 !         import traceback
-  
+
 !         traceback.print_exc()
 !         raise HTTPException(status_code=500, detail=str(e)) from e
-  
-  
+
+
 > @router.post("/{watchlist_id}/execute")
 > async def execute_sync(
 >     watchlist_id: UUID,
@@ -47,10 +47,10 @@
 >     """
 !     sync_token = payload.get("sync_token")
 !     approved_removals = payload.get("approved_removals", [])
-  
+
 !     if not sync_token:
 !         raise HTTPException(status_code=400, detail="Missing sync_token")
-  
+
 !     try:
 !         result = await sync_manager.execute_sync(db, str(current_user.id), sync_token, approved_removals)
 !         return result

@@ -1,9 +1,9 @@
 > from datetime import datetime
 > from typing import List, Optional
-  
+
 > from pydantic import BaseModel
-  
-  
+
+
 > class RecommendedTrack(BaseModel):
 >     name: str
 >     artist: str
@@ -14,8 +14,8 @@
 >     match: float = 0.0
 >     playcount: int = 0
 >     reason: Optional[str] = None
-  
-  
+
+
 > class RecommendedArtist(BaseModel):
 >     name: str
 >     url: str
@@ -23,8 +23,8 @@
 >     mbid: Optional[str] = None
 >     match: float = 0.0
 >     tags: List[str] = []
-  
-  
+
+
 > class RecommendedPlaylist(BaseModel):
 >     id: str
 >     title: str
@@ -33,8 +33,8 @@
 >     track_count: int = 0
 >     source: str = "spotify"
 >     url: Optional[str] = None
-  
-  
+
+
 > class RecommendationResponse(BaseModel):
 >     tracks: List[RecommendedTrack] = []
 >     artists: List[RecommendedArtist] = []

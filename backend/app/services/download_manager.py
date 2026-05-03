@@ -2,8 +2,8 @@ import asyncio
 import logging
 import os
 import uuid
+from collections.abc import Sequence
 from datetime import UTC, datetime
-from typing import Optional, Sequence
 
 import aiofiles
 import yt_dlp
@@ -41,7 +41,7 @@ class DownloadManager:
         # Per-user semaphores for concurrent download limits
         self.user_semaphores: dict[str, asyncio.Semaphore] = {}
 
-    def get_user_semaphore(self, user_id: str, max_concurrent: Optional[int] = None) -> asyncio.Semaphore:
+    def get_user_semaphore(self, user_id: str, max_concurrent: int | None = None) -> asyncio.Semaphore:
         """Get or create a semaphore for a specific user."""
         if max_concurrent is None:
             max_concurrent = self.DEFAULT_CONCURRENT_DOWNLOADS
@@ -195,9 +195,7 @@ class DownloadManager:
             logger.error(f"Failed to resume pending downloads: {e}")
             # Do not re-raise, allow app to start
 
-    async def add_download(
-        self, db: AsyncSession, user_id: str | uuid.UUID, download_data: "DownloadCreate"
-    ) -> Download:
+    async def add_download(self, db: AsyncSession, user_id: str | uuid.UUID, download_data: DownloadCreate) -> Download:
         download = Download(
             user_id=user_id,
             track_id=download_data.track_id,

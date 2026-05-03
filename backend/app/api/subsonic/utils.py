@@ -162,12 +162,12 @@ def _apply_metadata_fields(song: dict, metadata: dict) -> None:
     if metadata.get("year"):
         try:
             song["year"] = int(metadata["year"])
-        except (ValueError, TypeError):
+        except ValueError, TypeError:
             song["year"] = metadata["year"]
     if metadata.get("track"):
         try:
             song["track"] = int(metadata["track"])
-        except (ValueError, TypeError):
+        except ValueError, TypeError:
             pass
 
 

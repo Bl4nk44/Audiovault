@@ -97,7 +97,7 @@ The recommended way to run Audiovault is via **Docker**.
    - **Frontend**: `http://localhost:2137`
    - **Backend API**: `http://localhost:8000/docs`
 
-   > **Important Security Note:** For the first launch, it is **highly recommended** to set your own `ADMIN_PASSWORD` in the `.env` file. 
+   > **Important Security Note:** For the first launch, it is **highly recommended** to set your own `ADMIN_PASSWORD` in the `.env` file.
    > If not provided, a random password will be generated for the `admin` account, but for security reasons, it will **no longer be printed to the logs**.
    >
    > To set your password, add this to your `.env` before starting:
@@ -170,5 +170,3 @@ This project adheres to a [Code of Conduct](CODE_OF_CONDUCT.md). By participatin
 ## 📜 License
 
 Distributed under the MIT License. See [LICENSE](LICENSE) for more information.
-
-

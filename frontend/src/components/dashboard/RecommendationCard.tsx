@@ -74,12 +74,12 @@ const RecommendationCard: React.FC<RecommendationCardProps> = ({ track, onPlay }
         </div>
       </div>
 
-      {/* Playlist Modal - Note: We need a real track ID logic here. 
+      {/* Playlist Modal - Note: We need a real track ID logic here.
           Recommendation returns metadata. Adding to playlist usually requires a Track ID in DB.
           We might need an intermediate step: "Import to Library" or "Search & Add".
           For now, let's assume we handle 'import on add' logic in parent or assume ID if available.
           Since Last.fm tracks don't have local IDs yet, this button might trigger a search/download flow.
-          
+
           However, User asked to add to playlist.
           Let's fake the ID for visual completion or pass a special formatted ID "external:{artist}:{track}"
       */}

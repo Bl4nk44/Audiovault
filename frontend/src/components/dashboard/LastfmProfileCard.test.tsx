@@ -63,13 +63,13 @@ describe("LastfmProfileCard", () => {
 
     expect(screen.getByText("@testuser")).toBeInTheDocument();
     expect(screen.getByText("Poland")).toBeInTheDocument();
-    
+
     // Check formatted numbers
     expect(screen.getByText("1.2M")).toBeInTheDocument(); // 1234567 -> 1.2M
     expect(screen.getByText("500")).toBeInTheDocument();
     expect(screen.getByText("1.5K")).toBeInTheDocument(); // 1500 -> 1.5K
     expect(screen.getByText("300")).toBeInTheDocument();
-    
+
     // Check friends
     expect(screen.getByText("Friends (2)")).toBeInTheDocument();
     expect(screen.getByText("friend1")).toBeInTheDocument();
@@ -79,13 +79,13 @@ describe("LastfmProfileCard", () => {
   it("renders nothing on error", async () => {
     vi.mocked(getLastfmProfile).mockRejectedValue(new Error("API Error"));
     const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => {});
-    
+
     render(<LastfmProfileCard username="testuser" />);
 
     await waitFor(() => {
       expect(screen.queryByText("Test User")).not.toBeInTheDocument();
     });
-    
+
     consoleSpy.mockRestore();
   });
 
@@ -100,7 +100,7 @@ describe("LastfmProfileCard", () => {
       user: { ...mockProfile.user, image_url: null }
     };
     vi.mocked(getLastfmProfile).mockResolvedValue(profileNoImg);
-    
+
     render(<LastfmProfileCard username="testuser" />);
 
     await waitFor(() => {

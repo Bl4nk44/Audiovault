@@ -1,6 +1,5 @@
 import os
 import uuid
-from typing import Optional
 
 from app.core.config import settings
 from app.models.download import Download
@@ -17,12 +16,12 @@ class LibraryDataService:
         user_id: str,
         skip: int = 0,
         limit: int = 50,
-        source: Optional[str] = None,
-        playlist: Optional[str] = None,
-        search: Optional[str] = None,
-        artist: Optional[str] = None,
-        min_duration: Optional[int] = None,  # in seconds
-        max_duration: Optional[int] = None,  # in seconds
+        source: str | None = None,
+        playlist: str | None = None,
+        search: str | None = None,
+        artist: str | None = None,
+        min_duration: int | None = None,  # in seconds
+        max_duration: int | None = None,  # in seconds
     ) -> dict:
         from app.models.track import Track
 

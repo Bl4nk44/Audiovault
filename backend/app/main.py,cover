@@ -1,7 +1,7 @@
 > import asyncio
 > import logging
 > import os
-  
+
 > from fastapi import FastAPI
 > from fastapi.middleware.cors import CORSMiddleware
 > from fastapi.middleware.gzip import GZipMiddleware
@@ -9,7 +9,7 @@
 > from fastapi.staticfiles import StaticFiles
 > from fastapi_limiter import FastAPILimiter
 > from uvicorn.middleware.proxy_headers import ProxyHeadersMiddleware
-  
+
 > from app import models  # noqa: F401 - Ensure models are registered
 > from app.api.subsonic import router as subsonic_router
 > from app.api.v1 import (
@@ -44,30 +44,30 @@
 > from app.services.scheduler import scheduler_service
 > from app.services.socket_manager import socket_manager
 > from app.utils.logger import setup_logging
-  
+
   # Setup logging before app startup
 > setup_logging()
-  
+
 > logger = logging.getLogger(__name__)
-  
+
 > application = FastAPI(
 >     title=settings.PROJECT_NAME,
 >     description="Audiovault API for downloading and managing music",
 >     version=settings.VERSION,
 >     openapi_url=f"{settings.API_V1_STR}/openapi.json",
 > )
-  
+
   # Trusted Host Middleware (Security)
 > application.add_middleware(TrustedHostMiddleware, allowed_hosts=settings.ALLOWED_HOSTS)
-  
+
   # Proxy Headers Middleware (for Reverse Proxies like Nginx/Traefik)
-  
-  
+
+
 > application.add_middleware(ProxyHeadersMiddleware, trusted_hosts="*")
-  
+
   # CORS
 > origins = settings.BACKEND_CORS_ORIGINS
-  
+
 > application.add_middleware(
 >     CORSMiddleware,
 >     allow_origins=origins,
@@ -75,9 +75,9 @@
 >     allow_methods=["*"],
 >     allow_headers=["*"],
 > )
-  
+
 > application.add_middleware(GZipMiddleware, minimum_size=1000)
-  
+
   # Include Routers
 > application.include_router(auth.router, prefix="/api/v1/auth", tags=["auth"])
 > application.include_router(dashboard.router, prefix="/api/v1/dashboard", tags=["dashboard"])
@@ -100,26 +100,26 @@
 > application.include_router(storage.router, prefix="/api/v1/storage", tags=["storage"])
 > application.include_router(tidal.router, prefix="/api/v1/tidal", tags=["tidal"])
 > application.include_router(lastfm.router, prefix="/api/v1/lastfm", tags=["lastfm"])
-  
+
   # Subsonic API (compatible with Sonixd, Amperfy, DSub, etc.)
 > application.include_router(subsonic_router)
-  
-  
+
+
 > @application.get("/")
 > async def root():
 !     return {"message": "Welcome to Audiovault API"}
-  
-  
+
+
 > @application.get("/health")
 > async def health_check():
 !     return {"status": "healthy"}
-  
-  
+
+
 > @application.get("/api/version")
 > async def get_version():
 !     return {"version": settings.VERSION}
-  
-  
+
+
   # Ensure download directory exists
 > if not os.path.exists(settings.DOWNLOAD_DIR):
 !     os.makedirs(settings.DOWNLOAD_DIR)
@@ -127,24 +127,24 @@
 >     os.chmod(settings.DOWNLOAD_DIR, 0o755)  # nosemgrep: insecure-file-permissions  # nosec B103 - shared download dir needs group/other read+exec
 ! except Exception as e:
 !     logger.warning(f"Could not set permissions on {settings.DOWNLOAD_DIR}: {e}")
-  
+
 > logger.info(f"📂 Mounting StaticFiles from: {settings.DOWNLOAD_DIR}")
 > try:
 >     files = os.listdir(settings.DOWNLOAD_DIR)
 >     logger.info(f"📂 Files in {settings.DOWNLOAD_DIR}: {files}")
 ! except Exception as e:
 !     logger.error(f"❌ Error listing files: {e}")
-  
+
 > application.mount("/stream", StaticFiles(directory=settings.DOWNLOAD_DIR), name="stream")
   # Mount static files (avatars, etc.)
 > static_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "static")
 > if not os.path.exists(static_dir):
 !     os.makedirs(static_dir)
 > application.mount("/static", StaticFiles(directory=static_dir), name="static")
-  
+
 > application.mount("/socket.io", socket_manager.app)
-  
-  
+
+
 > @application.on_event("startup")
 > async def startup_event():
 !     banner = r"""
@@ -153,11 +153,11 @@
 !       / _ \| | | |/ _` | |/ _ \ \ / / _` | | | | | __|
 !      / ___ \ |_| | (_| | | (_) \ V / (_| | |_| | | |_
 !     /_/   \_\__,_|\__,_|_|\___/ \_/ \__,_|\__,_|_|\__|
-  
+
 !     """
 !     logger.info(banner)
 !     print(banner)  # Ensure it prints to console even if logs are diverted
-  
+
       # Create tables with retry logic
 !     retries = 5
 !     for i in range(retries):
@@ -170,29 +170,29 @@
 !                 raise e
 !             logger.info(f"Database not ready, retrying in 2 seconds... ({i + 1}/{retries})")
 !             await asyncio.sleep(2)
-  
+
       # Init data
 !     async with AsyncSessionLocal() as session:
 !         await init_db(session)
           # Resume pending downloads
 !         await download_manager.resume_pending_downloads(session)
-  
+
       # Connect to Redis
 !     await cache_manager.connect()
-  
+
       # Init Rate Limiter
 !     if cache_manager.redis:
 !         await FastAPILimiter.init(cache_manager.redis)
-  
+
       # Start Scheduler
 !     scheduler_service.start()
-  
-  
+
+
 > @application.on_event("shutdown")
 > async def shutdown_event():
 !     await cache_manager.close()
 !     scheduler_service.stop()
-  
-  
+
+
   # Alias for ASGI compatibility (uvicorn looks for 'app' by default)
 > app = application

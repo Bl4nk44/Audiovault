@@ -4,7 +4,6 @@ Provides methods to encrypt/decrypt credentials and migrate existing data.
 """
 
 import logging
-from typing import Optional
 from uuid import UUID
 
 from app.core.encryption import encryption_service
@@ -26,9 +25,9 @@ class CredentialsService:
         user_id: UUID,
         service: str,
         access_token: str,
-        refresh_token: Optional[str] = None,
+        refresh_token: str | None = None,
         expires_at=None,
-        extra_data: Optional[dict] = None,
+        extra_data: dict | None = None,
     ) -> ServiceCredentials:
         """
         Store encrypted tokens for a service.
@@ -90,7 +89,7 @@ class CredentialsService:
         db: AsyncSession,
         user_id: UUID,
         service: str,
-    ) -> Optional[dict]:
+    ) -> dict | None:
         """
         Get decrypted tokens for a service.
 

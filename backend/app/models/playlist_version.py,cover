@@ -1,60 +1,60 @@
 > """
 > Playlist versioning model for tracking playlist history.
 > """
-  
+
 > from datetime import UTC, datetime
 > from typing import TYPE_CHECKING
 > from uuid import UUID, uuid4
-  
+
 > from sqlalchemy import JSON, DateTime, ForeignKey, Index, Integer, String, Uuid
 > from sqlalchemy.orm import Mapped, mapped_column, relationship
-  
+
 > from app.db.base import Base
-  
+
 - if TYPE_CHECKING:
 -     from app.models.playlist import Playlist
 -     from app.models.user import User
-  
-  
+
+
 > class PlaylistVersion(Base):
 >     """
 >     Model for storing playlist version snapshots.
-  
+
 >     Each time a playlist is modified, a snapshot is created
 >     allowing users to view history and rollback to previous versions.
 >     """
-  
+
 >     __tablename__ = "playlist_versions"
-  
+
 >     __table_args__ = (Index("ix_playlist_versions_playlist_created", "playlist_id", "created_at"),)
-  
+
 >     id: Mapped[UUID] = mapped_column(Uuid(as_uuid=True), primary_key=True, default=uuid4)
 >     playlist_id: Mapped[UUID] = mapped_column(
 >         Uuid(as_uuid=True), ForeignKey("playlists.id", ondelete="CASCADE"), nullable=False
 >     )
 >     version_number: Mapped[int] = mapped_column(Integer, nullable=False)
-  
+
       # Snapshot of playlist metadata at this version
 >     name: Mapped[str] = mapped_column(String, nullable=False)
 >     comment: Mapped[str | None] = mapped_column(String, nullable=True)
-  
+
       # Snapshot of tracks at this version (ordered list of track IDs)
 >     tracks_snapshot: Mapped[list | None] = mapped_column(JSON, default=[])
-  
+
       # Who made the change
 >     created_by: Mapped[UUID | None] = mapped_column(Uuid(as_uuid=True), ForeignKey("users.id"), nullable=True)
-  
+
       # What kind of change
 >     change_type: Mapped[str] = mapped_column(
 >         String(50), nullable=False
 >     )  # CREATE, ADD_TRACK, REMOVE_TRACK, REORDER, RENAME, etc.
 >     change_details: Mapped[dict | None] = mapped_column(JSON, default={})
-  
+
 >     created_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(UTC))
-  
+
       # Relationships
 >     playlist: Mapped["Playlist"] = relationship("Playlist", back_populates="versions")
 >     creator: Mapped["User"] = relationship("User")
-  
+
 >     def __repr__(self) -> str:
 !         return f"<PlaylistVersion {self.playlist_id} v{self.version_number}>"

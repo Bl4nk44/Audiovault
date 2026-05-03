@@ -42,7 +42,7 @@ async def _star_item(db: AsyncSession, model, user_id, field_name: str, id_str: 
     try:
         item_uuid = UUID(id_str)
         existing = await db.execute(
-            select(model).where(getattr(model, "user_id") == user_id, getattr(model, field_name) == item_uuid)
+            select(model).where(model.user_id == user_id, getattr(model, field_name) == item_uuid)
         )
         if not existing.scalar_one_or_none():
             db.add(model(**{"user_id": user_id, field_name: item_uuid}))
@@ -53,9 +53,7 @@ async def _star_item(db: AsyncSession, model, user_id, field_name: str, id_str: 
 async def _unstar_item(db: AsyncSession, model, user_id, field_name: str, id_str: str) -> None:
     try:
         item_uuid = UUID(id_str)
-        await db.execute(
-            delete(model).where(getattr(model, "user_id") == user_id, getattr(model, field_name) == item_uuid)
-        )
+        await db.execute(delete(model).where(model.user_id == user_id, getattr(model, field_name) == item_uuid))
     except ValueError:
         pass
 

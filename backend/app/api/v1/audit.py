@@ -4,7 +4,7 @@ Admin-only access to view audit logs.
 """
 
 from datetime import datetime
-from typing import Annotated, Optional
+from typing import Annotated
 from uuid import UUID
 
 from app.core.dependencies import get_current_active_user
@@ -26,14 +26,14 @@ class AuditLogResponse(BaseModel):
     """Response model for a single audit log entry."""
 
     id: UUID
-    user_id: Optional[UUID] = None
+    user_id: UUID | None = None
     action: str
     resource_type: str
-    resource_id: Optional[UUID] = None
+    resource_id: UUID | None = None
     details: dict
-    ip_address: Optional[str] = None
-    endpoint: Optional[str] = None
-    method: Optional[str] = None
+    ip_address: str | None = None
+    endpoint: str | None = None
+    method: str | None = None
     created_at: datetime
 
     class Config:
@@ -54,9 +54,9 @@ class AuditLogListResponse(BaseModel):
 async def list_audit_logs(
     page: Annotated[int, Query(ge=1)] = 1,
     page_size: Annotated[int, Query(ge=1, le=100)] = 50,
-    action: Annotated[Optional[str], Query(description="Filter by action type")] = None,
-    resource_type: Annotated[Optional[str], Query(description="Filter by resource type")] = None,
-    user_id: Annotated[Optional[UUID], Query(description="Filter by user ID")] = None,
+    action: Annotated[str | None, Query(description="Filter by action type")] = None,
+    resource_type: Annotated[str | None, Query(description="Filter by resource type")] = None,
+    user_id: Annotated[UUID | None, Query(description="Filter by user ID")] = None,
     current_user: Annotated[User, Depends(get_current_active_user)] = ...,
     db: Annotated[AsyncSession, Depends(get_db)] = ...,
 ):

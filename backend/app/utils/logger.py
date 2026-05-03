@@ -1,8 +1,9 @@
 import logging
 import sys
+from collections.abc import Iterable
 from logging.handlers import TimedRotatingFileHandler
 from pathlib import Path
-from typing import Iterable, cast
+from typing import cast
 
 from app.core.config import settings
 

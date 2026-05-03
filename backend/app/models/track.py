@@ -59,7 +59,7 @@ class Track(Base):
     updated_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), onupdate=lambda: datetime.now(UTC))
 
     # Relationships
-    downloads: Mapped[list["Download"]] = relationship("Download", back_populates="track")
-    artist_rel: Mapped["Artist"] = relationship("Artist", back_populates="tracks")
-    album_rel: Mapped["Album"] = relationship("Album", back_populates="tracks")
-    watchlist_items: Mapped[list["WatchlistItem"]] = relationship("WatchlistItem", back_populates="track")
+    downloads: Mapped[list[Download]] = relationship("Download", back_populates="track")
+    artist_rel: Mapped[Artist] = relationship("Artist", back_populates="tracks")
+    album_rel: Mapped[Album] = relationship("Album", back_populates="tracks")
+    watchlist_items: Mapped[list[WatchlistItem]] = relationship("WatchlistItem", back_populates="track")

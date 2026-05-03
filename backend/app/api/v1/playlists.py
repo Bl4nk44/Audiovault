@@ -1,8 +1,8 @@
 import json
 import logging
+from datetime import UTC
 from datetime import datetime as dt
-from datetime import timezone
-from typing import Annotated, Optional
+from typing import Annotated
 from uuid import UUID
 
 from app.core.dependencies import get_current_active_user
@@ -471,7 +471,7 @@ async def export_playlist(
         },
         "tracks_count": len(tracks_data),
         "tracks": tracks_data,
-        "exported_at": dt.now(tz=timezone.utc).isoformat(),
+        "exported_at": dt.now(tz=UTC).isoformat(),
         "export_version": "1.0",
     }
 
@@ -497,7 +497,7 @@ class PlaylistVersionResponse(BaseModel):
     id: UUID
     version_number: int
     name: str
-    comment: Optional[str] = None
+    comment: str | None = None
     tracks_count: int
     change_type: str
     change_details: dict

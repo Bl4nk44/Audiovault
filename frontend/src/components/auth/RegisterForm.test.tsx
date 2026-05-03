@@ -84,7 +84,7 @@ describe("RegisterForm", () => {
 
   it("shows error when passwords do not match", async () => {
     renderForm();
-    
+
     fireEvent.change(screen.getByLabelText(/^Password$/i), { target: { value: "password123" } });
     fireEvent.change(screen.getByLabelText(/Confirm Password/i), { target: { value: "mismatch" } });
     fireEvent.click(screen.getByRole("button", { name: /Create Account/i }));
@@ -102,7 +102,7 @@ describe("RegisterForm", () => {
     fireEvent.change(screen.getByLabelText(/Email/i), { target: { value: "test@example.com" } });
     fireEvent.change(screen.getByLabelText(/^Password$/i), { target: { value: "password123" } });
     fireEvent.change(screen.getByLabelText(/Confirm Password/i), { target: { value: "password123" } });
-    
+
     fireEvent.click(screen.getByRole("button", { name: /Create Account/i }));
 
     await waitFor(() => {
@@ -126,7 +126,7 @@ describe("RegisterForm", () => {
     fireEvent.change(screen.getByLabelText(/Email/i), { target: { value: "test@example.com" } });
     fireEvent.change(screen.getByLabelText(/^Password$/i), { target: { value: "password123" } });
     fireEvent.change(screen.getByLabelText(/Confirm Password/i), { target: { value: "password123" } });
-    
+
     fireEvent.click(screen.getByRole("button", { name: /Create Account/i }));
 
     await waitFor(() => {

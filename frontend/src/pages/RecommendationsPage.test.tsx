@@ -167,7 +167,7 @@ describe("RecommendationsPage", () => {
       artists: [],
       playlists: [],
     });
-    
+
     // Mock search API
     vi.mocked(api.get).mockResolvedValue({
       data: [{ id: "track-123", name: "Recommended", artist: "Cool Artist", source: "deezer" }],

@@ -1,5 +1,4 @@
 from datetime import datetime
-from typing import List, Optional
 
 from pydantic import BaseModel
 
@@ -8,37 +7,37 @@ class RecommendedTrack(BaseModel):
     name: str
     artist: str
     url: str
-    image_url: Optional[str] = None
-    mbid: Optional[str] = None
+    image_url: str | None = None
+    mbid: str | None = None
     score: float = 0.0
     match: float = 0.0
     playcount: int = 0
-    reason: Optional[str] = None
+    reason: str | None = None
 
 
 class RecommendedArtist(BaseModel):
     name: str
     url: str
-    image_url: Optional[str] = None
-    mbid: Optional[str] = None
+    image_url: str | None = None
+    mbid: str | None = None
     match: float = 0.0
-    tags: List[str] = []
+    tags: list[str] = []
 
 
 class RecommendedPlaylist(BaseModel):
     id: str
     title: str
-    description: Optional[str] = None
-    image_url: Optional[str] = None
+    description: str | None = None
+    image_url: str | None = None
     track_count: int = 0
     source: str = "spotify"
-    url: Optional[str] = None
+    url: str | None = None
 
 
 class RecommendationResponse(BaseModel):
-    tracks: List[RecommendedTrack] = []
-    artists: List[RecommendedArtist] = []
-    playlists: List[RecommendedPlaylist] = []
+    tracks: list[RecommendedTrack] = []
+    artists: list[RecommendedArtist] = []
+    playlists: list[RecommendedPlaylist] = []
     source: str
     cache_status: str = "miss"
     lastfm_connected: bool = False

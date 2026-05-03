@@ -254,6 +254,11 @@ export default function Player() {
           crossOrigin="anonymous"
           onTimeUpdate={handleTimeUpdate}
           onEnded={nextTrack}
+          onError={() => {
+            import("react-hot-toast").then(({ default: toast }) => {
+              toast.error("Utwór niedostępny lokalnie. Pobierz go najpierw.", { id: "stream-error" });
+            });
+          }}
           preload="auto"
         ></audio>
       </motion.div>

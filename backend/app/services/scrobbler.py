@@ -1,6 +1,5 @@
 import logging
 import time
-from typing import Optional
 
 from app.models.user import User
 from app.services.lastfm_service import LastfmError, LastfmService
@@ -12,7 +11,7 @@ class AudiovaultScrobbler:
     def __init__(self, lastfm_service: LastfmService):
         self.lastfm = lastfm_service
 
-    async def update_now_playing(self, user: User, track: str, artist: str, album: Optional[str] = None) -> None:
+    async def update_now_playing(self, user: User, track: str, artist: str, album: str | None = None) -> None:
         """Update "Now Playing" status on Last.fm if enabled."""
         if not user.lastfm_session_key:
             return
@@ -35,8 +34,8 @@ class AudiovaultScrobbler:
         user: User,
         track: str,
         artist: str,
-        timestamp: Optional[int] = None,
-        album: Optional[str] = None,
+        timestamp: int | None = None,
+        album: str | None = None,
     ) -> bool:
         """Scrobble a track to Last.fm."""
         if not user.lastfm_session_key:

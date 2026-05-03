@@ -22,7 +22,7 @@
 >     youtube,
 > )
 > from fastapi import APIRouter
-  
+
 > api_router = APIRouter()
 > api_router.include_router(auth.router, prefix="/auth", tags=["auth"])
 > api_router.include_router(spotify.router, prefix="/spotify", tags=["spotify"])
@@ -38,7 +38,7 @@
 > api_router.include_router(lastfm.router, prefix="/lastfm", tags=["lastfm"])
 > api_router.include_router(audit.router, prefix="/audit", tags=["audit"])
 > api_router.include_router(storage.router, prefix="/storage", tags=["storage"])
-  
+
 > api_router.include_router(users.router, prefix="/users", tags=["users"])
 > api_router.include_router(deezer.router, prefix="/deezer", tags=["deezer"])
 > api_router.include_router(artists.router, prefix="/artists", tags=["artists"])

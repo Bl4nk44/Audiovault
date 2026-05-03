@@ -144,7 +144,7 @@ describe("LyricsPanel", () => {
     expect(screen.getByText("Karaoke")).toBeInTheDocument();
     const secondLine = screen.getByText("Second line");
     expect(secondLine).toBeInTheDocument();
-    
+
     // Check if scrollIntoView was called (it is called in useEffect when actualIndex changes)
     expect(window.HTMLElement.prototype.scrollIntoView).toHaveBeenCalled();
   });
@@ -168,7 +168,7 @@ describe("LyricsPanel", () => {
 
     // Refresh - this should trigger setRefreshCount which triggers useQuery refetch (via key change)
     fireEvent.click(screen.getByTestId("refresh-icon").parentElement!);
-    // Since we mock useQuery, we can't easily check the internal refreshCount state change 
+    // Since we mock useQuery, we can't easily check the internal refreshCount state change
     // without a more complex setup, but we covered the button click.
   });
 });

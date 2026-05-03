@@ -70,7 +70,7 @@ class SubsonicAuthToken(Base):
     is_active: Mapped[bool] = mapped_column(Boolean, default=True)
 
     # Relationship
-    user: Mapped["User"] = relationship("User", backref="subsonic_tokens")
+    user: Mapped[User] = relationship("User", backref="subsonic_tokens")
 
     __table_args__ = (
         Index("ix_subsonic_auth_tokens_user_active", "user_id", "is_active"),
@@ -113,8 +113,8 @@ class SubsonicRating(Base):
     )
 
     # Relationships
-    user: Mapped["User"] = relationship("User", backref="subsonic_ratings")
-    track: Mapped["Track"] = relationship("Track", backref="subsonic_ratings")
+    user: Mapped[User] = relationship("User", backref="subsonic_ratings")
+    track: Mapped[Track] = relationship("Track", backref="subsonic_ratings")
 
     __table_args__ = (Index("ix_subsonic_ratings_user_track", "user_id", "track_id", unique=True),)
 
@@ -160,8 +160,8 @@ class SubsonicNowPlaying(Base):
     position_seconds: Mapped[int] = mapped_column(Integer, default=0)
 
     # Relationships
-    user: Mapped["User"] = relationship("User", backref="subsonic_now_playing")
-    track: Mapped["Track"] = relationship("Track", backref="subsonic_now_playing")
+    user: Mapped[User] = relationship("User", backref="subsonic_now_playing")
+    track: Mapped[Track] = relationship("Track", backref="subsonic_now_playing")
 
     __table_args__ = (
         Index("ix_subsonic_now_playing_user", "user_id"),

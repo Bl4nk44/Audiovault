@@ -2,10 +2,10 @@
 > Storage statistics API endpoint.
 > Provides disk usage, library stats, and growth trends.
 > """
-  
+
 > import os
 > from datetime import UTC, datetime, timedelta
-  
+
 > from app.core.config import settings
 > from app.core.dependencies import get_current_active_user
 > from app.db.database import get_db
@@ -15,13 +15,13 @@
 > from pydantic import BaseModel
 > from sqlalchemy import func, select
 > from sqlalchemy.ext.asyncio import AsyncSession
-  
+
 > router = APIRouter()
-  
-  
+
+
 > class StorageStats(BaseModel):
 >     """Storage statistics response."""
-  
+
 >     total_files: int
 >     total_size_bytes: int
 >     total_size_formatted: str
@@ -31,8 +31,8 @@
 >     by_source: dict[str, dict]
 >     by_playlist: dict[str, dict]
 >     recent_growth: list[dict]
-  
-  
+
+
 > def format_bytes(size_bytes: int) -> str:
 >     """Format bytes to human-readable string."""
 !     current: float = float(size_bytes)
@@ -41,8 +41,8 @@
 !             return f"{current:.2f} {unit}"
 !         current /= 1024.0
 !     return f"{current:.2f} PB"
-  
-  
+
+
 > def get_file_size(file_path: str) -> int:
 >     """Safely get file size, returns 0 if file doesn't exist."""
 !     try:
@@ -51,8 +51,8 @@
 !     except (OSError, PermissionError):
 !         pass
 !     return 0
-  
-  
+
+
 > @router.get("/stats", response_model=StorageStats)
 > async def get_storage_stats(
 >     current_user: User = Depends(get_current_active_user),
@@ -70,36 +70,36 @@
 !         )
 !     )
 !     downloads = result.scalars().all()
-  
+
       # Calculate total size by iterating through files
 !     total_size = 0
 !     by_source: dict[str, dict] = {}
 !     by_playlist: dict[str, dict] = {}
-  
+
 !     for d in downloads:
 !         file_size = get_file_size(d.file_path) if d.file_path else 0
 !         total_size += file_size
-  
+
           # Group by source
 !         source = d.source or "unknown"
 !         if source not in by_source:
 !             by_source[source] = {"count": 0, "size_bytes": 0}
 !         by_source[source]["count"] += 1
 !         by_source[source]["size_bytes"] += file_size
-  
+
           # Group by playlist
 !         playlist = d.playlist_name or "(No Playlist)"
 !         if playlist not in by_playlist:
 !             by_playlist[playlist] = {"count": 0, "size_bytes": 0}
 !         by_playlist[playlist]["count"] += 1
 !         by_playlist[playlist]["size_bytes"] += file_size
-  
+
       # Format sizes
 !     for source_data in by_source.values():
 !         source_data["size_formatted"] = format_bytes(source_data["size_bytes"])
 !     for playlist_data in by_playlist.values():
 !         playlist_data["size_formatted"] = format_bytes(playlist_data["size_bytes"])
-  
+
       # Get disk usage
 !     download_dir = settings.DOWNLOAD_DIR
 !     try:
@@ -110,7 +110,7 @@
 !         else:
               # Windows fallback
 !             import shutil
-  
+
 !             disk_usage = shutil.disk_usage(download_dir)
 !             disk_total = disk_usage.total
 !             disk_free = disk_usage.free
@@ -119,7 +119,7 @@
 !         disk_total = 0
 !         disk_free = 0
 !         disk_used_percent = 0
-  
+
       # Get recent growth (downloads per day for last 30 days)
 !     thirty_days_ago = datetime.now(UTC) - timedelta(days=30)
 !     growth_result = await db.execute(
@@ -136,7 +136,7 @@
 !         .order_by(func.date(Download.created_at))
 !     )
 !     growth_data = [{"date": str(row.date), "count": row.count} for row in growth_result.fetchall()]
-  
+
 !     return StorageStats(
 !         total_files=len(downloads),
 !         total_size_bytes=total_size,
@@ -148,8 +148,8 @@
 !         by_playlist=by_playlist,
 !         recent_growth=growth_data,
 !     )
-  
-  
+
+
 > @router.get("/summary")
 > async def get_storage_summary(
 >     current_user: User = Depends(get_current_active_user),
@@ -169,7 +169,7 @@
 !         .group_by(Download.status)
 !     )
 !     status_counts = {row.status: row.count for row in result.fetchall()}
-  
+
 !     return {
 !         "completed": status_counts.get("completed", 0),
 !         "pending": status_counts.get("pending", 0),

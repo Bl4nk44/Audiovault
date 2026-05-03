@@ -79,7 +79,7 @@ async def _check_production_update(settings):
                             # or keep it simple: take first 3 parts
                             base = v_str.split("-")[0]
                             return tuple(map(int, base.split(".")))
-                        except (ValueError, AttributeError):
+                        except ValueError, AttributeError:
                             return (0, 0, 0)
 
                     latest_tuple = parse_version(latest_tag)

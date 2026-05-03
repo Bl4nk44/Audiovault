@@ -1,6 +1,6 @@
 > """
 > List handlers for Subsonic API.
-  
+
 > Handles list-based endpoints:
 > - getAlbumList.view
 > - getAlbumList2.view
@@ -8,9 +8,9 @@
 > - getTopSongs.view
 > - getSimilarSongs.view
 > """
-  
+
 > from uuid import UUID
-  
+
 > from app.api.subsonic.auth import subsonic_auth
 > from app.api.subsonic.utils import (
 >     build_song_response,
@@ -26,10 +26,10 @@
 > from fastapi import APIRouter, Depends, Query
 > from sqlalchemy import func, select
 > from sqlalchemy.ext.asyncio import AsyncSession
-  
+
 > router = APIRouter()
-  
-  
+
+
 > @router.get("/getGenres.view")
 > @router.post("/getGenres.view")
 > async def get_genres(
@@ -39,20 +39,20 @@
 > ):
 >     """
 >     Get genres.
-  
+
 >     Returns all genres found in ID3 tags.
 >     """
       # Updated to be dialect-aware (Postgres vs SQLite for tests)
-  
+
       # Check dialect to use correct JSON extraction
 !     is_postgres = db.bind.dialect.name == "postgresql" if hasattr(db.bind, "dialect") else True
-  
+
 !     if is_postgres:
 !         genre_query = func.json_extract_path_text(Track.metadata_content, "genre")
 !     else:
           # SQLite way for tests
 !         genre_query = func.json_extract(Track.metadata_content, "$.genre")
-  
+
 !     result = await db.execute(
 !         select(genre_query)
 !         .join(Download, Download.track_id == Track.id)
@@ -62,12 +62,12 @@
 !         )
 !         .distinct()
 !     )
-  
+
 !     genres_found = [r for r in result.scalars().all() if r]
-  
+
       # Sort and count (could be optimized with group_by in SQL if needed)
 !     genre_list = []
-  
+
 !     for genre_name in sorted(genres_found):
           # Count songs and albums (approximate)
           # Doing simple count query for each genre
@@ -75,13 +75,13 @@
 !             count_filter = func.json_extract_path_text(Track.metadata_content, "genre") == genre_name
 !         else:
 !             count_filter = func.json_extract(Track.metadata_content, "$.genre") == genre_name
-  
+
 !         song_count = await db.scalar(
 !             select(func.count(Track.id))
 !             .join(Download, Download.track_id == Track.id)
 !             .where(Download.user_id == current_user.id, Download.status == "completed", count_filter)
 !         )
-  
+
 !         genre_list.append(
 !             {
 !                 "value": genre_name,
@@ -89,10 +89,10 @@
 !                 "albumCount": 1,  # Dummy value for now as calculating distinct albums per genre is complex
 !             }
 !         )
-  
+
 !     return subsonic_response({"genres": {"genre": genre_list}}, f=f)
-  
-  
+
+
 > @router.get("/getAlbumList.view")
 > @router.post("/getAlbumList.view")
 > @router.get("/getAlbumList2.view")
@@ -113,16 +113,16 @@
 > ):
 >     """
 >     Get list of albums.
-  
+
 >     Supports various sorting types.
 >     """
 !     size = min(size, 500)
-  
+
       # Base query: Albums that have at least one downloaded track for this user
       # This is a bit complex in SQL, so we simplify by querying Albums directly
       # and filtering by join, making sure we don't return partial albums without checks
       # For performance, we check Download existence
-  
+
 !     query = (
 !         select(Album)
 !         .join(Track, Track.album_id == Album.id)
@@ -130,7 +130,7 @@
 !         .group_by(Album.id)
 !         .order_by(func.count(Download.id).desc())
 !     )
-  
+
       # Apply type sorting
 !     if type == "random":
 !         query = query.order_by(func.random())
@@ -149,13 +149,13 @@
 !         if fromYear:
               # We don't have year column easily queryable yet without cast, assume filters applied elsewhere
 !             pass
-  
+
       # Apply pagination
 !     query = query.offset(offset).limit(size)
-  
+
 !     result = await db.execute(query)
 !     albums = result.scalars().all()
-  
+
 !     album_list = []
 !     for album in albums:
           # Get artist name
@@ -164,14 +164,14 @@
 !             artist_res = await db.get(Artist, album.artist_id)
 !             if artist_res:
 !                 artist_name = artist_res.name
-  
+
           # Count songs
 !         song_count = await db.scalar(
 !             select(func.count(Track.id))
 !             .join(Download, Download.track_id == Track.id)
 !             .where(Track.album_id == album.id, Download.user_id == current_user.id, Download.status == "completed")
 !         )
-  
+
 !         album_list.append(
 !             {
 !                 "id": str(album.id),
@@ -186,10 +186,10 @@
 !                 "created": format_subsonic_date(album.created_at),
 !             }
 !         )
-  
+
 !     return subsonic_response({"albumList2": {"album": album_list}}, f=f)
-  
-  
+
+
 > @router.get("/getRandomSongs.view")
 > @router.post("/getRandomSongs.view")
 > async def get_random_songs(
@@ -206,24 +206,24 @@
 >     Get random songs.
 >     """
 !     size = min(size, 500)
-  
+
 !     query = (
 !         select(Track, Download)
 !         .outerjoin(Download, (Download.track_id == Track.id) & (Download.user_id == current_user.id))
 !         .order_by(func.random())
 !         .limit(size)
 !     )
-  
+
       # Apply filters if needed (genre, year, etc - simplified for now)
-  
+
 !     result = await db.execute(query)
 !     songs = []
 !     for track, download in result.all():
 !         songs.append(build_song_response(track, download))
-  
+
 !     return subsonic_response({"randomSongs": {"song": songs}}, f=f)
-  
-  
+
+
 > @router.get("/getTopSongs.view")
 > @router.post("/getTopSongs.view")
 > async def get_top_songs(
@@ -244,18 +244,18 @@
 !         .where(Download.user_id == current_user.id)
 !         .limit(count)
 !     )
-  
+
 !     if artist:
 !         query = query.where(Track.artist == artist)
-  
+
 !     result = await db.execute(query)
 !     songs = []
 !     for track, download in result.all():
 !         songs.append(build_song_response(track, download))
-  
+
 !     return subsonic_response({"topSongs": {"song": songs}}, f=f)
-  
-  
+
+
 > @router.get("/getSimilarSongs.view")
 > @router.post("/getSimilarSongs.view")
 > async def get_similar_songs(
@@ -272,11 +272,11 @@
 !         track_id = UUID(id)
 !     except ValueError:
 !         return subsonic_error(10, "Invalid ID", f=f)
-  
+
 !     track = await db.get(Track, track_id)
 !     if not track:
 !         return subsonic_error(70, "Song not found", f=f)
-  
+
       # Find songs by same artist
 !     query = (
 !         select(Track, Download)
@@ -288,10 +288,10 @@
 !         )
 !         .limit(count)
 !     )
-  
+
 !     result = await db.execute(query)
 !     songs = []
 !     for t, d in result.all():
 !         songs.append(build_song_response(t, d))
-  
+
 !     return subsonic_response({"similarSongs": {"song": songs}}, f=f)

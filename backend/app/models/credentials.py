@@ -31,4 +31,4 @@ class ServiceCredentials(Base):
         onupdate=lambda: datetime.now(UTC),
     )
 
-    user: Mapped["User"] = relationship("User", back_populates="credentials")
+    user: Mapped[User] = relationship("User", back_populates="credentials")

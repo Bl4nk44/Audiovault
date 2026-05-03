@@ -148,7 +148,7 @@ async def _resolve_track_to_local_id(db: AsyncSession, track_id_str: str, source
         track_obj = result.scalar_one_or_none()
         if track_obj:
             return track_obj.id
-    except (ValueError, AttributeError):
+    except ValueError, AttributeError:
         pass
 
     resolvers = {

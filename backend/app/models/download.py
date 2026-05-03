@@ -47,5 +47,5 @@ class Download(Base):
     completed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
 
     # Relationships
-    user: Mapped["User"] = relationship("User", back_populates="downloads")
-    track: Mapped["Track"] = relationship("Track", back_populates="downloads")
+    user: Mapped[User] = relationship("User", back_populates="downloads")
+    track: Mapped[Track] = relationship("Track", back_populates="downloads")

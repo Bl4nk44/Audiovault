@@ -270,11 +270,11 @@ jobs:
           echo "- Semgrep Analysis: ${{ needs.semgrep.result }}" >> $REPORT_FILE
           echo "- Secret Scan: ${{ needs.secret-scan.result }}" >> $REPORT_FILE
           echo "" >> $REPORT_FILE
-          
+
           if [[ "${{ needs.secret-scan.result }}" == "failure" ]]; then
             echo "⚠️ WARNING: Secrets detected in repository!" >> $REPORT_FILE
           fi
-          
+
           echo "Full results are available in the job artifacts." >> $REPORT_FILE
 
       - name: Send Email Report

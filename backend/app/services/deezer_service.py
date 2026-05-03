@@ -166,6 +166,25 @@ class DeezerService:
                 "source": "deezer",
             }
 
+    async def search_artists(self, query: str, limit: int = 10) -> list[dict[str, Any]]:
+        async with aiohttp.ClientSession() as session:
+            async with session.get(f"{self.BASE_URL}/search/artist", params={"q": query, "limit": limit}) as response:
+                if response.status != 200:
+                    return []
+                data = await response.json()
+                artists = []
+                for item in data.get("data", [])[:limit]:
+                    artists.append(
+                        {
+                            "id": str(item["id"]),
+                            "name": item["name"],
+                            "image_url": item.get("picture_medium") or item.get("picture"),
+                            "source": "deezer",
+                            "type": "artist",
+                        }
+                    )
+                return artists
+
     def _format_track(self, item: dict[str, Any]) -> dict[str, Any]:
         # Safe image extraction
         image_url = None

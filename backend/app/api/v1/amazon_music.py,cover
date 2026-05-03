@@ -2,10 +2,10 @@
 > from app.models.user import User
 > from app.services.amazon_music_service import amazon_music_service
 > from fastapi import APIRouter, Depends
-  
+
 > router = APIRouter()
-  
-  
+
+
 > @router.get("/search")
 > async def search_amazon_music(
 >     q: str,
@@ -19,6 +19,6 @@
 !             playlist_info = await amazon_music_service.get_playlist_info(q)
 !             if playlist_info:
 !                 return [playlist_info]
-  
+
 !         return await amazon_music_service.get_tracks(q)
 !     return []

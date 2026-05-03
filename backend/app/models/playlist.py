@@ -29,14 +29,14 @@ class Playlist(Base):
     )
 
     # Relationships
-    owner: Mapped["User"] = relationship("User", back_populates="playlists")
-    tracks: Mapped[list["PlaylistTrack"]] = relationship(
+    owner: Mapped[User] = relationship("User", back_populates="playlists")
+    tracks: Mapped[list[PlaylistTrack]] = relationship(
         "PlaylistTrack",
         back_populates="playlist",
         cascade="all, delete-orphan",
         order_by="PlaylistTrack.order",
     )
-    versions: Mapped[list["PlaylistVersion"]] = relationship(
+    versions: Mapped[list[PlaylistVersion]] = relationship(
         "PlaylistVersion",
         back_populates="playlist",
         cascade="all, delete-orphan",
@@ -54,5 +54,5 @@ class PlaylistTrack(Base):
     order: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
 
     # Relationships
-    playlist: Mapped["Playlist"] = relationship("Playlist", back_populates="tracks")
-    track: Mapped["Track"] = relationship("Track")
+    playlist: Mapped[Playlist] = relationship("Playlist", back_populates="tracks")
+    track: Mapped[Track] = relationship("Track")

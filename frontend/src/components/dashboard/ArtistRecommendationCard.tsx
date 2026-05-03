@@ -1,6 +1,9 @@
-import React from "react";
+import React, { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { IoArrowForward, IoPerson } from "react-icons/io5";
+import { useNavigate } from "react-router-dom";
+import { toast } from "react-hot-toast";
+import api from "../../services/api";
 import type { RecommendedArtist } from "../../types/lastfm";
 
 interface ArtistRecommendationCardProps {
@@ -9,6 +12,26 @@ interface ArtistRecommendationCardProps {
 
 const ArtistRecommendationCard: React.FC<ArtistRecommendationCardProps> = ({ artist }) => {
   const { t } = useTranslation();
+  const navigate = useNavigate();
+  const [loading, setLoading] = useState(false);
+
+  const handleViewProfile = async () => {
+    setLoading(true);
+    try {
+      const { data } = await api.get("/browse/search", {
+        params: { q: artist.name, type: "artist", limit: 1 },
+      });
+      if (data && data.length > 0 && data[0].id) {
+        navigate(`/artist/${data[0].id}`, { state: { source: data[0].source || "deezer" } });
+      } else {
+        toast.error(t("artist.not_found", "Nie znaleziono artysty w bibliotece"));
+      }
+    } catch {
+      toast.error(t("common.error", "Wystąpił błąd"));
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <div className="group relative bg-zinc-900/50 hover:bg-zinc-800 transition-all duration-300 rounded-xl overflow-hidden border border-white/5 hover:border-primary/30">
@@ -27,15 +50,14 @@ const ArtistRecommendationCard: React.FC<ArtistRecommendationCardProps> = ({ art
 
         {/* Hover Overlay */}
         <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-          <a
-            href={artist.url}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="px-4 py-2 bg-primary text-white rounded-full font-bold flex items-center gap-2 hover:scale-110 hover:opacity-80 transition-all shadow-lg shadow-primary/30"
+          <button
+            onClick={handleViewProfile}
+            disabled={loading}
+            className="px-4 py-2 bg-primary text-white rounded-full font-bold flex items-center gap-2 hover:scale-110 hover:opacity-80 transition-all shadow-lg shadow-primary/30 disabled:opacity-60 disabled:cursor-not-allowed"
           >
             {t("common.view_profile", "View Profile")}
             <IoArrowForward />
-          </a>
+          </button>
         </div>
 
         {/* Match Score Badge */}
