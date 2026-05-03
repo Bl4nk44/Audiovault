@@ -24,7 +24,7 @@ export const createNotificationSlice: StateCreator<NotificationSlice> = (set) =>
   addNotification: (type, message) =>
     set((state) => {
       const newNotification: Notification = {
-        id: Math.random().toString(36).substring(7),
+        id: crypto.randomUUID(),
         type,
         message,
         timestamp: Date.now(),

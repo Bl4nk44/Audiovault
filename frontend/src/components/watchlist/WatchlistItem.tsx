@@ -149,7 +149,7 @@ export default function WatchlistItem({
             </span>
           </div>
 
-          <div className="pointer-events-auto shrink-0 pb-0.5" onClick={(e) => e.stopPropagation()}>
+          <div role="none" className="pointer-events-auto shrink-0 pb-0.5" onClick={(e) => e.stopPropagation()}>
             <AutoDownloadSwitch autoDownload={autoDownload} onToggle={toggleAutoDownload} />
           </div>
         </div>
@@ -194,7 +194,7 @@ export default function WatchlistItem({
       </div>
 
       <div className="flex items-center gap-4 shrink-0">
-        <div onClick={(e) => e.stopPropagation()}>
+        <div role="none" onClick={(e) => e.stopPropagation()}>
           <AutoDownloadSwitch autoDownload={autoDownload} onToggle={toggleAutoDownload} />
         </div>
 

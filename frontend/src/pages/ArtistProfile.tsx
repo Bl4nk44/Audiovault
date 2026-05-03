@@ -158,7 +158,7 @@ export default function ArtistProfile() {
 
           <div className="absolute top-4 right-4 flex gap-2">
             <Button
-              variant={isWatched ? "secondary" : "secondary"} // Keep secondary if watched to show state
+              variant={isWatched ? "default" : "secondary"}
               onClick={handleToggleWatchlist}
               className="gap-2 bg-black/50 hover:bg-black/70 border border-white/10"
             >

@@ -206,14 +206,14 @@ export function useAudioVisualizer(
       bass /= 10 * 255;
       if (bass > 0.6 && particlesRef.current.length < 100) {
         for (let k = 0; k < 5; k++) {
-          const ang = Math.random() * Math.PI * 2;
+          const ang = Math.random() * Math.PI * 2; // NOSONAR - animation RNG, not security-sensitive
           particlesRef.current.push({
             x: canvas.width / 2,
             y: canvas.height / 2,
-            vx: Math.cos(ang) * (Math.random() * 5 + 2),
-            vy: Math.sin(ang) * (Math.random() * 5 + 2),
-            size: Math.random() * 4 + 2,
-            color: colors.alpha(Math.random()),
+            vx: Math.cos(ang) * (Math.random() * 5 + 2), // NOSONAR
+            vy: Math.sin(ang) * (Math.random() * 5 + 2), // NOSONAR
+            size: Math.random() * 4 + 2, // NOSONAR
+            color: colors.alpha(Math.random()), // NOSONAR
             life: 1,
           });
         }
