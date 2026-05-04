@@ -200,25 +200,33 @@ async def startup_event():
     sys.stdout.write(_BANNER)
     sys.stdout.flush()
 
-    # Database setup with retry logic
+    # Wait for DB to be ready (connection errors only, not migration errors)
+    from sqlalchemy import text
+
     retries = 5
     for i in range(retries):
         try:
-            # Run Alembic migrations (creates/updates tables and columns)
-            _run_alembic_upgrade()
-            logger.info("✅ Alembic migrations applied successfully")
+            async with engine.connect() as conn:
+                await conn.execute(text("SELECT 1"))
             break
-        except Exception as e:
+        except Exception:
             if i == retries - 1:
-                logger.warning(f"⚠️ Alembic migration failed: {e}. Falling back to create_all.")
-                async with engine.begin() as conn:
-                    await conn.run_sync(Base.metadata.create_all)
-                # Stamp to head so subsequent restarts don't re-run failed migrations.
-                _run_alembic_stamp_head()
-                logger.info("✅ DB stamped to head after create_all fallback")
-            else:
-                logger.info(f"Database not ready, retrying in 2 seconds... ({i + 1}/{retries})")
-                await asyncio.sleep(2)
+                logger.error("❌ Database not reachable after %d attempts", retries)
+                raise
+            logger.info("Database not ready, retrying in 2 seconds... (%d/%d)", i + 1, retries)
+            await asyncio.sleep(2)
+
+    # Run migrations — DB is ready; fall back to create_all if migrations fail
+    try:
+        _run_alembic_upgrade()
+        logger.info("✅ Alembic migrations applied successfully")
+    except Exception as e:
+        logger.warning("⚠️ Alembic migration failed: %s. Falling back to create_all.", e)
+        async with engine.begin() as conn:
+            await conn.run_sync(Base.metadata.create_all)
+        # Stamp to head so subsequent restarts don't re-run failed migrations.
+        _run_alembic_stamp_head()
+        logger.info("✅ DB stamped to head after create_all fallback")
 
     # Init data
     async with AsyncSessionLocal() as session:
@@ -227,7 +235,7 @@ async def startup_event():
         await download_manager.resume_pending_downloads(session)
 
     # Connect to Redis
-    cache_manager.connect()
+    await cache_manager.connect()
 
     # Start Scheduler
     scheduler_service.start()
