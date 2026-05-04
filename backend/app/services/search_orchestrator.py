@@ -160,8 +160,16 @@ class SearchOrchestrator:
             return []
 
     async def _search_deezer_artists(self, query: str, limit: int = 10) -> list[dict[str, Any]]:
-        """Search artists via Deezer artist search endpoint (returns proper artist IDs)."""
-        return await self.deezer.search_artists(query, limit=limit)
+        """Search artists via Deezer track search, extracting unique artists."""
+        tracks = await self.deezer.search(query, limit=limit)
+        seen: set[str] = set()
+        artists = []
+        for t in tracks:
+            name = t.get("artist")
+            if name and name not in seen:
+                seen.add(name)
+                artists.append({"id": t.get("id"), "name": name, "image_url": t.get("image_url"), "source": "deezer"})
+        return artists
 
     async def _search_musicbrainz_artists(self, query: str, limit: int = 10) -> list[dict[str, Any]]:
         """Search artists via MusicBrainz."""

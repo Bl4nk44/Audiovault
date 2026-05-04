@@ -1,4 +1,5 @@
 import { render, screen } from "@testing-library/react";
+import { MemoryRouter } from "react-router-dom";
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import ArtistRecommendationCard from "./ArtistRecommendationCard";
 import type { RecommendedArtist } from "../../types/lastfm";
@@ -18,7 +19,11 @@ describe("ArtistRecommendationCard", () => {
   });
 
   const renderCard = (artist = mockArtist) => {
-    return render(<ArtistRecommendationCard artist={artist} />);
+    return render(
+      <MemoryRouter>
+        <ArtistRecommendationCard artist={artist} />
+      </MemoryRouter>
+    );
   };
 
   it("renders artist info correctly", () => {
