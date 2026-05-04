@@ -108,7 +108,7 @@ export default function AlbumDetails() {
 
           <div className="space-y-2">
             <span className="text-sm font-medium text-primary uppercase tracking-wider">
-              {album.album_type === "single" ? "Single" : album.album_type === "compilation" ? "Compilation" : "Album"}
+              {album.album_type === "single" ? "Single" : album.album_type === "compilation" ? "Compilation" : "Album" /* eslint-disable-line sonarjs/no-nested-conditional */}
             </span>
             <motion.h1
               initial={{ opacity: 0, y: 20 }}

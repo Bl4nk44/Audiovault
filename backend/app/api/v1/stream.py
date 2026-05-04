@@ -197,7 +197,7 @@ async def get_album_cover(album_id: str, db: Annotated[AsyncSession, Depends(get
     try:
         a_uuid = uuid.UUID(str(album_id))
     except ValueError:
-        raise HTTPException(status_code=400, detail="Invalid album ID")
+        raise HTTPException(status_code=400, detail="Invalid album ID") from None
 
     result = await db.execute(select(Album).where(Album.id == a_uuid))
     album = result.scalar_one_or_none()

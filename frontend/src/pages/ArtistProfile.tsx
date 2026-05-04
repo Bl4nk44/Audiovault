@@ -123,9 +123,10 @@ export default function ArtistProfile() {
       });
 
       toast.success(response.data.message || "Album queued for download");
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Failed to download album:", error);
-      toast.error(error.response?.data?.detail || "Failed to queue album download");
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      toast.error((error as any)?.response?.data?.detail || "Failed to queue album download");
     }
   };
 
@@ -158,7 +159,7 @@ export default function ArtistProfile() {
 
           <div className="absolute top-4 right-4 flex gap-2">
             <Button
-              variant={isWatched ? "default" : "secondary"}
+              variant={isWatched ? "primary" : "secondary"}
               onClick={handleToggleWatchlist}
               className="gap-2 bg-black/50 hover:bg-black/70 border border-white/10"
             >

@@ -112,13 +112,11 @@ export default function TrackCard({ track, queue, onRemove }: Readonly<TrackCard
                 isCurrentTrack ? "opacity-100" : "opacity-0 group-hover:opacity-100 bg-black/40"
               }`}
             >
-              {isNowPlaying ? (
-                <AudioLines className="text-primary animate-pulse" size={20} />
-              ) : isCurrentTrack ? (
-                <Play className="text-primary fill-primary" size={20} />
-              ) : (
-                <Play className="text-white fill-white" size={20} />
-              )}
+              {(() => {
+                if (isNowPlaying) return <AudioLines className="text-primary animate-pulse" size={20} />;
+                if (isCurrentTrack) return <Play className="text-primary fill-primary" size={20} />;
+                return <Play className="text-white fill-white" size={20} />;
+              })()}
             </div>
           </div>
 

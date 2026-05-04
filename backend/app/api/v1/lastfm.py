@@ -71,7 +71,7 @@ async def lastfm_callback(
         return {"status": "connected", "username": username}
 
     except LastfmError as e:
-        raise HTTPException(status_code=400, detail=f"Last.fm authentication failed: {str(e)}")
+        raise HTTPException(status_code=400, detail=f"Last.fm authentication failed: {str(e)}") from e
 
 
 @router.get("/recommendations", response_model=RecommendationResponse)
@@ -194,4 +194,4 @@ async def get_lastfm_profile(
     except Exception as e:
         logger.error(f"Profile fetch error: {e}")
         # If it was the user_info error re-raised above, it will be caught here
-        raise HTTPException(status_code=500, detail=f"Failed to fetch profile: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to fetch profile: {str(e)}") from e

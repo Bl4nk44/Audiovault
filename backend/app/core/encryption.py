@@ -95,7 +95,7 @@ class EncryptionService:
             return decrypted.decode()
         except InvalidToken:
             logger.error("Decryption failed: invalid token or wrong key")
-            raise ValueError("Decryption failed: invalid token")
+            raise ValueError("Decryption failed: invalid token") from None
         except Exception as e:
             logger.error(f"Decryption failed: {e}")
             raise ValueError("Decryption failed") from e

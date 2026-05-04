@@ -608,7 +608,7 @@ class DownloadManager:
 
     async def retry_failed_downloads(self, db: AsyncSession):
         """Retry all failed downloads that haven't exceeded max retries."""
-        MAX_RETRIES = 3
+        MAX_RETRIES = 3  # noqa: N806
 
         result = await db.execute(
             select(Download).where(
@@ -645,7 +645,7 @@ class DownloadManager:
         ]
 
     def _build_output_template(self, download: Download, filename_schema: str, schema_map: dict) -> str:
-        PLAYLIST_TAG = "{playlist}"
+        PLAYLIST_TAG = "{playlist}"  # noqa: N806
         tmpl = filename_schema.replace("{service}", download.source or "")
         if PLAYLIST_TAG in tmpl:
             playlist_val = sanitize_filename(download.playlist_name) if download.playlist_name else ""

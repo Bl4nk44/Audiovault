@@ -49,9 +49,9 @@ class SubsonicResponseWrapper(BaseModel):
 
     status: str = "ok"
     version: str = "1.16.1"
-    serverVersion: str = "1.0.0"
+    serverVersion: str = "1.0.0"  # noqa: N815
     type: str = "audiovault"
-    openSubsonic: bool = True
+    openSubsonic: bool = True  # noqa: N815
 
     error: SubsonicError | None = None
 

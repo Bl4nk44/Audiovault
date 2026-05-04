@@ -67,8 +67,9 @@ export function useAudioVisualizer(
           analyserRef.current.connect(audioContextRef.current.destination);
           sourceRef.current = source;
           console.log("Visualizer: Source connected to element.");
-        } catch (e: any) {
-          if (!e.message?.includes("connected")) {
+        } catch (e) {
+          const msg = e instanceof Error ? e.message : "";
+          if (!msg.includes("connected")) {
             console.warn("Visualizer: Connection issue:", e);
           }
         }
@@ -153,6 +154,7 @@ export function useAudioVisualizer(
     };
 
     const drawWave = (data: Uint8Array) => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       analyserRef.current!.getByteTimeDomainData(data as any);
       ctx.fillStyle = "rgba(0, 0, 0, 0.2)";
       ctx.fillRect(0, 0, canvas.width, canvas.height);
@@ -206,6 +208,7 @@ export function useAudioVisualizer(
       bass /= 10 * 255;
       if (bass > 0.6 && particlesRef.current.length < 100) {
         for (let k = 0; k < 5; k++) {
+          /* eslint-disable sonarjs/pseudo-random */
           const ang = Math.random() * Math.PI * 2; // NOSONAR - animation RNG, not security-sensitive
           particlesRef.current.push({
             x: canvas.width / 2,
@@ -214,6 +217,7 @@ export function useAudioVisualizer(
             vy: Math.sin(ang) * (Math.random() * 5 + 2), // NOSONAR
             size: Math.random() * 4 + 2, // NOSONAR
             color: colors.alpha(Math.random()), // NOSONAR
+            /* eslint-enable sonarjs/pseudo-random */
             life: 1,
           });
         }
@@ -256,6 +260,7 @@ export function useAudioVisualizer(
     const render = () => {
       if (!analyserRef.current || !dataArrayRef.current) return;
       const data = dataArrayRef.current;
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       analyserRef.current.getByteFrequencyData(data as any);
 
       // Debug logging every 100 frames

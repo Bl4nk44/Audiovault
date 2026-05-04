@@ -70,7 +70,7 @@ class AuthManager:
             token_type = payload.get("type")
             user_id = payload.get("sub")
 
-            if token_type != "refresh":  # nosec
+            if token_type != "refresh":  # nosec  # noqa: S105
                 raise HTTPException(
                     status_code=status.HTTP_401_UNAUTHORIZED,
                     detail="Invalid token type",

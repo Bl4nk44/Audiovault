@@ -69,7 +69,7 @@ class LastfmService:
         sig_str = "".join(f"{k}{v}" for k, v in sorted_params)
         sig_str += str(settings.LASTFM_API_SECRET or "")
         # nosemgrep: python.lang.security.audit.md5-used-as-password.md5-used-as-password, md5-used-as-password
-        return hashlib.md5(sig_str.encode("utf-8")).hexdigest()  # nosec B324
+        return hashlib.md5(sig_str.encode("utf-8")).hexdigest()  # nosec B324  # noqa: S324
 
     async def _request(self, method: str, params: dict[str, Any], signed: bool = False) -> dict[str, Any]:
         # Apply rate limiting before each request
@@ -100,7 +100,7 @@ class LastfmService:
             return data
         except httpx.HTTPError as e:
             logger.error(f"Last.fm request failed: {e}")
-            raise LastfmAPIError(f"HTTP request failed: {str(e)}")
+            raise LastfmAPIError(f"HTTP request failed: {str(e)}") from e
 
     def get_auth_url(self, base_url: str | None = None) -> str:
         if base_url:
@@ -312,7 +312,7 @@ class LastfmService:
             return data
         except httpx.HTTPError as e:
             logger.error(f"Last.fm POST failed: {e}")
-            raise LastfmAPIError(f"HTTP POST failed: {str(e)}")
+            raise LastfmAPIError(f"HTTP POST failed: {str(e)}") from e
 
     def _parse_artist_name(self, artist_data: Any) -> str | None:
         if isinstance(artist_data, str):
@@ -397,7 +397,7 @@ class LastfmService:
                     tracks = data.get("toptracks", {}).get("track", [])
                     for t in tracks:
                         self._add_to_candidates(candidates, t, score_mult=0.5)
-                except Exception:  # nosec B110
+                except Exception:  # nosec B110  # noqa: S110
                     pass
 
         tasks = [fetch_similar_for_track(n, a) for n, a in unique_tracks[:15]]

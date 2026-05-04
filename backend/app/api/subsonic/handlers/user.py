@@ -321,7 +321,7 @@ async def _record_submission(db, scrobbler_service, current_user, track_id, trac
                 album=track_obj.album,
                 timestamp=int(played_at.timestamp()),
             )
-        except Exception:  # nosec B110
+        except Exception:  # nosec B110  # noqa: S110
             pass
     return played_at
 
@@ -380,7 +380,7 @@ async def scrobble(
             await scrobbler_service.update_now_playing(
                 user=current_user, track=track_obj.title, artist=track_obj.artist or "Unknown", album=track_obj.album
             )
-        except Exception:  # nosec B110
+        except Exception:  # nosec B110  # noqa: S110
             pass
 
     await db.commit()

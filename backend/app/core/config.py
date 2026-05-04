@@ -37,7 +37,7 @@ class Settings(BaseSettings):
 
     ADMIN_EMAIL: str = "admin@example.com"
     ADMIN_USERNAME: str = "admin"
-    ADMIN_PASSWORD: str = "admin"
+    ADMIN_PASSWORD: str = "admin"  # noqa: S105
 
     # Genius API for lyrics
     GENIUS_API_TOKEN: str | None = None
@@ -59,7 +59,7 @@ class Settings(BaseSettings):
         "http://127.0.0.1:3000",
         "http://127.0.0.1:5173",
     ]
-    ALLOWED_HOSTS: list[str] | str = ["localhost", "127.0.0.1", "0.0.0.0"]  # nosec B104
+    ALLOWED_HOSTS: list[str] | str = ["localhost", "127.0.0.1", "0.0.0.0"]  # nosec B104  # noqa: S104
 
     @field_validator("BACKEND_CORS_ORIGINS", "ALLOWED_HOSTS", mode="before")
     @classmethod

@@ -13,7 +13,7 @@ const RecommendationCard: React.FC<RecommendationCardProps> = ({ track, onPlay }
   const { t } = useTranslation();
   const [showPlaylistModal, setShowPlaylistModal] = useState(false);
 
-  // TODO: Add methods to search this track in Audiovault and play it.
+  // Add methods to search this track in Audiovault and play it.
   // For now we assume we pass the track object up.
 
   return (

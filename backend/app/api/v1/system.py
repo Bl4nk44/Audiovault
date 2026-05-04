@@ -45,7 +45,7 @@ async def get_system_logs(lines: Annotated[int, Query(ge=1, le=5000)] = 500):
         return await loop.run_in_executor(None, functools.partial(_read_last_lines, log_file, lines))
     except Exception as e:
         logger.error(f"Failed to read logs: {e}")
-        raise HTTPException(status_code=500, detail="Failed to read logs")
+        raise HTTPException(status_code=500, detail="Failed to read logs") from e
 
 
 @router.get("/logs/download", responses={404: {"description": "Not found"}})
@@ -114,7 +114,7 @@ def _get_local_git_sha(git_dir: Path) -> str:
                 return result
             # Detached HEAD
             return ref
-    except Exception:
+    except Exception:  # noqa: S110
         pass
     return "unknown"
 
@@ -189,7 +189,9 @@ async def get_system_stats():
     try:
         import psutil
     except ImportError:
-        raise HTTPException(status_code=503, detail="psutil library is not installed. Statistics are unavailable.")
+        raise HTTPException(
+            status_code=503, detail="psutil library is not installed. Statistics are unavailable."
+        ) from None
 
     try:
         # CPU
@@ -220,4 +222,4 @@ async def get_system_stats():
         }
     except Exception as e:
         logger.error(f"Error gathering system stats: {e}")
-        raise HTTPException(status_code=500, detail=f"Failed to gather system stats: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to gather system stats: {str(e)}") from e

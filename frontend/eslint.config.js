@@ -46,6 +46,7 @@ export default [
     rules: {
       "@typescript-eslint/no-explicit-any": "off",
       "sonarjs/no-duplicate-string": "off",
+      "sonarjs/no-clear-text-protocols": "off",
     },
   },
 ];

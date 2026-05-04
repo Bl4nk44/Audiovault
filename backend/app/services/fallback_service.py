@@ -21,7 +21,7 @@ class FallbackService:
         title = track_metadata.title if track_metadata else "Unknown"
         base_query = f"{artist} - {title}"
 
-        STRATEGIES = {
+        STRATEGIES = {  # noqa: N806
             "spotify": self._strategy_streaming_service,
             "apple_music": self._strategy_streaming_service,
             "tidal": self._strategy_streaming_service,

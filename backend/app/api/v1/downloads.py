@@ -371,7 +371,7 @@ async def download_album(
         except Exception as e:
             # nosemgrep: python.fastapi.log.tainted-log-injection-stdlib-fastapi.tainted-log-injection-stdlib-fastapi
             _logger.error(f"Error fetching album {album_id}: {e}")
-            raise HTTPException(status_code=404, detail="Album not found")
+            raise HTTPException(status_code=404, detail="Album not found") from e
         tracks = await service.get_album_tracks(album_id)
     else:
         raise HTTPException(status_code=400, detail=f"Source '{request.source}' not supported for album downloads")

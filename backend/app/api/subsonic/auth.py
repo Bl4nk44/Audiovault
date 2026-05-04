@@ -67,7 +67,7 @@ def compute_md5_token(password: str, salt: str) -> str:
     # MD5 is required by Subsonic API specification for token auth
     # This is NOT used for password storage - passwords use bcrypt
     # nosemgrep: python.lang.security.audit.md5-used-as-password.md5-used-as-password, md5-used-as-password
-    result = hashlib.md5(f"{password}{salt}".encode()).hexdigest()
+    result = hashlib.md5(f"{password}{salt}".encode()).hexdigest()  # noqa: S324
     return result
 
 

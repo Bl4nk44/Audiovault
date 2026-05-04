@@ -376,10 +376,10 @@ async def add_tracks_to_playlist(
         await db.commit()
     except IntegrityError:
         await db.rollback()
-        raise HTTPException(status_code=400, detail="Database integrity error.")
+        raise HTTPException(status_code=400, detail="Database integrity error.") from None
     except Exception as e:
         await db.rollback()
-        raise HTTPException(status_code=500, detail=f"Database error: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Database error: {str(e)}") from e
 
     return PlaylistTrackAddResponse(
         added_count=added_count, duplicate_count=duplicate_count, total_processed=len(tracks_in.track_ids)

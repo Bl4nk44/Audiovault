@@ -640,7 +640,7 @@ export default function Library() {
       const skip = (page - 1) * limit;
       // Build params based on selection
 
-      const params: any = { skip, limit };
+      const params: Record<string, string | number> = { skip, limit };
 
       if (selectedService) params.source = selectedService;
       if (selectedPlaylist) params.playlist = selectedPlaylist;

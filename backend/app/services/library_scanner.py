@@ -39,7 +39,7 @@ class LibraryScannerService:
         return self.base_dir
 
     async def _get_known_paths(self, db: AsyncSession, user_id: str) -> set[str]:
-        from uuid import UUID as UUID_type
+        from uuid import UUID as UUID_type  # noqa: N811
 
         try:
             u_id = UUID_type(str(user_id))
@@ -92,7 +92,7 @@ class LibraryScannerService:
                     lrc_content = f.read().strip()
                     if lrc_content:
                         return lrc_content
-            except Exception:
+            except Exception:  # noqa: S110
                 pass
         return None
 
@@ -384,7 +384,7 @@ class LibraryScannerService:
             db.add(new_track)
             await db.flush()
 
-            from uuid import UUID as UUID_type
+            from uuid import UUID as UUID_type  # noqa: N811
 
             try:
                 u_id = UUID_type(str(user_id))
