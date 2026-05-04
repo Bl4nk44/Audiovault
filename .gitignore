@@ -85,3 +85,4 @@ backend/app/debug_genres.py
 .claude
 agent_docs
 CLAUDE.md
+AGENTS.md
