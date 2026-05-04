@@ -30,7 +30,7 @@ async def test_get_downloads(client, admin_token_headers, sample_download):
 @pytest.mark.asyncio
 async def test_create_download(client, admin_token_headers):
     data = {"track_id": str(uuid.uuid4()), "source": "spotify", "playlist_name": "Test"}
-    with patch("app.services.spotify_service.SpotifyService") as MockSpotify:
+    with patch("app.services.spotify_service.SpotifyService") as MockSpotify:  # noqa: N806
         mock_instance = MockSpotify.return_value
         mock_instance.get_track = AsyncMock(
             return_value={
@@ -87,7 +87,7 @@ async def test_bulk_update_invalid_fields(client, admin_token_headers, sample_do
 async def test_resolve_spotify_track(client, admin_token_headers, db_session):
     from app.api.v1.downloads import _resolve_track_to_local_id
 
-    with patch("app.services.spotify_service.SpotifyService") as MockSpotify:
+    with patch("app.services.spotify_service.SpotifyService") as MockSpotify:  # noqa: N806
         mock_instance = MockSpotify.return_value
         mock_instance.get_track = AsyncMock(
             return_value={
@@ -113,7 +113,7 @@ async def test_resolve_spotify_track(client, admin_token_headers, db_session):
 async def test_resolve_deezer_track(client, admin_token_headers, db_session):
     from app.api.v1.downloads import _resolve_track_to_local_id
 
-    with patch("app.services.deezer_service.DeezerService") as MockDeezer:
+    with patch("app.services.deezer_service.DeezerService") as MockDeezer:  # noqa: N806
         mock_instance = MockDeezer.return_value
         mock_instance.get_track = AsyncMock(
             return_value={

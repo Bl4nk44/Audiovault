@@ -233,8 +233,8 @@ async def test_resolve_stream_url_cached(client: AsyncClient):
 async def test_resolve_stream_url_spotify_to_youtube(client: AsyncClient):
     with (
         patch("app.api.v1.stream.cache_manager.get", new_callable=AsyncMock, return_value=None),
-        patch("app.api.v1.stream.SpotifyService") as MockSpotify,
-        patch("app.api.v1.stream.YouTubeService") as MockYoutube,
+        patch("app.api.v1.stream.SpotifyService") as MockSpotify,  # noqa: N806
+        patch("app.api.v1.stream.YouTubeService") as MockYoutube,  # noqa: N806
         patch("app.api.v1.stream.cache_manager.set", new_callable=AsyncMock) as m_set,
     ):
         mock_sp = AsyncMock()

@@ -123,7 +123,7 @@ async def test_fetch_remote_tracks_strategies(sync_manager):
 
     # 2. Artist via SpotifyService (Legacy)
     wl_ar = Watchlist(watch_type="artist", source="spotify", source_id="ar1")
-    with patch("app.services.sync_manager.SpotifyService") as MockSpot:
+    with patch("app.services.sync_manager.SpotifyService") as MockSpot:  # noqa: N806
         inst = AsyncMock()
         MockSpot.return_value = inst
         inst.get_artist_albums.return_value = [{"id": "al1"}]

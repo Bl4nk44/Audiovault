@@ -99,7 +99,7 @@ export default defineConfig({
         "src/types/**",
       ],
       thresholds: {
-        // TODO: Gradually increase thresholds as more tests are added
+        // Gradually increase thresholds as more tests are added
         // Current baseline: 20%, Target: 80% (Phase 2)
         lines: 20,
         branches: 15,

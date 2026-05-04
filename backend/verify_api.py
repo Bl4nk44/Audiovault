@@ -11,7 +11,7 @@ logger = logging.getLogger(__name__)
 BASE_URL = "http://localhost:8000"
 # Default credentials (from init_data.py usually)
 USERNAME = "admin"  # nosec B105
-PASSWORD = "admin"  # nosec B105  # nosonar
+PASSWORD = "admin"  # nosec B105  # nosonar  # noqa: S105
 
 
 async def verify_api():
@@ -91,7 +91,7 @@ async def verify_api():
 
         # 4. Test Subsonic API
         logger.info("🎵 Testing Subsonic API...")
-        SUBSONIC_PARAMS = {
+        SUBSONIC_PARAMS = {  # noqa: N806
             "u": USERNAME,
             "p": PASSWORD,  # Plaintext for simplicity in test
             "v": "1.16.1",

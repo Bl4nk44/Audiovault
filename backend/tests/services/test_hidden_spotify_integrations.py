@@ -89,7 +89,7 @@ class TestStreamSpotifyIntegration:
 
     def test_get_spotify_track_sync_returns_minimal_data(self):
         """H6: Stream pipeline only needs artist+title from Spotify, not deprecated fields."""
-        with patch("app.services.spotify_service.SpotifyService") as MockService:
+        with patch("app.services.spotify_service.SpotifyService") as MockService:  # noqa: N806
             mock_instance = MockService.return_value
             # Simulate Spotify response without deprecated fields
             mock_instance.get_track.return_value = {
@@ -109,7 +109,7 @@ class TestStreamSpotifyIntegration:
 
     def test_get_spotify_track_sync_handles_none(self):
         """H6: Stream handles SpotifyService returning None."""
-        with patch("app.services.spotify_service.SpotifyService") as MockService:
+        with patch("app.services.spotify_service.SpotifyService") as MockService:  # noqa: N806
             mock_instance = MockService.return_value
             mock_instance.get_track.return_value = None
 
@@ -122,7 +122,7 @@ class TestWatchlistSpotifyIntegration:
 
     def test_processor_get_artist_albums_empty_result(self):
         """H8: WatchlistItemProcessor handles empty album list from Spotify."""
-        with patch("app.services.spotify_service.SpotifyService") as MockService:
+        with patch("app.services.spotify_service.SpotifyService") as MockService:  # noqa: N806
             mock_instance = MockService.return_value
             mock_instance.get_artist_albums.return_value = []
 
@@ -131,7 +131,7 @@ class TestWatchlistSpotifyIntegration:
 
     def test_processor_get_album_tracks_without_deprecated_fields(self):
         """H8: Album tracks from Spotify can lack popularity/isrc."""
-        with patch("app.services.spotify_service.SpotifyService") as MockService:
+        with patch("app.services.spotify_service.SpotifyService") as MockService:  # noqa: N806
             mock_instance = MockService.return_value
             mock_instance.get_album_tracks.return_value = [
                 {
@@ -151,7 +151,7 @@ class TestWatchlistSpotifyIntegration:
 
     def test_sync_manager_artist_albums_spotify(self):
         """H9: SyncManager._fetch_remote_tracks works with Spotify artist."""
-        with patch("app.services.spotify_service.SpotifyService") as MockService:
+        with patch("app.services.spotify_service.SpotifyService") as MockService:  # noqa: N806
             mock_instance = MockService.return_value
             mock_instance.get_artist_albums.return_value = [{"id": "album_1", "name": "Album 1"}]
             mock_instance.get_album_tracks.return_value = [{"id": "track_1", "title": "Track 1", "artist": "Artist 1"}]
@@ -165,7 +165,7 @@ class TestWatchlistSpotifyIntegration:
 
     def test_watchlist_engine_init_spotify_service(self):
         """H7: WatchlistEngine initializes SpotifyService (may have no credentials)."""
-        with patch("app.services.spotify_service.SpotifyService") as MockService:
+        with patch("app.services.spotify_service.SpotifyService") as MockService:  # noqa: N806
             mock_instance = MockService.return_value
             mock_instance.client = None  # No Spotify credentials configured
 
@@ -178,7 +178,7 @@ class TestGetAlbumMethod:
 
     def test_get_album_returns_raw_data(self):
         """H5: get_album() returns raw Spotify API data including name."""
-        with patch("app.services.spotify_service.SpotifyService") as MockService:
+        with patch("app.services.spotify_service.SpotifyService") as MockService:  # noqa: N806
             mock_instance = MockService.return_value
             mock_instance.get_album.return_value = {
                 "name": "Test Album",
@@ -197,7 +197,7 @@ class TestGetAlbumMethod:
 
     def test_get_album_no_client(self):
         """H5: get_album() returns None when no Spotify client."""
-        with patch("app.services.spotify_service.SpotifyService") as MockService:
+        with patch("app.services.spotify_service.SpotifyService") as MockService:  # noqa: N806
             mock_instance = MockService.return_value
             mock_instance.get_album.return_value = None
 
