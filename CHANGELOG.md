@@ -1,6 +1,35 @@
 # Changelog
 
 All notable changes to Audiovault will be documented in this file.
+## [0.2.0] - 2026-05-04
+
+### Bug Fixes
+
+- **lint**: Fix all 81 ruff errors to pass CI
+- **lint**: Apply ruff format to 24 files
+- **mypy**: Fix all 227 mypy errors to pass CI
+- **tests**: Fix 12 failing pytest tests across 5 root causes
+- **lint**: Apply ruff format to spotify_service.py
+- **cache**: Await connect() in get/set/delete auto-connect calls
+- **logging**: Remove duplicate banner, add colors and cleaner format
+- **lint**: Apply ruff format to logger.py
+- **security**: Resolve SonarQube, OSV and Snyk findings
+- **ci**: Resolve all ruff, ESLint and build failures
+- **ci**: Resolve ruff N806/S105 and ESLint sonarjs/todo-tag failures
+- **tests**: Resolve Vitest Router context and Pytest deduplication failures
+- **ci**: Resolve Vitest link test and Docker Hub rate limit failures
+- **ci**: Remove dockerhub-description steps causing Forbidden error
+- **ci**: Restore dockerhub-description steps (token now has Delete scope)
+- **docker**: Switch postgres and redis to public.ecr.aws to avoid Docker Hub rate limits
+
+### Miscellaneous
+
+- Update .gitignore
+
+### Release
+
+- **0.2.0**: Bump version and fix startup race conditions
+
 ## [0.15.0] - 2026-04-18
 
 ### Bug Fixes
@@ -419,3 +448,5 @@ All notable changes to Audiovault will be documented in this file.
 - Add Amperfy iOS compatibility tests for Subsonic API
 
 ## [0.9.0] - 2026-01-11
+
+
