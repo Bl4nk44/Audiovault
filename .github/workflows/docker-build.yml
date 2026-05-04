@@ -78,22 +78,3 @@ jobs:
           build-args: |
             BUILDKIT_INLINE_CACHE=1
 
-      - name: Docker Hub Description (Backend)
-        uses: peter-evans/dockerhub-description@v5.0.0
-        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-        with:
-          username: ${{ secrets.DOCKER_USERNAME }}
-          password: ${{ secrets.DOCKER_PASSWORD }}
-          repository: bl4nk404/audiovault
-          short-description: Your Personal Music Sanctuary - Self-hosted music downloader
-          readme-filepath: ./README.md
-
-      - name: Docker Hub Description (Frontend)
-        uses: peter-evans/dockerhub-description@v5.0.0
-        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-        with:
-          username: ${{ secrets.DOCKER_USERNAME }}
-          password: ${{ secrets.DOCKER_PASSWORD }}
-          repository: bl4nk404/audiovault-frontend
-          short-description: Audiovault Frontend - React UI for self-hosted music manager
-          readme-filepath: ./frontend/README.md
