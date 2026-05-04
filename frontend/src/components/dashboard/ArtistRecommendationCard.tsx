@@ -69,9 +69,14 @@ const ArtistRecommendationCard: React.FC<ArtistRecommendationCardProps> = ({ art
       </div>
 
       <div className="p-4 text-center">
-        <h3 className="font-bold text-white truncate text-lg mb-1 leading-tight group-hover:text-primary transition-colors">
+        <a
+          href={artist.url}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="font-bold text-white truncate text-lg mb-1 leading-tight group-hover:text-primary transition-colors block"
+        >
           {artist.name}
-        </h3>
+        </a>
         <p className="text-xs text-zinc-500 uppercase tracking-widest font-bold">
           {t("common.artist", "Artist")}
         </p>
