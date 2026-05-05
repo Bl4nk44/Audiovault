@@ -26,6 +26,10 @@
 
 ---
 
+> **Legal Notice** — Audiovault is an independent, open-source project developed for **educational and personal use**. It is a technical demonstration of self-hosted media management and local network streaming. The author does not endorse, encourage, or condone any use of this software that violates applicable laws, the terms of service of any streaming platform, or the rights of copyright holders. You are solely responsible for how you use this software and for ensuring your usage complies with the laws of your jurisdiction. Downloading copyrighted content without authorization may be illegal. **If you enjoy an artist's work, please support them through official channels.**
+
+---
+
 Audiovault is a powerful, self-hosted application designed to import, manage, and download your music libraries from **any major streaming platform** directly to your local server. Built with performance, aesthetics, and reliability in mind.
 
 ![Audiovault Dashboard](https://i.imgur.com/yO8vjOy.png)
@@ -35,8 +39,8 @@ Audiovault is a powerful, self-hosted application designed to import, manage, an
 ### Extensive Platform Support
 
 - **Supported Services**: Spotify, YouTube, Deezer, SoundCloud, Apple Music, Tidal, Amazon Music
-- **Zero-Config Spotify**: Anonymous scraping means no developer API keys required
-- **Robust Fallback**: Automatically tries alternative sources or proxies if a download fails
+- **Zero-Config Spotify**: Uses Spotify's internal Partner GraphQL API — no developer app, no API keys, no account required. Works from Docker and VPS without restrictions. Supports playlists of any size (no 50- or 100-track limit).
+- **Robust Fallback**: Automatically tries alternative sources if a primary fetch fails
 - [Read the Platform & Fallback Guide](docs/PLATFORM_SUPPORT.md)
 - [Read the Spotify Integration Guide](docs/SPOTIFY_INTEGRATION.md)
 
