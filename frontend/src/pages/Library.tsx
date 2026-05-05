@@ -688,7 +688,7 @@ export default function Library() {
   const confirmDelete = async () => {
     if (!deleteId) return;
     try {
-      await api.delete(`/downloads/remove/${deleteId}`);
+      await api.delete(`/downloads/${deleteId}`);
       setItems(items.filter((i) => i.id !== deleteId));
       fetchFolders(); // Update counts/structure if emptiness changes
       toast.success("Track deleted");

@@ -164,7 +164,7 @@ describe("Library Page Integration", () => {
     const confirmBtn = await screen.findByText("Delete");
     fireEvent.click(confirmBtn);
 
-    await waitFor(() => expect(api.delete).toHaveBeenCalledWith("/downloads/remove/1"));
+    await waitFor(() => expect(api.delete).toHaveBeenCalledWith("/downloads/1"));
     expect(notify.success).toHaveBeenCalledWith("Track deleted");
   });
 
