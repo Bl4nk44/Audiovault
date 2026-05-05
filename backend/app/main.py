@@ -24,6 +24,7 @@ from app.api.v1 import (
     import_routes,
     lastfm,
     lyrics,
+    metadata_routes,  # noqa: E402
     playlists,
     spotify,
     storage,
@@ -102,6 +103,7 @@ application.include_router(playlists.router, prefix="/api/v1/playlists", tags=["
 application.include_router(storage.router, prefix="/api/v1/storage", tags=["storage"])
 application.include_router(tidal.router, prefix="/api/v1/tidal", tags=["tidal"])
 application.include_router(lastfm.router, prefix="/api/v1/lastfm", tags=["lastfm"])
+application.include_router(metadata_routes.router, prefix="/api/v1/metadata", tags=["metadata"])
 
 # Subsonic API (compatible with Sonixd, Amperfy, DSub, etc.)
 application.include_router(subsonic_router)
@@ -240,9 +242,17 @@ async def startup_event():
     # Start Scheduler
     scheduler_service.start()
 
+    # Start Spotify OAuth callback server on :9900
+    from app.services.spotify_service import spotify_service as _spotify_service
+
+    await _spotify_service.start_oauth_server()
+
 
 @application.on_event("shutdown")
 async def shutdown_event():
+    from app.services.spotify_service import spotify_service as _spotify_service
+
+    await _spotify_service.stop_oauth_server()
     await cache_manager.close()
     scheduler_service.stop()
 

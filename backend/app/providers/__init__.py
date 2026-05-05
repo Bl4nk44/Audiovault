@@ -9,16 +9,17 @@ from app.providers.spotify_provider import SpotifyProvider
 from app.providers.tidal_provider import TidalProvider
 from app.providers.youtube_provider import YouTubeProvider
 
-# Register providers
-# In the future we can add more specific providers here
-provider_manager.register_provider(GenericProvider())
+# Register specific providers first — order matters: first match wins.
+# GenericProvider (yt-dlp wildcard) must be last — it returns True for every URL
+# and would shadow all dedicated providers if registered earlier.
+provider_manager.register_provider(SpotifyProvider())
 provider_manager.register_provider(AppleMusicProvider())
 provider_manager.register_provider(DeezerProvider())
 provider_manager.register_provider(TidalProvider())
 provider_manager.register_provider(AmazonMusicProvider())
 provider_manager.register_provider(SoundCloudProvider())
 provider_manager.register_provider(MusicBrainzProvider())
-provider_manager.register_provider(SpotifyProvider())
 provider_manager.register_provider(YouTubeProvider())
+provider_manager.register_provider(GenericProvider())  # fallback — must be last
 
 __all__ = ["provider_manager"]
