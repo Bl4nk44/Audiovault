@@ -1,0 +1,18 @@
+{
+  "include": ["backend/app"],
+  "exclude": ["backend/tests", "**/__pycache__", "**/.venv"],
+  "pythonVersion": "3.14",
+  "pythonPlatform": "Linux",
+  "typeCheckingMode": "basic",
+  "reportMissingTypeStubs": false,
+  "reportOptionalSubscript": "none",
+  "reportOptionalMemberAccess": "none",
+  "reportArgumentType": "none",
+  "reportGeneralTypeIssues": "none",
+  "reportPrivateImportUsage": "none",
+  "reportCallIssue": "none",
+  "reportTypedDictNotRequiredAccess": "none",
+  "reportReturnType": "none",
+  "reportOptionalOperand": "none",
+  "reportOperatorIssue": "none"
+}

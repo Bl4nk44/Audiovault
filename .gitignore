@@ -86,3 +86,6 @@ backend/app/debug_genres.py
 agent_docs
 CLAUDE.md
 AGENTS.md
+
+# Added by ggshield
+.cache_ggshield

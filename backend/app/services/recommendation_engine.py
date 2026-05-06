@@ -103,12 +103,9 @@ class HybridRecommendationEngine:
     async def _search_deezer_playlists_for_artist(self, deezer: DeezerService, artist_name: str) -> list:
         results = []
         try:
-            r1 = await deezer.search(f"This Is {artist_name}", limit=2)
+            r1 = await deezer.search_playlists(artist_name, limit=3)
             if r1:
                 results.extend(r1)
-            r2 = await deezer.search(f"{artist_name} Mix", limit=2)
-            if r2:
-                results.extend(r2)
         except Exception as e:
             logger.warning(f"Playlist search failed for {artist_name}: {e}")
         return results
@@ -126,7 +123,7 @@ class HybridRecommendationEngine:
                             image_url=p.get("image_url"),
                             track_count=p.get("track_count", 0),
                             source="deezer",
-                            url=f"https://www.deezer.com/track/{p['id']}",
+                            url=p.get("url") or f"https://www.deezer.com/playlist/{p['id']}",
                         )
                     )
                     seen_ids.add(p["id"])

@@ -31,9 +31,9 @@ export function VisualizerToggle({
 
   const modes: { id: VisualizerMode; label: string }[] = [
     { id: "classic", label: "Classic Bars" },
-    { id: "wave", label: "Waveform" },
-    { id: "circle", label: "Radial Circle" },
-    { id: "particles", label: "Particles" },
+    { id: "mirror", label: "Mirror Bars" },
+    { id: "spectrum", label: "Spectrum Bars" },
+    { id: "pulse", label: "Pulse Rings" },
     { id: "glow", label: "Ambient Glow" },
   ];
 

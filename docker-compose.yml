@@ -13,6 +13,7 @@ services:
       # No code mounts in production
     ports:
       - "8000:8000"
+      - "9900:9900"
     env_file:
       - .env
     environment:

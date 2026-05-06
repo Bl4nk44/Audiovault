@@ -119,8 +119,8 @@ describe("playerSlice", () => {
   describe("visualizer mode", () => {
     it("should set visualizer mode", () => {
       expect(state.visualizerMode).toBe("classic");
-      state.setVisualizerMode("wave");
-      expect(state.visualizerMode).toBe("wave");
+      state.setVisualizerMode("mirror");
+      expect(state.visualizerMode).toBe("mirror");
     });
   });
 });

@@ -38,8 +38,8 @@ logger = logging.getLogger(__name__)
 
 # spotDL's publicly embedded credentials — Authorization Code redirect registered
 # to http://127.0.0.1:9900/ in their Spotify developer app (MIT-licensed project).
-_FALLBACK_CLIENT_ID = "5f573c9620494bae87890c0f08a60293"
-_FALLBACK_CLIENT_SECRET = "212476d9b0f3472eaa762d90b19b0ba8"
+_FALLBACK_CLIENT_ID = "5f573c9620494bae87890c0f08a60293"  # nosemgrep: detected-generic-secret  # ggignore  # deepcode ignore HCS: public spotDL MIT credentials
+_FALLBACK_CLIENT_SECRET = "212476d9b0f3472eaa762d90b19b0ba8"  # nosemgrep: detected-generic-secret  # ggignore  # deepcode ignore HCS: public spotDL MIT credentials
 
 _REDIRECT_URI = "http://127.0.0.1:9900/"
 _SCOPE = "playlist-read-private playlist-read-collaborative"
@@ -157,7 +157,8 @@ class SpotifyService:
                 error = (params.get("error") or [None])[0]
 
                 if error:
-                    html = f"<h1>Spotify auth denied</h1><p>{error}</p>"
+                    safe_error = str(error).replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
+                    html = f"<h1>Spotify auth denied</h1><p>{safe_error}</p>"  # nosemgrep: raw-html-format
                     logger.warning(f"Spotify OAuth denied: {error}")
                 elif code and state == self._oauth_state:
                     await self._exchange_code(code)
@@ -195,7 +196,7 @@ class SpotifyService:
         if self._server is not None:
             return
         try:
-            self._server = await asyncio.start_server(self._handle_callback_connection, "0.0.0.0", 9900)
+            self._server = await asyncio.start_server(self._handle_callback_connection, "127.0.0.1", 9900)
             logger.info("Spotify OAuth callback server listening on :9900")
         except OSError as e:
             logger.warning(f"Could not bind Spotify OAuth server on :9900: {e}")

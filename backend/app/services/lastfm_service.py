@@ -218,7 +218,7 @@ class LastfmService:
             url=a.get("url", ""),
             image_url=self._extract_best_image(a.get("image", [])),
             mbid=a.get("mbid"),
-            match=float(a.get("match") or a.get("playcount") or 0.0),
+            match=float(a.get("match") or 0.0),
         )
 
     async def get_recommended_artists(

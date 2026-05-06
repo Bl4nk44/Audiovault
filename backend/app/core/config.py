@@ -39,6 +39,15 @@ class Settings(BaseSettings):
     ADMIN_USERNAME: str = "admin"
     ADMIN_PASSWORD: str = "admin"  # noqa: S105
 
+    # Spotify — optional: your own app credentials (overrides embedded fallback)
+    SPOTIFY_CLIENT_ID: str | None = None
+    SPOTIFY_CLIENT_SECRET: str | None = None
+    # sp_dc cookie fallback (any free account, ~1 year TTL)
+    # How to get: open.spotify.com → DevTools → Application → Cookies → sp_dc
+    SPOTIFY_SP_DC: str | None = None
+    # Host proxy for embed scraping — run spotify-host-proxy.py on WSL2 host
+    SPOTIFY_HOST_PROXY: str | None = None
+
     # Genius API for lyrics
     GENIUS_API_TOKEN: str | None = None
 

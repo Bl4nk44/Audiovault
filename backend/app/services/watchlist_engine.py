@@ -6,7 +6,7 @@ from app.models.download import Download
 from app.models.watchlist import Watchlist
 from app.schemas.download import DownloadCreate
 from app.services.download_manager import download_manager
-from app.services.spotify_service import SpotifyService
+from app.services.spotify_service import SpotifyService, spotify_service as _spotify_singleton
 from app.services.watchlist import WatchlistItemProcessor, WatchlistStorage
 from app.services.youtube_service import YouTubeService
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -20,7 +20,7 @@ class WatchlistEngine:
         self.storage = WatchlistStorage()
         # processor initialized lazily or injected?
         # Services are stateless mostly, so we can init them here or lazily
-        self._spotify_service = SpotifyService()
+        self._spotify_service = _spotify_singleton
         self._youtube_service = YouTubeService()
 
     def _to_uuid(self, val: str | uuid.UUID) -> uuid.UUID:

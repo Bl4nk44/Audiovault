@@ -161,10 +161,30 @@ class DeezerService:
                 "name": artist["name"],
                 "image_url": artist.get("picture_medium") or artist.get("picture_big"),
                 "genres": [],  # Deezer doesn't easily expose genres in this view
-                "top_tracks": top_tracks,
+                "tracks": top_tracks,
                 "albums": albums,
                 "source": "deezer",
             }
+
+    async def search_playlists(self, query: str, limit: int = 10) -> list[dict[str, Any]]:
+        async with aiohttp.ClientSession() as session:
+            async with session.get(f"{self.BASE_URL}/search/playlist", params={"q": query, "limit": limit}) as response:
+                if response.status != 200:
+                    return []
+                data = await response.json()
+                playlists = []
+                for item in data.get("data", [])[:limit]:
+                    playlists.append(
+                        {
+                            "id": str(item["id"]),
+                            "title": item.get("title", ""),
+                            "image_url": item.get("picture_medium") or item.get("picture_big") or item.get("picture"),
+                            "track_count": item.get("nb_tracks", 0),
+                            "url": item.get("link") or f"https://www.deezer.com/playlist/{item['id']}",
+                            "source": "deezer",
+                        }
+                    )
+                return playlists
 
     async def search_artists(self, query: str, limit: int = 10) -> list[dict[str, Any]]:
         async with aiohttp.ClientSession() as session:

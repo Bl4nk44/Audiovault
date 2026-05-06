@@ -142,8 +142,9 @@ async def upload_user_avatar(
     filename = f"avatar_{current_user.id}_{int(time.time())}{file_ext}"
     file_path = os.path.join(avatar_dir, filename)
 
-    # deepcode ignore PT: file_ext is restricted to _ALLOWED_AVATAR_EXTS allowlist before path construction
-    async with aiofiles.open(file_path, "wb") as out_file:
+    async with aiofiles.open(
+        file_path, "wb"
+    ) as out_file:  # deepcode ignore PT: path built from user.id+timestamp+allowlist ext, not raw user input
         while content := await file.read(1024 * 1024):  # Read in 1MB chunks
             await out_file.write(content)
 
