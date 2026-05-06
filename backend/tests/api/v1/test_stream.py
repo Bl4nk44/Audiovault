@@ -224,7 +224,7 @@ async def test_get_track_cover_album_fallback(client: AsyncClient, db_session):
 async def test_resolve_stream_url_cached(client: AsyncClient):
     with patch("app.api.v1.stream.cache_manager.get", new_callable=AsyncMock) as m_cache:
         m_cache.return_value = "https://cached-url.com"
-        url = await stream._resolve_stream_url("some_id")
+        url = await stream._resolve_stream_url("some_id", AsyncMock())
         assert url == "https://cached-url.com"
         assert m_cache.called
 
@@ -245,6 +245,6 @@ async def test_resolve_stream_url_spotify_to_youtube(client: AsyncClient):
         mock_yt.search.return_value = [{"id": "spot"}]
         MockYoutube.return_value = mock_yt
 
-        url = await stream._resolve_stream_url("spotify_id")
+        url = await stream._resolve_stream_url("spotify_id", AsyncMock())
         assert url == "https://www.youtube.com/watch?v=spot"
         assert m_set.called

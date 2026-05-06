@@ -298,7 +298,7 @@ class SpotifyPartnerClient:
         album = t.get("albumOfTrack") or {}
         album_name = album.get("name")
         covers = (album.get("coverArt") or {}).get("sources") or []
-        image_url = max(covers, key=lambda s: s.get("width") or 0, default={}).get("url")
+        image_url = max(covers, key=lambda s: s.get("width") or 0, default={}).get("url")  # type: ignore[call-overload]
 
         duration_ms = (t.get("trackDuration") or {}).get("totalMilliseconds")
 

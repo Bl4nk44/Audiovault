@@ -152,9 +152,9 @@ class SpotifyService:
             if len(parts) >= 2:
                 parsed = urlparse(parts[1])
                 params = parse_qs(parsed.query)
-                code = (params.get("code") or [None])[0]
-                state = (params.get("state") or [None])[0]
-                error = (params.get("error") or [None])[0]
+                code = (params.get("code") or [None])[0]  # type: ignore[list-item]
+                state = (params.get("state") or [None])[0]  # type: ignore[list-item]
+                error = (params.get("error") or [None])[0]  # type: ignore[list-item]
 
                 if error:
                     safe_error = str(error).replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")

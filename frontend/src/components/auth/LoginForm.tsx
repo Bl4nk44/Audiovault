@@ -33,7 +33,7 @@ export default function LoginForm() {
       // Now add full session
       addSession(user, access_token, refresh_token);
 
-      toast.dismiss();
+      toast.success("Logged in successfully");
       navigate("/");
     } catch (error) {
       console.error("Login error:", error);

@@ -84,6 +84,6 @@ async def resolve_track_metadata(
     return ResolvedTrack(
         id=str(track_obj.id),
         title=track_obj.title,
-        artist=track_obj.artist,
+        artist=track_obj.artist or "",
         album=(track_obj.metadata_content or {}).get("album") if track_obj.metadata_content else None,
     )
