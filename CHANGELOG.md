@@ -1,6 +1,22 @@
 # Changelog
 
 All notable changes to Audiovault will be documented in this file.
+## [0.3.1] - 2026-05-06
+
+### Bug Fixes
+
+- **ci**: Fix Ruff lint errors and add tag triggers to CI/security workflows
+- **ci**: Fix mypy type errors and failing frontend test
+- **tests**: Fix 35+ failing pytest tests after SpotifyService OAuth refactor
+
+### Documentation
+
+- **env**: Add Spotify OAuth env vars to .env.example
+
+### Features
+
+- **dashboard**: Show real-time network speed in SystemStats
+
 ## [0.3.0] - 2026-05-06
 
 ### Bug Fixes
