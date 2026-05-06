@@ -9,7 +9,7 @@ from app.models.download import Download
 from app.models.watchlist import Watchlist
 from app.models.watchlist_item import WatchlistItem
 from app.providers import provider_manager
-from app.services.spotify_service import SpotifyService, spotify_service as _spotify_singleton
+from app.services.spotify_service import spotify_service as _spotify_singleton
 from app.services.youtube_service import YouTubeService
 from sqlalchemy import delete, func
 from sqlalchemy.ext.asyncio import AsyncSession

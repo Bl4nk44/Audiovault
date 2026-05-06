@@ -6,7 +6,7 @@ from app.models.download import Download
 from app.models.watchlist import Watchlist
 from app.schemas.download import DownloadCreate
 from app.services.download_manager import download_manager
-from app.services.spotify_service import SpotifyService, spotify_service as _spotify_singleton
+from app.services.spotify_service import spotify_service as _spotify_singleton
 from app.services.watchlist import WatchlistItemProcessor, WatchlistStorage
 from app.services.youtube_service import YouTubeService
 from sqlalchemy.ext.asyncio import AsyncSession

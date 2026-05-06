@@ -32,14 +32,14 @@ _UA_POOL = [
     "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
     "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36",
     "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:125.0) Gecko/20100101 Firefox/125.0",
-    "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
+    "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",  # noqa: E501
     "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
 ]
 
-_SECRETS_PATH = b"aHR0cHM6Ly9jb2RlLnRoZXRhZGV2LmRlL1RoZXRhRGV2L3Nwb3RpZnktc2VjcmV0cy9yYXcvYnJhbmNoL21haW4vc2VjcmV0cy9zZWNyZXREaWN0Lmpzb24="
+_SECRETS_PATH = b"aHR0cHM6Ly9jb2RlLnRoZXRhZGV2LmRlL1RoZXRhRGV2L3Nwb3RpZnktc2VjcmV0cy9yYXcvYnJhbmNoL21haW4vc2VjcmV0cy9zZWNyZXREaWN0Lmpzb24="  # noqa: E501
 _OPEN_SPOTIFY = "https://open.spotify.com"  # noqa: S1192 — intentional single definition
 _TOKEN_URL = f"{_OPEN_SPOTIFY}/api/token"
-_CLIENT_TOKEN_URL = "https://clienttoken.spotify.com/v1/clienttoken"
+_CLIENT_TOKEN_URL = "https://clienttoken.spotify.com/v1/clienttoken"  # noqa: S105
 _PARTNER_URL = "https://api-partner.spotify.com/pathfinder/v1/query"
 _JSON_CT = "application/json"  # noqa: S1192
 
@@ -401,7 +401,7 @@ class SpotifyPartnerClient:
 
         try:
             await cache_manager.delete(f"sp:pl:{playlist_id}")
-        except Exception:
+        except Exception:  # noqa: S110
             pass
 
 

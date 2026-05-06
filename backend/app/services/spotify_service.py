@@ -38,13 +38,13 @@ logger = logging.getLogger(__name__)
 
 # spotDL's publicly embedded credentials — Authorization Code redirect registered
 # to http://127.0.0.1:9900/ in their Spotify developer app (MIT-licensed project).
-_FALLBACK_CLIENT_ID = "5f573c9620494bae87890c0f08a60293"  # nosemgrep: detected-generic-secret  # ggignore  # deepcode ignore HCS: public spotDL MIT credentials
-_FALLBACK_CLIENT_SECRET = "212476d9b0f3472eaa762d90b19b0ba8"  # nosemgrep: detected-generic-secret  # ggignore  # deepcode ignore HCS: public spotDL MIT credentials
+_FALLBACK_CLIENT_ID = "5f573c9620494bae87890c0f08a60293"  # noqa: S105  # nosemgrep  # ggignore — public spotDL MIT credentials
+_FALLBACK_CLIENT_SECRET = "212476d9b0f3472eaa762d90b19b0ba8"  # noqa: S105  # nosemgrep  # ggignore — public spotDL MIT credentials
 
 _REDIRECT_URI = "http://127.0.0.1:9900/"
 _SCOPE = "playlist-read-private playlist-read-collaborative"
 _AUTH_FILE = Path("/downloads/.spotify_auth.json")
-_TOKEN_URL = "https://accounts.spotify.com/api/token"  # noqa: S1192
+_TOKEN_URL = "https://accounts.spotify.com/api/token"  # noqa: S105,S1192
 _FORM_CONTENT_TYPE = "application/x-www-form-urlencoded"  # noqa: S1192
 
 _BROWSER_HEADERS = {
@@ -189,7 +189,7 @@ class SpotifyService:
             writer.close()
             try:
                 await writer.wait_closed()
-            except Exception:
+            except Exception:  # noqa: S110
                 pass
 
     async def start_oauth_server(self) -> None:
@@ -309,7 +309,7 @@ class SpotifyService:
             self._refresh_token = None
             try:
                 _AUTH_FILE.unlink(missing_ok=True)
-            except Exception:
+            except Exception:  # noqa: S110
                 pass
 
         # 2. sp_dc cookie (works only from residential IPs)

@@ -1,6 +1,6 @@
 from app.providers.base import MusicProvider
 from app.schemas.metadata import PlaylistMetadata, TrackMetadata
-from app.services.spotify_service import SpotifyService, spotify_service as _spotify_singleton
+from app.services.spotify_service import spotify_service as _spotify_singleton
 
 
 class SpotifyProvider(MusicProvider):

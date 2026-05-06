@@ -76,7 +76,7 @@ async def _resolve_spotify_id(db: AsyncSession, track_id_str: str) -> UUID:
     result = await db.execute(select(Track).where(Track.spotify_id == track_id_str))
     track_obj = result.scalar_one_or_none()
     if not track_obj:
-        from app.services.spotify_service import SpotifyService, spotify_service as _spotify_singleton
+        from app.services.spotify_service import spotify_service as _spotify_singleton
 
         track_data = await _spotify_singleton.get_track(track_id_str)
         if not track_data:
@@ -311,7 +311,7 @@ async def download_all_artist_tracks(
         for album in artist.get("albums", []):
             all_tracks.extend(await service.get_album_tracks(album["id"]))
     elif request.source == "spotify":
-        from app.services.spotify_service import SpotifyService, spotify_service as _spotify_singleton
+        from app.services.spotify_service import spotify_service as _spotify_singleton
 
         service_sp = _spotify_singleton
         artist = await service_sp.get_artist_details(artist_id)
@@ -358,7 +358,7 @@ async def download_album(
             raise HTTPException(status_code=404, detail="Album not found on Deezer")
         album_name = tracks[0].get("album", "Unknown Album") if tracks else album_id
     elif request.source == "spotify":
-        from app.services.spotify_service import SpotifyService, spotify_service as _spotify_singleton
+        from app.services.spotify_service import spotify_service as _spotify_singleton
 
         service = _spotify_singleton
         try:
