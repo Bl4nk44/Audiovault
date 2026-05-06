@@ -1,6 +1,21 @@
 # Changelog
 
 All notable changes to Audiovault will be documented in this file.
+## [0.3.0] - 2026-05-06
+
+### Bug Fixes
+
+- **spotify**: Fix playlist import — provider order + missing resolve endpoint
+- **library**: Fix track delete URL — /downloads/remove/:id → /downloads/:id
+
+### Documentation
+
+- Update Spotify integration docs and add legal disclaimer
+
+### Release
+
+- **0.3.0**: Bump version and collect accumulated changes
+
 ## [0.2.0] - 2026-05-04
 
 ### Bug Fixes
