@@ -1,5 +1,5 @@
 import { Activity, ArrowDown, ArrowUp, Cpu, HardDrive, Server } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import api from "../../services/api";
 import Gauge from "./Gauge";
 
@@ -8,6 +8,11 @@ type SystemStats = {
   memory: { total: number; used: number; percent: number };
   disk: { total: number; used: number; percent: number };
   network: { sent: number; recv: number };
+};
+
+type NetworkSpeed = {
+  downBps: number;
+  upBps: number;
 };
 
 const formatBytes = (bytes: number, decimals = 2) => {
@@ -19,22 +24,44 @@ const formatBytes = (bytes: number, decimals = 2) => {
   return `${Number.parseFloat((bytes / Math.pow(k, i)).toFixed(dm))} ${sizes[i]}`;
 };
 
+const formatSpeed = (bps: number) => {
+  if (bps < 1024) return `${bps.toFixed(0)} B/s`;
+  if (bps < 1024 * 1024) return `${(bps / 1024).toFixed(1)} KB/s`;
+  if (bps < 1024 * 1024 * 1024) return `${(bps / (1024 * 1024)).toFixed(2)} MB/s`;
+  return `${(bps / (1024 * 1024 * 1024)).toFixed(2)} GB/s`;
+};
+
 export default function SystemStats() {
   const [stats, setStats] = useState<SystemStats | null>(null);
+  const [speed, setSpeed] = useState<NetworkSpeed>({ downBps: 0, upBps: 0 });
+  const prevRef = useRef<{ recv: number; sent: number; ts: number } | null>(null);
 
   useEffect(() => {
     const fetchStats = async () => {
       try {
         const response = await api.get("/system/stats");
-        setStats(response.data);
+        const data: SystemStats = response.data;
+        const now = Date.now();
+
+        if (prevRef.current !== null) {
+          const dt = (now - prevRef.current.ts) / 1000;
+          if (dt > 0) {
+            setSpeed({
+              downBps: Math.max(0, (data.network.recv - prevRef.current.recv) / dt),
+              upBps: Math.max(0, (data.network.sent - prevRef.current.sent) / dt),
+            });
+          }
+        }
+
+        prevRef.current = { recv: data.network.recv, sent: data.network.sent, ts: now };
+        setStats(data);
       } catch (err) {
-        // Just log debug
         console.debug("Failed to fetch system stats", err);
       }
     };
 
     fetchStats();
-    const interval = setInterval(fetchStats, 2000); // 2 seconds update
+    const interval = setInterval(fetchStats, 2000);
     return () => clearInterval(interval);
   }, []);
 
@@ -100,7 +127,10 @@ export default function SystemStats() {
                 Download
               </span>
               <span className="text-lg font-bold text-white font-mono">
-                {formatBytes(stats.network.recv)}
+                {formatSpeed(speed.downBps)}
+              </span>
+              <span className="text-xs text-gray-500 font-mono">
+                {formatBytes(stats.network.recv)} total
               </span>
             </div>
           </div>
@@ -116,7 +146,10 @@ export default function SystemStats() {
                 Upload
               </span>
               <span className="text-lg font-bold text-white font-mono">
-                {formatBytes(stats.network.sent)}
+                {formatSpeed(speed.upBps)}
+              </span>
+              <span className="text-xs text-gray-500 font-mono">
+                {formatBytes(stats.network.sent)} total
               </span>
             </div>
           </div>

@@ -36,14 +36,10 @@ backend/dummy/
 *.db
 *.sqlite
 
-# Docker volumes (not in repo, but just in case)
-audiovault-downloads/
-audiovault-db-data/
 
 # Logs
 *.log
 logs/
 
 # IDE
-.vscode/
-.idea/
+

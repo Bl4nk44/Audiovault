@@ -80,12 +80,9 @@ backend/app/fix_covers.py
 backend/app/test_genres_query.py
 backend/app/debug_genres.py
 
-
 # Agentic AI
 .claude
-agent_docs
 CLAUDE.md
-AGENTS.md
 
 # Added by ggshield
 .cache_ggshield
