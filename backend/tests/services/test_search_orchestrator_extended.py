@@ -226,13 +226,15 @@ async def test_search_spotify_caps_limit_at_10(orchestrator):
 @pytest.mark.asyncio
 async def test_search_deezer_artists_deduplicates(orchestrator):
     orchestrator.deezer = AsyncMock()
-    orchestrator.deezer.search.return_value = [
-        {"id": "1", "artist": "Nirvana", "image_url": "img1"},
-        {"id": "2", "artist": "Nirvana", "image_url": "img2"},
-        {"id": "3", "artist": "Foo Fighters", "image_url": "img3"},
+    orchestrator.deezer.search_artists.return_value = [
+        {"id": "1", "name": "Nirvana", "image_url": "img1"},
+        {"id": "2", "name": "Nirvana", "image_url": "img2"},
+        {"id": "3", "name": "Foo Fighters", "image_url": "img3"},
     ]
+    orchestrator.musicbrainz = AsyncMock()
+    orchestrator.musicbrainz.search_artist.return_value = []
 
-    result = await orchestrator._search_deezer_artists("rock", limit=10)
+    result = await orchestrator.search_artists("rock", limit=10)
 
     names = [r["name"] for r in result]
     assert names.count("Nirvana") == 1

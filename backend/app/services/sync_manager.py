@@ -9,7 +9,7 @@ from app.models.download import Download
 from app.models.watchlist import Watchlist
 from app.models.watchlist_item import WatchlistItem
 from app.providers import provider_manager
-from app.services.spotify_service import spotify_service as _spotify_singleton
+from app.services.spotify_service import SpotifyService  # noqa: F401
 from app.services.youtube_service import YouTubeService
 from sqlalchemy import delete, func
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -208,11 +208,11 @@ class SyncManager:
 
     async def _fetch_artist_tracks(self, item: Watchlist) -> list[dict]:
         if item.source == "spotify" and item.source_id:
-            spotify_service = _spotify_singleton
-            albums = await spotify_service.get_artist_albums(item.source_id)
+            spotify_svc = SpotifyService()
+            albums = await spotify_svc.get_artist_albums(item.source_id)
             tracks = []
             for album in albums:
-                tracks.extend(await spotify_service.get_album_tracks(album["id"]))
+                tracks.extend(await spotify_svc.get_album_tracks(album["id"]))
             return tracks
         if item.source == "youtube" and item.source_id:
             return YouTubeService().get_artist_tracks(item.source_id)

@@ -5,18 +5,13 @@ import pytest
 
 @pytest.fixture
 def mock_spotify_service():
-    with patch("app.api.v1.spotify.SpotifyService") as mock_cls:
-        service_instance = AsyncMock()
-
-        # Async mocks
-        service_instance.search.return_value = {"tracks": {"items": [{"id": "s1"}]}}
-        service_instance.get_playlist_details.return_value = {"id": "pl1", "name": "Spot PL"}
-        service_instance.get_artist_details.return_value = {"id": "ar1", "name": "Artist"}
-        service_instance.get_album_details.return_value = {"id": "al1", "name": "Album"}
-        service_instance.get_track.return_value = {"id": "t1", "name": "Track"}
-
-        mock_cls.return_value = service_instance
-        yield service_instance
+    with patch("app.api.v1.spotify.spotify_service") as mock_singleton:
+        mock_singleton.search = AsyncMock(return_value={"tracks": {"items": [{"id": "s1"}]}})
+        mock_singleton.get_playlist_details = AsyncMock(return_value={"id": "pl1", "name": "Spot PL"})
+        mock_singleton.get_artist_details = AsyncMock(return_value={"id": "ar1", "name": "Artist"})
+        mock_singleton.get_album_details = AsyncMock(return_value={"id": "al1", "name": "Album"})
+        mock_singleton.get_track = AsyncMock(return_value={"id": "t1", "name": "Track"})
+        yield mock_singleton
 
 
 @pytest.mark.asyncio

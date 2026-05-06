@@ -29,20 +29,22 @@ async def test_get_downloads(client, admin_token_headers, sample_download):
 
 @pytest.mark.asyncio
 async def test_create_download(client, admin_token_headers):
-    data = {"track_id": str(uuid.uuid4()), "source": "spotify", "playlist_name": "Test"}
-    with patch("app.services.spotify_service.SpotifyService") as MockSpotify:  # noqa: N806
-        mock_instance = MockSpotify.return_value
-        mock_instance.get_track = AsyncMock(
-            return_value={
-                "title": "Test Title",
-                "artist": "Test Artist",
-                "duration_ms": 1000,
-                "image_url": "http://example.com/img.jpg",
-                "album": "Test Album",
-                "isrc": "US123",
-            }
-        )
+    from app.services.spotify_service import spotify_service as _singleton
 
+    data = {"track_id": str(uuid.uuid4()), "source": "spotify", "playlist_name": "Test"}
+    with patch.object(
+        _singleton,
+        "get_track",
+        new_callable=AsyncMock,
+        return_value={
+            "title": "Test Title",
+            "artist": "Test Artist",
+            "duration_ms": 1000,
+            "image_url": "http://example.com/img.jpg",
+            "album": "Test Album",
+            "isrc": "US123",
+        },
+    ):
         response = await client.post("/api/v1/downloads/add", json=data, headers=admin_token_headers)
         assert response.status_code in [200, 201]
 
@@ -86,19 +88,20 @@ async def test_bulk_update_invalid_fields(client, admin_token_headers, sample_do
 @pytest.mark.asyncio
 async def test_resolve_spotify_track(client, admin_token_headers, db_session):
     from app.api.v1.downloads import _resolve_track_to_local_id
+    from app.services.spotify_service import spotify_service as _sp_singleton
 
-    with patch("app.services.spotify_service.SpotifyService") as MockSpotify:  # noqa: N806
-        mock_instance = MockSpotify.return_value
-        mock_instance.get_track = AsyncMock(
-            return_value={
-                "title": "New Spotify Track",
-                "artist": "Spotify Artist",
-                "duration_ms": 200000,
-                "image_url": "http://img.com",
-                "album": "Spotify Album",
-            }
-        )
-
+    with patch.object(
+        _sp_singleton,
+        "get_track",
+        new_callable=AsyncMock,
+        return_value={
+            "title": "New Spotify Track",
+            "artist": "Spotify Artist",
+            "duration_ms": 200000,
+            "image_url": "http://img.com",
+            "album": "Spotify Album",
+        },
+    ):
         track_uuid = await _resolve_track_to_local_id(db_session, "sp_new_123", "spotify")
         assert track_uuid is not None
 

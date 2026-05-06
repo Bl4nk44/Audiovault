@@ -9,7 +9,7 @@ Covers:
 """
 
 from typing import Any
-from unittest.mock import MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 from app.services.spotify_service import SpotifyService
@@ -210,7 +210,12 @@ class TestPlaylistNoTracks:
             "images": [{"url": "http://img"}],
             "tracks": {"items": [], "total": 50, "next": None},
         }
-        with patch.object(spotify_service, "_request", return_value=mock_playlist):
+        with (
+            patch("app.services.spotify_service.partner_client") as mock_partner,
+            patch.object(spotify_service, "_proxy_get", new_callable=AsyncMock, return_value=None),
+            patch.object(spotify_service, "_request", new_callable=AsyncMock, return_value=mock_playlist),
+        ):
+            mock_partner.get_playlist = AsyncMock(return_value=None)
             result = await spotify_service.get_playlist_details("pl1")
             assert result is not None
             assert result["tracks"] == []
@@ -220,7 +225,12 @@ class TestPlaylistNoTracks:
     async def test_playlist_tracks_empty_items(self, spotify_service):
         """get_playlist_tracks should return empty list for restricted playlists."""
         mock_result: dict[str, Any] = {"items": [], "next": None}
-        with patch.object(spotify_service, "_request", return_value=mock_result):
+        with (
+            patch("app.services.spotify_service.partner_client") as mock_partner,
+            patch.object(spotify_service, "_proxy_get", new_callable=AsyncMock, return_value=None),
+            patch.object(spotify_service, "_request", new_callable=AsyncMock, return_value=mock_result),
+        ):
+            mock_partner.get_playlist = AsyncMock(return_value=None)
             result = await spotify_service.get_playlist_tracks("pl_restricted")
             assert result == []
 
@@ -228,21 +238,31 @@ class TestPlaylistNoTracks:
     async def test_playlist_tracks_null_track_in_items(self, spotify_service):
         """Some items may have null 'track' field — should be skipped."""
         mock_result = {
-            "items": [
-                {"track": None},
-                {
-                    "track": {
-                        "id": "t1",
-                        "name": "Valid",
-                        "artists": [{"name": "A", "id": "a1"}],
-                        "album": {"name": "AL", "images": []},
-                        "duration_ms": 100,
-                    }
-                },
-            ],
-            "next": None,
+            "id": "pl1",
+            "name": "PL",
+            "images": [],
+            "tracks": {
+                "total": 2,
+                "items": [
+                    {"track": None},
+                    {
+                        "track": {
+                            "id": "t1",
+                            "name": "Valid",
+                            "artists": [{"name": "A", "id": "a1"}],
+                            "album": {"name": "AL", "images": []},
+                            "duration_ms": 100,
+                        }
+                    },
+                ],
+            },
         }
-        with patch.object(spotify_service, "_request", return_value=mock_result):
+        with (
+            patch("app.services.spotify_service.partner_client") as mock_partner,
+            patch.object(spotify_service, "_proxy_get", new_callable=AsyncMock, return_value=None),
+            patch.object(spotify_service, "_request", new_callable=AsyncMock, return_value=mock_result),
+        ):
+            mock_partner.get_playlist = AsyncMock(return_value=None)
             result = await spotify_service.get_playlist_tracks("pl1")
             assert len(result) == 1
             assert result[0]["title"] == "Valid"

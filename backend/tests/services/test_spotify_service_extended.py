@@ -43,7 +43,7 @@ async def test_token_fetch_exception_returns_empty(service):
 
 @pytest.mark.asyncio
 async def test_request_no_token_returns_none(service):
-    with patch.object(service, "get_anonymous_token", new_callable=AsyncMock, return_value=""):
+    with patch.object(service, "_ensure_token", new_callable=AsyncMock, return_value=""):
         result = await service._request("get", "tracks/abc")
     assert result is None
 
@@ -71,7 +71,7 @@ async def test_request_401_retries_with_new_token(service):
         mock_cls.return_value.__aenter__ = AsyncMock(return_value=mock_client)
         mock_cls.return_value.__aexit__ = AsyncMock(return_value=False)
         mock_client.get = fake_get
-        with patch.object(service, "get_anonymous_token", new_callable=AsyncMock, return_value="new_token"):
+        with patch.object(service, "_ensure_token", new_callable=AsyncMock, return_value="new_token"):
             result = await service._request("get", "tracks/abc")
 
     assert result is not None
@@ -85,7 +85,7 @@ async def test_request_exception_returns_none(service):
         mock_cls.return_value.__aenter__ = AsyncMock(return_value=mock_client)
         mock_cls.return_value.__aexit__ = AsyncMock(return_value=False)
         mock_client.get = AsyncMock(side_effect=RuntimeError("API error"))
-        with patch.object(service, "get_anonymous_token", new_callable=AsyncMock, return_value="token"):
+        with patch.object(service, "_ensure_token", new_callable=AsyncMock, return_value="token"):
             result = await service._request("get", "tracks/abc")
 
     assert result is None
@@ -123,7 +123,10 @@ def test_format_track_album_obj_no_images(service):
 
 @pytest.mark.asyncio
 async def test_get_track_returns_none_when_no_data(service):
-    with patch.object(service, "_request", new_callable=AsyncMock, return_value=None):
+    with (
+        patch.object(service, "_proxy_get", new_callable=AsyncMock, return_value=None),
+        patch.object(service, "_request", new_callable=AsyncMock, return_value=None),
+    ):
         result = await service.get_track("missing_id")
     assert result is None
 
@@ -139,10 +142,23 @@ async def test_get_playlist_tracks_breaks_on_no_data(service):
         nonlocal call_count
         call_count += 1
         if call_count == 1:
-            return {"total": 100, "items": [{"track": {"id": "t1", "name": "T", "artists": [], "duration_ms": 0}}]}
+            return {
+                "id": "pl1",
+                "name": "PL",
+                "images": [],
+                "tracks": {
+                    "total": 100,
+                    "items": [{"track": {"id": "t1", "name": "T", "artists": [], "duration_ms": 0}}],
+                },
+            }
         return None  # second page returns None
 
-    with patch.object(service, "_request", side_effect=mock_request):
+    with (
+        patch("app.services.spotify_service.partner_client") as mock_partner,
+        patch.object(service, "_proxy_get", new_callable=AsyncMock, return_value=None),
+        patch.object(service, "_request", side_effect=mock_request),
+    ):
+        mock_partner.get_playlist = AsyncMock(return_value=None)
         tracks = await service.get_playlist_tracks("pl1")
 
     assert len(tracks) == 1
@@ -153,7 +169,12 @@ async def test_get_playlist_tracks_breaks_on_no_data(service):
 
 @pytest.mark.asyncio
 async def test_get_playlist_details_returns_none_when_no_data(service):
-    with patch.object(service, "_request", new_callable=AsyncMock, return_value=None):
+    with (
+        patch("app.services.spotify_service.partner_client") as mock_partner,
+        patch.object(service, "_proxy_get", new_callable=AsyncMock, return_value=None),
+        patch.object(service, "_request", new_callable=AsyncMock, return_value=None),
+    ):
+        mock_partner.get_playlist = AsyncMock(return_value=None)
         result = await service.get_playlist_details("pl1")
     assert result is None
 
@@ -180,7 +201,12 @@ async def test_get_playlist_details_pagination(service):
             return first_response
         return second_response
 
-    with patch.object(service, "_request", side_effect=mock_request):
+    with (
+        patch("app.services.spotify_service.partner_client") as mock_partner,
+        patch.object(service, "_proxy_get", new_callable=AsyncMock, return_value=None),
+        patch.object(service, "_request", side_effect=mock_request),
+    ):
+        mock_partner.get_playlist = AsyncMock(return_value=None)
         result = await service.get_playlist_details("pl1")
 
     assert result is not None
@@ -192,7 +218,10 @@ async def test_get_playlist_details_pagination(service):
 
 @pytest.mark.asyncio
 async def test_get_album_tracks_no_album_data(service):
-    with patch.object(service, "_request", new_callable=AsyncMock, return_value=None):
+    with (
+        patch.object(service, "_proxy_get", new_callable=AsyncMock, return_value=None),
+        patch.object(service, "_request", new_callable=AsyncMock, return_value=None),
+    ):
         result = await service.get_album_tracks("album1")
     assert result == []
 
@@ -219,7 +248,10 @@ async def test_get_album_tracks_pagination(service):
             return album_data
         return second_page
 
-    with patch.object(service, "_request", side_effect=mock_request):
+    with (
+        patch.object(service, "_proxy_get", new_callable=AsyncMock, return_value=None),
+        patch.object(service, "_request", side_effect=mock_request),
+    ):
         tracks = await service.get_album_tracks("album1")
 
     assert len(tracks) == 60
@@ -240,7 +272,10 @@ async def test_get_album_returns_none(service):
 
 @pytest.mark.asyncio
 async def test_get_album_details_no_album_returns_none(service):
-    with patch.object(service, "get_album", new_callable=AsyncMock, return_value=None):
+    with (
+        patch.object(service, "_proxy_get", new_callable=AsyncMock, return_value=None),
+        patch.object(service, "_request", new_callable=AsyncMock, return_value=None),
+    ):
         result = await service.get_album_details("album1")
     assert result is None
 
@@ -421,7 +456,7 @@ async def test_search_url_playlist_type(service):
 
 @pytest.mark.asyncio
 async def test_search_url_playlist_exception_returns_empty(service):
-    with patch.object(service, "_request", new_callable=AsyncMock, side_effect=RuntimeError("err")):
+    with patch.object(service, "get_playlist_details", new_callable=AsyncMock, side_effect=RuntimeError("err")):
         result = await service.search("https://open.spotify.com/playlist/pl1")
     assert result == []
 

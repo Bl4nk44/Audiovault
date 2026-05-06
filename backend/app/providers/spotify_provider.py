@@ -1,6 +1,6 @@
 from app.providers.base import MusicProvider
 from app.schemas.metadata import PlaylistMetadata, TrackMetadata
-from app.services.spotify_service import spotify_service as _spotify_singleton
+from app.services.spotify_service import SpotifyService  # noqa: F401
 
 
 class SpotifyProvider(MusicProvider):
@@ -8,7 +8,7 @@ class SpotifyProvider(MusicProvider):
     SPOTIFY_DOMAIN = "spotify.com"
 
     def __init__(self):
-        self.service = _spotify_singleton
+        self.service = SpotifyService()
 
     @property
     def name(self) -> str:

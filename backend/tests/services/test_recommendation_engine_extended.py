@@ -199,7 +199,7 @@ async def test_fetch_playlists_success_builds_playlists(engine, mock_lastfm, use
     mock_lastfm.get_user_top_artists.return_value = [{"name": "Nirvana"}]
 
     mock_deezer = AsyncMock()
-    mock_deezer.search.return_value = [
+    mock_deezer.search_playlists.return_value = [
         {"id": "p1", "title": "This Is Nirvana", "image_url": "img", "track_count": 20},
     ]
 

@@ -1,4 +1,4 @@
-from unittest.mock import MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 from app.services.spotify_service import SpotifyService
@@ -10,26 +10,14 @@ def spotify_service():
 
 
 @pytest.mark.asyncio
-@patch("httpx.AsyncClient.get")
-async def test_get_anonymous_token(mock_get, spotify_service):
-    # Mocking the HTML response containing the token
-    mock_response = MagicMock()
-    mock_response.status_code = 200
-    mock_response.json.return_value = {"clientId": "client_123", "accessToken": "BQA_mock_token", "isAnonymous": True}
-    mock_get.return_value = mock_response
-
-    token = await spotify_service.get_anonymous_token()
-    assert token == "BQA_mock_token"
-    mock_get.assert_called_once()
+async def test_get_anonymous_token(spotify_service):
+    with patch.object(spotify_service, "_ensure_token", new_callable=AsyncMock, return_value="BQA_mock_token"):
+        token = await spotify_service.get_anonymous_token()
+        assert token == "BQA_mock_token"
 
 
 @pytest.mark.asyncio
-@patch("httpx.AsyncClient.get")
-@patch.object(SpotifyService, "get_anonymous_token")
-async def test_spotify_get_track(mock_token, mock_get, spotify_service):
-    mock_token.return_value = "mock_token"
-
-    # Mocking track API response
+async def test_spotify_get_track(spotify_service):
     mock_response = MagicMock()
     mock_response.status_code = 200
     mock_response.json.return_value = {
@@ -41,9 +29,13 @@ async def test_spotify_get_track(mock_token, mock_get, spotify_service):
         "external_ids": {"isrc": "ISRC123"},
         "popularity": 80,
     }
-    mock_get.return_value = mock_response
 
-    track = await spotify_service.get_track("t1")
+    with (
+        patch.object(spotify_service, "_ensure_token", new_callable=AsyncMock, return_value="mock_token"),
+        patch.object(spotify_service, "_proxy_get", new_callable=AsyncMock, return_value=None),
+        patch("httpx.AsyncClient.get", return_value=mock_response),
+    ):
+        track = await spotify_service.get_track("t1")
 
     assert track is not None
     assert track["title"] == "T1"
@@ -52,12 +44,7 @@ async def test_spotify_get_track(mock_token, mock_get, spotify_service):
 
 
 @pytest.mark.asyncio
-@patch("httpx.AsyncClient.get")
-@patch.object(SpotifyService, "get_anonymous_token")
-async def test_spotify_get_playlist_details(mock_token, mock_get, spotify_service):
-    mock_token.return_value = "mock_token"
-
-    # Needs two API calls typically: one for playlist, one for tracks
+async def test_spotify_get_playlist_details(spotify_service):
     mock_playlist_response = MagicMock()
     mock_playlist_response.status_code = 200
     mock_playlist_response.json.return_value = {
@@ -81,9 +68,14 @@ async def test_spotify_get_playlist_details(mock_token, mock_get, spotify_servic
         },
     }
 
-    mock_get.return_value = mock_playlist_response
-
-    playlist = await spotify_service.get_playlist_details("pl1")
+    with (
+        patch.object(spotify_service, "_ensure_token", new_callable=AsyncMock, return_value="mock_token"),
+        patch.object(spotify_service, "_proxy_get", new_callable=AsyncMock, return_value=None),
+        patch("app.services.spotify_service.partner_client") as mock_partner,
+        patch("httpx.AsyncClient.get", return_value=mock_playlist_response),
+    ):
+        mock_partner.get_playlist = AsyncMock(return_value=None)
+        playlist = await spotify_service.get_playlist_details("pl1")
 
     assert playlist is not None
     assert playlist["title"] == "My Playlist"

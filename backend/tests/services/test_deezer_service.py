@@ -128,5 +128,5 @@ async def test_deezer_get_artist_details(deezer_service):
         details = await deezer_service.get_artist_details("789")
 
         assert details["name"] == "Mega Artist"
-        assert len(details["top_tracks"]) == 1
+        assert len(details["tracks"]) == 1
         assert len(details["albums"]) == 1

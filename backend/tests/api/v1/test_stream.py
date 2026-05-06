@@ -230,21 +230,28 @@ async def test_resolve_stream_url_cached(client: AsyncClient):
 
 
 @pytest.mark.asyncio
-async def test_resolve_stream_url_spotify_to_youtube(client: AsyncClient):
+async def test_resolve_stream_url_db_track_to_youtube(client: AsyncClient):
+    """When a track is found in DB (no youtube_id), resolve via YouTube search."""
+    mock_track = MagicMock()
+    mock_track.youtube_id = None
+    mock_track.title = "Song"
+    mock_track.artist = "Artist"
+
+    mock_result = MagicMock()
+    mock_result.scalar_one_or_none.return_value = mock_track
+
+    mock_db = AsyncMock()
+    mock_db.execute.return_value = mock_result
+
     with (
         patch("app.api.v1.stream.cache_manager.get", new_callable=AsyncMock, return_value=None),
-        patch("app.api.v1.stream.SpotifyService") as MockSpotify,  # noqa: N806
-        patch("app.api.v1.stream.YouTubeService") as MockYoutube,  # noqa: N806
+        patch(
+            "app.api.v1.stream._youtube_search_url",
+            new_callable=AsyncMock,
+            return_value="https://www.youtube.com/watch?v=spot",
+        ),
         patch("app.api.v1.stream.cache_manager.set", new_callable=AsyncMock) as m_set,
     ):
-        mock_sp = AsyncMock()
-        mock_sp.get_track.return_value = {"title": "S", "artist": "A"}
-        MockSpotify.return_value = mock_sp
-
-        mock_yt = MagicMock()
-        mock_yt.search.return_value = [{"id": "spot"}]
-        MockYoutube.return_value = mock_yt
-
-        url = await stream._resolve_stream_url("spotify_id", AsyncMock())
+        url = await stream._resolve_stream_url("spotify_id", mock_db)
         assert url == "https://www.youtube.com/watch?v=spot"
         assert m_set.called

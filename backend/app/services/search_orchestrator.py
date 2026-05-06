@@ -17,7 +17,7 @@ from typing import Any
 
 from app.services.deezer_service import DeezerService
 from app.services.musicbrainz_service import MusicBrainzService
-from app.services.spotify_service import spotify_service as _spotify_singleton
+from app.services.spotify_service import SpotifyService  # noqa: F401
 
 logger = logging.getLogger(__name__)
 
@@ -28,7 +28,7 @@ class SearchOrchestrator:
     def __init__(self) -> None:
         self.deezer = DeezerService()
         self.musicbrainz = MusicBrainzService()
-        self.spotify = _spotify_singleton
+        self.spotify = SpotifyService()
 
     # --- Public Search Methods ---
 

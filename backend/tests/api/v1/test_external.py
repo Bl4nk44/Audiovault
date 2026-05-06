@@ -6,12 +6,10 @@ from httpx import AsyncClient
 
 @pytest.fixture
 def mock_spotify_service():
-    with patch("app.api.v1.spotify.SpotifyService") as mock:
-        instance = AsyncMock()
-        mock.return_value = instance
-        instance.search.return_value = {"tracks": {"items": []}}
-        instance.get_track.return_value = {"id": "123", "name": "Fake Track"}
-        yield instance
+    with patch("app.api.v1.spotify.spotify_service") as mock_singleton:
+        mock_singleton.search = AsyncMock(return_value={"tracks": {"items": []}})
+        mock_singleton.get_track = AsyncMock(return_value={"id": "123", "name": "Fake Track"})
+        yield mock_singleton
 
 
 @pytest.mark.asyncio

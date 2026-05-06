@@ -335,6 +335,10 @@ class SpotifyService:
     def is_oauth_authenticated(self) -> bool:
         return bool(self._refresh_token)
 
+    async def get_anonymous_token(self) -> str:
+        """Backward-compat shim — delegates to _ensure_token."""
+        return await self._ensure_token() or ""
+
     # ------------------------------------------------------------------ #
     # HTTP helper                                                          #
     # ------------------------------------------------------------------ #
@@ -417,6 +421,8 @@ class SpotifyService:
             "popularity": item.get("popularity", 0),
             "isrc": item.get("external_ids", {}).get("isrc"),
         }
+
+    _format_track = _fmt_track  # noqa: E305 — backward-compat alias used by tests
 
     def _fmt_playlist(self, item: dict[str, Any], is_album: bool = False) -> dict[str, Any]:
         images = item.get("images") or []
@@ -637,7 +643,11 @@ class SpotifyService:
         if match:
             resource_type, resource_id = match.groups()
             logger.info(f"Detected Spotify URL: type={resource_type}, id={resource_id}")
-            return await self._fetch_resource(resource_type, resource_id)
+            try:
+                return await self._fetch_resource(resource_type, resource_id)
+            except Exception as e:
+                logger.error(f"Spotify URL resolution failed: {e}")
+                return []
 
         return []
 
