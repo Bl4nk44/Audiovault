@@ -13,6 +13,8 @@ from uvicorn.middleware.proxy_headers import ProxyHeadersMiddleware
 from app import models  # noqa: F401 - Ensure models are registered
 from app.api.subsonic import router as subsonic_router
 from app.api.v1 import (
+    amazon_music,
+    apple_music,
     artists,
     audit,
     auth,
@@ -26,6 +28,7 @@ from app.api.v1 import (
     lyrics,
     metadata_routes,  # noqa: E402
     playlists,
+    soundcloud,
     spotify,
     storage,
     stream,
@@ -104,6 +107,9 @@ application.include_router(storage.router, prefix="/api/v1/storage", tags=["stor
 application.include_router(tidal.router, prefix="/api/v1/tidal", tags=["tidal"])
 application.include_router(lastfm.router, prefix="/api/v1/lastfm", tags=["lastfm"])
 application.include_router(metadata_routes.router, prefix="/api/v1/metadata", tags=["metadata"])
+application.include_router(amazon_music.router, prefix="/api/v1/amazon_music", tags=["amazon_music"])
+application.include_router(apple_music.router, prefix="/api/v1/apple_music", tags=["apple_music"])
+application.include_router(soundcloud.router, prefix="/api/v1/soundcloud", tags=["soundcloud"])
 
 # Subsonic API (compatible with Sonixd, Amperfy, DSub, etc.)
 application.include_router(subsonic_router)

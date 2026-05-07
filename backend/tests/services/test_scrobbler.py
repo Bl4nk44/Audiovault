@@ -60,3 +60,27 @@ async def test_scrobble_error_handling(scrobbler, mock_lastfm_service, user_conn
 
     result = await scrobbler.scrobble_track(user_connected, "Track", "Artist")
     assert result is False
+
+
+@pytest.mark.asyncio
+async def test_update_now_playing_lastfm_error(scrobbler, mock_lastfm_service, user_connected):
+    mock_lastfm_service.update_now_playing.side_effect = LastfmError("API error")
+    # Should not raise, error is caught internally
+    await scrobbler.update_now_playing(user_connected, "Track", "Artist")
+
+
+def test_should_scrobble_connected_no_prefs(scrobbler):
+    user = User(username="test", lastfm_session_key="key")
+    user.preferences = {}
+    assert scrobbler._should_scrobble(user) is True
+
+
+def test_should_scrobble_disconnected(scrobbler):
+    user = User(username="test", lastfm_session_key=None)
+    assert scrobbler._should_scrobble(user) is False
+
+
+def test_should_scrobble_disabled_in_prefs(scrobbler):
+    user = User(username="test", lastfm_session_key="key")
+    user.preferences = {"scrobble_enabled": False}
+    assert scrobbler._should_scrobble(user) is False

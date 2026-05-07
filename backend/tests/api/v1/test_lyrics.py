@@ -53,3 +53,96 @@ async def test_get_lyrics_not_found(client: AsyncClient, mock_user):
 
         assert response.status_code == 200
         assert response.json()["found"] is False
+
+
+@pytest.mark.asyncio
+async def test_get_lyrics_by_track_not_found(client, admin_token_headers):
+    response = await client.get(f"/api/v1/lyrics/track/{uuid.uuid4()}", headers=admin_token_headers)
+    assert response.status_code == 404
+
+
+@pytest.mark.asyncio
+async def test_get_lyrics_by_track_missing_artist(client, admin_token_headers, db_session):
+    from app.models.track import Track
+
+    track = Track(id=uuid.uuid4(), title="Song", artist=None)
+    db_session.add(track)
+    await db_session.commit()
+    await db_session.refresh(track)
+
+    response = await client.get(f"/api/v1/lyrics/track/{track.id}", headers=admin_token_headers)
+    assert response.status_code == 400
+
+
+@pytest.mark.asyncio
+async def test_get_lyrics_by_track_success(client, admin_token_headers, db_session):
+    from app.models.track import Track
+
+    track = Track(id=uuid.uuid4(), title="Hit Song", artist="Famous Artist")
+    db_session.add(track)
+    await db_session.commit()
+    await db_session.refresh(track)
+
+    mock_lyrics = {"found": True, "lyrics": "Line 1", "title": "Hit Song", "artist": "Famous Artist"}
+    with patch("app.services.lyrics_service.lyrics_service.get_lyrics", new_callable=AsyncMock) as mock_get:
+        mock_get.return_value = mock_lyrics
+        response = await client.get(f"/api/v1/lyrics/track/{track.id}", headers=admin_token_headers)
+
+    assert response.status_code == 200
+    assert response.json()["found"] is True
+
+
+@pytest.mark.asyncio
+async def test_get_lyrics_by_track_none_from_service(client, admin_token_headers, db_session):
+    from app.models.track import Track
+
+    track = Track(id=uuid.uuid4(), title="Obscure Song", artist="Obscure Artist")
+    db_session.add(track)
+    await db_session.commit()
+    await db_session.refresh(track)
+
+    with patch("app.services.lyrics_service.lyrics_service.get_lyrics", new_callable=AsyncMock) as mock_get:
+        mock_get.return_value = None
+        response = await client.get(f"/api/v1/lyrics/track/{track.id}", headers=admin_token_headers)
+
+    assert response.status_code == 200
+    assert response.json()["found"] is False
+
+
+@pytest.mark.asyncio
+async def test_search_lyrics_post_success(client, admin_token_headers):
+    mock_lyrics = {"found": True, "lyrics": "Verse 1", "title": "Song", "artist": "Artist"}
+    with patch("app.services.lyrics_service.lyrics_service.get_lyrics", new_callable=AsyncMock) as mock_get:
+        mock_get.return_value = mock_lyrics
+        response = await client.post(
+            "/api/v1/lyrics/search",
+            json={"artist": "Artist", "title": "Song"},
+            headers=admin_token_headers,
+        )
+    assert response.status_code == 200
+    assert response.json()["found"] is True
+
+
+@pytest.mark.asyncio
+async def test_search_lyrics_post_none(client, admin_token_headers):
+    with patch("app.services.lyrics_service.lyrics_service.get_lyrics", new_callable=AsyncMock) as mock_get:
+        mock_get.return_value = None
+        response = await client.post(
+            "/api/v1/lyrics/search",
+            json={"artist": "Nobody", "title": "Nothing"},
+            headers=admin_token_headers,
+        )
+    assert response.status_code == 200
+    assert response.json()["found"] is False
+
+
+@pytest.mark.asyncio
+async def test_get_lyrics_search_get_none(client, admin_token_headers):
+    with patch("app.services.lyrics_service.lyrics_service.get_lyrics", new_callable=AsyncMock) as mock_get:
+        mock_get.return_value = None
+        response = await client.get(
+            "/api/v1/lyrics/search?artist=Nobody&title=Nothing&use_cache=false",
+            headers=admin_token_headers,
+        )
+    assert response.status_code == 200
+    assert response.json()["found"] is False

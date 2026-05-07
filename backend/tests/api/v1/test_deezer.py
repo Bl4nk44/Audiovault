@@ -47,3 +47,23 @@ async def test_get_deezer_playlist_not_found(client, admin_token_headers, mock_d
     response = await client.get("/api/v1/deezer/playlist/bad_id", headers=admin_token_headers)
 
     assert response.status_code == 404
+
+
+@pytest.mark.asyncio
+async def test_get_deezer_artist(client, admin_token_headers, mock_deezer_service):
+    mock_deezer_service.get_artist_details.return_value = {"id": "ar1", "name": "Deezer Artist"}
+
+    response = await client.get("/api/v1/deezer/artist/ar1", headers=admin_token_headers)
+
+    assert response.status_code == 200
+    assert response.json()["name"] == "Deezer Artist"
+    mock_deezer_service.get_artist_details.assert_called_with("ar1")
+
+
+@pytest.mark.asyncio
+async def test_get_deezer_artist_not_found(client, admin_token_headers, mock_deezer_service):
+    mock_deezer_service.get_artist_details.return_value = None
+
+    response = await client.get("/api/v1/deezer/artist/bad_id", headers=admin_token_headers)
+
+    assert response.status_code == 404

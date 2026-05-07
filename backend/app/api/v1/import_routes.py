@@ -85,6 +85,8 @@ async def import_playlist(request: ImportRequest):
         )  # nosemgrep: python.fastapi.log.tainted-log-injection-stdlib-fastapi.tainted-log-injection-stdlib-fastapi
         return playlist
 
+    except HTTPException:
+        raise
     except Exception as e:
         logger.error(f"Import failed: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail=str(e)) from e
