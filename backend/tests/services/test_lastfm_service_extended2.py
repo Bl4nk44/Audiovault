@@ -780,7 +780,7 @@ def test_parse_artist_name_returns_none_for_unknown_type(svc):
 
 def test_add_track_seeds_adds_valid_tracks(svc):
     """Line 328-332: tracks with name and artist are appended."""
-    seeds = []
+    seeds: list[tuple[str, str]] = []
     tracks = [{"name": "Song1", "artist": {"name": "Artist1"}}, {"name": "Song2", "artist": "Artist2"}]
 
     svc._add_track_seeds(tracks, seeds)
@@ -791,14 +791,14 @@ def test_add_track_seeds_adds_valid_tracks(svc):
 
 def test_add_track_seeds_skips_exception_result(svc):
     """Line 327-328: Exception result is ignored."""
-    seeds = []
+    seeds: list[tuple[str, str]] = []
     svc._add_track_seeds(Exception("fail"), seeds)
     assert seeds == []
 
 
 def test_add_track_seeds_skips_tracks_without_artist(svc):
     """Tracks with no parseable artist are not added."""
-    seeds = []
+    seeds: list[tuple[str, str]] = []
     svc._add_track_seeds([{"name": "T1", "artist": 42}], seeds)
     assert seeds == []
 

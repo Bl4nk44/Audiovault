@@ -15,9 +15,9 @@ def mock_lastfm_service():
         mock_settings.LASTFM_API_SECRET = "test_secret"
         mock_settings.CALLBACK_URL = "http://test.com"
         service = LastfmService()
-        service.get_session = AsyncMock()
-        service.get_user_info = AsyncMock()
-        service.get_user_friends = AsyncMock(return_value=[])
+        service.get_session = AsyncMock()  # type: ignore[method-assign]
+        service.get_user_info = AsyncMock()  # type: ignore[method-assign]
+        service.get_user_friends = AsyncMock(return_value=[])  # type: ignore[method-assign]
         yield service
 
 
