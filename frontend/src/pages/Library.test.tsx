@@ -149,6 +149,7 @@ describe("Library Page Integration", () => {
 
   it("handles track deletion flow", async () => {
     await renderLibrary();
+    fireEvent.click(screen.getByTitle("List View"));
     fireEvent.click(screen.getByText("local"));
     await waitFor(() => screen.getByText("Playlist 1"));
     fireEvent.click(screen.getByText("Playlist 1"));
@@ -171,6 +172,7 @@ describe("Library Page Integration", () => {
   it("handles track deletion failure", async () => {
     (api.delete as any).mockRejectedValue(new Error("Failed"));
     await renderLibrary();
+    fireEvent.click(screen.getByTitle("List View"));
     fireEvent.click(screen.getByText("local"));
     await waitFor(() => screen.getByText("Playlist 1"));
     fireEvent.click(screen.getByText("Playlist 1"));
@@ -229,6 +231,7 @@ describe("Library Page Integration", () => {
 
   it("handles track edit flow", async () => {
     await renderLibrary();
+    fireEvent.click(screen.getByTitle("List View"));
     fireEvent.click(screen.getByText("local"));
     await waitFor(() => screen.getByText("Playlist 1"));
     fireEvent.click(screen.getByText("Playlist 1"));
@@ -333,6 +336,7 @@ describe("Library Page Integration", () => {
 
   it("handles Add to Playlist modal opening", async () => {
     await renderLibrary();
+    fireEvent.click(screen.getByTitle("List View"));
     fireEvent.click(screen.getByText("local"));
     await waitFor(() => screen.getByText("Playlist 1"));
     fireEvent.click(screen.getByText("Playlist 1"));
@@ -358,8 +362,8 @@ describe("Library Page Integration", () => {
     fireEvent.click(screen.getByText("local"));
     await waitFor(() => screen.getByText("Playlist 1"));
 
-    // Find the playlist delete button by its title from translation mock
-    const deleteBtn = screen.getByTitle("library.playlistDeleted");
+    // Find the playlist delete button by its hardcoded title
+    const deleteBtn = screen.getByTitle("Delete playlist");
     fireEvent.click(deleteBtn);
 
     // Check for the modal.
