@@ -14,6 +14,7 @@
 [![Aikido](https://img.shields.io/badge/SAST%2FSCA-Aikido-FF6B35?logo=aikido&logoColor=white)](https://aikido.dev/)
 [![OSV-Scanner](https://img.shields.io/badge/CVE-OSV--Scanner-4285F4?logo=google&logoColor=white)](https://google.github.io/osv-scanner/)
 [![Nuclei](https://img.shields.io/badge/DAST-Nuclei-9B59B6?logoColor=white)](https://nuclei.projectdiscovery.io/)
+[![Trivy](https://img.shields.io/badge/Container-Trivy-1904DA?logo=aquasecurity&logoColor=white)](https://trivy.dev/)
 [![codecov](https://codecov.io/gh/Bl4nk44/Audiovault/branch/main/graph/badge.svg)](https://codecov.io/gh/Bl4nk44/Audiovault)
 [![Build Status](https://github.com/Bl4nk44/Audiovault/actions/workflows/ci.yml/badge.svg)](https://github.com/Bl4nk44/Audiovault/actions)
 
