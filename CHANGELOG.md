@@ -5,16 +5,17 @@ All notable changes to Audiovault will be documented in this file.
 
 ### Bug Fixes
 
-- **tests**: Add mypy type annotations and method-assign ignores
-- **i18n**: Add missing keys and fix sidebar.recommendations mismatch
 - **tests**: Switch Library tests to list mode and fix playlist delete title
+- **i18n**: Add missing keys and fix sidebar.recommendations mismatch
+- **tests**: Add mypy type annotations and method-assign ignores
 
 ### Documentation
 
+- **readme**: Replace Snyk badge with Checkov, Aikido, OSV-Scanner, Nuclei
+- **readme**: Add Trivy badge
 - **contributing**: Update outdated contribution guidelines
-- **readme**: Add Trivy badge, replace Snyk with Checkov, Aikido, OSV-Scanner, Nuclei
 
-### Tests
+### Testing
 
 - **coverage**: Raise backend coverage from 79% to 85%
 
