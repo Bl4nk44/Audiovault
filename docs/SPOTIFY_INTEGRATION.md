@@ -35,13 +35,24 @@ No Spotify account required. No developer app registration. No cookies.
 
 No configuration is needed. Audiovault handles all authentication automatically on first use.
 
-Optional overrides in `.env` (only if you have your own Spotify developer app):
+Optional overrides in `.env`:
 
 ```env
-# Optional: use your own Spotify app credentials instead of the built-in ones
+# Use your own Spotify developer app credentials instead of the built-in ones
 SPOTIFY_CLIENT_ID=your_client_id
 SPOTIFY_CLIENT_SECRET=your_client_secret
+
+# sp_dc cookie — free Spotify account cookie, ~1yr TTL
+# How to get: open.spotify.com → DevTools → Application → Cookies → copy sp_dc value
+# Used as a fallback authentication layer when TOTP token acquisition fails
+SPOTIFY_SP_DC=your_sp_dc_cookie_value
+
+# Host proxy for embed scraping — limited to 50 tracks, requires running
+# spotify-host-proxy.py on the Docker host (e.g. WSL2 host machine)
+SPOTIFY_HOST_PROXY=http://host.docker.internal:8765
 ```
+
+> **Note**: None of the above are required. The built-in TOTP-based Partner API works without any credentials.
 
 ### OAuth fallback (for private playlists)
 

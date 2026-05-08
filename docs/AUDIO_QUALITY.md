@@ -1,12 +1,30 @@
 # Audio Quality Options
 
-Audiovault gives you full control over the quality of your downloaded music.
+Audiovault gives you control over the format and bitrate of downloaded music via per-user preferences.
 
-## Available Formats
+## Quality Tiers
 
-- **MP3**: Choose from standard bitrates including 128kbps, 192kbps, and 320kbps.
-- **FLAC**: Download lossless audio for the highest possible fidelity (ideal for audiophiles).
+| Setting | Format | Bitrate |
+|---|---|---|
+| `low` | MP3 | 128 kbps |
+| `normal` | MP3 | 192 kbps |
+| `high` | MP3 | 320 kbps |
+| `best` | MP3 | 320 kbps |
+| `lossless` | FLAC | lossless |
 
-## Smart Selection
+The default is `high` (320 kbps MP3) unless overridden in user preferences.
 
-Depending on the source platform and your global settings, Audiovault will automatically select the best available format that matches your preferences. You can override these settings on a per-download basis.
+## How It Works
+
+Quality is set per-user in preferences. When a download is queued:
+
+1. The download manager reads `user.preferences["quality"]`
+2. Maps it to the appropriate ffmpeg postprocessor (`FFmpegExtractAudio`)
+3. yt-dlp fetches the best available source audio (`bestaudio/best`)
+4. ffmpeg transcodes to the target format/bitrate
+
+## Notes
+
+- FLAC (`lossless`) is only as good as the source. If the source platform streams at 128/256 kbps AAC, the FLAC will be a lossless container of that lossy stream — not true lossless.
+- MP3 320 kbps is transparent for most listeners and has the widest client compatibility.
+- Format choice affects storage: a 4-minute track at 320 kbps MP3 ≈ 9 MB; FLAC ≈ 25–40 MB.

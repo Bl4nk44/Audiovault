@@ -1,6 +1,6 @@
-# Uwaga: `pre-commit install` konflikuje z globalnym core.hooksPath ggshield (~/.gitconfig).
-# Uruchamiaj ręcznie: `pre-commit run --all-files` lub przez CI.
-# Ggshield na git commit działa przez swój globalny hook — nie wymaga pre-commit install.
+# Note: `pre-commit install` conflicts with the global core.hooksPath set by ggshield (~/.gitconfig).
+# Run manually: `pre-commit run --all-files` or via CI.
+# ggshield runs on git commit via its own global hook — no `pre-commit install` required.
 
 repos:
   - repo: https://github.com/pre-commit/pre-commit-hooks
