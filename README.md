@@ -19,7 +19,7 @@
 [![Build Status](https://github.com/Bl4nk44/Audiovault/actions/workflows/ci.yml/badge.svg)](https://github.com/Bl4nk44/Audiovault/actions)
 
 🔗 **Quick Links**:
-[📖 Wiki](https://github.com/Bl4nk44/Audiovault/wiki) •
+[📖 Docs](docs/GETTING_STARTED.md) •
 [🐛 Issues](https://github.com/Bl4nk44/Audiovault/issues) •
 [🎯 Pull Requests](https://github.com/Bl4nk44/Audiovault/pulls) •
 [💬 Discussions](https://github.com/Bl4nk44/Audiovault/discussions) •
@@ -130,14 +130,16 @@ Audiovault supports running behind reverse proxies out of the box. For detailed 
 
 ## 📚 Documentation
 
-For detailed guides and documentation, please visit our [**Wiki**](https://github.com/Bl4nk44/Audiovault/wiki):
-
-- [Getting Started](https://github.com/Bl4nk44/Audiovault/wiki/Getting-Started)
-- [Configuration Guide](https://github.com/Bl4nk44/Audiovault/wiki/Configuration)
-- [Usage Guide](https://github.com/Bl4nk44/Audiovault/wiki/Usage-Guide)
-- [Architecture](https://github.com/Bl4nk44/Audiovault/wiki/Architecture)
-- [Development Setup](https://github.com/Bl4nk44/Audiovault/wiki/Development)
-- [FAQ & Troubleshooting](https://github.com/Bl4nk44/Audiovault/wiki/FAQ-&-Troubleshooting)
+- [Getting Started](docs/GETTING_STARTED.md)
+- [Configuration Guide](docs/CONFIGURATION.md)
+- [Platform Support & Fallbacks](docs/PLATFORM_SUPPORT.md)
+- [Spotify Integration](docs/SPOTIFY_INTEGRATION.md)
+- [Last.fm Integration](docs/LASTFM_INTEGRATION.md)
+- [Audio Quality](docs/AUDIO_QUALITY.md)
+- [Automation & Watchlists](docs/AUTOMATION.md)
+- [Streaming Server (Subsonic)](docs/STREAMING_SERVER.md)
+- [Reverse Proxy & SSL](docs/REVERSE_PROXY.md)
+- [Pre-Commit Setup](docs/PRE_COMMIT.md)
 
 ## 🐛 Support & Issues
 
