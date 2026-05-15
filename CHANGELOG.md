@@ -5,15 +5,13 @@ All notable changes to Audiovault will be documented in this file.
 
 ### Bug Fixes
 
-- **models**: Move `PlaylistTrack` before `Playlist` to resolve F821 forward reference
+- **release**: Sync VERSION and pyproject.toml to 0.4.0
+- **models**: Move PlaylistTrack before Playlist to resolve F821 forward ref
 
-### Dependencies
+### Documentation
 
-- Bump `fastapi` to 0.136.1
-- Bump `uvicorn` to 0.46.0
-- Bump `pydantic` to 2.13.4, `pydantic-core` to 2.46.4, `pydantic-settings` to 2.14.1
-- Bump `PyJWT` to 2.12.1, `cryptography` to 48.0.0
-- Bump `yt-dlp` to 2026.3.17
+- Update and sync docs with current state
+- **readme**: Replace wiki links with local docs/ references
 
 ## [0.4.0] - 2026-05-07
 
