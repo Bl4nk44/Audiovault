@@ -3,20 +3,23 @@
 All notable changes to Audiovault will be documented in this file.
 ## [0.4.2] - 2026-05-18
 
-### Features
-
-- **docker**: Switch to pre-built Docker Hub images — users update with `docker compose pull && docker compose up -d`, no `git pull` needed
-- **docker**: Add `migrate` init-container that runs `alembic upgrade head` automatically before backend starts
-- **docker**: Add `docker-compose.dev.yml` override for local development builds with hot-reload
-
 ### Bug Fixes
 
-- **tests**: Fix `test_search_url_playlist_type` — patch `get_playlist_details` instead of `_request` to avoid DNS calls in unit tests
+- **docker**: Remove redundant env_file from migrate init-container
+- **tests**: Patch get_playlist_details instead of _request in playlist search test
+- **tests**: Add type annotation for playlist_data to satisfy mypy
 
 ### Documentation
 
-- Update `QUICKSTART.md` with pull-based update workflow, new Update and Developer Setup sections
-- Update `README.md` and `CONTRIBUTING.md` to reflect image-based delivery
+- **delivery**: Add image-based delivery design spec
+- **plans**: Add image-based delivery implementation plan
+- **quickstart**: Replace --build with pull workflow, add update + dev sections
+- Replace --build with pull workflow and dev override command
+
+### Features
+
+- **docker**: Switch to pre-built images, add migrate init-container
+- **docker**: Add docker-compose.dev.yml override for local builds
 
 ## [0.4.1] - 2026-05-15
 
