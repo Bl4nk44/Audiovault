@@ -443,7 +443,7 @@ async def test_search_url_artist_exception_returns_empty(service):
 
 @pytest.mark.asyncio
 async def test_search_url_playlist_type(service):
-    playlist_data = {
+    playlist_data: dict[str, object] = {
         "id": "pl1",
         "title": "PL",
         "image_url": None,
