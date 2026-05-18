@@ -18,8 +18,3 @@ services:
         - APP_VERSION=dev
     image: audiovault-frontend-dev
 
-  migrate:
-    build:
-      context: .
-      dockerfile: backend/Dockerfile
-    image: audiovault-backend-dev

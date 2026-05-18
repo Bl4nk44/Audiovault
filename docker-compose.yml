@@ -26,8 +26,6 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
-      migrate:
-        condition: service_completed_successfully
     networks:
       - audiovault-network
 
@@ -39,19 +37,6 @@ services:
       - "2137:8080"
     depends_on:
       - backend
-    networks:
-      - audiovault-network
-
-  migrate:
-    image: bl4nk404/audiovault:latest
-    container_name: audiovault-migrate
-    command: alembic upgrade head
-    environment:
-      - DATABASE_URL=postgresql+asyncpg://postgres:postgres@db:5432/audiovault
-    depends_on:
-      db:
-        condition: service_healthy
-    restart: "no"
     networks:
       - audiovault-network
 
