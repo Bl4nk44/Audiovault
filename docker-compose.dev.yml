@@ -1,0 +1,25 @@
+# Developer override — adds local build and hot-reload.
+# Usage: docker compose -f docker-compose.yml -f docker-compose.dev.yml up --build
+services:
+  backend:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    image: audiovault-backend-dev
+    volumes:
+      - ./backend:/app
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+
+  frontend:
+    build:
+      context: .
+      dockerfile: frontend/Dockerfile
+      args:
+        - APP_VERSION=dev
+    image: audiovault-frontend-dev
+
+  migrate:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    image: audiovault-backend-dev
