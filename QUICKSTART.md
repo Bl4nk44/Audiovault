@@ -29,8 +29,9 @@ cp .env.example .env
 ## Step 3: Start
 
 ```bash
-# Build and start all containers
-docker compose up -d --build
+# Pull the latest images and start all containers
+docker compose pull
+docker compose up -d
 
 # Wait ~30 seconds for startup...
 
@@ -44,6 +45,17 @@ docker compose ps
 2. **API Docs**: http://localhost:8000/docs
 3. **Username**: `admin`
 4. **Password**: The one you set in `.env` (Default: `admin` if not changed)
+
+## Step 5: Updating
+
+When a new version is released, pull the latest images and restart:
+
+```bash
+docker compose pull
+docker compose up -d
+```
+
+Migrations run automatically. No `git pull` needed — unless you want to update `.env` with new config options.
 
 ## 🎵 First Download
 
@@ -106,6 +118,16 @@ docker compose up -d
 - **[Configuration Options](https://github.com/Bl4nk44/Audiovault/wiki/Configuration)**
 - **[FAQ & Support](SUPPORT.md)**
 - **[Contributing](CONTRIBUTING.md)**
+
+## 🛠️ Developer Setup
+
+To build images locally from source:
+
+```bash
+docker compose -f docker-compose.yml -f docker-compose.dev.yml up --build
+```
+
+This uses `docker-compose.dev.yml` which adds `build:` overrides and backend hot-reload.
 
 ---
 
