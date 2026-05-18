@@ -46,8 +46,6 @@ services:
     image: bl4nk404/audiovault:latest
     container_name: audiovault-migrate
     command: alembic upgrade head
-    env_file:
-      - .env
     environment:
       - DATABASE_URL=postgresql+asyncpg://postgres:postgres@db:5432/audiovault
     depends_on:
