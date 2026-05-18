@@ -98,7 +98,8 @@ The recommended way to run Audiovault is via **Docker**.
 3. **Run with Docker**:
 
    ```bash
-   docker compose up -d --build
+   docker compose pull
+   docker compose up -d
    ```
 
    - **Frontend**: `http://localhost:2137`

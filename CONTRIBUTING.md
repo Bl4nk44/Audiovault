@@ -38,7 +38,7 @@ git remote add upstream https://github.com/Bl4nk44/Audiovault.git
 cp .env.example .env
 
 # Start
-docker compose up -d --build
+docker compose -f docker-compose.yml -f docker-compose.dev.yml up --build
 ```
 
 ### Pre-commit Hooks
