@@ -1,6 +1,17 @@
 # Changelog
 
 All notable changes to Audiovault will be documented in this file.
+## [0.4.3] - 2026-05-18
+
+### Bug Fixes
+
+- **store**: Guard `crypto.randomUUID` with SSR/jsdom fallback in notification and queue slices
+- **store**: Suppress `sonarjs/pseudo-random` on non-security `Math.random` ID fallback
+
+### Chores
+
+- **docker**: Remove redundant `migrate` service from docker-compose files
+
 ## [0.4.2] - 2026-05-18
 
 ### Bug Fixes
