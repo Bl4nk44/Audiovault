@@ -1,4 +1,9 @@
 import { type StateCreator } from "zustand";
+
+const generateId = (): string =>
+  typeof crypto !== "undefined" && typeof crypto.randomUUID === "function"
+    ? crypto.randomUUID()
+    : `${Date.now().toString(36)}-${Math.random().toString(36).slice(2)}`;
 import { type Download, type Track } from "../../types";
 import { downloadsApi } from "../../api/downloads";
 
@@ -21,7 +26,7 @@ export const createQueueSlice: StateCreator<QueueSlice> = (set) => ({
       downloadQueue: [
         ...state.downloadQueue,
         {
-          id: crypto.randomUUID(),
+          id: generateId(),
           track,
           progress: 0,
           status: "pending",

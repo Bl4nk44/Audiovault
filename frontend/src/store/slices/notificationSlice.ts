@@ -1,5 +1,10 @@
 import type { StateCreator } from "zustand";
 
+const generateId = (): string =>
+  typeof crypto !== "undefined" && typeof crypto.randomUUID === "function"
+    ? crypto.randomUUID()
+    : `${Date.now().toString(36)}-${Math.random().toString(36).slice(2)}`;
+
 export interface Notification {
   id: string;
   type: "success" | "error" | "info" | "warning";
@@ -24,7 +29,7 @@ export const createNotificationSlice: StateCreator<NotificationSlice> = (set) =>
   addNotification: (type, message) =>
     set((state) => {
       const newNotification: Notification = {
-        id: crypto.randomUUID(),
+        id: generateId(),
         type,
         message,
         timestamp: Date.now(),
