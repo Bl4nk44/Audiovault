@@ -1,8 +1,5 @@
 services:
   backend:
-    build:
-      context: .
-      dockerfile: backend/Dockerfile
     image: bl4nk404/audiovault:latest
     container_name: audiovault-backend
     restart: unless-stopped
@@ -29,15 +26,12 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
     networks:
       - audiovault-network
 
   frontend:
-    build:
-      context: .
-      dockerfile: frontend/Dockerfile
-      args:
-        - APP_VERSION=${APP_VERSION:-0.10.4}
     image: bl4nk404/audiovault-frontend:latest
     container_name: audiovault-frontend
     restart: unless-stopped
@@ -45,6 +39,21 @@ services:
       - "2137:8080"
     depends_on:
       - backend
+    networks:
+      - audiovault-network
+
+  migrate:
+    image: bl4nk404/audiovault:latest
+    container_name: audiovault-migrate
+    command: alembic upgrade head
+    env_file:
+      - .env
+    environment:
+      - DATABASE_URL=postgresql+asyncpg://postgres:postgres@db:5432/audiovault
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: "no"
     networks:
       - audiovault-network
 
