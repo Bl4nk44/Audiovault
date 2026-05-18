@@ -443,12 +443,16 @@ async def test_search_url_artist_exception_returns_empty(service):
 
 @pytest.mark.asyncio
 async def test_search_url_playlist_type(service):
-    with patch.object(
-        service,
-        "_request",
-        new_callable=AsyncMock,
-        return_value={"id": "pl1", "name": "PL", "images": [], "tracks": {"total": 5}},
-    ):
+    playlist_data = {
+        "id": "pl1",
+        "title": "PL",
+        "image_url": None,
+        "source": "spotify",
+        "type": "playlist",
+        "track_count": 5,
+        "tracks": [],
+    }
+    with patch.object(service, "get_playlist_details", new_callable=AsyncMock, return_value=playlist_data):
         result = await service.search("https://open.spotify.com/playlist/pl1")
     assert len(result) == 1
     assert result[0]["type"] == "playlist"
