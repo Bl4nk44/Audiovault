@@ -1,11 +1,13 @@
 import { type StateCreator } from "zustand";
 
+import { type Download, type Track } from "../../types";
+import { downloadsApi } from "../../api/downloads";
+
 const generateId = (): string =>
   typeof crypto !== "undefined" && typeof crypto.randomUUID === "function"
     ? crypto.randomUUID()
-    : `${Date.now().toString(36)}-${Math.random().toString(36).slice(2)}`;
-import { type Download, type Track } from "../../types";
-import { downloadsApi } from "../../api/downloads";
+    : // eslint-disable-next-line sonarjs/pseudo-random
+      `${Date.now().toString(36)}-${Math.random().toString(36).slice(2)}`;
 
 export interface QueueSlice {
   downloadQueue: Download[];
