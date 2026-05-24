@@ -1,6 +1,24 @@
 # Changelog
 
 All notable changes to Audiovault will be documented in this file.
+## [0.5.0] - 2026-05-24
+
+### Security
+
+- **auth**: Add authentication to `POST /import/playlist` endpoint — previously unauthenticated SSRF surface
+- **auth**: Add authentication to `POST /settings/verify/spotify` and `POST /settings/verify/youtube`
+- **auth**: Prevent user enumeration on registration — unify error to generic `"Registration failed"`
+- **ci**: Add `permissions: contents: read` to `ci.yml`, `docker-build.yml`, `agent-memory-validator.yml` (CKV2_GHA_1)
+
+### Dependencies
+
+- **backend**: Bump `python-multipart` to `>=0.0.29` (fixes GHSA-pp6c-gr5w-3c5g, CVSS 7.5)
+- **frontend**: Bump `engine.io-client` to `6.6.5` pulling `ws@8.20.1` (fixes GHSA-58qx-3vcg-4xpx)
+
+### Bug Fixes
+
+- **docker**: Change db/redis host ports to `15432`/`16379` to avoid conflicts with host-level PostgreSQL and Redis on WSL2
+
 ## [0.4.3] - 2026-05-18
 
 ### Bug Fixes

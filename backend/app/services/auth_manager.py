@@ -12,14 +12,14 @@ class AuthManager:
         self.db = db
 
     async def register_user(self, user_in: UserCreate) -> User:
-        # Check if user exists
+        # Check if user exists — generic message to prevent user enumeration
         result = await self.db.execute(select(User).where(User.email == user_in.email))
         if result.scalar_one_or_none():
-            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Email already registered")
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Registration failed")
 
         result = await self.db.execute(select(User).where(User.username == user_in.username))
         if result.scalar_one_or_none():
-            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Username already taken")
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Registration failed")
 
         # Create user
         user = User(

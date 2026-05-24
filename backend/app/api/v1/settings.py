@@ -34,7 +34,10 @@ class VerifyYouTube(BaseModel):
 
 
 @router.post("/verify/spotify", responses={400: {"description": "Bad request"}})
-async def verify_spotify(creds: VerifySpotify):
+async def verify_spotify(
+    creds: VerifySpotify,
+    _: Annotated[User, Depends(get_current_active_user)] = ...,
+):
     import asyncio
 
     import spotipy
@@ -55,7 +58,10 @@ async def verify_spotify(creds: VerifySpotify):
 
 
 @router.post("/verify/youtube", responses={400: {"description": "Bad request"}})
-async def verify_youtube(creds: VerifyYouTube):
+async def verify_youtube(
+    creds: VerifyYouTube,
+    _: Annotated[User, Depends(get_current_active_user)] = ...,
+):
     import httpx
 
     try:
