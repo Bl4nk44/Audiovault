@@ -1,6 +1,9 @@
 # Validate Claude Code configuration files for consistency and quality
 name: Claude Code Config Validator
 
+permissions:
+  contents: read
+
 on:
   pull_request:
     paths:

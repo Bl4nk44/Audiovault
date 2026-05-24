@@ -1,8 +1,11 @@
 import logging
+from typing import Annotated
 
+from app.core.dependencies import get_current_active_user
+from app.models.user import User
 from app.providers import provider_manager
 from app.schemas.metadata import PlaylistMetadata
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel, model_validator
 
 router = APIRouter()
@@ -62,7 +65,10 @@ class ImportRequest(BaseModel):
     response_model=PlaylistMetadata,
     responses={404: {"description": "Not found"}, 500: {"description": "Internal server error"}},
 )
-async def import_playlist(request: ImportRequest):
+async def import_playlist(
+    request: ImportRequest,
+    _: Annotated[User, Depends(get_current_active_user)] = ...,
+):
     """
     Import a playlist from a URL (Tidal, SoundCloud, Apple Music, etc.)
     using the Universal Provider system.

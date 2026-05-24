@@ -57,7 +57,7 @@ services:
       timeout: 5s
       retries: 5
     ports:
-      - "5432:5432"
+      - "15432:5432"
     networks:
       - audiovault-network
 
@@ -74,7 +74,7 @@ services:
       timeout: 5s
       retries: 5
     ports:
-      - "6379:6379"
+      - "16379:6379"
     networks:
       - audiovault-network
 
