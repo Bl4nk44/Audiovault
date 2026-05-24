@@ -38,7 +38,7 @@ async def test_register_email_already_registered(manager, mock_db):
         await manager.register_user(UserCreate(email="a@b.com", username="user", password="password123"))
 
     assert exc_info.value.status_code == 400
-    assert "Email" in exc_info.value.detail
+    assert exc_info.value.detail == "Registration failed"
 
 
 @pytest.mark.asyncio
@@ -53,7 +53,7 @@ async def test_register_username_already_taken(manager, mock_db):
         await manager.register_user(UserCreate(email="new@b.com", username="taken", password="password123"))
 
     assert exc_info.value.status_code == 400
-    assert "Username" in exc_info.value.detail
+    assert exc_info.value.detail == "Registration failed"
 
 
 # ─── refresh_access_token error paths ────────────────────────────────────────
