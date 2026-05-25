@@ -53,6 +53,9 @@ sonar-project.properties
 # Test Artifacts
 backend/coverage_report.txt
 frontend/lint_report.txt
+
+# SQLite databases (test/dev artifacts)
+backend/*.db
 .coverage
 htmlcov/
 coverage/
