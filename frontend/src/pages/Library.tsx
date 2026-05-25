@@ -799,6 +799,8 @@ export default function Library() {
 
   // Initialize: Fetch Folder Structure
   useEffect(() => {
+    // Async fetch handlers defined below; intentional effect-driven fetch (pre-TanStack pattern)
+    // eslint-disable-next-line react-hooks/immutability
     fetchFolders();
 
     // Listen for refresh events
@@ -810,9 +812,9 @@ export default function Library() {
   // Fetch items when selection changes or page changes
   useEffect(() => {
     if (viewMode === "playlist") {
+      // eslint-disable-next-line react-hooks/immutability
       fetchLibraryItems();
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [page, viewMode, selectedService, selectedPlaylist]);
 
   const fetchFolders = async () => {

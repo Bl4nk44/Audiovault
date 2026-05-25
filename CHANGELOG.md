@@ -1,6 +1,30 @@
 # Changelog
 
 All notable changes to Audiovault will be documented in this file.
+## [0.5.1] - 2026-05-25
+
+### Security
+
+- **ci**: Add Socket supply chain scan job to `security.yml` — detects malware, typosquats and risky dependencies in `package-lock.json` and `pyproject.toml`, complementing Trivy (known CVEs) with SCA (#99)
+- **frontend**: Bump `brace-expansion` to `5.0.6` (fixes CVE-2026-45149 / GHSA-jxxr-4gwj-5jf2, ReDoS, CVSS 6.5)
+
+### Dependencies
+
+- **frontend**: Update 45 packages within semver — `tailwindcss` 4.3, `eslint` 10.4, `@tanstack/react-query` 5.100, `react-router-dom` 7.15, `rollup` 4.60.4, `zustand` 5.0.13, `jsdom` 29.1.1, `date-fns` 4.3, `typescript-eslint` 8.59.4 and others
+
+### Bug Fixes
+
+- **frontend**: Resolve `eslint-plugin-react-hooks` 7.1 violations — `LyricsPanel` reset moved to render-time derivation, `Search` hook ordering fixed; effect-driven data fetches annotated pending TanStack Query migration
+
+### Chores
+
+- **docker**: Remove obsolete `docker/` directory
+- **tests**: Add auth headers to import route tests, fix auth error assertions
+
+### Documentation
+
+- **readme**: Add Socket.dev supply-chain protection badge
+
 ## [0.5.0] - 2026-05-24
 
 ### Security

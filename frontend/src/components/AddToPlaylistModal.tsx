@@ -38,10 +38,13 @@ const AddToPlaylistModal: React.FC<AddToPlaylistModalProps> = ({ isOpen, onClose
 
     if (isOpen) {
       fetchPlaylists();
+      // Reset transient form state when the modal opens — gated on isOpen, not derivable in render
+      /* eslint-disable react-hooks/set-state-in-effect */
       setSuccessMsg(null);
       setErrorMsg(null);
       setCreating(false);
       setNewPlaylistName("");
+      /* eslint-enable react-hooks/set-state-in-effect */
     }
   }, [isOpen, t]);
 
