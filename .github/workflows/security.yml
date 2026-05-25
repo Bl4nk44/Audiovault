@@ -224,6 +224,36 @@ jobs:
           path: trivy-secrets.sarif
 
   # ==============================================
+  # Socket.dev Supply Chain Scan (SCA)
+  # ==============================================
+  # Wykrywa malware, typosquat, ryzykowne/maintenance-risk deps w
+  # package-lock.json (root) i pyproject.toml (backend). Uzupełnia Trivy
+  # (znane CVE) o analizę supply chain. Wymaga sekretu SOCKET_CLI_API_TOKEN.
+  socket-scan:
+    name: Socket Supply Chain Scan
+    runs-on: ubuntu-latest
+    # Pomiń gdy brak sekretu (np. fork PR) — nie wywalaj buildu.
+    if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+
+      - name: Install Socket CLI
+        run: npm install -g @socketsecurity/cli
+
+      - name: Run Socket CI scan
+        env:
+          SOCKET_CLI_API_TOKEN: ${{ secrets.SOCKET_CLI_API_TOKEN }}
+        run: socket ci
+        continue-on-error: true
+
+  # ==============================================
   # License Compliance
   # ==============================================
   license-check:
