@@ -27,8 +27,9 @@ export default function SettingsPanel() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    // fetchSettings defined below; intentional effect-driven fetch (pre-TanStack pattern)
+    // eslint-disable-next-line react-hooks/immutability
     fetchSettings();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Apply theme immediately on change for preview

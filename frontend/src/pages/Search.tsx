@@ -95,6 +95,8 @@ export default function Search() {
     }
   };
 
+  const setSearchParams = useSearchParams()[1];
+
   /* eslint-disable react-hooks/exhaustive-deps */
   const handleSearch = useCallback(
     async (query: string, source: string, type: string) => {
@@ -150,8 +152,6 @@ export default function Search() {
     [searchParams] // Re-create when params change
   );
 
-  const setSearchParams = useSearchParams()[1];
-
   useEffect(() => {
     const queryParam = searchParams.get("q");
     const sourceParam = searchParams.get("source") || "all";
@@ -164,6 +164,8 @@ export default function Search() {
         sourceParam !== currentSource ||
         typeParam !== currentType
       ) {
+        // handleSearch syncs results to URL params (external state) — legit effect, not derivable in render
+        // eslint-disable-next-line react-hooks/set-state-in-effect
         handleSearch(queryParam, sourceParam, typeParam);
       }
     }

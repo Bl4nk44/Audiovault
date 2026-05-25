@@ -50,6 +50,8 @@ export default function DownloadQueue() {
   }, []);
 
   useEffect(() => {
+    // Initial + polled data fetch from the backend (external system) — belongs in an effect
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     fetchQueue();
     const interval = setInterval(fetchQueue, 2000);
 
