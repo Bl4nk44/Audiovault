@@ -6,11 +6,12 @@ that were causing issues (404s and compatibility problems).
 """
 
 import pytest
+from httpx import AsyncClient
+from sqlalchemy.ext.asyncio import AsyncSession
+
 from app.core.security import get_password_hash
 from app.models.artist import Artist
 from app.models.user import User
-from httpx import AsyncClient
-from sqlalchemy.ext.asyncio import AsyncSession
 
 
 @pytest.fixture

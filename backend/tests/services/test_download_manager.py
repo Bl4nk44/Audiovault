@@ -4,6 +4,7 @@ from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
+
 from app.schemas.download import DownloadCreate
 from app.services.download_manager import DownloadManager
 
@@ -51,9 +52,7 @@ async def test_dm_pause_resume_download(download_manager):
         mock_result.scalar_one_or_none.return_value = mock_download
         db_mock.execute.return_value = mock_result
 
-        # NOTE: db.commit is async in AsyncSession, but db.add is synchronous.
-        # Here we only use execute/commit which are async in previous code context?
-        # Actually in SQLAlchemy asyncio, execute is awaitable.
+        # db.commit/execute are async in AsyncSession; db.add is synchronous.
 
         await download_manager.resume_download(db_mock, download_id)
         assert download_id not in download_manager.paused_downloads

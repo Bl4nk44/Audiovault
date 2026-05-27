@@ -5,6 +5,7 @@ Tests for FallbackService to improve coverage.
 from unittest.mock import MagicMock
 
 import pytest
+
 from app.services.fallback_service import FallbackService
 
 

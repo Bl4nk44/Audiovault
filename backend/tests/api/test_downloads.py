@@ -1,6 +1,8 @@
 import uuid
 
 import pytest
+from httpx import AsyncClient
+from sqlalchemy.ext.asyncio import AsyncSession
 
 # Assuming client and db_session fixtures are from conftest.py
 from app.core.dependencies import get_current_active_user
@@ -8,8 +10,6 @@ from app.main import app
 from app.models.download import Download
 from app.models.track import Track
 from app.models.user import User
-from httpx import AsyncClient
-from sqlalchemy.ext.asyncio import AsyncSession
 
 
 @pytest.fixture
@@ -56,7 +56,6 @@ async def test_get_library(client: AsyncClient, db_session: AsyncSession, overri
     await db_session.commit()
 
     response = await client.get("/api/v1/downloads/library")
-    print(f"DEBUG: {response.text}")
     assert response.status_code == 200, f"Status code {response.status_code}, response: {response.text}"
     data = response.json()
     assert data["total"] == 1

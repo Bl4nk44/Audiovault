@@ -1,9 +1,14 @@
+import logging
 import os
 import shutil
 import time
 from typing import Annotated
 
 import aiofiles
+from fastapi import APIRouter, Depends, File, HTTPException, UploadFile
+from pydantic import BaseModel
+from sqlalchemy.ext.asyncio import AsyncSession
+
 from app.core.config import settings
 from app.core.dependencies import get_current_active_user
 from app.core.security import get_password_hash, verify_password
@@ -11,9 +16,8 @@ from app.db.database import get_db
 from app.models.schemas import UserResponse
 from app.models.user import User
 from app.utils.sanitization import sanitize_filename
-from fastapi import APIRouter, Depends, File, HTTPException, UploadFile
-from pydantic import BaseModel
-from sqlalchemy.ext.asyncio import AsyncSession
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter()
 
@@ -54,7 +58,7 @@ async def delete_user_me(
                 )  # nosemgrep: python.fastapi.file.tainted-path-traversal-stdlib-fastapi.tainted-path-traversal-stdlib-fastapi  # noqa: E501
             except Exception as e:
                 # Log error but proceed with account deletion
-                print(f"Failed to delete user library: {e}")
+                logger.error("Failed to delete user library: %s", e)
 
     # 2. Delete user from DB (Cascades will handle related data)
     await db.delete(current_user)

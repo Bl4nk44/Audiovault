@@ -5,6 +5,7 @@ Tests for WatchlistItemProcessor.
 from unittest.mock import AsyncMock, MagicMock
 
 import pytest
+
 from app.schemas.metadata import PlaylistMetadata, TrackMetadata
 from app.services.watchlist.processor import WatchlistItemProcessor
 

@@ -2,6 +2,7 @@ import uuid
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
+
 from app.models.track import Track
 from app.models.watchlist import Watchlist
 from app.models.watchlist_item import WatchlistItem

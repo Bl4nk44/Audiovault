@@ -2,12 +2,13 @@ import uuid
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
+from httpx import AsyncClient
+
 from app.api.v1 import stream
 from app.models.album import Album
 from app.models.download import Download
 from app.models.track import Track
 from app.models.user import User
-from httpx import AsyncClient
 
 
 @pytest.mark.asyncio

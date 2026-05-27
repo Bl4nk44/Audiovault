@@ -1,13 +1,14 @@
 import logging
 from typing import Annotated
 
+from fastapi import APIRouter, Depends
+from pydantic import BaseModel
+from sqlalchemy.ext.asyncio import AsyncSession
+
 from app.core.dependencies import get_current_active_user
 from app.db.database import get_db
 from app.models.user import User
 from app.schemas.metadata import TrackMetadata
-from fastapi import APIRouter, Depends
-from pydantic import BaseModel
-from sqlalchemy.ext.asyncio import AsyncSession
 
 router = APIRouter()
 logger = logging.getLogger(__name__)
@@ -30,8 +31,9 @@ async def resolve_track_metadata(
     Find or create a Track DB entry from metadata.
     Used by the playlist import flow to obtain a local UUID before queuing a download.
     """
-    from app.models.track import Track
     from sqlalchemy.future import select
+
+    from app.models.track import Track
 
     source = metadata.source or ""
     source_id = metadata.source_id or ""

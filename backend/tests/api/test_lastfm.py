@@ -1,6 +1,7 @@
 from unittest.mock import AsyncMock, patch
 
 import pytest
+
 from app.api.v1.lastfm import get_lastfm_service
 from app.main import app
 from app.services.lastfm_service import LastfmService
@@ -62,10 +63,7 @@ async def test_status_endpoint(client, admin_token_headers):
     response = await client.get("/api/v1/lastfm/status", headers=admin_token_headers)
     assert response.status_code == 200
     data = response.json()
-    # Assuming admin_user in tests/conftest.py doesn't have lastfm fields set initially
-    # But current_user comes from DB.
-    # The callback test should have set it?
-    # NOTE: tests run in isolation or sequence?
-    # client fixture uses db_session which rolls back after each function.
-    # So status should be False initially.
+    # admin_user in tests/conftest.py has no lastfm fields set initially.
+    # client fixture uses db_session which rolls back after each function,
+    # so status should be False initially.
     assert "connected" in data

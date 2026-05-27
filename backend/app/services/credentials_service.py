@@ -6,10 +6,11 @@ Provides methods to encrypt/decrypt credentials and migrate existing data.
 import logging
 from uuid import UUID
 
-from app.core.encryption import encryption_service
-from app.models.credentials import ServiceCredentials
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
+
+from app.core.encryption import encryption_service
+from app.models.credentials import ServiceCredentials
 
 logger = logging.getLogger(__name__)
 

@@ -5,8 +5,9 @@ Audit service for logging user actions.
 import logging
 from uuid import UUID
 
-from app.models.audit_log import AuditLog
 from sqlalchemy.ext.asyncio import AsyncSession
+
+from app.models.audit_log import AuditLog
 
 logger = logging.getLogger(__name__)
 

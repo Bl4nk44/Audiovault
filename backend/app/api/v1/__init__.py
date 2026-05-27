@@ -1,3 +1,5 @@
+from fastapi import APIRouter
+
 from app.api.v1 import (
     amazon_music,
     apple_music,
@@ -22,7 +24,6 @@ from app.api.v1 import (
     watchlist,
     youtube,
 )
-from fastapi import APIRouter
 
 api_router = APIRouter()
 api_router.include_router(auth.router, prefix="/auth", tags=["auth"])

@@ -94,9 +94,10 @@ class LyricsService:
         try:
             from uuid import UUID
 
+            from sqlalchemy import select
+
             from app.db.database import AsyncSessionLocal as SessionLocal
             from app.models.track import Track
-            from sqlalchemy import select
 
             async with SessionLocal() as db:
                 result = await db.execute(select(Track).where(Track.id == UUID(str(track_id))))

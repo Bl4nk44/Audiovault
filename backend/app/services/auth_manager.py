@@ -1,10 +1,11 @@
+from fastapi import HTTPException, status
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.future import select
+
 from app.core.config import settings
 from app.core.security import create_access_token, create_refresh_token, get_password_hash, verify_password
 from app.models.schemas import UserCreate, UserLogin
 from app.models.user import User
-from fastapi import HTTPException, status
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.future import select
 
 
 class AuthManager:
@@ -57,8 +58,9 @@ class AuthManager:
 
     async def refresh_access_token(self, refresh_token: str):
         import jwt
-        from app.core.config import settings
         from jwt import InvalidTokenError
+
+        from app.core.config import settings
 
         try:
             payload = jwt.decode(

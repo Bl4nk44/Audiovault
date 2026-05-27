@@ -1,12 +1,13 @@
 from typing import Annotated
 from uuid import UUID
 
+from fastapi import APIRouter, Body, Depends, HTTPException
+from sqlalchemy.ext.asyncio import AsyncSession
+
 from app.core.dependencies import get_current_active_user
 from app.db.database import get_db
 from app.models.user import User
 from app.services.sync_manager import sync_manager
-from fastapi import APIRouter, Body, Depends, HTTPException
-from sqlalchemy.ext.asyncio import AsyncSession
 
 router = APIRouter()
 

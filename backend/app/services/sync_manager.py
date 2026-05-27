@@ -4,6 +4,11 @@ import shutil
 from datetime import UTC, datetime
 from uuid import UUID, uuid4
 
+from sqlalchemy import delete, func
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.future import select
+from sqlalchemy.orm import joinedload
+
 from app.core.config import settings
 from app.models.download import Download
 from app.models.watchlist import Watchlist
@@ -11,10 +16,6 @@ from app.models.watchlist_item import WatchlistItem
 from app.providers import provider_manager
 from app.services.spotify_service import SpotifyService  # noqa: F401
 from app.services.youtube_service import YouTubeService
-from sqlalchemy import delete, func
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.future import select
-from sqlalchemy.orm import joinedload
 
 logger = logging.getLogger(__name__)
 

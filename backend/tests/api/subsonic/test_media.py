@@ -2,10 +2,11 @@ import uuid
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
-from app.models.download import Download
-from app.models.track import Track
 from fastapi import Response
 from httpx import AsyncClient
+
+from app.models.download import Download
+from app.models.track import Track
 
 
 @pytest.fixture

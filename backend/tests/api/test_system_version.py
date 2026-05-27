@@ -1,6 +1,7 @@
 from unittest.mock import patch
 
 import pytest
+
 from app.api.v1.system import check_for_updates
 
 

@@ -6,6 +6,7 @@ import uuid
 from unittest.mock import MagicMock, patch
 
 import pytest
+
 from app.services.library_scanner import UNKNOWN_ALBUM, UNKNOWN_ARTIST, LibraryScannerService
 
 

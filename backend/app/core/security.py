@@ -3,6 +3,7 @@ from typing import Any
 
 import bcrypt
 import jwt
+
 from app.core.config import settings
 
 ALGORITHM = settings.JWT_ALGORITHM

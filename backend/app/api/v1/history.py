@@ -1,14 +1,15 @@
 from typing import Annotated
 from uuid import UUID
 
+from fastapi import APIRouter, Depends, HTTPException
+from pydantic import BaseModel
+from sqlalchemy.ext.asyncio import AsyncSession
+
 from app.core.dependencies import get_current_active_user
 from app.db.database import get_db
 from app.models.history import ListeningHistory
 from app.models.track import Track
 from app.models.user import User
-from fastapi import APIRouter, Depends, HTTPException
-from pydantic import BaseModel
-from sqlalchemy.ext.asyncio import AsyncSession
 
 router = APIRouter()
 

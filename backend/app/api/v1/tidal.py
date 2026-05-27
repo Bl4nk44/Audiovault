@@ -1,9 +1,10 @@
 from typing import Annotated
 
+from fastapi import APIRouter, Depends
+
 from app.core.dependencies import get_current_active_user
 from app.models.user import User
 from app.services.tidal_service import tidal_service
-from fastapi import APIRouter, Depends
 
 router = APIRouter()
 

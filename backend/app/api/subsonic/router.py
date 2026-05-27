@@ -4,6 +4,10 @@ Main Subsonic API router.
 Mounts all Subsonic API handlers under /rest prefix.
 """
 
+import logging
+
+from fastapi import APIRouter, Depends, Request, Response
+
 from app.api.subsonic.handlers import (
     browse,
     info,
@@ -15,7 +19,8 @@ from app.api.subsonic.handlers import (
     system,  # Contains ping, getLicense, getToken
     user,
 )
-from fastapi import APIRouter, Depends, Request, Response
+
+logger = logging.getLogger(__name__)
 
 
 def log_subsonic_request(request: Request):
@@ -33,9 +38,8 @@ def log_subsonic_request(request: Request):
         with open("/app/subsonic_debug.log", "a") as f:
             f.write(log_line)
     except Exception as e:
-        print(f"Failed to write log: {e}")
-    # Still print for console
-    print(log_line, flush=True)
+        logger.warning("Failed to write subsonic debug log: %s", e)
+    logger.debug(log_line.rstrip())
 
 
 # Create main router with logging dependency
@@ -63,8 +67,8 @@ def catch_all_subsonic(request: Request, path_name: str):
         with open("/app/subsonic_debug.log", "a") as f:
             f.write(log_line)
     except Exception as e:
-        print(f"Failed to write log: {e}")
-    print(log_line)
+        logger.warning("Failed to write subsonic debug log: %s", e)
+    logger.debug(log_line.rstrip())
     return Response(
         content='<?xml version="1.0" encoding="UTF-8"?>\n'
         '<subsonic-response xmlns="http://subsonic.org/restapi" status="failed" version="1.16.1">'

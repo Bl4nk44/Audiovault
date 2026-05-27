@@ -7,14 +7,15 @@ from datetime import datetime
 from typing import Annotated
 from uuid import UUID
 
-from app.core.dependencies import get_current_active_user
-from app.db.database import get_db
-from app.models.audit_log import AuditLog
-from app.models.user import User
 from fastapi import APIRouter, Depends, HTTPException, Query
 from pydantic import BaseModel
 from sqlalchemy import desc, select
 from sqlalchemy.ext.asyncio import AsyncSession
+
+from app.core.dependencies import get_current_active_user
+from app.db.database import get_db
+from app.models.audit_log import AuditLog
+from app.models.user import User
 
 router = APIRouter()
 

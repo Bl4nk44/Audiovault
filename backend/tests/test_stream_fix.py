@@ -1,6 +1,7 @@
 from unittest.mock import patch
 
 import pytest
+
 from app.api.v1.stream import _extract_direct_url
 
 

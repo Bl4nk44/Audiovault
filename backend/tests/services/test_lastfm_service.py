@@ -2,6 +2,7 @@ from unittest.mock import AsyncMock, Mock
 
 import httpx
 import pytest
+
 from app.services.lastfm_service import LastfmAPIError, LastfmRateLimitError, LastfmService
 
 

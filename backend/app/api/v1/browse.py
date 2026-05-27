@@ -15,10 +15,11 @@ Endpoints:
 import logging
 from typing import Annotated
 
+from fastapi import APIRouter, Depends, HTTPException
+
 from app.core.dependencies import get_current_active_user
 from app.models.user import User
 from app.services.search_orchestrator import search_orchestrator
-from fastapi import APIRouter, Depends, HTTPException
 
 logger = logging.getLogger(__name__)
 

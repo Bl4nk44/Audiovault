@@ -3,18 +3,18 @@ from collections.abc import AsyncGenerator
 from unittest.mock import patch
 
 import pytest
-from app.db.base import Base
-from app.db.database import get_db
-from app.main import app
 from httpx import ASGITransport, AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 from sqlalchemy.pool import StaticPool
 
+from app.db.base import Base
+from app.db.database import get_db
+from app.main import app
+
+
 # pytest-asyncio 1.x: set default loop scope for all async fixtures/tests
 def pytest_configure(config):
-    config.addinivalue_line(
-        "markers", "asyncio: mark test as async"
-    )
+    config.addinivalue_line("markers", "asyncio: mark test as async")
 
 
 # Use in-memory SQLite for tests

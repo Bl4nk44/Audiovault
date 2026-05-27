@@ -5,6 +5,7 @@ from unittest.mock import AsyncMock, patch
 
 import anyio
 import pytest
+
 from app.models.download import Download
 from app.models.track import Track
 from app.models.watchlist import Watchlist

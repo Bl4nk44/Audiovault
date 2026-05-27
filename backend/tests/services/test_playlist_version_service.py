@@ -5,12 +5,13 @@ Tests for PlaylistVersionService.
 import uuid
 
 import pytest
+from sqlalchemy import select
+from sqlalchemy.orm import selectinload
+
 from app.models.playlist import Playlist, PlaylistTrack
 from app.models.playlist_version import PlaylistVersion
 from app.models.track import Track
 from app.services.playlist_version_service import playlist_version_service
-from sqlalchemy import select
-from sqlalchemy.orm import selectinload
 
 
 @pytest.fixture

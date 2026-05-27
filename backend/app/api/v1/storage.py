@@ -7,15 +7,16 @@ import os
 from datetime import UTC, datetime, timedelta
 from typing import Annotated
 
+from fastapi import APIRouter, Depends
+from pydantic import BaseModel
+from sqlalchemy import func, select
+from sqlalchemy.ext.asyncio import AsyncSession
+
 from app.core.config import settings
 from app.core.dependencies import get_current_active_user
 from app.db.database import get_db
 from app.models.download import Download
 from app.models.user import User
-from fastapi import APIRouter, Depends
-from pydantic import BaseModel
-from sqlalchemy import func, select
-from sqlalchemy.ext.asyncio import AsyncSession
 
 router = APIRouter()
 

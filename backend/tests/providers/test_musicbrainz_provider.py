@@ -5,6 +5,7 @@ Tests for MusicBrainzProvider — TDD Red Phase.
 from unittest.mock import AsyncMock, patch
 
 import pytest
+
 from app.providers.musicbrainz_provider import MusicBrainzProvider
 from app.schemas.metadata import TrackMetadata
 

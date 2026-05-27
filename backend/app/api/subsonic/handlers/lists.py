@@ -12,6 +12,10 @@ Handles list-based endpoints:
 from typing import Annotated
 from uuid import UUID
 
+from fastapi import APIRouter, Depends, Query
+from sqlalchemy import func, select
+from sqlalchemy.ext.asyncio import AsyncSession
+
 from app.api.subsonic.auth import subsonic_auth
 from app.api.subsonic.utils import (
     build_song_response,
@@ -24,9 +28,6 @@ from app.models.download import Download
 from app.models.track import Track
 from app.models.user import User
 from app.schemas.subsonic.base import subsonic_error, subsonic_response
-from fastapi import APIRouter, Depends, Query
-from sqlalchemy import func, select
-from sqlalchemy.ext.asyncio import AsyncSession
 
 router = APIRouter()
 

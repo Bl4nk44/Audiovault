@@ -4,6 +4,7 @@ from unittest.mock import AsyncMock, Mock, patch
 from uuid import uuid4
 
 import pytest
+
 from app.models.user import User
 from app.schemas.recommendation import RecommendedArtist, RecommendedTrack
 from app.services.lastfm_service import LastfmService

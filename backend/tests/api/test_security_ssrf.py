@@ -2,10 +2,11 @@ from unittest.mock import AsyncMock, patch
 from uuid import uuid4
 
 import pytest
-from app.models.album import Album
-from app.models.user import User
 from httpx import AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession
+
+from app.models.album import Album
+from app.models.user import User
 
 
 @pytest.mark.asyncio

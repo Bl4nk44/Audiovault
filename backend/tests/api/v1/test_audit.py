@@ -1,10 +1,11 @@
 import uuid
 
 import pytest
+from httpx import AsyncClient
+
 from app.core.security import create_access_token
 from app.models.audit_log import AuditLog
 from app.models.user import User
-from httpx import AsyncClient
 
 
 @pytest.mark.asyncio

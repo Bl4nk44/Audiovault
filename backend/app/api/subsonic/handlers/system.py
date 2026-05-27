@@ -11,6 +11,9 @@ Handles authentication and system info endpoints:
 from datetime import UTC, datetime
 from typing import Annotated
 
+from fastapi import APIRouter, Depends, Query
+from sqlalchemy.ext.asyncio import AsyncSession
+
 from app.api.subsonic.auth import (
     create_auth_token,
     get_user_by_username,
@@ -20,8 +23,6 @@ from app.core.security import verify_password
 from app.db.database import get_db
 from app.models.user import User
 from app.schemas.subsonic.base import subsonic_error, subsonic_response
-from fastapi import APIRouter, Depends, Query
-from sqlalchemy.ext.asyncio import AsyncSession
 
 router = APIRouter()
 

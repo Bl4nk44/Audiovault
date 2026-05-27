@@ -1,5 +1,6 @@
-from app.core.config import settings
 from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
+
+from app.core.config import settings
 
 # Convert postgresql:// to postgresql+asyncpg:// if needed
 DATABASE_URL = settings.DATABASE_URL

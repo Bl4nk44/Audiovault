@@ -3,9 +3,10 @@ import uuid
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
+from httpx import AsyncClient
+
 from app.core.security import get_password_hash
 from app.models.user import User
-from httpx import AsyncClient
 
 
 @pytest.fixture

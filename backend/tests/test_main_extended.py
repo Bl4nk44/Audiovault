@@ -2,8 +2,9 @@ import os
 import shutil
 
 import pytest
-from app.main import shutdown_event, startup_event
 from httpx import AsyncClient
+
+from app.main import shutdown_event, startup_event
 
 
 @pytest.mark.asyncio
@@ -44,9 +45,10 @@ async def test_main_lifecycle(db_session):
 
 @pytest.mark.asyncio
 async def test_setup_static_dirs():
+    from fastapi import FastAPI
+
     from app.core.config import settings
     from app.main import setup_static_dirs
-    from fastapi import FastAPI
 
     test_app = FastAPI()
     temp_dir = "/tmp/audiovault_test_static"

@@ -1,6 +1,7 @@
 from unittest.mock import AsyncMock, patch
 
 import pytest
+
 from app.providers.apple_music_provider import AppleMusicProvider
 from app.schemas.metadata import PlaylistMetadata, TrackMetadata
 

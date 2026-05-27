@@ -1,14 +1,15 @@
 import logging
 
+from apscheduler.schedulers.asyncio import AsyncIOScheduler
+from apscheduler.triggers.interval import IntervalTrigger
+from sqlalchemy import select
+
 from app.core.cache import cache_manager
 from app.db.database import AsyncSessionLocal
 from app.models.user import User
 from app.services.download_manager import download_manager
 from app.services.recommendation_engine import recommendation_engine
 from app.services.watchlist_engine import watchlist_engine
-from apscheduler.schedulers.asyncio import AsyncIOScheduler
-from apscheduler.triggers.interval import IntervalTrigger
-from sqlalchemy import select
 
 logger = logging.getLogger(__name__)
 

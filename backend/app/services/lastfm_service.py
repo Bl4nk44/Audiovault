@@ -6,6 +6,7 @@ from collections.abc import Coroutine
 from typing import Any, cast
 
 import httpx
+
 from app.core.config import settings
 from app.schemas.recommendation import RecommendedArtist, RecommendedTrack
 

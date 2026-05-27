@@ -5,6 +5,14 @@ from datetime import datetime as dt
 from typing import Annotated
 from uuid import UUID
 
+from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi.responses import Response
+from pydantic import BaseModel
+from sqlalchemy import delete, func, select
+from sqlalchemy.exc import IntegrityError
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import selectinload
+
 from app.core.dependencies import get_current_active_user
 from app.db.database import get_db
 from app.models.playlist import Playlist, PlaylistTrack
@@ -20,13 +28,6 @@ from app.schemas.playlist import (
     PlaylistUpdate,
 )
 from app.services.playlist_version_service import playlist_version_service
-from fastapi import APIRouter, Depends, HTTPException, status
-from fastapi.responses import Response
-from pydantic import BaseModel
-from sqlalchemy import delete, func, select
-from sqlalchemy.exc import IntegrityError
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.orm import selectinload
 
 router = APIRouter()
 logger = logging.getLogger(__name__)
@@ -399,7 +400,8 @@ async def remove_tracks_from_playlist(
 ):
     """
     Remove tracks from playlist.
-    NOTE: This implementation removes ALL occurrences of the specified track_ids from the playlist.
+
+    Removes all occurrences of the specified track_ids from the playlist.
     """
     query = select(Playlist).where(Playlist.id == playlist_id, Playlist.owner_id == current_user.id)
     result = await db.execute(query)

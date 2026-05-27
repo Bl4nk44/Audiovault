@@ -1,5 +1,10 @@
 from typing import Annotated
 
+from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi_limiter.depends import RateLimiter
+from pyrate_limiter import Limiter, Rate
+from sqlalchemy.ext.asyncio import AsyncSession
+
 from app.core.dependencies import get_current_active_user
 from app.db.database import get_db
 from app.models.schemas import (
@@ -11,10 +16,6 @@ from app.models.schemas import (
 )
 from app.models.user import User
 from app.services.auth_manager import AuthManager
-from fastapi import APIRouter, Depends, HTTPException, status
-from fastapi_limiter.depends import RateLimiter
-from pyrate_limiter import Limiter, Rate
-from sqlalchemy.ext.asyncio import AsyncSession
 
 register_limiter = RateLimiter(Limiter(Rate(5, 60000)))
 login_limiter = RateLimiter(Limiter(Rate(10, 60000)))

@@ -1,9 +1,10 @@
 import logging
 
-from app.core.security import get_password_hash
-from app.models.user import User
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
+
+from app.core.security import get_password_hash
+from app.models.user import User
 
 logger = logging.getLogger(__name__)
 
