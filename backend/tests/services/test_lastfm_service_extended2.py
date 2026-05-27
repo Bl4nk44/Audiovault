@@ -526,6 +526,22 @@ def test_build_recommended_artist_match_defaults_to_zero(svc):
     assert result.match == 0.0
 
 
+def test_build_recommended_artist_extracts_rank_from_top_artists(svc):
+    """TopArtists items carry @attr.rank (no match) → expose rank for UI badge."""
+    a = {"name": "Tool", "url": "x", "@attr": {"rank": "3"}}
+    result = svc._build_recommended_artist(a)
+    assert result is not None
+    assert result.match == 0.0
+    assert result.rank == 3
+
+
+def test_build_recommended_artist_rank_none_when_absent(svc):
+    """Recommended artists (with match, no @attr) leave rank=None."""
+    result = svc._build_recommended_artist({"name": "X", "match": "0.5"})
+    assert result is not None
+    assert result.rank is None
+
+
 # ===========================================================================
 # get_recommended_artists()
 # ===========================================================================

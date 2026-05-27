@@ -21,6 +21,7 @@ class RecommendedArtist(BaseModel):
     image_url: str | None = None
     mbid: str | None = None
     match: float = 0.0
+    rank: int | None = None
     tags: list[str] = []
 
 

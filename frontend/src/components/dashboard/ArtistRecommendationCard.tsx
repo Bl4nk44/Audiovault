@@ -15,6 +15,13 @@ const ArtistRecommendationCard: React.FC<ArtistRecommendationCardProps> = ({ art
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
 
+  let badgeLabel: string | null = null;
+  if (artist.match > 0) {
+    badgeLabel = `${Math.round(artist.match * 100)}% Match`;
+  } else if (artist.rank) {
+    badgeLabel = `#${artist.rank}`;
+  }
+
   const handleViewProfile = async () => {
     setLoading(true);
     try {
@@ -60,10 +67,10 @@ const ArtistRecommendationCard: React.FC<ArtistRecommendationCardProps> = ({ art
           </button>
         </div>
 
-        {/* Match Score Badge */}
-        {artist.match > 0 && (
+        {/* Match Score / Rank Badge */}
+        {badgeLabel && (
           <div className="absolute top-2 right-2 px-2 py-0.5 rounded-full bg-black/60 backdrop-blur text-[10px] font-bold text-primary border border-white/5">
-            {Math.round(artist.match * 100)}% Match
+            {badgeLabel}
           </div>
         )}
       </div>

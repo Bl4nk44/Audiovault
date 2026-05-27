@@ -213,12 +213,14 @@ class LastfmService:
         name = a.get("name")
         if not name:
             return None
+        rank_raw = a.get("@attr", {}).get("rank")
         return RecommendedArtist(
             name=name,
             url=a.get("url", ""),
             image_url=self._extract_best_image(a.get("image", [])),
             mbid=a.get("mbid"),
             match=float(a.get("match") or 0.0),
+            rank=int(rank_raw) if rank_raw else None,
         )
 
     async def get_recommended_artists(

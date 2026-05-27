@@ -16,6 +16,7 @@ export interface RecommendedArtist {
   image_url: string | null;
   mbid: string | null;
   match: number;
+  rank: number | null;
   tags: string[];
 }
 
