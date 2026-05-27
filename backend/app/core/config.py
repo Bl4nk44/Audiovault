@@ -37,7 +37,16 @@ class Settings(BaseSettings):
 
     ADMIN_EMAIL: str = "admin@example.com"
     ADMIN_USERNAME: str = "admin"
-    ADMIN_PASSWORD: str = "admin"
+    ADMIN_PASSWORD: str = "admin"  # noqa: S105
+
+    # Spotify — optional: your own app credentials (overrides embedded fallback)
+    SPOTIFY_CLIENT_ID: str | None = None
+    SPOTIFY_CLIENT_SECRET: str | None = None
+    # sp_dc cookie fallback (any free account, ~1 year TTL)
+    # How to get: open.spotify.com → DevTools → Application → Cookies → sp_dc
+    SPOTIFY_SP_DC: str | None = None
+    # Host proxy for embed scraping — run spotify-host-proxy.py on WSL2 host
+    SPOTIFY_HOST_PROXY: str | None = None
 
     # Genius API for lyrics
     GENIUS_API_TOKEN: str | None = None
@@ -59,7 +68,7 @@ class Settings(BaseSettings):
         "http://127.0.0.1:3000",
         "http://127.0.0.1:5173",
     ]
-    ALLOWED_HOSTS: list[str] | str = ["localhost", "127.0.0.1", "0.0.0.0"]  # nosec B104
+    ALLOWED_HOSTS: list[str] | str = ["localhost", "127.0.0.1", "0.0.0.0"]  # nosec B104  # noqa: S104
 
     @field_validator("BACKEND_CORS_ORIGINS", "ALLOWED_HOSTS", mode="before")
     @classmethod

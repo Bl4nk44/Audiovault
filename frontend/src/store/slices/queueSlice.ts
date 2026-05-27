@@ -1,6 +1,13 @@
 import { type StateCreator } from "zustand";
+
 import { type Download, type Track } from "../../types";
 import { downloadsApi } from "../../api/downloads";
+
+const generateId = (): string =>
+  typeof crypto !== "undefined" && typeof crypto.randomUUID === "function"
+    ? crypto.randomUUID()
+    : // eslint-disable-next-line sonarjs/pseudo-random
+      `${Date.now().toString(36)}-${Math.random().toString(36).slice(2)}`;
 
 export interface QueueSlice {
   downloadQueue: Download[];
@@ -21,7 +28,7 @@ export const createQueueSlice: StateCreator<QueueSlice> = (set) => ({
       downloadQueue: [
         ...state.downloadQueue,
         {
-          id: Math.random().toString(36).slice(2, 11), // Temp ID gen
+          id: generateId(),
           track,
           progress: 0,
           status: "pending",

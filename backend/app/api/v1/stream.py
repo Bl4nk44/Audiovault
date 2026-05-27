@@ -1,7 +1,7 @@
 import asyncio
 import logging
 import os
-from typing import Annotated, Optional
+from typing import Annotated
 from urllib.parse import urlparse
 
 import aiofiles
@@ -15,7 +15,7 @@ from app.db.database import get_db
 from app.models.album import Album
 from app.models.download import Download
 from app.models.track import Track
-from app.services.spotify_service import SpotifyService
+from app.services.deezer_service import DeezerService
 from app.services.youtube_service import YouTubeService
 from fastapi import APIRouter, Depends, HTTPException, Request
 from fastapi.responses import RedirectResponse, Response
@@ -28,7 +28,7 @@ router = APIRouter()
 logger = logging.getLogger(__name__)
 
 
-async def _resolve_local_cover_file(directory: str) -> tuple[Optional[bytes], Optional[str]]:
+async def _resolve_local_cover_file(directory: str) -> tuple[bytes | None, str | None]:
     """Check for local cover files and return content + mime type."""
     cover_names = ["cover.jpg", "folder.jpg", "cover.png", "folder.png", "artwork.jpg", "artwork.png"]
     for name in cover_names:
@@ -44,14 +44,14 @@ async def _resolve_local_cover_file(directory: str) -> tuple[Optional[bytes], Op
     return None, None
 
 
-def _extract_art_flac(audio) -> tuple[Optional[bytes], Optional[str]]:
+def _extract_art_flac(audio) -> tuple[bytes | None, str | None]:
     if hasattr(audio, "pictures") and audio.pictures:
         p = audio.pictures[0]
         return p.data, p.mime
     return None, None
 
 
-def _extract_art_id3(audio) -> tuple[Optional[bytes], Optional[str]]:
+def _extract_art_id3(audio) -> tuple[bytes | None, str | None]:
     if hasattr(audio, "tags") and isinstance(audio.tags, ID3):
         for tag in audio.tags.values():
             if isinstance(tag, APIC):
@@ -59,7 +59,7 @@ def _extract_art_id3(audio) -> tuple[Optional[bytes], Optional[str]]:
     return None, None
 
 
-def _extract_art_mp4(audio) -> tuple[Optional[bytes], Optional[str]]:
+def _extract_art_mp4(audio) -> tuple[bytes | None, str | None]:
     if hasattr(audio, "tags") and "covr" in audio.tags:
         covers = audio.tags["covr"]
         if covers:
@@ -71,7 +71,7 @@ def _extract_art_mp4(audio) -> tuple[Optional[bytes], Optional[str]]:
     return None, None
 
 
-def _extract_art_sync(path: str) -> tuple[Optional[bytes], Optional[str]]:
+def _extract_art_sync(path: str) -> tuple[bytes | None, str | None]:
     """Synchronous mutagen extraction logic."""
     try:
         audio = MutagenFile(path)
@@ -97,7 +97,7 @@ def _extract_art_sync(path: str) -> tuple[Optional[bytes], Optional[str]]:
     return None, None
 
 
-async def _extract_embedded_cover_art(file_path: str) -> tuple[Optional[bytes], Optional[str]]:
+async def _extract_embedded_cover_art(file_path: str) -> tuple[bytes | None, str | None]:
     """Run mutagen extraction in executor."""
     import functools
 
@@ -105,27 +105,31 @@ async def _extract_embedded_cover_art(file_path: str) -> tuple[Optional[bytes], 
     return await loop.run_in_executor(stream_executor, functools.partial(_extract_art_sync, file_path))
 
 
-async def _resolve_track_path(db: AsyncSession, track_id: str) -> tuple[Optional[Track], Optional[str]]:
+async def _resolve_track_path(db: AsyncSession, track_id: str) -> tuple[Track | None, str | None]:
     """Resolve Track and filesystem path."""
     import uuid
 
+    track: Track | None = None
+
     try:
         t_uuid = uuid.UUID(str(track_id))
-    except ValueError:
-        return None, None
+        # 1. Try to find track by local UUID
+        result = await db.execute(select(Track).where(Track.id == t_uuid))
+        track = result.scalar_one_or_none()
 
-    # 1. Try to find track content
-    result = await db.execute(select(Track).where(Track.id == t_uuid))
-    track: Track | None = result.scalar_one_or_none()
+        if not track:
+            # Try finding by download if track_id is actually download_id
+            result_dl = await db.execute(select(Download).where(Download.id == t_uuid))
+            dl_found: Download | None = result_dl.scalar_one_or_none()
+            if dl_found and dl_found.track:
+                track = dl_found.track
+    except ValueError:
+        # Not a UUID — try matching by deezer_id (numeric string from browse results)
+        result = await db.execute(select(Track).where(Track.deezer_id == track_id))
+        track = result.scalar_one_or_none()
 
     if not track:
-        # Try finding by download if track_id is actually download_id
-        result_dl = await db.execute(select(Download).where(Download.id == t_uuid))
-        dl_found: Download | None = result_dl.scalar_one_or_none()
-        if dl_found and dl_found.track:
-            track = dl_found.track
-        else:
-            return None, None
+        return None, None
 
     # 2. Resolve local file path via Download
     file_path: str | None = None
@@ -139,7 +143,7 @@ async def _resolve_track_path(db: AsyncSession, track_id: str) -> tuple[Optional
     return track, file_path
 
 
-async def _get_album_art_redirect(track: Track, db: AsyncSession) -> Optional[RedirectResponse]:
+async def _get_album_art_redirect(track: Track, db: AsyncSession) -> RedirectResponse | None:
     if not track.album_id:
         return None
     result = await db.execute(select(Album).where(Album.id == track.album_id))
@@ -193,7 +197,7 @@ async def get_album_cover(album_id: str, db: Annotated[AsyncSession, Depends(get
     try:
         a_uuid = uuid.UUID(str(album_id))
     except ValueError:
-        raise HTTPException(status_code=400, detail="Invalid album ID")
+        raise HTTPException(status_code=400, detail="Invalid album ID") from None
 
     result = await db.execute(select(Album).where(Album.id == a_uuid))
     album = result.scalar_one_or_none()
@@ -213,35 +217,60 @@ async def get_album_cover(album_id: str, db: Annotated[AsyncSession, Depends(get
     raise HTTPException(status_code=404, detail="No cover art found")
 
 
-async def _resolve_stream_url(track_id: str) -> str:
+async def _youtube_search_url(query: str) -> str | None:
+    """Search YouTube and return the first watch URL, or None."""
+    try:
+        import functools
+
+        loop = asyncio.get_event_loop()
+        youtube_service = YouTubeService()
+        results = await loop.run_in_executor(stream_executor, functools.partial(youtube_service.search, query, limit=1))
+        if results:
+            return f"https://www.youtube.com/watch?v={results[0]['id']}"
+    except Exception as e:
+        logger.error(f"YouTube search failed for '{query}': {e}")
+    return None
+
+
+async def _resolve_stream_url(track_id: str, db: AsyncSession) -> str:
     cached_url = await cache_manager.get(f"stream_url:{track_id}")
     if cached_url:
         return cached_url
 
-    youtube_url = None
-    if len(track_id) == 11:
+    youtube_url: str | None = None
+
+    # 1. Direct YouTube ID (exactly 11 alphanumeric chars)
+    if len(track_id) == 11 and track_id.replace("-", "").replace("_", "").isalnum():
         youtube_url = f"https://www.youtube.com/watch?v={track_id}"
     else:
-        # Spotify -> YouTube resolution
-        # 1. Get Spotify Metadata
-        service = SpotifyService()
-        track_info = await service.get_track(track_id)
+        # 2. Look up track in DB by any known external ID
+        db_track: Track | None = None
+        for col, val in [
+            (Track.spotify_id, track_id),
+            (Track.deezer_id, track_id),
+            (Track.youtube_id, track_id),
+        ]:
+            result = await db.execute(select(Track).where(col == val))
+            db_track = result.scalar_one_or_none()
+            if db_track:
+                break
 
-        if not track_info:
-            raise HTTPException(status_code=404, detail="Track not found")
+        if db_track:
+            if db_track.youtube_id:
+                youtube_url = f"https://www.youtube.com/watch?v={db_track.youtube_id}"
+            elif db_track.title and db_track.artist:
+                youtube_url = await _youtube_search_url(f"{db_track.artist} - {db_track.title}")
+        else:
+            # 3. Numeric ID → try Deezer public API (no auth needed, no rate limits)
+            if track_id.isdigit():
+                deezer = DeezerService()
+                deezer_track = await deezer.get_track(track_id)
+                if deezer_track:
+                    query = f"{deezer_track['artist']} - {deezer_track['title']}"
+                    youtube_url = await _youtube_search_url(query)
 
-        # 2. Search on YouTube
-        try:
-            youtube_service = YouTubeService()
-            query = f"{track_info['artist']} - {track_info['title']}"
-            results = youtube_service.search(query, limit=1)
-            if results:
-                youtube_url = f"https://www.youtube.com/watch?v={results[0]['id']}"
-            else:
-                raise HTTPException(status_code=404, detail="Stream not found")
-        except Exception as e:
-            logger.error(f"YouTube search failed: {e}")
-            raise HTTPException(status_code=404, detail="Stream not found") from e
+        if not youtube_url:
+            raise HTTPException(status_code=404, detail="Stream not found")
 
     await cache_manager.set(f"stream_url:{track_id}", youtube_url, expire=3600)
     return youtube_url
@@ -268,9 +297,13 @@ async def _extract_direct_url(youtube_url: str) -> tuple[str, dict]:
     "/{track_id}.mp3",
     responses={404: {"description": "Not found"}, 500: {"description": "Internal server error"}},
 )
-async def stream_track(track_id: str, request: Request):
+async def stream_track(
+    track_id: str,
+    request: Request,
+    db: Annotated[AsyncSession, Depends(get_db)] = ...,
+):
     try:
-        youtube_url = await _resolve_stream_url(track_id)
+        youtube_url = await _resolve_stream_url(track_id, db)
         url, headers = await _extract_direct_url(youtube_url)
 
         # Forward Range header from browser for seeking support

@@ -44,8 +44,10 @@ export const playlistsApi = {
   },
 
   getLocalById: async (id: string) => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const response = await api.get<Playlist & { tracks: any[] }>(`/playlists/${id}`);
     // Transform backend tracks to frontend Track interface if structure differs
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const tracks: Track[] = response.data.tracks.map((t: any) => ({
       id: t.track_id,
       title: t.title,

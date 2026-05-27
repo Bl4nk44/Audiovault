@@ -1,6 +1,6 @@
 from app.providers.base import MusicProvider
 from app.schemas.metadata import PlaylistMetadata, TrackMetadata
-from app.services.spotify_service import SpotifyService
+from app.services.spotify_service import SpotifyService  # noqa: F401
 
 
 class SpotifyProvider(MusicProvider):

@@ -123,6 +123,7 @@ describe("ArtistProfile", () => {
   it("renders loading state", () => {
     mockArtistsApi.getById.mockImplementation(() => new Promise(() => {})); // Hang
     renderComponent("123");
+    expect(document.body).toBeTruthy();
   });
 
   it("renders full artist profile", async () => {

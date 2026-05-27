@@ -1,6 +1,147 @@
 # Changelog
 
 All notable changes to Audiovault will be documented in this file.
+## [0.5.2] - 2026-05-27
+
+### Miscellaneous
+
+- Ignore SQLite db artifacts, untrack stray audiovault.db (#101)
+
+## [0.5.1] - 2026-05-25
+
+### Bug Fixes
+
+- **tests**: Add auth headers to import route tests, fix auth error assertions
+
+### CI/CD
+
+- **security**: Add Socket supply chain scan job
+
+### Miscellaneous
+
+- Remove obsolete docker/ directory
+
+## [0.4.3] - 2026-05-18
+
+### Bug Fixes
+
+- **store**: Guard crypto.randomUUID with SSR/test fallback
+- **store**: Suppress sonarjs/pseudo-random on Math.random fallback
+
+### Miscellaneous
+
+- **docker**: Remove migrate service from compose files
+
+## [0.4.2] - 2026-05-18
+
+### Bug Fixes
+
+- **docker**: Remove redundant env_file from migrate init-container
+- **tests**: Patch get_playlist_details instead of _request in playlist search test
+- **tests**: Add type annotation for playlist_data to satisfy mypy
+
+### Documentation
+
+- **delivery**: Add image-based delivery design spec
+- **plans**: Add image-based delivery implementation plan
+- **quickstart**: Replace --build with pull workflow, add update + dev sections
+- Replace --build with pull workflow and dev override command
+
+### Features
+
+- **docker**: Switch to pre-built images, add migrate init-container
+- **docker**: Add docker-compose.dev.yml override for local builds
+
+## [0.4.1] - 2026-05-15
+
+### Bug Fixes
+
+- **release**: Sync VERSION and pyproject.toml to 0.4.0
+- **models**: Move PlaylistTrack before Playlist to resolve F821 forward ref
+
+### Documentation
+
+- Update and sync docs with current state
+- **readme**: Replace wiki links with local docs/ references
+
+## [0.4.0] - 2026-05-07
+
+### Bug Fixes
+
+- **tests**: Switch Library tests to list mode and fix playlist delete title
+- **i18n**: Add missing keys and fix sidebar.recommendations mismatch
+- **tests**: Add mypy type annotations and method-assign ignores
+
+### Documentation
+
+- **readme**: Replace Snyk badge with Checkov, Aikido, OSV-Scanner, Nuclei
+- **readme**: Add Trivy badge
+- **contributing**: Update outdated contribution guidelines
+
+### Testing
+
+- **coverage**: Raise backend coverage from 79% to 85%
+
+## [0.3.1] - 2026-05-06
+
+### Bug Fixes
+
+- **ci**: Fix Ruff lint errors and add tag triggers to CI/security workflows
+- **ci**: Fix mypy type errors and failing frontend test
+- **tests**: Fix 35+ failing pytest tests after SpotifyService OAuth refactor
+
+### Documentation
+
+- **env**: Add Spotify OAuth env vars to .env.example
+
+### Features
+
+- **dashboard**: Show real-time network speed in SystemStats
+
+## [0.3.0] - 2026-05-06
+
+### Bug Fixes
+
+- **spotify**: Fix playlist import — provider order + missing resolve endpoint
+- **library**: Fix track delete URL — /downloads/remove/:id → /downloads/:id
+
+### Documentation
+
+- Update Spotify integration docs and add legal disclaimer
+
+### Release
+
+- **0.3.0**: Bump version and collect accumulated changes
+
+## [0.2.0] - 2026-05-04
+
+### Bug Fixes
+
+- **lint**: Fix all 81 ruff errors to pass CI
+- **lint**: Apply ruff format to 24 files
+- **mypy**: Fix all 227 mypy errors to pass CI
+- **tests**: Fix 12 failing pytest tests across 5 root causes
+- **lint**: Apply ruff format to spotify_service.py
+- **cache**: Await connect() in get/set/delete auto-connect calls
+- **logging**: Remove duplicate banner, add colors and cleaner format
+- **lint**: Apply ruff format to logger.py
+- **security**: Resolve SonarQube, OSV and Snyk findings
+- **ci**: Resolve all ruff, ESLint and build failures
+- **ci**: Resolve ruff N806/S105 and ESLint sonarjs/todo-tag failures
+- **tests**: Resolve Vitest Router context and Pytest deduplication failures
+- **ci**: Resolve Vitest link test and Docker Hub rate limit failures
+- **ci**: Remove dockerhub-description steps causing Forbidden error
+- **ci**: Restore dockerhub-description steps (token now has Delete scope)
+- **docker**: Switch postgres and redis to public.ecr.aws to avoid Docker Hub rate limits
+
+### Miscellaneous
+
+- Update .gitignore
+
+### Release
+
+- **0.2.0**: Bump version and fix startup race conditions
+
 ## [0.15.0] - 2026-04-18
 
 ### Bug Fixes

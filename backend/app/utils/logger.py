@@ -1,8 +1,9 @@
 import logging
 import sys
+from collections.abc import Iterable
 from logging.handlers import TimedRotatingFileHandler
 from pathlib import Path
-from typing import Iterable, cast
+from typing import cast
 
 from app.core.config import settings
 
@@ -36,10 +37,10 @@ _FILE_FORMAT = "%(asctime)s | %(levelname)-8s | %(name)-30s | %(message)s"
 
 
 def setup_logging():
-    BASE_DIR = Path(__file__).resolve().parent.parent.parent
-    LOGS_DIR = BASE_DIR / "logs"
+    BASE_DIR = Path(__file__).resolve().parent.parent.parent  # noqa: N806
+    LOGS_DIR = BASE_DIR / "logs"  # noqa: N806
     LOGS_DIR.mkdir(exist_ok=True)
-    LOG_FILE = LOGS_DIR / "audiovault.log"
+    LOG_FILE = LOGS_DIR / "audiovault.log"  # noqa: N806
 
     logging.getLogger("uvicorn.access").addFilter(HealthCheckFilter())
 

@@ -83,3 +83,103 @@ async def test_get_random_songs(client: AsyncClient, test_user: User, sample_tra
     assert data["subsonic-response"]["status"] == "ok"
     assert "randomSongs" in data["subsonic-response"]
     assert len(data["subsonic-response"]["randomSongs"]["song"]) > 0
+
+
+@pytest.mark.asyncio
+async def test_get_random_songs_admin(client: AsyncClient, admin_user):
+    """Use admin_user fixture (same pattern as other subsonic tests) to ensure coverage."""
+    params = {"u": admin_user.username, "p": "admin", "c": "pytest", "v": "1.16.1", "f": "json"}
+    response = await client.get("/rest/getRandomSongs.view", params=params)
+    assert response.status_code == 200
+    data = response.json()
+    assert data["subsonic-response"]["status"] == "ok"
+    assert "randomSongs" in data["subsonic-response"]
+
+
+@pytest.mark.asyncio
+async def test_get_top_songs(client: AsyncClient, test_user: User, sample_tracks):
+    response = await client.get("/rest/getTopSongs.view?u=testuser&p=testpass&c=test&v=1.16.1&f=json")
+    assert response.status_code == 200
+    data = response.json()
+    assert data["subsonic-response"]["status"] == "ok"
+    assert "topSongs" in data["subsonic-response"]
+
+
+@pytest.mark.asyncio
+async def test_get_top_songs_by_artist(client: AsyncClient, test_user: User, sample_tracks):
+    response = await client.get(
+        "/rest/getTopSongs.view?u=testuser&p=testpass&c=test&v=1.16.1&f=json&artist=Test+Artist"
+    )
+    assert response.status_code == 200
+    data = response.json()
+    assert data["subsonic-response"]["status"] == "ok"
+    assert "topSongs" in data["subsonic-response"]
+
+
+@pytest.mark.asyncio
+async def test_get_similar_songs_valid(client: AsyncClient, test_user: User, sample_tracks):
+    track_id = str(sample_tracks[0].id)
+    response = await client.get(
+        f"/rest/getSimilarSongs.view?u=testuser&p=testpass&c=test&v=1.16.1&f=json&id={track_id}"
+    )
+    assert response.status_code == 200
+    data = response.json()
+    assert data["subsonic-response"]["status"] == "ok"
+    assert "similarSongs" in data["subsonic-response"]
+
+
+@pytest.mark.asyncio
+async def test_get_similar_songs_invalid_id(client: AsyncClient, test_user: User):
+    response = await client.get("/rest/getSimilarSongs.view?u=testuser&p=testpass&c=test&v=1.16.1&f=json&id=not-a-uuid")
+    assert response.status_code == 200
+    data = response.json()
+    assert data["subsonic-response"]["status"] == "failed"
+    assert data["subsonic-response"]["error"]["code"] == 10
+
+
+@pytest.mark.asyncio
+async def test_get_similar_songs_not_found(client: AsyncClient, test_user: User):
+    import uuid
+
+    unknown_id = str(uuid.uuid4())
+    response = await client.get(
+        f"/rest/getSimilarSongs.view?u=testuser&p=testpass&c=test&v=1.16.1&f=json&id={unknown_id}"
+    )
+    assert response.status_code == 200
+    data = response.json()
+    assert data["subsonic-response"]["status"] == "failed"
+    assert data["subsonic-response"]["error"]["code"] == 70
+
+
+@pytest.mark.asyncio
+async def test_get_album_list_random_type(client: AsyncClient, test_user: User, sample_tracks):
+    response = await client.get("/rest/getAlbumList.view?type=random&u=testuser&p=testpass&c=test&v=1.16.1&f=json")
+    assert response.status_code == 200
+    data = response.json()
+    assert data["subsonic-response"]["status"] == "ok"
+
+
+@pytest.mark.asyncio
+async def test_get_album_list_alphabetical_type(client: AsyncClient, test_user: User, sample_tracks):
+    response = await client.get(
+        "/rest/getAlbumList.view?type=alphabetical&u=testuser&p=testpass&c=test&v=1.16.1&f=json"
+    )
+    assert response.status_code == 200
+    data = response.json()
+    assert data["subsonic-response"]["status"] == "ok"
+
+
+@pytest.mark.asyncio
+async def test_get_album_list_by_name_type(client: AsyncClient, test_user: User, sample_tracks):
+    response = await client.get("/rest/getAlbumList.view?type=byName&u=testuser&p=testpass&c=test&v=1.16.1&f=json")
+    assert response.status_code == 200
+    data = response.json()
+    assert data["subsonic-response"]["status"] == "ok"
+
+
+@pytest.mark.asyncio
+async def test_get_album_list_default_type(client: AsyncClient, test_user: User, sample_tracks):
+    response = await client.get("/rest/getAlbumList.view?type=starred&u=testuser&p=testpass&c=test&v=1.16.1&f=json")
+    assert response.status_code == 200
+    data = response.json()
+    assert data["subsonic-response"]["status"] == "ok"

@@ -3,7 +3,6 @@ Audit service for logging user actions.
 """
 
 import logging
-from typing import Optional
 from uuid import UUID
 
 from app.models.audit_log import AuditLog
@@ -23,13 +22,13 @@ class AuditService:
         db: AsyncSession,
         action: str,
         resource_type: str,
-        resource_id: Optional[UUID] = None,
-        user_id: Optional[UUID] = None,
-        details: Optional[dict] = None,
-        ip_address: Optional[str] = None,
-        user_agent: Optional[str] = None,
-        endpoint: Optional[str] = None,
-        method: Optional[str] = None,
+        resource_id: UUID | None = None,
+        user_id: UUID | None = None,
+        details: dict | None = None,
+        ip_address: str | None = None,
+        user_agent: str | None = None,
+        endpoint: str | None = None,
+        method: str | None = None,
     ) -> AuditLog:
         """
         Create a new audit log entry.
@@ -73,8 +72,8 @@ class AuditService:
     async def log_login(
         db: AsyncSession,
         user_id: UUID,
-        ip_address: Optional[str] = None,
-        user_agent: Optional[str] = None,
+        ip_address: str | None = None,
+        user_agent: str | None = None,
         success: bool = True,
     ) -> AuditLog:
         """Log a login attempt."""
@@ -92,7 +91,7 @@ class AuditService:
     async def log_logout(
         db: AsyncSession,
         user_id: UUID,
-        ip_address: Optional[str] = None,
+        ip_address: str | None = None,
     ) -> AuditLog:
         """Log a logout."""
         return await AuditService.log(
@@ -109,8 +108,8 @@ class AuditService:
         resource_type: str,
         resource_id: UUID,
         user_id: UUID,
-        details: Optional[dict] = None,
-        ip_address: Optional[str] = None,
+        details: dict | None = None,
+        ip_address: str | None = None,
     ) -> AuditLog:
         """Log a resource creation."""
         return await AuditService.log(
@@ -129,9 +128,9 @@ class AuditService:
         resource_type: str,
         resource_id: UUID,
         user_id: UUID,
-        old_values: Optional[dict] = None,
-        new_values: Optional[dict] = None,
-        ip_address: Optional[str] = None,
+        old_values: dict | None = None,
+        new_values: dict | None = None,
+        ip_address: str | None = None,
     ) -> AuditLog:
         """Log a resource update with before/after values."""
         return await AuditService.log(
@@ -150,8 +149,8 @@ class AuditService:
         resource_type: str,
         resource_id: UUID,
         user_id: UUID,
-        details: Optional[dict] = None,
-        ip_address: Optional[str] = None,
+        details: dict | None = None,
+        ip_address: str | None = None,
     ) -> AuditLog:
         """Log a resource deletion."""
         return await AuditService.log(

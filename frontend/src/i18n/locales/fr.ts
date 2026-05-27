@@ -16,7 +16,7 @@ export const fr = {
     library: "Ma Bibliothèque",
     downloads: "Téléchargements",
     settings: "Paramètres",
-    recommendations: "Recommandations",
+    discover: "Découvrir",
     logs: "Journaux",
   },
   logs: {
@@ -173,6 +173,7 @@ export const fr = {
     removeFromWatchlist: "Retirer de la liste",
     newItems: "nouveau",
     addToWatchlist: "Ajouter à la liste",
+    viewDetails: "Voir les détails",
   },
   recommendations: {
     title: "Découverte musicale",
@@ -183,5 +184,12 @@ export const fr = {
     connected: "Connexion réussie à Last.fm !",
     error: "Échec de la connexion à Last.fm",
     scrobbling: "Scrobbling activé",
+    profile: {
+      error: "Impossible de charger le profil",
+      artists: "Artistes",
+      tracks: "Titres",
+      albums: "Albums",
+      friends: "Amis",
+    },
   },
 };

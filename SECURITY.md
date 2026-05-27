@@ -38,15 +38,46 @@ The Audiovault team takes security vulnerabilities very seriously. We appreciate
 2. Rotate/revoke any exposed credentials
 3. We will help remove the information from the repository history
 
-### Known Vulnerabilities in Dependencies
+### Automated Security Tooling
 
-Audiovault uses the following security tools:
+Audiovault runs a layered set of security tools across CI/CD, pre-commit, and dependency monitoring. These tools keep the codebase, dependencies, container images, and secrets continuously scanned.
 
-- **Snyk** - Automated vulnerability scanning
-- **Dependabot** - Dependency updates and security alerts
-- **GitHub Security Advisories** - Tracking known vulnerabilities
+#### CI/CD — GitHub Actions (`.github/workflows/security.yml`)
 
-Both tools are configured to automatically create pull requests for security updates.
+Runs on every push/PR to `main` and `dev`, on `v*` tags, and on a weekly schedule (Sundays 02:00 UTC).
+
+| Tool | Type | What it scans |
+|------|------|---------------|
+| **Trivy** (filesystem) | SCA / vuln scan | Dependency CVEs across the repo (CRITICAL/HIGH/MEDIUM), SARIF + JSON artifacts |
+| **Trivy** (Docker image) | Container scan | Backend and frontend images built from their Dockerfiles |
+| **Trivy** (secret scanner) | Secret detection | Full git history — **fails the build** if secrets are found |
+| **Trivy** (license scanner) | License compliance | Flags HIGH/CRITICAL license risks in dependencies |
+| **Semgrep** | SAST | Static analysis via `.semgrep.yml` + `auto` ruleset, SARIF + JSON artifacts |
+| **Socket.dev** (`socket ci`) | Supply chain | Malware, typosquatting, and maintenance-risk dependencies (`package-lock.json`, `pyproject.toml`) |
+
+A **Security Summary** job aggregates Trivy, Semgrep, and secret-scan results, emails a report (on scheduled runs or any failure), and fails the pipeline if secrets are detected.
+
+#### Dependency Monitoring
+
+| Tool | Type | Notes |
+|------|------|-------|
+| **Dependabot** (`.github/dependabot.yml`) | Dependency alerts | Monitors npm, pip, Docker base images, and GitHub Actions weekly. Configured **alerts-only** (`open-pull-requests-limit: 0`) — no automatic PRs; review in Security → Dependabot alerts |
+| **Weekly Dependency Report** (`.github/workflows/dependency-report.yml`) | Audit report | Runs `pip-audit` (Python) and `npm audit` (frontend) every Monday, opens a GitHub issue with outdated packages, CVEs, and Docker base-image versions |
+| **GitHub Security Advisories** | Advisory tracking | Tracks known vulnerabilities affecting the project |
+
+#### Pre-commit & Local Developer Hooks (`.pre-commit-config.yaml`)
+
+Run locally before code reaches CI:
+
+| Tool | Type | Scope |
+|------|------|-------|
+| **ggshield** (GitGuardian) | Secret scanning | Runs on `git commit` via a global git hook |
+| **Semgrep** | SAST | `.semgrep.yml` ruleset, excludes `backend/tests` |
+| **Ruff** | Lint + format | Python (`backend/`) |
+| **ESLint** | Lint | TypeScript/React (`frontend/src/`) |
+| **detect-private-key** + base hooks | Hygiene | Private-key detection, merge-conflict / YAML / JSON checks, trailing whitespace |
+
+> **Note:** SECURITY.md previously listed Snyk — that tool is **not** used. Vulnerability scanning is handled by Trivy, Socket.dev, Dependabot, and the weekly `pip-audit`/`npm audit` report.
 
 ## Security Best Practices for Users
 
@@ -213,7 +244,9 @@ We follow the responsible disclosure principle:
 - [OWASP Security Testing Guide](https://owasp.org/www-project-web-security-testing-guide/)
 - [CWE/SANS Top 25](https://cwe.mitre.org/top25/)
 - [NIST Cybersecurity Framework](https://www.nist.gov/cyberframework)
-- [Snyk Security Knowledge Base](https://snyk.io/learn/)
+- [Trivy Documentation](https://trivy.dev/)
+- [Semgrep Rules Registry](https://semgrep.dev/explore)
+- [Socket.dev](https://socket.dev/)
 
 ---
 

@@ -3,6 +3,17 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import pytest
 from app.services.deezer_service import DeezerService
 
+# Deezer returns HTTP 200 with this body when the rate-limit quota is hit
+DEEZER_QUOTA_ERROR = {"error": {"type": "Exception", "message": "Quota limit exceeded", "code": 4}, "data": []}
+
+
+def _cm(json_payload, status: int = 200):
+    """Build an async-context-manager mock for aiohttp ClientSession.get."""
+    resp = MagicMock()
+    resp.status = status
+    resp.json = AsyncMock(return_value=json_payload)
+    return MagicMock(__aenter__=AsyncMock(return_value=resp))
+
 
 @pytest.fixture
 def deezer_service():
@@ -128,5 +139,60 @@ async def test_deezer_get_artist_details(deezer_service):
         details = await deezer_service.get_artist_details("789")
 
         assert details["name"] == "Mega Artist"
-        assert len(details["top_tracks"]) == 1
+        assert len(details["tracks"]) == 1
         assert len(details["albums"]) == 1
+
+
+@pytest.mark.asyncio
+async def test_search_playlists_retries_on_quota_error(deezer_service):
+    """Deezer quota error (HTTP 200 + code 4) must trigger a retry, not a silent empty list."""
+    ok = {
+        "data": [{"id": 99, "title": "Paluch Mix", "nb_tracks": 25, "link": "http://x", "picture_medium": "http://i"}]
+    }
+
+    with patch("asyncio.sleep", new=AsyncMock()), patch("aiohttp.ClientSession.get") as mock_get:
+        mock_get.side_effect = [_cm(DEEZER_QUOTA_ERROR), _cm(ok)]
+
+        results = await deezer_service.search_playlists("Paluch")
+
+        assert mock_get.call_count == 2  # retried after the quota error
+        assert len(results) == 1
+        assert results[0]["id"] == "99"
+        assert results[0]["track_count"] == 25
+
+
+@pytest.mark.asyncio
+async def test_search_playlists_quota_never_clears_returns_empty(deezer_service):
+    """If quota stays exhausted across all retries, return [] cleanly (no crash)."""
+    with patch("asyncio.sleep", new=AsyncMock()), patch("aiohttp.ClientSession.get") as mock_get:
+        mock_get.side_effect = [_cm(DEEZER_QUOTA_ERROR) for _ in range(10)]
+
+        results = await deezer_service.search_playlists("Paluch")
+
+        assert results == []
+        assert mock_get.call_count >= 2  # attempted retries before giving up
+
+
+@pytest.mark.asyncio
+async def test_search_retries_on_quota_error(deezer_service):
+    """Track search must also recover from a transient quota error."""
+    ok = {
+        "data": [
+            {
+                "id": 5,
+                "title": "Song",
+                "artist": {"name": "A"},
+                "album": {"title": "Alb", "cover_medium": "http://c"},
+                "duration": 100,
+            }
+        ]
+    }
+
+    with patch("asyncio.sleep", new=AsyncMock()), patch("aiohttp.ClientSession.get") as mock_get:
+        mock_get.side_effect = [_cm(DEEZER_QUOTA_ERROR), _cm(ok)]
+
+        results = await deezer_service.search("query")
+
+        assert mock_get.call_count == 2
+        assert len(results) == 1
+        assert results[0]["id"] == "5"

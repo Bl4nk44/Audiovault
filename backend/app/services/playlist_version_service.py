@@ -3,7 +3,6 @@ Playlist versioning service for creating and managing version history.
 """
 
 import logging
-from typing import Optional
 from uuid import UUID
 
 from app.models.playlist import Playlist, PlaylistTrack
@@ -34,8 +33,8 @@ class PlaylistVersionService:
         db: AsyncSession,
         playlist: Playlist,
         change_type: str,
-        user_id: Optional[UUID] = None,
-        change_details: Optional[dict] = None,
+        user_id: UUID | None = None,
+        change_details: dict | None = None,
     ) -> PlaylistVersion:
         """
         Create a version snapshot of the playlist's current state.
@@ -98,7 +97,7 @@ class PlaylistVersionService:
         db: AsyncSession,
         playlist_id: UUID,
         version_number: int,
-    ) -> Optional[PlaylistVersion]:
+    ) -> PlaylistVersion | None:
         """Get a specific version of a playlist."""
         result = await db.execute(
             select(PlaylistVersion).where(

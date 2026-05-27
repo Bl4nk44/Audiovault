@@ -12,7 +12,7 @@
 > from .user import User
 > from .watchlist import Watchlist
 > from .watchlist_item import WatchlistItem
-  
+
 > __all__ = [
 >     "User",
 >     "Artist",

@@ -26,18 +26,33 @@ patch_tags = ["fix", "perf", "chore"]
 [project]
 name = "audiovault"
 description = "Self-hosted application for importing, managing, and downloading music from major streaming platforms"
-version = "0.10.4"
+version = "0.4.2"
 
 [tool.ruff]
 line-length = 120
-target-version = "py312"
+target-version = "py314"
 
 [tool.ruff.lint]
-select = ["E", "F", "W", "I"]
-ignore = []
+select = [
+  "E", "F", "W",  # pycodestyle + pyflakes
+  "S",             # flake8-bandit (security)
+  "B",             # flake8-bugbear (bugs + design issues)
+  "I",             # isort
+  "UP",            # pyupgrade (modern Python syntax)
+  "N",             # pep8-naming
+]
+ignore = [
+  "S101",  # allow assert
+  "S311",  # allow random (non-security use)
+  "S603",  # subprocess without shell — intentional
+  "S607",  # partial path executable — intentional (ffmpeg, aria2)
+]
+
+[tool.ruff.lint.per-file-ignores]
+"backend/tests/**" = ["S"]
 
 [tool.mypy]
-python_version = "3.12"
+python_version = "3.14"
 ignore_missing_imports = true
 disallow_untyped_calls = false
 disallow_untyped_defs = false
@@ -64,7 +79,7 @@ exclude = [
     "backend/.venv",
     "backend/tests",
 ]
-pythonVersion = "3.12"
+pythonVersion = "3.14"
 typeCheckingMode = "basic"
 venvPath = "."
 venv = ".venv"

@@ -21,6 +21,13 @@ export default function LyricsPanel({ isOpen, onClose, currentTime }: LyricsPane
   const { currentTrack } = useStore();
   const scrollRef = useRef<HTMLDivElement>(null);
   const [refreshCount, setRefreshCount] = useState(0);
+  const [prevTrackId, setPrevTrackId] = useState(currentTrack?.id);
+
+  // Reset refresh count when track changes — adjust state during render (no effect needed)
+  if (currentTrack?.id !== prevTrackId) {
+    setPrevTrackId(currentTrack?.id);
+    setRefreshCount(0);
+  }
 
   // Helper to clean artist/title for better search results
   const cleanSearchTerm = (term: string, counterpart?: string) => {
@@ -75,14 +82,6 @@ export default function LyricsPanel({ isOpen, onClose, currentTime }: LyricsPane
   const handleRefresh = () => {
     setRefreshCount((prev) => prev + 1);
   };
-
-  // Reset refresh count when track changes
-  useEffect(() => {
-    if (refreshCount !== 0) {
-      setRefreshCount(0);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [currentTrack?.id]);
 
   // Robust LRC Parser
   const parseLrc = (lrc: string): LrcLine[] => {

@@ -1,5 +1,5 @@
 import logging
-from typing import Any, Optional
+from typing import Any
 
 import socketio
 
@@ -21,7 +21,7 @@ class SocketManager:
         async def disconnect(sid):
             self.logger.info(f"Socket disconnected: {sid}")
 
-    async def emit(self, event: str, data: Any, room: Optional[str] = None):
+    async def emit(self, event: str, data: Any, room: str | None = None):
         await self.sio.emit(event, data, room=room)
 
 

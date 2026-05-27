@@ -1,6 +1,7 @@
 import asyncio
 import logging
 
+import aiofiles
 import httpx
 
 # Configure logging
@@ -10,7 +11,7 @@ logger = logging.getLogger(__name__)
 BASE_URL = "http://localhost:8000"
 # Default credentials (from init_data.py usually)
 USERNAME = "admin"  # nosec B105
-PASSWORD = "admin"  # nosec B105
+PASSWORD = "admin"  # nosec B105  # nosonar  # noqa: S105
 
 
 async def verify_api():
@@ -90,7 +91,7 @@ async def verify_api():
 
         # 4. Test Subsonic API
         logger.info("🎵 Testing Subsonic API...")
-        SUBSONIC_PARAMS = {
+        SUBSONIC_PARAMS = {  # noqa: N806
             "u": USERNAME,
             "p": PASSWORD,  # Plaintext for simplicity in test
             "v": "1.16.1",
@@ -156,9 +157,6 @@ async def verify_api():
         except Exception as e:
             logger.error(f"❌ Subsonic getIndexes Error: {e}")
 
-        except Exception as e:
-            logger.error(f"❌ Subsonic getIndexes Error: {e}")
-
         # 5. Fetch System Logs to debug the reported crash
         logger.info("📜 Fetching System Logs via API...")
         try:
@@ -173,8 +171,8 @@ async def verify_api():
                     logs = data.get("logs", "")
 
                 logger.info(f"✅ Fetched {len(logs)} characters of logs")
-                with open("/app/fetched_logs.txt", "w", encoding="utf-8") as f:
-                    f.write(logs)
+                async with aiofiles.open("/app/fetched_logs.txt", "w", encoding="utf-8") as f:
+                    await f.write(logs)
             else:
                 logger.error(f"❌ Failed to fetch logs: {response.status_code}")
         except Exception as e:

@@ -13,7 +13,6 @@ export const isValidImageUrl = (url: string | undefined | null): boolean => {
     // but strict validation prefers full URLs with valid protocols for external content.
     // For local assets (starting with /), we can allow them if needed,
     // but ArtistProfile mostly deals with external CDN links.
-    if (url.startsWith("/")) return true;
-    return false;
+    return url.startsWith("/");
   }
 };

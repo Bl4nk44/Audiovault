@@ -1,8 +1,5 @@
 services:
   backend:
-    build:
-      context: .
-      dockerfile: backend/Dockerfile
     image: bl4nk404/audiovault:latest
     container_name: audiovault-backend
     restart: unless-stopped
@@ -13,6 +10,7 @@ services:
       # No code mounts in production
     ports:
       - "8000:8000"
+      - "9900:9900"
     env_file:
       - .env
     environment:
@@ -32,11 +30,6 @@ services:
       - audiovault-network
 
   frontend:
-    build:
-      context: .
-      dockerfile: frontend/Dockerfile
-      args:
-        - APP_VERSION=${APP_VERSION:-0.10.4}
     image: bl4nk404/audiovault-frontend:latest
     container_name: audiovault-frontend
     restart: unless-stopped
@@ -48,7 +41,7 @@ services:
       - audiovault-network
 
   db:
-    image: postgres:16-alpine
+    image: public.ecr.aws/docker/library/postgres:16-alpine
     container_name: audiovault-db
     restart: always
     volumes:
@@ -64,12 +57,12 @@ services:
       timeout: 5s
       retries: 5
     ports:
-      - "5432:5432"
+      - "15432:5432"
     networks:
       - audiovault-network
 
   redis:
-    image: redis:8-alpine
+    image: public.ecr.aws/docker/library/redis:8-alpine
     container_name: audiovault-redis
     restart: always
     command: redis-server --appendonly yes
@@ -81,7 +74,7 @@ services:
       timeout: 5s
       retries: 5
     ports:
-      - "6379:6379"
+      - "16379:6379"
     networks:
       - audiovault-network
 

@@ -1,7 +1,7 @@
 import { type StateCreator } from "zustand";
 import { type Track } from "../../types";
 
-export type VisualizerMode = "classic" | "wave" | "circle" | "particles" | "glow";
+export type VisualizerMode = "classic" | "mirror" | "spectrum" | "pulse" | "glow";
 
 export interface PlayerSlice {
   currentTrack: Track | null;

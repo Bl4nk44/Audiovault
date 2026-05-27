@@ -13,6 +13,8 @@ from uvicorn.middleware.proxy_headers import ProxyHeadersMiddleware
 from app import models  # noqa: F401 - Ensure models are registered
 from app.api.subsonic import router as subsonic_router
 from app.api.v1 import (
+    amazon_music,
+    apple_music,
     artists,
     audit,
     auth,
@@ -24,7 +26,9 @@ from app.api.v1 import (
     import_routes,
     lastfm,
     lyrics,
+    metadata_routes,  # noqa: E402
     playlists,
+    soundcloud,
     spotify,
     storage,
     stream,
@@ -102,6 +106,10 @@ application.include_router(playlists.router, prefix="/api/v1/playlists", tags=["
 application.include_router(storage.router, prefix="/api/v1/storage", tags=["storage"])
 application.include_router(tidal.router, prefix="/api/v1/tidal", tags=["tidal"])
 application.include_router(lastfm.router, prefix="/api/v1/lastfm", tags=["lastfm"])
+application.include_router(metadata_routes.router, prefix="/api/v1/metadata", tags=["metadata"])
+application.include_router(amazon_music.router, prefix="/api/v1/amazon_music", tags=["amazon_music"])
+application.include_router(apple_music.router, prefix="/api/v1/apple_music", tags=["apple_music"])
+application.include_router(soundcloud.router, prefix="/api/v1/soundcloud", tags=["soundcloud"])
 
 # Subsonic API (compatible with Sonixd, Amperfy, DSub, etc.)
 application.include_router(subsonic_router)
@@ -130,7 +138,7 @@ def setup_static_dirs(app: FastAPI):
         if not os.path.exists(settings.DOWNLOAD_DIR):
             os.makedirs(settings.DOWNLOAD_DIR, exist_ok=True)
         # nosemgrep: python.lang.security.audit.insecure-file-permissions.insecure-file-permissions
-        os.chmod(settings.DOWNLOAD_DIR, 0o755)  # nosec B103  # NOSONAR
+        os.chmod(settings.DOWNLOAD_DIR, 0o755)  # nosec B103  # NOSONAR  # noqa: S103
     except Exception as e:
         logger.warning(f"Could not setup {settings.DOWNLOAD_DIR}: {e}")
 
@@ -200,25 +208,33 @@ async def startup_event():
     sys.stdout.write(_BANNER)
     sys.stdout.flush()
 
-    # Database setup with retry logic
+    # Wait for DB to be ready (connection errors only, not migration errors)
+    from sqlalchemy import text
+
     retries = 5
     for i in range(retries):
         try:
-            # Run Alembic migrations (creates/updates tables and columns)
-            _run_alembic_upgrade()
-            logger.info("✅ Alembic migrations applied successfully")
+            async with engine.connect() as conn:
+                await conn.execute(text("SELECT 1"))
             break
-        except Exception as e:
+        except Exception:
             if i == retries - 1:
-                logger.warning(f"⚠️ Alembic migration failed: {e}. Falling back to create_all.")
-                async with engine.begin() as conn:
-                    await conn.run_sync(Base.metadata.create_all)
-                # Stamp to head so subsequent restarts don't re-run failed migrations.
-                _run_alembic_stamp_head()
-                logger.info("✅ DB stamped to head after create_all fallback")
-            else:
-                logger.info(f"Database not ready, retrying in 2 seconds... ({i + 1}/{retries})")
-                await asyncio.sleep(2)
+                logger.error("❌ Database not reachable after %d attempts", retries)
+                raise
+            logger.info("Database not ready, retrying in 2 seconds... (%d/%d)", i + 1, retries)
+            await asyncio.sleep(2)
+
+    # Run migrations — DB is ready; fall back to create_all if migrations fail
+    try:
+        _run_alembic_upgrade()
+        logger.info("✅ Alembic migrations applied successfully")
+    except Exception as e:
+        logger.warning("⚠️ Alembic migration failed: %s. Falling back to create_all.", e)
+        async with engine.begin() as conn:
+            await conn.run_sync(Base.metadata.create_all)
+        # Stamp to head so subsequent restarts don't re-run failed migrations.
+        _run_alembic_stamp_head()
+        logger.info("✅ DB stamped to head after create_all fallback")
 
     # Init data
     async with AsyncSessionLocal() as session:
@@ -227,14 +243,22 @@ async def startup_event():
         await download_manager.resume_pending_downloads(session)
 
     # Connect to Redis
-    cache_manager.connect()
+    await cache_manager.connect()
 
     # Start Scheduler
     scheduler_service.start()
 
+    # Start Spotify OAuth callback server on :9900
+    from app.services.spotify_service import spotify_service as _spotify_service
+
+    await _spotify_service.start_oauth_server()
+
 
 @application.on_event("shutdown")
 async def shutdown_event():
+    from app.services.spotify_service import spotify_service as _spotify_service
+
+    await _spotify_service.stop_oauth_server()
     await cache_manager.close()
     scheduler_service.stop()
 

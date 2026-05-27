@@ -13,6 +13,20 @@ if TYPE_CHECKING:
     from app.models.user import User
 
 
+class PlaylistTrack(Base):
+    __tablename__ = "playlist_tracks"
+
+    __table_args__ = (Index("ix_playlist_tracks_order", "playlist_id", "order"),)
+
+    playlist_id: Mapped[UUID] = mapped_column(Uuid(as_uuid=True), ForeignKey("playlists.id"), primary_key=True)
+    track_id: Mapped[UUID] = mapped_column(Uuid(as_uuid=True), ForeignKey("tracks.id"), primary_key=True)
+    order: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+
+    # Relationships
+    playlist: Mapped[Playlist] = relationship("Playlist", back_populates="tracks")
+    track: Mapped[Track] = relationship("Track")
+
+
 class Playlist(Base):
     __tablename__ = "playlists"
 
@@ -29,30 +43,16 @@ class Playlist(Base):
     )
 
     # Relationships
-    owner: Mapped["User"] = relationship("User", back_populates="playlists")
-    tracks: Mapped[list["PlaylistTrack"]] = relationship(
+    owner: Mapped[User] = relationship("User", back_populates="playlists")
+    tracks: Mapped[list[PlaylistTrack]] = relationship(
         "PlaylistTrack",
         back_populates="playlist",
         cascade="all, delete-orphan",
         order_by="PlaylistTrack.order",
     )
-    versions: Mapped[list["PlaylistVersion"]] = relationship(
+    versions: Mapped[list[PlaylistVersion]] = relationship(
         "PlaylistVersion",
         back_populates="playlist",
         cascade="all, delete-orphan",
         order_by="PlaylistVersion.version_number.desc()",
     )
-
-
-class PlaylistTrack(Base):
-    __tablename__ = "playlist_tracks"
-
-    __table_args__ = (Index("ix_playlist_tracks_order", "playlist_id", "order"),)
-
-    playlist_id: Mapped[UUID] = mapped_column(Uuid(as_uuid=True), ForeignKey("playlists.id"), primary_key=True)
-    track_id: Mapped[UUID] = mapped_column(Uuid(as_uuid=True), ForeignKey("tracks.id"), primary_key=True)
-    order: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
-
-    # Relationships
-    playlist: Mapped["Playlist"] = relationship("Playlist", back_populates="tracks")
-    track: Mapped["Track"] = relationship("Track")

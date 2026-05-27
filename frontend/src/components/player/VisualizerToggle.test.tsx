@@ -62,9 +62,9 @@ describe("VisualizerToggle Component", () => {
 
     expect(screen.getByText("Visualizer Style")).toBeInTheDocument();
 
-    const waveMode = screen.getByText("Waveform");
-    fireEvent.click(waveMode);
+    const mirrorMode = screen.getByText("Mirror Bars");
+    fireEvent.click(mirrorMode);
 
-    expect(mockSetVisualizerMode).toHaveBeenCalledWith("wave");
+    expect(mockSetVisualizerMode).toHaveBeenCalledWith("mirror");
   });
 });

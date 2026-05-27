@@ -1,0 +1,45 @@
+# Dependencies
+node_modules/
+frontend/node_modules/
+backend/.venv/
+backend/venv/
+*.egg-info/
+
+# Build outputs
+dist/
+build/
+frontend/dist/
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.mypy_cache/
+.ruff_cache/
+
+# Test / coverage output
+htmlcov/
+.coverage
+.coverage.*
+coverage/
+frontend/coverage/
+backend/.pytest_cache/
+
+# Lock files (huge, generated)
+package-lock.json
+frontend/package-lock.json
+
+# Local dev databases & temp files
+backend/audiovault.db
+backend/dummy/
+*.db
+*.sqlite
+
+
+# Logs
+*.log
+logs/
+
+# IDE
+

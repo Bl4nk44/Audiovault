@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { useTranslation } from "react-i18next";
+import { useTranslation } from "../../hooks/useTranslation";
 import {
   IoCalendarOutline,
   IoDisc,
@@ -17,7 +17,7 @@ interface LastfmProfileCardProps {
 }
 
 export const LastfmProfileCard: React.FC<LastfmProfileCardProps> = ({ username }) => {
-  const { t } = useTranslation();
+  const { t, language } = useTranslation();
   const [profile, setProfile] = useState<LastfmProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -49,7 +49,7 @@ export const LastfmProfileCard: React.FC<LastfmProfileCardProps> = ({ username }
 
   const formatDate = (unixTime: number): string => {
     if (!unixTime) return "";
-    return new Date(unixTime * 1000).toLocaleDateString(undefined, {
+    return new Date(unixTime * 1000).toLocaleDateString(language, {
       year: "numeric",
       month: "short",
     });

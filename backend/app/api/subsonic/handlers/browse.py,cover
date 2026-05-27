@@ -1,6 +1,6 @@
 > """
 > Browse handlers for Subsonic API.
-  
+
 > Handles library browsing endpoints:
 > - getMusicFolders.view
 > - getIndexes.view
@@ -10,9 +10,9 @@
 > - getSong.view
 > - getMusicDirectory.view
 > """
-  
+
 > from uuid import UUID
-  
+
 > from app.api.subsonic.auth import subsonic_auth
 > from app.api.subsonic.utils import (
 >     build_song_response,
@@ -29,10 +29,10 @@
 > from fastapi import APIRouter, Depends, Query
 > from sqlalchemy import distinct, func, select
 > from sqlalchemy.ext.asyncio import AsyncSession
-  
+
 > router = APIRouter()
-  
-  
+
+
 > @router.get("/getMusicFolders.view")
 > @router.post("/getMusicFolders.view")
 > async def get_music_folders(
@@ -42,15 +42,15 @@
 > ):
 >     """
 >     Get list of music folders.
-  
+
 >     In Audiovault, we have a single virtual folder containing all music.
-  
+
 >     Returns:
 >         List of music folders (single "Music Library" folder)
 >     """
 !     return subsonic_response({"musicFolders": {"musicFolder": [{"id": "1", "name": "Music Library"}]}}, f=f)
-  
-  
+
+
 > @router.get("/getIndexes.view")
 > @router.post("/getIndexes.view")
 > async def get_indexes(
@@ -62,13 +62,13 @@
 > ):
 >     """
 >     Get indexed list of all artists.
-  
+
 >     Groups artists alphabetically (A-Z, #).
-  
+
 >     Args:
 >         musicFolderId: Folder ID (ignored, we have one folder)
 >         ifModifiedSince: Timestamp for incremental updates
-  
+
 >     Returns:
 >         Alphabetical index of artists
 >     """
@@ -85,27 +85,27 @@
 !         .order_by(Artist.name)
 !     )
 !     artists = artists_res.scalars().all()
-  
+
       # Group by first letter
 !     indexes: dict[str, list] = {}
-  
+
 !     for artist in artists:
 !         if not artist.name:
 !             continue
-  
+
 !         first_char = artist.name[0].upper()
-  
+
           # Group non-letter characters under #
 !         if not first_char.isalpha():
 !             first_char = "#"
-  
+
 !         if first_char not in indexes:
 !             indexes[first_char] = []
-  
+
           # Count albums for this artist
 !         album_result = await db.execute(select(func.count(distinct(Album.id))).where(Album.artist_id == artist.id))
 !         album_count = album_result.scalar() or 0
-  
+
 !         indexes[first_char].append(
 !             {
 !                 "id": str(artist.id),
@@ -114,7 +114,7 @@
 !                 "coverArt": f"ar-{artist.id}",
 !             }
 !         )
-  
+
       # Build index list
 !     index_list = []
 !     for letter in sorted(indexes.keys()):
@@ -124,7 +124,7 @@
 !                 "artist": indexes[letter],
 !             }
 !         )
-  
+
 !     return subsonic_response(
 !         {
 !             "indexes": {
@@ -135,8 +135,8 @@
 !         },
 !         f=f,
 !     )
-  
-  
+
+
 > @router.get("/getArtists.view")
 > @router.post("/getArtists.view")
 > async def get_artists(
@@ -147,7 +147,7 @@
 > ):
 >     """
 >     Get all artists (similar to getIndexes but for ID3 view).
-  
+
 >     Returns:
 >         Alphabetical index of artists (ID3 format)
 >     """
@@ -164,26 +164,26 @@
 !         .order_by(Artist.name)
 !     )
 !     artists = artists_id3_res.scalars().all()
-  
+
       # Group by first letter
 !     indexes: dict[str, list] = {}
-  
+
 !     for artist in artists:
 !         if not artist.name:
 !             continue
-  
+
 !         first_char = artist.name[0].upper()
 !         if not first_char.isalpha():
 !             first_char = "#"
-  
+
 !         if first_char not in indexes:
 !             indexes[first_char] = []
-  
+
 !         album_result = await db.execute(select(func.count(distinct(Album.id))).where(Album.artist_id == artist.id))
 !         album_count = album_result.scalar() or 0
-  
+
           # artist_images = artist.images or {}
-  
+
 !         indexes[first_char].append(
 !             {
 !                 "id": str(artist.id),
@@ -192,7 +192,7 @@
 !                 "coverArt": f"ar-{artist.id}",
 !             }
 !         )
-  
+
 !     index_list = []
 !     for letter in sorted(indexes.keys()):
 !         index_list.append(
@@ -201,7 +201,7 @@
 !                 "artist": indexes[letter],
 !             }
 !         )
-  
+
 !     return subsonic_response(
 !         {
 !             "artists": {
@@ -211,8 +211,8 @@
 !         },
 !         f=f,
 !     )
-  
-  
+
+
 > @router.get("/getArtist.view")
 > @router.post("/getArtist.view")
 > async def get_artist(
@@ -223,10 +223,10 @@
 > ):
 >     """
 >     Get artist details including albums.
-  
+
 >     Args:
 >         id: Artist ID (UUID)
-  
+
 >     Returns:
 >         Artist info with list of albums
 >     """
@@ -234,14 +234,14 @@
 !         artist_id = UUID(id)
 !     except ValueError:
 !         return subsonic_error(10, "Invalid artist ID", f=f)
-  
+
       # Get artist
 !     artist_result = await db.execute(select(Artist).where(Artist.id == artist_id))
 !     artist = artist_result.scalar_one_or_none()
-  
+
 !     if not artist:
 !         return subsonic_error(70, "Artist not found", f=f)
-  
+
       # Get albums for this artist that user has downloaded tracks from
 !     albums_result = await db.execute(
 !         select(Album)
@@ -256,7 +256,7 @@
 !         .order_by(Album.release_date.desc().nullslast(), Album.title)
 !     )
 !     albums = albums_result.scalars().all()
-  
+
       # Build album list
 !     album_list = []
 !     for album in albums:
@@ -271,7 +271,7 @@
 !             )
 !         )
 !         song_count = song_result.scalar() or 0
-  
+
           # Sum duration
 !         duration_result = await db.execute(
 !             select(func.sum(Track.duration_ms))
@@ -283,7 +283,7 @@
 !             )
 !         )
 !         total_duration = duration_result.scalar() or 0
-  
+
 !         album_list.append(
 !             {
 !                 "id": str(album.id),
@@ -297,9 +297,9 @@
 !                 "year": int(album.release_date[:4]) if album.release_date and len(album.release_date) >= 4 else None,
 !             }
 !         )
-  
+
 !     artist_images = artist.images or {}
-  
+
 !     return subsonic_response(
 !         {
 !             "artist": {
@@ -312,8 +312,8 @@
 !         },
 !         f=f,
 !     )
-  
-  
+
+
 > @router.get("/getAlbum.view")
 > @router.post("/getAlbum.view")
 > async def get_album(
@@ -324,10 +324,10 @@
 > ):
 >     """
 >     Get album details including songs.
-  
+
 >     Args:
 >         id: Album ID (UUID)
-  
+
 >     Returns:
 >         Album info with list of songs
 >     """
@@ -335,14 +335,14 @@
 !         album_id = UUID(id)
 !     except ValueError:
 !         return subsonic_error(10, "Invalid album ID", f=f)
-  
+
       # Get album with artist
 !     result = await db.execute(select(Album).where(Album.id == album_id))
 !     album = result.scalar_one_or_none()
-  
+
 !     if not album:
 !         return subsonic_error(70, "Album not found", f=f)
-  
+
       # Get artist name
 !     artist_name = "Unknown Artist"
 !     if album.artist_id:
@@ -350,7 +350,7 @@
 !         artist = artist_result.scalar_one_or_none()
 !         if artist:
 !             artist_name = artist.name
-  
+
       # Get tracks with downloads for this user (only completed downloads)
 !     tracks_res = await db.execute(
 !         select(Track, Download)
@@ -363,24 +363,24 @@
 !         .order_by(Track.title)
 !     )
 !     track_downloads = tracks_res.all()
-  
+
       # Build song list
 !     song_list = []
 !     total_duration = 0
-  
+
 !     for i, (track, download) in enumerate(track_downloads):
 !         song = build_song_response(track, download)
 !         song["parent"] = str(album.id)
 !         song["albumId"] = str(album.id)
 !         song["artistId"] = str(album.artist_id) if album.artist_id else None
-  
+
           # Ensure track number exists (fallback to index + 1)
 !         if "track" not in song:
 !             song["track"] = i + 1
-  
+
 !         song_list.append(song)
 !         total_duration += track.duration_ms or 0
-  
+
 !     return subsonic_response(
 !         {
 !             "album": {
@@ -398,8 +398,8 @@
 !         },
 !         f=f,
 !     )
-  
-  
+
+
 > @router.get("/getSong.view")
 > @router.post("/getSong.view")
 > async def get_song(
@@ -410,10 +410,10 @@
 > ):
 >     """
 >     Get song metadata.
-  
+
 >     Args:
 >         id: Song/Track ID (UUID)
-  
+
 >     Returns:
 >         Song metadata
 >     """
@@ -421,7 +421,7 @@
 !         track_id = UUID(id)
 !     except ValueError:
 !         return subsonic_error(10, "Invalid song ID", f=f)
-  
+
       # Get track with download (only if downloaded)
 !     song_res = await db.execute(
 !         select(Track, Download)
@@ -433,16 +433,16 @@
 !         )
 !     )
 !     song_row = song_res.first()
-  
+
 !     if not song_row:
 !         return subsonic_error(70, "Song not found", f=f)
-  
+
 !     track, download = song_row
 !     song = build_song_response(track, download)
-  
+
 !     return subsonic_response({"song": song}, f=f)
-  
-  
+
+
 > @router.get("/getMusicDirectory.view")
 > @router.post("/getMusicDirectory.view")
 > async def get_music_directory(
@@ -453,15 +453,15 @@
 > ):
 >     """
 >     Get contents of a music directory.
-  
+
 >     Directory can be:
 >     - "1" = root (list artists)
 >     - Artist ID = list albums
 >     - Album ID = list songs
-  
+
 >     Args:
 >         id: Directory ID
-  
+
 >     Returns:
 >         Directory contents
 >     """
@@ -480,7 +480,7 @@
 !             .order_by(Artist.name)
 !         )
 !         artists = root_artists_res.scalars().all()
-  
+
 !         children = []
 !         for artist in artists:
 !             children.append(
@@ -492,7 +492,7 @@
 !                     "coverArt": f"ar-{artist.id}" if artist.images else None,
 !                 }
 !             )
-  
+
 !         return subsonic_response(
 !             {
 !                 "directory": {
@@ -503,17 +503,17 @@
 !             },
 !             f=f,
 !         )
-  
+
       # Try as artist ID
 !     try:
 !         item_id = UUID(id)
 !     except ValueError:
 !         return subsonic_error(70, "Directory not found", f=f)
-  
+
       # Check if it's an artist
 !     item_artist_result = await db.execute(select(Artist).where(Artist.id == item_id))
 !     artist_item = item_artist_result.scalar_one_or_none()
-  
+
 !     if artist_item:
           # List albums for this artist (only with downloaded tracks)
 !         result = await db.execute(
@@ -529,7 +529,7 @@
 !             .order_by(Album.release_date.desc().nullslast())
 !         )
 !         albums = result.scalars().all()
-  
+
 !         children = []
 !         for album in albums:
               # Count songs (only downloaded)
@@ -543,7 +543,7 @@
 !                 )
 !             )
 !             song_count = song_result.scalar() or 0
-  
+
 !             children.append(
 !                 {
 !                     "id": str(album.id),
@@ -558,7 +558,7 @@
 !                     else None,
 !                 }
 !             )
-  
+
 !         return subsonic_response(
 !             {
 !                 "directory": {
@@ -570,11 +570,11 @@
 !             },
 !             f=f,
 !         )
-  
+
       # Check if it's an album
 !     item_album_result = await db.execute(select(Album).where(Album.id == item_id))
 !     album_item = item_album_result.scalar_one_or_none()
-  
+
 !     if album_item:
           # Get artist name
 !         artist_name = "Unknown Artist"
@@ -585,7 +585,7 @@
 !             if artist_obj:
 !                 artist_name = artist_obj.name
 !                 parent_id = str(artist_obj.id)
-  
+
           # List tracks (only downloaded)
 !         result = await db.execute(
 !             select(Track, Download)
@@ -598,13 +598,13 @@
 !             .order_by(Track.title)
 !         )
 !         track_downloads = result.all()
-  
+
 !         children = []
 !         for track, download in track_downloads:
 !             song = build_song_response(track, download)
 !             song["parent"] = str(album_item.id)
 !             children.append(song)
-  
+
 !         return subsonic_response(
 !             {
 !                 "directory": {
@@ -618,5 +618,5 @@
 !             },
 !             f=f,
 !         )
-  
+
 !     return subsonic_error(70, "Directory not found", f=f)

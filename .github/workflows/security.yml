@@ -5,6 +5,8 @@ on:
     branches:
       - main
       - dev
+    tags:
+      - "v*"
   pull_request:
     branches:
       - main
@@ -13,6 +15,9 @@ on:
     # Run security scans weekly on Sundays at 2 AM UTC
     - cron: '0 2 * * 0'
   workflow_dispatch:
+
+permissions:
+  contents: read
 
 jobs:
   # ==============================================
@@ -222,6 +227,36 @@ jobs:
           path: trivy-secrets.sarif
 
   # ==============================================
+  # Socket.dev Supply Chain Scan (SCA)
+  # ==============================================
+  # Wykrywa malware, typosquat, ryzykowne/maintenance-risk deps w
+  # package-lock.json (root) i pyproject.toml (backend). Uzupełnia Trivy
+  # (znane CVE) o analizę supply chain. Wymaga sekretu SOCKET_CLI_API_TOKEN.
+  socket-scan:
+    name: Socket Supply Chain Scan
+    runs-on: ubuntu-latest
+    # Pomiń gdy brak sekretu (np. fork PR) — nie wywalaj buildu.
+    if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+
+      - name: Install Socket CLI
+        run: npm install -g @socketsecurity/cli
+
+      - name: Run Socket CI scan
+        env:
+          SOCKET_CLI_API_TOKEN: ${{ secrets.SOCKET_CLI_API_TOKEN }}
+        run: socket ci
+        continue-on-error: true
+
+  # ==============================================
   # License Compliance
   # ==============================================
   license-check:
@@ -257,24 +292,31 @@ jobs:
     steps:
       - name: Prepare Email Body
         if: always()
+        env:
+          GH_REPOSITORY: ${{ github.repository }}
+          GH_REF_NAME: ${{ github.ref_name }}
+          GH_SHA: ${{ github.sha }}
+          RESULT_TRIVY: ${{ needs.trivy-scan.result }}
+          RESULT_SEMGREP: ${{ needs.semgrep.result }}
+          RESULT_SECRET: ${{ needs.secret-scan.result }}
         run: |
           REPORT_FILE="security-report.txt"
           echo "GitHub Security Scan Report" > $REPORT_FILE
           echo "===========================" >> $REPORT_FILE
-          echo "Repository: ${{ github.repository }}" >> $REPORT_FILE
-          echo "Branch: ${{ github.ref_name }}" >> $REPORT_FILE
-          echo "Commit: ${{ github.sha }}" >> $REPORT_FILE
+          echo "Repository: ${GH_REPOSITORY}" >> $REPORT_FILE
+          echo "Branch: ${GH_REF_NAME}" >> $REPORT_FILE
+          echo "Commit: ${GH_SHA}" >> $REPORT_FILE
           echo "" >> $REPORT_FILE
           echo "## Job Statuses" >> $REPORT_FILE
-          echo "- Trivy Scan: ${{ needs.trivy-scan.result }}" >> $REPORT_FILE
-          echo "- Semgrep Analysis: ${{ needs.semgrep.result }}" >> $REPORT_FILE
-          echo "- Secret Scan: ${{ needs.secret-scan.result }}" >> $REPORT_FILE
+          echo "- Trivy Scan: ${RESULT_TRIVY}" >> $REPORT_FILE
+          echo "- Semgrep Analysis: ${RESULT_SEMGREP}" >> $REPORT_FILE
+          echo "- Secret Scan: ${RESULT_SECRET}" >> $REPORT_FILE
           echo "" >> $REPORT_FILE
-          
-          if [[ "${{ needs.secret-scan.result }}" == "failure" ]]; then
-            echo "⚠️ WARNING: Secrets detected in repository!" >> $REPORT_FILE
+
+          if [[ "${RESULT_SECRET}" == "failure" ]]; then
+            echo "WARNING: Secrets detected in repository!" >> $REPORT_FILE
           fi
-          
+
           echo "Full results are available in the job artifacts." >> $REPORT_FILE
 
       - name: Send Email Report

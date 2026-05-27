@@ -108,7 +108,7 @@ python:
   # Enable Python dependency scanning
   enabled: true
 
-# JavaScript/TypeScript specific  
+# JavaScript/TypeScript specific
 javascript:
   # Enable JS dependency scanning
   enabled: true

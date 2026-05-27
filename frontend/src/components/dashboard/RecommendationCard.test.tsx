@@ -6,7 +6,7 @@ import type { RecommendedTrack } from "../../types/lastfm";
 
 // Mocks
 vi.mock("../AddToPlaylistModal", () => ({
-  default: ({ isOpen, onClose, trackIds }: any) => 
+  default: ({ isOpen, onClose, trackIds }: any) =>
     isOpen ? <div data-testid="playlist-modal">Modal {trackIds[0]} <button onClick={onClose}>Close</button></div> : null
 }));
 
@@ -62,7 +62,7 @@ describe("RecommendationCard", () => {
     renderCard();
     const addButton = screen.getByTitle(/Add to playlist/i);
     fireEvent.click(addButton);
-    
+
     expect(screen.getByTestId("playlist-modal")).toBeInTheDocument();
     expect(screen.getByText(/external:Test Artist:Test Song/)).toBeInTheDocument();
   });
@@ -71,10 +71,10 @@ describe("RecommendationCard", () => {
     renderCard();
     const addButton = screen.getByTitle(/Add to playlist/i);
     fireEvent.click(addButton);
-    
+
     const closeButton = screen.getByText("Close");
     fireEvent.click(closeButton);
-    
+
     expect(screen.queryByTestId("playlist-modal")).not.toBeInTheDocument();
   });
 });

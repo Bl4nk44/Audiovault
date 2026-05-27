@@ -166,10 +166,10 @@ export default function Player() {
         animate={{ y: 0 }}
         exit={{ y: 100 }}
         className={cn(
-          "fixed left-0 right-0 z-40 transition-all duration-500 ease-in-out md:left-78",
+          "fixed left-0 z-40 transition-all duration-500 ease-in-out md:left-78",
           isExpanded
-            ? "top-0 bottom-0 h-dvh bg-black/95 backdrop-blur-3xl md:left-0"
-            : "bottom-20 md:bottom-3 h-16 md:h-24 bg-black/80 md:bg-black/60 backdrop-blur-xl border-t border-white/10 md:rounded-b-3xl"
+            ? "top-0 bottom-0 right-0 h-dvh bg-black/95 backdrop-blur-3xl md:left-0"
+            : "right-0 md:right-3 bottom-20 md:bottom-3 h-16 md:h-24 bg-black/80 md:bg-black/60 backdrop-blur-xl border-t border-white/10 md:rounded-3xl"
         )}
       >
         {showVisualizer &&
@@ -254,6 +254,11 @@ export default function Player() {
           crossOrigin="anonymous"
           onTimeUpdate={handleTimeUpdate}
           onEnded={nextTrack}
+          onError={() => {
+            import("react-hot-toast").then(({ default: toast }) => {
+              toast.error("Nie udało się odtworzyć utworu. Spróbuj ponownie za chwilę.", { id: "stream-error" });
+            });
+          }}
           preload="auto"
         ></audio>
       </motion.div>

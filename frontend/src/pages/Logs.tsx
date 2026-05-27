@@ -46,6 +46,8 @@ export default function Logs() {
   useEffect(() => {
     if (!autoRefresh) return;
 
+    // Initial + polled log fetch from the backend (external system) — belongs in an effect
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     fetchLogs();
     const interval = setInterval(fetchLogs, 2000);
     return () => clearInterval(interval);

@@ -6,6 +6,9 @@ on:
     - cron: '0 8 * * 1'
   workflow_dispatch:
 
+permissions:
+  contents: read
+
 jobs:
   check-updates:
     name: Check for Dependency Updates
@@ -111,9 +114,9 @@ jobs:
             const pythonVulns = process.env.PYTHON_VULNS || '';
             const npmVulns = process.env.NPM_VULNS || '';
             const dockerInfo = process.env.DOCKER_INFO || '';
-            
+
             const date = new Date().toISOString().split('T')[0];
-            
+
             const issueBody = `## 📦 Weekly Dependency Update Report
             **Generated:** ${date}
 
@@ -172,7 +175,7 @@ jobs:
             *This report is automatically generated every Monday at 9:00 AM CET*
             *Close this issue after reviewing and updating dependencies*
             `;
-            
+
             // Check if there's already an open report issue
             const issues = await github.rest.issues.listForRepo({
               owner: context.repo.owner,
@@ -181,7 +184,7 @@ jobs:
               labels: 'dependency-report',
               per_page: 1
             });
-            
+
             // Close previous report if exists
             if (issues.data.length > 0) {
               await github.rest.issues.update({
@@ -191,7 +194,7 @@ jobs:
                 state: 'closed'
               });
             }
-            
+
             // Create new issue
             await github.rest.issues.create({
               owner: context.repo.owner,

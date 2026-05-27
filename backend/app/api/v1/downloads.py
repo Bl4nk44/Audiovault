@@ -76,9 +76,9 @@ async def _resolve_spotify_id(db: AsyncSession, track_id_str: str) -> UUID:
     result = await db.execute(select(Track).where(Track.spotify_id == track_id_str))
     track_obj = result.scalar_one_or_none()
     if not track_obj:
-        from app.services.spotify_service import SpotifyService
+        from app.services.spotify_service import spotify_service as _spotify_singleton
 
-        track_data = await SpotifyService().get_track(track_id_str)
+        track_data = await _spotify_singleton.get_track(track_id_str)
         if not track_data:
             raise HTTPException(status_code=404, detail="Track not found on Spotify")
         track_obj = await _ensure_track_in_db(db, {**track_data, "id": track_id_str}, "spotify")
@@ -148,7 +148,7 @@ async def _resolve_track_to_local_id(db: AsyncSession, track_id_str: str, source
         track_obj = result.scalar_one_or_none()
         if track_obj:
             return track_obj.id
-    except (ValueError, AttributeError):
+    except ValueError, AttributeError:
         pass
 
     resolvers = {
@@ -311,9 +311,9 @@ async def download_all_artist_tracks(
         for album in artist.get("albums", []):
             all_tracks.extend(await service.get_album_tracks(album["id"]))
     elif request.source == "spotify":
-        from app.services.spotify_service import SpotifyService
+        from app.services.spotify_service import spotify_service as _spotify_singleton
 
-        service_sp = SpotifyService()
+        service_sp = _spotify_singleton
         artist = await service_sp.get_artist_details(artist_id)
         if not artist:
             raise HTTPException(status_code=404, detail="Artist not found")
@@ -358,9 +358,9 @@ async def download_album(
             raise HTTPException(status_code=404, detail="Album not found on Deezer")
         album_name = tracks[0].get("album", "Unknown Album") if tracks else album_id
     elif request.source == "spotify":
-        from app.services.spotify_service import SpotifyService
+        from app.services.spotify_service import spotify_service as _spotify_singleton
 
-        service = SpotifyService()
+        service = _spotify_singleton
         try:
             album_data = await service.get_album_details(album_id)
             if not album_data:
@@ -371,7 +371,7 @@ async def download_album(
         except Exception as e:
             # nosemgrep: python.fastapi.log.tainted-log-injection-stdlib-fastapi.tainted-log-injection-stdlib-fastapi
             _logger.error(f"Error fetching album {album_id}: {e}")
-            raise HTTPException(status_code=404, detail="Album not found")
+            raise HTTPException(status_code=404, detail="Album not found") from e
         tracks = await service.get_album_tracks(album_id)
     else:
         raise HTTPException(status_code=400, detail=f"Source '{request.source}' not supported for album downloads")

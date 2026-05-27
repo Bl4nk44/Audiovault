@@ -6,15 +6,6 @@ declare global {
   var webkitAudioContext: typeof AudioContext;
 }
 
-interface Particle {
-  x: number;
-  y: number;
-  vx: number;
-  vy: number;
-  size: number;
-  color: string;
-  life: number;
-}
 
 export function useAudioVisualizer(
   currentTrack: Track | null,
@@ -28,10 +19,7 @@ export function useAudioVisualizer(
   const sourceRef = useRef<MediaElementAudioSourceNode | null>(null);
   const animationFrameRef = useRef<number | undefined>(undefined);
 
-  // State refs for specific modes
   const barHeightsRef = useRef<number[]>([]);
-  const particlesRef = useRef<Particle[]>([]);
-  const rotationRef = useRef(0);
 
   // Reusable arrays to avoid GC pressure
   const dataArrayRef = useRef<Uint8Array | null>(null);
@@ -67,8 +55,9 @@ export function useAudioVisualizer(
           analyserRef.current.connect(audioContextRef.current.destination);
           sourceRef.current = source;
           console.log("Visualizer: Source connected to element.");
-        } catch (e: any) {
-          if (!e.message?.includes("connected")) {
+        } catch (e) {
+          const msg = e instanceof Error ? e.message : "";
+          if (!msg.includes("connected")) {
             console.warn("Visualizer: Connection issue:", e);
           }
         }
@@ -103,12 +92,7 @@ export function useAudioVisualizer(
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
 
-    // Adjust FFT size based on mode
-    if (mode === "wave") {
-      analyserRef.current.fftSize = 2048;
-    } else {
-      analyserRef.current.fftSize = 512;
-    }
+    analyserRef.current.fftSize = 512;
 
     const bufferLength = analyserRef.current.frequencyBinCount;
     dataArrayRef.current = new Uint8Array(bufferLength);
@@ -152,83 +136,119 @@ export function useAudioVisualizer(
       }
     };
 
-    const drawWave = (data: Uint8Array) => {
-      analyserRef.current!.getByteTimeDomainData(data as any);
+    const drawMirrorBars = (data: Uint8Array) => {
       ctx.fillStyle = "rgba(0, 0, 0, 0.2)";
       ctx.fillRect(0, 0, canvas.width, canvas.height);
       const colors = getPrimaryColors();
-      ctx.lineWidth = 3;
-      ctx.strokeStyle = colors.alpha(0.8);
-      ctx.beginPath();
-      const sliceWidth = canvas.width / data.length;
-      let x = 0;
-      for (let i = 0; i < data.length; i++) {
-        const v = data[i] / 128;
-        const y = (v * canvas.height) / 2;
-        if (i === 0) ctx.moveTo(x, y);
-        else ctx.lineTo(x, y);
-        x += sliceWidth;
-      }
-      ctx.stroke();
-    };
+      const numBars = 64;
+      const barWidth = (canvas.width / numBars) * 0.8;
+      const gap = (canvas.width / numBars) * 0.2;
+      const midY = canvas.height / 2;
 
-    const drawCircle = (data: Uint8Array) => {
-      ctx.fillStyle = "rgba(0, 0, 0, 0.2)";
-      ctx.fillRect(0, 0, canvas.width, canvas.height);
-      const colors = getPrimaryColors();
-      const centerX = canvas.width / 2;
-      const centerY = canvas.height / 2;
-      const radius = Math.min(centerX, centerY) * 0.4;
-      const numBars = 60;
-      rotationRef.current += 0.005;
-      ctx.save();
-      ctx.translate(centerX, centerY);
-      ctx.rotate(rotationRef.current);
-      const step = (Math.PI * 2) / numBars;
       for (let i = 0; i < numBars; i++) {
-        const index = Math.floor((i / numBars) * (data.length * 0.6));
-        const barHeight = (data[index] / 255) * (Math.min(centerX, centerY) * 0.5);
+        const index = Math.floor((i / numBars) * (data.length * 0.7));
+        const percent = data[index] / 255;
+        const halfHeight = percent * midY * 0.85;
         if (!barHeightsRef.current[i]) barHeightsRef.current[i] = 0;
-        barHeightsRef.current[i] += (barHeight - barHeightsRef.current[i]) * 0.2;
-        ctx.rotate(step);
-        ctx.fillStyle = colors.alpha(0.8);
-        ctx.fillRect(0, radius, 4, barHeightsRef.current[i]);
+        barHeightsRef.current[i] += (halfHeight - barHeightsRef.current[i]) * 0.2;
+        const h = barHeightsRef.current[i];
+        const x = i * (barWidth + gap) + gap / 2;
+
+        const gradUp = ctx.createLinearGradient(x, midY - h, x, midY);
+        gradUp.addColorStop(0, colors.alpha(1));
+        gradUp.addColorStop(1, colors.alpha(0.15));
+        ctx.fillStyle = gradUp;
+        ctx.fillRect(x, midY - h, barWidth, h);
+
+        const gradDown = ctx.createLinearGradient(x, midY, x, midY + h);
+        gradDown.addColorStop(0, colors.alpha(0.15));
+        gradDown.addColorStop(1, colors.alpha(1));
+        ctx.fillStyle = gradDown;
+        ctx.fillRect(x, midY, barWidth, h);
+
+        ctx.fillStyle = colors.alpha(0.6);
+        ctx.fillRect(x, midY - h - 3, barWidth, 2);
+        ctx.fillRect(x, midY + h + 1, barWidth, 2);
       }
-      ctx.restore();
     };
 
-    const drawParticles = (data: Uint8Array) => {
+    const drawSpectrumBars = (data: Uint8Array) => {
       ctx.fillStyle = "rgba(0, 0, 0, 0.2)";
       ctx.fillRect(0, 0, canvas.width, canvas.height);
+      const numBars = 64;
+      const barWidth = (canvas.width / numBars) * 0.8;
+      const gap = (canvas.width / numBars) * 0.2;
+
+      for (let i = 0; i < numBars; i++) {
+        const index = Math.floor((i / numBars) * (data.length * 0.7));
+        const percent = data[index] / 255;
+        const height = percent * canvas.height * 0.6;
+        if (!barHeightsRef.current[i]) barHeightsRef.current[i] = 0;
+        barHeightsRef.current[i] += (height - barHeightsRef.current[i]) * 0.2;
+        const h = barHeightsRef.current[i];
+        const x = i * (barWidth + gap) + gap / 2;
+        const hue = (i / numBars) * 280;
+
+        const gradient = ctx.createLinearGradient(x, canvas.height - h, x, canvas.height);
+        gradient.addColorStop(0, `hsla(${hue}, 100%, 65%, 1)`);
+        gradient.addColorStop(1, `hsla(${hue}, 100%, 40%, 0.2)`);
+        ctx.fillStyle = gradient;
+        ctx.fillRect(x, canvas.height - h, barWidth, h);
+
+        ctx.fillStyle = `hsla(${hue}, 100%, 80%, 0.7)`;
+        ctx.fillRect(x, canvas.height - h - 4, barWidth, 2);
+      }
+    };
+
+    const drawPulseRings = (data: Uint8Array) => {
+      ctx.fillStyle = "rgba(0, 0, 0, 0.15)";
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
       const colors = getPrimaryColors();
+      const cx = canvas.width / 2;
+      const cy = canvas.height / 2;
+
       let bass = 0;
-      for (let i = 0; i < 10; i++) bass += data[i];
-      bass /= 10 * 255;
-      if (bass > 0.6 && particlesRef.current.length < 100) {
-        for (let k = 0; k < 5; k++) {
-          const ang = Math.random() * Math.PI * 2;
-          particlesRef.current.push({
-            x: canvas.width / 2,
-            y: canvas.height / 2,
-            vx: Math.cos(ang) * (Math.random() * 5 + 2),
-            vy: Math.sin(ang) * (Math.random() * 5 + 2),
-            size: Math.random() * 4 + 2,
-            color: colors.alpha(Math.random()),
-            life: 1,
-          });
-        }
-      }
-      for (const p of particlesRef.current) {
-        p.x += p.vx;
-        p.y += p.vy;
-        p.life -= 0.02;
-        p.size *= 0.95;
+      for (let i = 0; i < 8; i++) bass += data[i];
+      bass /= 8 * 255;
+
+      let mid = 0;
+      for (let i = 8; i < 48; i++) mid += data[i];
+      mid /= 40 * 255;
+
+      let treble = 0;
+      for (let i = 48; i < data.length; i++) treble += data[i];
+      treble /= (data.length - 48) * 255;
+
+      const rings = [
+        { band: bass, baseRadius: 0.18, color: colors.alpha },
+        { band: mid, baseRadius: 0.3, color: colors.alpha },
+        { band: treble, baseRadius: 0.42, color: colors.alpha },
+        { band: (bass + mid) / 2, baseRadius: 0.54, color: colors.alpha },
+      ];
+
+      const maxR = Math.min(cx, cy);
+      for (const ring of rings) {
+        const r = maxR * (ring.baseRadius + ring.band * 0.12);
+        const lineWidth = 2 + ring.band * 6;
+        const alpha = 0.15 + ring.band * 0.75;
+
+        const glow = ctx.createRadialGradient(cx, cy, r - lineWidth * 2, cx, cy, r + lineWidth * 2);
+        glow.addColorStop(0, ring.color(0));
+        glow.addColorStop(0.5, ring.color(alpha));
+        glow.addColorStop(1, ring.color(0));
+
         ctx.beginPath();
-        ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
-        ctx.fillStyle = p.color;
-        ctx.fill();
+        ctx.arc(cx, cy, r, 0, Math.PI * 2);
+        ctx.lineWidth = lineWidth * 3;
+        ctx.strokeStyle = glow;
+        ctx.stroke();
+
+        ctx.beginPath();
+        ctx.arc(cx, cy, r, 0, Math.PI * 2);
+        ctx.lineWidth = lineWidth * 0.5;
+        ctx.strokeStyle = ring.color(Math.min(alpha * 1.5, 1));
+        ctx.stroke();
       }
-      particlesRef.current = particlesRef.current.filter((p) => p.life > 0);
     };
 
     const drawGlow = (data: Uint8Array) => {
@@ -256,6 +276,7 @@ export function useAudioVisualizer(
     const render = () => {
       if (!analyserRef.current || !dataArrayRef.current) return;
       const data = dataArrayRef.current;
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       analyserRef.current.getByteFrequencyData(data as any);
 
       // Debug logging every 100 frames
@@ -266,14 +287,14 @@ export function useAudioVisualizer(
       }
 
       switch (mode) {
-        case "wave":
-          drawWave(timeDataRef.current!);
+        case "mirror":
+          drawMirrorBars(data);
           break;
-        case "circle":
-          drawCircle(data);
+        case "spectrum":
+          drawSpectrumBars(data);
           break;
-        case "particles":
-          drawParticles(data);
+        case "pulse":
+          drawPulseRings(data);
           break;
         case "glow":
           drawGlow(data);

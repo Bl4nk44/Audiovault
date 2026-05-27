@@ -2,7 +2,6 @@ import asyncio
 import json
 import logging
 from datetime import datetime
-from typing import List, Optional
 
 from app.core.cache import cache_manager
 from app.models.user import User
@@ -20,7 +19,7 @@ LASTFM_PLACEHOLDER_HASHES = [
 ]
 
 
-def _is_missing_image(image_url: Optional[str]) -> bool:
+def _is_missing_image(image_url: str | None) -> bool:
     """Check if image URL is missing, empty, or a Last.fm placeholder."""
     if not image_url or not image_url.strip():
         return True
@@ -40,7 +39,7 @@ class HybridRecommendationEngine:
         """Check if user has a Last.fm session connected."""
         return bool(user.lastfm_session_key)
 
-    async def _get_cached_recommendations(self, cache_key: str) -> Optional[RecommendationResponse]:
+    async def _get_cached_recommendations(self, cache_key: str) -> RecommendationResponse | None:
         cached_data = await self.cache.get(cache_key)
         if not cached_data:
             return None
@@ -51,7 +50,7 @@ class HybridRecommendationEngine:
             logger.error(f"Failed to parse cached recommendations: {e}")
             return None
 
-    async def _fetch_lastfm_recommendations(self, user: User, source: str) -> List[RecommendedTrack]:
+    async def _fetch_lastfm_recommendations(self, user: User, source: str) -> list[RecommendedTrack]:
         if source != "auto":
             # We used to support 'lastfm' vs 'llm', now only 'auto' (which is lastfm)
             # or we can treat everything as auto for now.
@@ -104,17 +103,14 @@ class HybridRecommendationEngine:
     async def _search_deezer_playlists_for_artist(self, deezer: DeezerService, artist_name: str) -> list:
         results = []
         try:
-            r1 = await deezer.search(f"This Is {artist_name}", limit=2)
+            r1 = await deezer.search_playlists(artist_name, limit=3)
             if r1:
                 results.extend(r1)
-            r2 = await deezer.search(f"{artist_name} Mix", limit=2)
-            if r2:
-                results.extend(r2)
         except Exception as e:
             logger.warning(f"Playlist search failed for {artist_name}: {e}")
         return results
 
-    def _collect_unique_playlists(self, search_results: list) -> List[RecommendedPlaylist]:
+    def _collect_unique_playlists(self, search_results: list) -> list[RecommendedPlaylist]:
         seen_ids: set = set()
         playlists = []
         for results_batch in search_results:
@@ -127,13 +123,13 @@ class HybridRecommendationEngine:
                             image_url=p.get("image_url"),
                             track_count=p.get("track_count", 0),
                             source="deezer",
-                            url=f"https://www.deezer.com/track/{p['id']}",
+                            url=p.get("url") or f"https://www.deezer.com/playlist/{p['id']}",
                         )
                     )
                     seen_ids.add(p["id"])
         return playlists
 
-    async def _fetch_playlists(self, user: User) -> List[RecommendedPlaylist]:
+    async def _fetch_playlists(self, user: User) -> list[RecommendedPlaylist]:
         """Fetch recommended playlists based on user's top artists."""
         if not self._user_has_lastfm(user):
             return []
@@ -171,7 +167,7 @@ class HybridRecommendationEngine:
         except Exception as e:
             logger.error(f"Deezer artist search error for {artist.name}: {e}")
 
-    async def _fetch_artists(self, user: User) -> List[RecommendedArtist]:
+    async def _fetch_artists(self, user: User) -> list[RecommendedArtist]:
         """Fetch recommended artists with Spotify image fallback."""
         target_user = user.lastfm_username or user.username
         session_key = user.lastfm_session_key

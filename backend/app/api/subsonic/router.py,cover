@@ -1,9 +1,9 @@
 > """
 > Main Subsonic API router.
-  
+
 > Mounts all Subsonic API handlers under /rest prefix.
 > """
-  
+
 > from app.api.subsonic.handlers import (
 >     browse,
 >     info,
@@ -16,8 +16,8 @@
 >     user,
 > )
 > from fastapi import APIRouter, Depends, Request, Response
-  
-  
+
+
 > def log_subsonic_request(request: Request):
 >     """Debug log for Subsonic requests to identify mobile client issues."""
 !     path = request.url.path
@@ -27,7 +27,7 @@
 !         params["p"] = "***"
 !     if "t" in params:
 !         params["t"] = "***"
-  
+
 !     log_line = f"DEBUG: {path} | Params: {params}\n"
 !     try:
 !         with open("/app/subsonic_debug.log", "a") as f:
@@ -36,13 +36,13 @@
 !         print(f"Failed to write log: {e}")
       # Still print for console
 !     print(log_line, flush=True)
-  
-  
+
+
   # Create main router with logging dependency
 > router = APIRouter(
 >     prefix="/rest", tags=["subsonic"], dependencies=[Depends(log_subsonic_request)], redirect_slashes=False
 > )
-  
+
   # Include all handler routers
 > router.include_router(system.router)
 > router.include_router(browse.router)
@@ -53,8 +53,8 @@
 > router.include_router(lists.router)
 > router.include_router(lyrics.router)
 > router.include_router(info.router)
-  
-  
+
+
 > @router.api_route("/{path_name:path}", methods=["GET", "POST"])
 > def catch_all_subsonic(request: Request, path_name: str):
 >     """Catch-all for Subsonic to debug 404s."""

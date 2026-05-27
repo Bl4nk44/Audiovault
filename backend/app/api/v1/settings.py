@@ -13,28 +13,31 @@ router = APIRouter()
 
 
 class SettingsUpdate(BaseModel):
-    spotifyClientId: str | None = None
-    spotifyClientSecret: str | None = None
-    youtubeApiKey: str | None = None
-    downloadPath: str | None = None
-    maxParallelDownloads: int | None = None
+    spotifyClientId: str | None = None  # noqa: N815
+    spotifyClientSecret: str | None = None  # noqa: N815
+    youtubeApiKey: str | None = None  # noqa: N815
+    downloadPath: str | None = None  # noqa: N815
+    maxParallelDownloads: int | None = None  # noqa: N815
     theme: str | None = None
     language: str | None = None
-    filenameSchema: str | None = None
-    audioQuality: str | None = None
+    filenameSchema: str | None = None  # noqa: N815
+    audioQuality: str | None = None  # noqa: N815
 
 
 class VerifySpotify(BaseModel):
-    clientId: str
-    clientSecret: str
+    clientId: str  # noqa: N815
+    clientSecret: str  # noqa: N815
 
 
 class VerifyYouTube(BaseModel):
-    apiKey: str
+    apiKey: str  # noqa: N815
 
 
 @router.post("/verify/spotify", responses={400: {"description": "Bad request"}})
-async def verify_spotify(creds: VerifySpotify):
+async def verify_spotify(
+    creds: VerifySpotify,
+    _: Annotated[User, Depends(get_current_active_user)] = ...,
+):
     import asyncio
 
     import spotipy
@@ -55,7 +58,10 @@ async def verify_spotify(creds: VerifySpotify):
 
 
 @router.post("/verify/youtube", responses={400: {"description": "Bad request"}})
-async def verify_youtube(creds: VerifyYouTube):
+async def verify_youtube(
+    creds: VerifyYouTube,
+    _: Annotated[User, Depends(get_current_active_user)] = ...,
+):
     import httpx
 
     try:

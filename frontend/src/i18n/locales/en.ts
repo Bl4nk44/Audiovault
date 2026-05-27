@@ -16,7 +16,7 @@ export const en = {
     library: "My Library",
     downloads: "Downloads",
     settings: "Settings",
-    recommendations: "Recommendations",
+    discover: "Discovery",
     logs: "Logs",
   },
   logs: {
@@ -173,6 +173,7 @@ export const en = {
     removeFromWatchlist: "Remove from watchlist",
     newItems: "new",
     addToWatchlist: "Add to Watchlist",
+    viewDetails: "View details",
   },
   recommendations: {
     title: "Music Discovery",
@@ -183,5 +184,12 @@ export const en = {
     connected: "Successfully connected to Last.fm!",
     error: "Failed to connect to Last.fm",
     scrobbling: "Scrobbling enabled",
+    profile: {
+      error: "Failed to load profile",
+      artists: "Artists",
+      tracks: "Tracks",
+      albums: "Albums",
+      friends: "Friends",
+    },
   },
 };

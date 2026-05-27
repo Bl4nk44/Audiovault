@@ -33,5 +33,5 @@ class Album(Base):
     updated_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), onupdate=lambda: datetime.now(UTC))
 
     # Relationships
-    artist: Mapped["Artist"] = relationship("Artist", back_populates="albums")
-    tracks: Mapped[list["Track"]] = relationship("Track", back_populates="album_rel")
+    artist: Mapped[Artist] = relationship("Artist", back_populates="albums")
+    tracks: Mapped[list[Track]] = relationship("Track", back_populates="album_rel")

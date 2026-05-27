@@ -59,7 +59,9 @@ async def execute_sync(
         raise HTTPException(status_code=400, detail="Missing sync_token")
 
     try:
-        result = await sync_manager.execute_sync(db, str(current_user.id), sync_token, approved_removals)
+        result = await sync_manager.execute_sync(
+            db, str(current_user.id), sync_token, approved_removals
+        )  # deepcode ignore PT: file paths originate from DB records, not HTTP request params
         return result
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e)) from e

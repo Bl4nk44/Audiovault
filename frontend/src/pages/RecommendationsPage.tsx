@@ -35,31 +35,18 @@ const RecommendationsPage: React.FC = () => {
   useEffect(() => {
     const token = searchParams.get("token");
     if (token) {
+      // Async fetch handlers defined below; intentional effect-driven fetch (pre-TanStack pattern)
+      // eslint-disable-next-line react-hooks/immutability
       handleCallback(token);
     } else {
+      // eslint-disable-next-line react-hooks/immutability
       checkStatus();
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchParams]);
-
-  const handleCallback = async (token: string) => {
-    try {
-      setLoading(true);
-      await callbackLastfm(token);
-      toast.success(t("lastfm.connected", "Successfully connected to Last.fm!"));
-      navigate("/recommendations", { replace: true });
-      checkStatus();
-    } catch (e) {
-      console.error("Callback failed", e);
-      toast.error(t("lastfm.error", "Failed to connect to Last.fm"));
-      navigate("/recommendations", { replace: true });
-    } finally {
-      setLoading(false);
-    }
-  };
 
   useEffect(() => {
     if (status.connected) {
+      // eslint-disable-next-line react-hooks/immutability
       fetchRecommendations();
     }
   }, [status.connected]);
@@ -85,6 +72,22 @@ const RecommendationsPage: React.FC = () => {
     } finally {
       setLoading(false);
       setRefreshing(false);
+    }
+  };
+
+  const handleCallback = async (token: string) => {
+    try {
+      setLoading(true);
+      await callbackLastfm(token);
+      toast.success(t("lastfm.connected", "Successfully connected to Last.fm!"));
+      navigate("/recommendations", { replace: true });
+      checkStatus();
+    } catch (e) {
+      console.error("Callback failed", e);
+      toast.error(t("lastfm.error", "Failed to connect to Last.fm"));
+      navigate("/recommendations", { replace: true });
+    } finally {
+      setLoading(false);
     }
   };
 

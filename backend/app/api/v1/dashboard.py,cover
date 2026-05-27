@@ -3,7 +3,7 @@
 > from datetime import UTC, datetime
 > from typing import Any, Optional
 > from uuid import UUID
-  
+
 > from app.core.config import settings
 > from app.core.dependencies import get_current_active_user
 > from app.db.database import get_db
@@ -14,10 +14,10 @@
 > from sqlalchemy.ext.asyncio import AsyncSession
 > from sqlalchemy.future import select
 > from sqlalchemy.orm import selectinload
-  
+
 > router = APIRouter()
-  
-  
+
+
 > @router.get("/stats")
 > async def get_dashboard_stats(
 >     current_user: User = Depends(get_current_active_user),
@@ -26,11 +26,11 @@
 !     total_downloads = await _get_count(db, current_user.id)
 !     tracks_in_library = await _get_count(db, current_user.id, status="completed")
 !     pending_queue = await _get_queue_count(db, current_user.id)
-  
+
 !     storage_free_text = _get_storage_free_space()
 !     recent_activity = await _get_recent_activity(db, current_user.id)
 !     active_download = await _get_active_download(db, current_user.id)
-  
+
 !     return {
 !         "total_downloads": str(total_downloads),
 !         "tracks_in_library": str(tracks_in_library),
@@ -39,16 +39,16 @@
 !         "recent_activity": recent_activity,
 !         "active_download": active_download,
 !     }
-  
-  
+
+
 > async def _get_count(db: AsyncSession, user_id: UUID, status: Optional[str] = None) -> int:
 !     query = select(func.count(Download.id)).where(Download.user_id == user_id)
 !     if status:
 !         query = query.where(Download.status == status)
 !     result = await db.execute(query)
 !     return result.scalar() or 0
-  
-  
+
+
 > async def _get_queue_count(db: AsyncSession, user_id: UUID) -> int:
 !     query = select(func.count(Download.id)).where(
 !         Download.user_id == user_id,
@@ -56,8 +56,8 @@
 !     )
 !     result = await db.execute(query)
 !     return result.scalar() or 0
-  
-  
+
+
 > def _get_storage_free_space() -> str:
 !     try:
 !         if not os.path.exists(settings.DOWNLOAD_DIR):
@@ -67,11 +67,11 @@
 !         return f"{storage_free_gb} GB"
 !     except Exception:
 !         return "Unknown"
-  
-  
+
+
   # ... (skipping unchanged helper functions)
-  
-  
+
+
 > async def _get_recent_activity(db: AsyncSession, user_id: UUID) -> list[dict[str, Any]]:
 !     recent_query = (
 !         select(Download)
@@ -82,7 +82,7 @@
 !     )
 !     result = await db.execute(recent_query)
 !     recent_downloads = result.scalars().all()
-  
+
 !     activity = []
 !     for d in recent_downloads:
 !         activity.append(
@@ -98,8 +98,8 @@
 !             }
 !         )
 !     return activity
-  
-  
+
+
 > async def _get_active_download(db: AsyncSession, user_id: UUID) -> dict[str, Any] | None:
       # Priority: Downloading
 !     active_query = (
@@ -110,7 +110,7 @@
 !     )
 !     active_result = await db.execute(active_query)
 !     active_item = active_result.scalar_one_or_none()
-  
+
       # Fallback: Pending/Processing
 !     if not active_item:
 !         pending_query = (
@@ -125,7 +125,7 @@
 !         )
 !         pending_result = await db.execute(pending_query)
 !         active_item = pending_result.scalar_one_or_none()
-  
+
 !     if active_item:
 !         return {
 !             "id": str(active_item.id),
@@ -136,8 +136,8 @@
 !             "image_url": _get_image_url(active_item),
 !         }
 !     return None
-  
-  
+
+
 > def _calculate_time_ago(dt: datetime) -> str:
 !     if not dt:
 !         return "Just now"
@@ -146,7 +146,7 @@
 !     now = datetime.now(UTC)
 !     if dt.tzinfo is None:
 !         dt = dt.replace(tzinfo=UTC)
-  
+
 !     diff = now - dt
 !     if diff.days > 0:
 !         return f"{diff.days}d ago"
@@ -155,8 +155,8 @@
 !     elif diff.seconds > 60:
 !         return f"{diff.seconds // 60}m ago"
 !     return "Just now"
-  
-  
+
+
 > def _get_image_url(download: Download) -> str | None:
 !     if not download.track or not download.track.metadata_content:
 !         return None
@@ -164,11 +164,11 @@
 !     url = meta.get("image_url") or meta.get("album_art")
 !     if url:
 !         return url
-  
+
       # Fallback to native endpoint
 !     return f"{settings.API_V1_STR}/stream/{download.track.id}/cover"
-  
-  
+
+
 > def _get_filename(download: Download) -> str:
 !     if not download.file_path:
 !         return "Unknown"

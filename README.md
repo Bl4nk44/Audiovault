@@ -8,21 +8,29 @@
 [![GitHub Stars](https://img.shields.io/github/stars/Bl4nk44/Audiovault?logo=github)](https://github.com/Bl4nk44/Audiovault/stargazers)
 [![Docker Pulls](https://img.shields.io/docker/pulls/bl4nk404/audiovault?logo=docker)](https://hub.docker.com/r/bl4nk404/audiovault)
 [![Security monitoring by GitGuardian](https://img.shields.io/badge/Protected_by-GitGuardian-darkblue?logo=gitguardian&logoColor=white)](https://www.gitguardian.com/)
-[![Snyk](https://img.shields.io/badge/Security-Snyk-4C4A73?logo=snyk&logoColor=white)](https://snyk.io/)
 [![SonarQube](https://img.shields.io/badge/Quality-SonarQube-4E9BCD?logo=sonarqube&logoColor=white)](https://sonarqube.org/)
-[![Safety Checks](https://img.shields.io/badge/Dependencies-Checked-brightgreen)](https://github.com/Bl4nk44/Audiovault/security/dependabot)
 [![Semgrep](https://img.shields.io/badge/Semgrep-Scanned-00D26A?logo=semgrep)](https://semgrep.dev/)
+[![Checkov](https://img.shields.io/badge/IaC-Checkov-blue?logo=paloaltonetworks&logoColor=white)](https://www.checkov.io/)
+[![Aikido](https://img.shields.io/badge/SAST%2FSCA-Aikido-FF6B35?logo=aikido&logoColor=white)](https://aikido.dev/)
+[![OSV-Scanner](https://img.shields.io/badge/CVE-OSV--Scanner-4285F4?logo=google&logoColor=white)](https://google.github.io/osv-scanner/)
+[![Nuclei](https://img.shields.io/badge/DAST-Nuclei-9B59B6?logoColor=white)](https://nuclei.projectdiscovery.io/)
+[![Trivy](https://img.shields.io/badge/Container-Trivy-1904DA?logo=aquasecurity&logoColor=white)](https://trivy.dev/)
+[![Socket](https://img.shields.io/badge/Supply_Chain-Socket-7C3AED?logoColor=white)](https://socket.dev/)
 [![codecov](https://codecov.io/gh/Bl4nk44/Audiovault/branch/main/graph/badge.svg)](https://codecov.io/gh/Bl4nk44/Audiovault)
 [![Build Status](https://github.com/Bl4nk44/Audiovault/actions/workflows/ci.yml/badge.svg)](https://github.com/Bl4nk44/Audiovault/actions)
 
 🔗 **Quick Links**:
-[📖 Wiki](https://github.com/Bl4nk44/Audiovault/wiki) •
+[📖 Docs](docs/GETTING_STARTED.md) •
 [🐛 Issues](https://github.com/Bl4nk44/Audiovault/issues) •
 [🎯 Pull Requests](https://github.com/Bl4nk44/Audiovault/pulls) •
 [💬 Discussions](https://github.com/Bl4nk44/Audiovault/discussions) •
 [🤝 Contributing](CONTRIBUTING.md)
 
 </div>
+
+---
+
+> **Legal Notice** — Audiovault is an independent, open-source project developed for **educational and personal use**. It is a technical demonstration of self-hosted media management and local network streaming. The author does not endorse, encourage, or condone any use of this software that violates applicable laws, the terms of service of any streaming platform, or the rights of copyright holders. You are solely responsible for how you use this software and for ensuring your usage complies with the laws of your jurisdiction. Downloading copyrighted content without authorization may be illegal. **If you enjoy an artist's work, please support them through official channels.**
 
 ---
 
@@ -35,8 +43,8 @@ Audiovault is a powerful, self-hosted application designed to import, manage, an
 ### Extensive Platform Support
 
 - **Supported Services**: Spotify, YouTube, Deezer, SoundCloud, Apple Music, Tidal, Amazon Music
-- **Zero-Config Spotify**: Anonymous scraping means no developer API keys required
-- **Robust Fallback**: Automatically tries alternative sources or proxies if a download fails
+- **Zero-Config Spotify**: Uses Spotify's internal Partner GraphQL API — no developer app, no API keys, no account required. Works from Docker and VPS without restrictions. Supports playlists of any size (no 50- or 100-track limit).
+- **Robust Fallback**: Automatically tries alternative sources if a primary fetch fails
 - [Read the Platform & Fallback Guide](docs/PLATFORM_SUPPORT.md)
 - [Read the Spotify Integration Guide](docs/SPOTIFY_INTEGRATION.md)
 
@@ -91,13 +99,14 @@ The recommended way to run Audiovault is via **Docker**.
 3. **Run with Docker**:
 
    ```bash
-   docker compose up -d --build
+   docker compose pull
+   docker compose up -d
    ```
 
    - **Frontend**: `http://localhost:2137`
    - **Backend API**: `http://localhost:8000/docs`
 
-   > **Important Security Note:** For the first launch, it is **highly recommended** to set your own `ADMIN_PASSWORD` in the `.env` file. 
+   > **Important Security Note:** For the first launch, it is **highly recommended** to set your own `ADMIN_PASSWORD` in the `.env` file.
    > If not provided, a random password will be generated for the `admin` account, but for security reasons, it will **no longer be printed to the logs**.
    >
    > To set your password, add this to your `.env` before starting:
@@ -123,14 +132,16 @@ Audiovault supports running behind reverse proxies out of the box. For detailed 
 
 ## 📚 Documentation
 
-For detailed guides and documentation, please visit our [**Wiki**](https://github.com/Bl4nk44/Audiovault/wiki):
-
-- [Getting Started](https://github.com/Bl4nk44/Audiovault/wiki/Getting-Started)
-- [Configuration Guide](https://github.com/Bl4nk44/Audiovault/wiki/Configuration)
-- [Usage Guide](https://github.com/Bl4nk44/Audiovault/wiki/Usage-Guide)
-- [Architecture](https://github.com/Bl4nk44/Audiovault/wiki/Architecture)
-- [Development Setup](https://github.com/Bl4nk44/Audiovault/wiki/Development)
-- [FAQ & Troubleshooting](https://github.com/Bl4nk44/Audiovault/wiki/FAQ-&-Troubleshooting)
+- [Getting Started](docs/GETTING_STARTED.md)
+- [Configuration Guide](docs/CONFIGURATION.md)
+- [Platform Support & Fallbacks](docs/PLATFORM_SUPPORT.md)
+- [Spotify Integration](docs/SPOTIFY_INTEGRATION.md)
+- [Last.fm Integration](docs/LASTFM_INTEGRATION.md)
+- [Audio Quality](docs/AUDIO_QUALITY.md)
+- [Automation & Watchlists](docs/AUTOMATION.md)
+- [Streaming Server (Subsonic)](docs/STREAMING_SERVER.md)
+- [Reverse Proxy & SSL](docs/REVERSE_PROXY.md)
+- [Pre-Commit Setup](docs/PRE_COMMIT.md)
 
 ## 🐛 Support & Issues
 
@@ -170,5 +181,3 @@ This project adheres to a [Code of Conduct](CODE_OF_CONDUCT.md). By participatin
 ## 📜 License
 
 Distributed under the MIT License. See [LICENSE](LICENSE) for more information.
-
-

@@ -5,7 +5,6 @@ Provides lyrics fetching with Redis caching.
 
 import json
 import logging
-from typing import Optional
 
 from app.core.cache import cache_manager
 from app.core.config import settings
@@ -54,8 +53,8 @@ class LyricsService:
         return f"lyrics:{normalized}"
 
     async def get_lyrics(
-        self, artist: str, title: str, use_cache: bool = True, track_id: Optional[str] = None
-    ) -> Optional[dict]:
+        self, artist: str, title: str, use_cache: bool = True, track_id: str | None = None
+    ) -> dict | None:
         """
         Fetch lyrics for a song.
         Checks cache, then DB metadata (if track_id provided), then LRCLIB, then Genius.
@@ -90,7 +89,7 @@ class LyricsService:
 
         return await self._fetch_and_cache_genius(genius, artist, title, cache_key)
 
-    async def _get_from_db_metadata(self, track_id: str, cache_key: str) -> Optional[dict]:
+    async def _get_from_db_metadata(self, track_id: str, cache_key: str) -> dict | None:
         """Fetch lyrics stored in track metadata (local DB)."""
         try:
             from uuid import UUID
@@ -117,7 +116,7 @@ class LyricsService:
             logger.warning(f"Failed to fetch lyrics from DB metadata: {e}")
         return None
 
-    async def _get_from_lrclib(self, artist: str, title: str) -> Optional[dict]:
+    async def _get_from_lrclib(self, artist: str, title: str) -> dict | None:
         """
         Fetch lyrics from LRCLIB API.
         LRCLIB provides high-quality synced lyrics (LRC format).
@@ -153,7 +152,7 @@ class LyricsService:
 
         return {"found": False, "lyrics": None, "synced_lyrics": None}
 
-    async def _get_from_cache(self, cache_key: str, artist: str, title: str) -> Optional[dict]:
+    async def _get_from_cache(self, cache_key: str, artist: str, title: str) -> dict | None:
         """Try to retrieve lyrics from cache."""
         try:
             cached_str = await cache_manager.get(cache_key)
@@ -165,7 +164,7 @@ class LyricsService:
             logger.warning(f"Cache read error: {e}")
         return None
 
-    async def _fetch_and_cache_genius(self, genius, artist: str, title: str, cache_key: str) -> Optional[dict]:
+    async def _fetch_and_cache_genius(self, genius, artist: str, title: str, cache_key: str) -> dict | None:
         """Fetch from Genius and update cache."""
         try:
             song = genius.search_song(title, artist)

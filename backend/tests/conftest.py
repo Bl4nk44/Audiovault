@@ -126,7 +126,7 @@ async def mock_library_maintenance():
 @pytest.fixture(scope="function")
 async def client(
     db_session: AsyncSession, mock_cache_manager, mock_scheduler, mock_download_manager, mock_library_maintenance
-) -> AsyncGenerator[AsyncClient, None]:
+) -> AsyncGenerator[AsyncClient]:
     """Create a new FastAPI TestClient that uses the `db_session` fixture and mocked cache."""
 
     async def override_get_db():
@@ -166,7 +166,7 @@ async def admin_user(db_session):
     from app.core.security import get_password_hash
     from app.models.user import User
 
-    password = "admin"
+    password = "admin"  # nosonar
     hashed_password = get_password_hash(password)
 
     user = User(
@@ -193,7 +193,7 @@ async def normal_user(db_session):
     from app.core.security import get_password_hash
     from app.models.user import User
 
-    password = "user"
+    password = "user"  # nosonar
     hashed_password = get_password_hash(password)
     user = User(
         id=uuid.uuid4(), username="user", email="user@example.com", hashed_password=hashed_password, is_active=True

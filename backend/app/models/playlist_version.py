@@ -53,8 +53,8 @@ class PlaylistVersion(Base):
     created_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(UTC))
 
     # Relationships
-    playlist: Mapped["Playlist"] = relationship("Playlist", back_populates="versions")
-    creator: Mapped["User"] = relationship("User")
+    playlist: Mapped[Playlist] = relationship("Playlist", back_populates="versions")
+    creator: Mapped[User] = relationship("User")
 
     def __repr__(self) -> str:
         return f"<PlaylistVersion {self.playlist_id} v{self.version_number}>"

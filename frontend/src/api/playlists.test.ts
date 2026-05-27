@@ -122,7 +122,7 @@ describe("playlistsApi", () => {
       expect(api.get).toHaveBeenCalledWith("/playlists/pl-1/export", { responseType: "blob" });
       expect(mockLink.download).toBe("My Playlist_export.json");
       expect(mockLink.click).toHaveBeenCalled();
-      
+
       createElementSpy.mockRestore();
       appendChildSpy.mockRestore();
     });

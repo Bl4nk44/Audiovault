@@ -2,8 +2,8 @@ import asyncio
 import logging
 import os
 import uuid
+from collections.abc import Sequence
 from datetime import UTC, datetime
-from typing import Optional, Sequence
 
 import aiofiles
 import yt_dlp
@@ -41,7 +41,7 @@ class DownloadManager:
         # Per-user semaphores for concurrent download limits
         self.user_semaphores: dict[str, asyncio.Semaphore] = {}
 
-    def get_user_semaphore(self, user_id: str, max_concurrent: Optional[int] = None) -> asyncio.Semaphore:
+    def get_user_semaphore(self, user_id: str, max_concurrent: int | None = None) -> asyncio.Semaphore:
         """Get or create a semaphore for a specific user."""
         if max_concurrent is None:
             max_concurrent = self.DEFAULT_CONCURRENT_DOWNLOADS
@@ -195,9 +195,7 @@ class DownloadManager:
             logger.error(f"Failed to resume pending downloads: {e}")
             # Do not re-raise, allow app to start
 
-    async def add_download(
-        self, db: AsyncSession, user_id: str | uuid.UUID, download_data: "DownloadCreate"
-    ) -> Download:
+    async def add_download(self, db: AsyncSession, user_id: str | uuid.UUID, download_data: DownloadCreate) -> Download:
         download = Download(
             user_id=user_id,
             track_id=download_data.track_id,
@@ -610,7 +608,7 @@ class DownloadManager:
 
     async def retry_failed_downloads(self, db: AsyncSession):
         """Retry all failed downloads that haven't exceeded max retries."""
-        MAX_RETRIES = 3
+        MAX_RETRIES = 3  # noqa: N806
 
         result = await db.execute(
             select(Download).where(
@@ -647,7 +645,7 @@ class DownloadManager:
         ]
 
     def _build_output_template(self, download: Download, filename_schema: str, schema_map: dict) -> str:
-        PLAYLIST_TAG = "{playlist}"
+        PLAYLIST_TAG = "{playlist}"  # noqa: N806
         tmpl = filename_schema.replace("{service}", download.source or "")
         if PLAYLIST_TAG in tmpl:
             playlist_val = sanitize_filename(download.playlist_name) if download.playlist_name else ""

@@ -17,7 +17,7 @@ from typing import Any
 
 from app.services.deezer_service import DeezerService
 from app.services.musicbrainz_service import MusicBrainzService
-from app.services.spotify_service import SpotifyService
+from app.services.spotify_service import SpotifyService  # noqa: F401
 
 logger = logging.getLogger(__name__)
 
@@ -160,24 +160,8 @@ class SearchOrchestrator:
             return []
 
     async def _search_deezer_artists(self, query: str, limit: int = 10) -> list[dict[str, Any]]:
-        """Search artists via Deezer — uses track search and extracts artists."""
-        tracks = await self.deezer.search(query, limit=limit)
-        artists_seen = set()
-        artists = []
-        for t in tracks:
-            name = t.get("artist")
-            if name and name not in artists_seen:
-                artists_seen.add(name)
-                artists.append(
-                    {
-                        "id": t.get("id"),
-                        "name": name,
-                        "image_url": t.get("image_url"),
-                        "source": "deezer",
-                        "type": "artist",
-                    }
-                )
-        return artists
+        """Search artists via Deezer artist search endpoint."""
+        return await self.deezer.search_artists(query, limit=limit)
 
     async def _search_musicbrainz_artists(self, query: str, limit: int = 10) -> list[dict[str, Any]]:
         """Search artists via MusicBrainz."""

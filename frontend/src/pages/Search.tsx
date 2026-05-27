@@ -22,6 +22,7 @@ const detectSourceFromUrl = (query: string): string => {
 export default function Search() {
   const [searchParams] = useSearchParams();
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [results, setResults] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [offset, setOffset] = useState(0);
@@ -38,6 +39,7 @@ export default function Search() {
     type: string,
     currentOffset: number
   ) => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     let newResults: any[] = [];
 
     // Determine which types to fetch
@@ -92,6 +94,8 @@ export default function Search() {
       setOffset(currentOffset + 20);
     }
   };
+
+  const setSearchParams = useSearchParams()[1];
 
   /* eslint-disable react-hooks/exhaustive-deps */
   const handleSearch = useCallback(
@@ -148,8 +152,6 @@ export default function Search() {
     [searchParams] // Re-create when params change
   );
 
-  const setSearchParams = useSearchParams()[1];
-
   useEffect(() => {
     const queryParam = searchParams.get("q");
     const sourceParam = searchParams.get("source") || "all";
@@ -162,6 +164,8 @@ export default function Search() {
         sourceParam !== currentSource ||
         typeParam !== currentType
       ) {
+        // handleSearch syncs results to URL params (external state) — legit effect, not derivable in render
+        // eslint-disable-next-line react-hooks/set-state-in-effect
         handleSearch(queryParam, sourceParam, typeParam);
       }
     }

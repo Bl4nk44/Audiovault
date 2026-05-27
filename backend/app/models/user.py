@@ -50,25 +50,25 @@ class User(Base):
     created_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(UTC))
 
     # Relationships
-    credentials: Mapped[list["ServiceCredentials"]] = relationship(
+    credentials: Mapped[list[ServiceCredentials]] = relationship(
         "ServiceCredentials", back_populates="user", cascade=CASCADE_DELETE
     )
-    downloads: Mapped[list["Download"]] = relationship("Download", back_populates="user", cascade=CASCADE_DELETE)
-    playlists: Mapped[list["Playlist"]] = relationship("Playlist", back_populates="owner", cascade=CASCADE_DELETE)
-    watchlist: Mapped[list["Watchlist"]] = relationship("Watchlist", back_populates="user", cascade=CASCADE_DELETE)
-    starred_artists: Mapped[list["StarredArtist"]] = relationship(
+    downloads: Mapped[list[Download]] = relationship("Download", back_populates="user", cascade=CASCADE_DELETE)
+    playlists: Mapped[list[Playlist]] = relationship("Playlist", back_populates="owner", cascade=CASCADE_DELETE)
+    watchlist: Mapped[list[Watchlist]] = relationship("Watchlist", back_populates="user", cascade=CASCADE_DELETE)
+    starred_artists: Mapped[list[StarredArtist]] = relationship(
         "StarredArtist", back_populates="user", cascade=CASCADE_DELETE
     )
-    starred_albums: Mapped[list["StarredAlbum"]] = relationship(
+    starred_albums: Mapped[list[StarredAlbum]] = relationship(
         "StarredAlbum", back_populates="user", cascade=CASCADE_DELETE
     )
-    starred_tracks: Mapped[list["StarredTrack"]] = relationship(
+    starred_tracks: Mapped[list[StarredTrack]] = relationship(
         "StarredTrack", back_populates="user", cascade=CASCADE_DELETE
     )
-    history: Mapped[list["ListeningHistory"]] = relationship(
+    history: Mapped[list[ListeningHistory]] = relationship(
         "ListeningHistory", back_populates="user", cascade=CASCADE_DELETE
     )
-    audit_logs: Mapped[list["AuditLog"]] = relationship("AuditLog", back_populates="user", cascade=CASCADE_DELETE)
+    audit_logs: Mapped[list[AuditLog]] = relationship("AuditLog", back_populates="user", cascade=CASCADE_DELETE)
 
     # Preferences (JSONB)
     preferences: Mapped[dict[str, Any]] = mapped_column(JSON, default=default_preferences)

@@ -39,7 +39,7 @@ class LibraryScannerService:
         return self.base_dir
 
     async def _get_known_paths(self, db: AsyncSession, user_id: str) -> set[str]:
-        from uuid import UUID as UUID_type
+        from uuid import UUID as UUID_type  # noqa: N811
 
         try:
             u_id = UUID_type(str(user_id))
@@ -88,11 +88,11 @@ class LibraryScannerService:
         lrc_path = base_path + ".lrc"
         if os.path.exists(lrc_path):
             try:
-                with open(lrc_path, "r", encoding="utf-8", errors="replace") as f:
+                with open(lrc_path, encoding="utf-8", errors="replace") as f:
                     lrc_content = f.read().strip()
                     if lrc_content:
                         return lrc_content
-            except Exception:
+            except Exception:  # noqa: S110
                 pass
         return None
 
@@ -253,7 +253,7 @@ class LibraryScannerService:
             base_dir = os.path.dirname(full_path)
             matched_tracks = []  # List of track_ids in order
 
-            async with aiofiles.open(full_path, "r", encoding="utf-8", errors="ignore") as f:
+            async with aiofiles.open(full_path, encoding="utf-8", errors="ignore") as f:
                 lines = await f.readlines()
 
             for line in lines:
@@ -384,7 +384,7 @@ class LibraryScannerService:
             db.add(new_track)
             await db.flush()
 
-            from uuid import UUID as UUID_type
+            from uuid import UUID as UUID_type  # noqa: N811
 
             try:
                 u_id = UUID_type(str(user_id))

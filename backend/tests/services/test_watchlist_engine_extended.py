@@ -118,3 +118,146 @@ async def test_check_for_updates_mocked(db_session: AsyncSession):
                         count = await engine.check_for_updates(db_session, user_id)
                         assert count == 1
                         mock_handle.assert_called_once()
+
+
+@pytest.mark.asyncio
+async def test_to_uuid_with_string(db_session: AsyncSession):
+    engine = WatchlistEngine()
+    str_id = str(uuid.uuid4())
+    result = engine._to_uuid(str_id)
+    assert isinstance(result, uuid.UUID)
+    assert str(result) == str_id
+
+
+@pytest.mark.asyncio
+async def test_handle_download_new_auto_download(db_session: AsyncSession):
+    engine = WatchlistEngine()
+    user_id = uuid.uuid4()
+    track_id = uuid.uuid4()
+
+    item = MagicMock()
+    item.auto_download = True
+    item.source = "spotify"
+    item.watch_type = "playlist"
+    item.source_name = "My Playlist"
+
+    with patch("app.services.watchlist_engine.download_manager.add_download", new_callable=AsyncMock):
+        result = await engine._handle_download(db_session, user_id, track_id, item, "New Track")
+        assert result is True
+
+
+@pytest.mark.asyncio
+async def test_handle_download_no_auto_download(db_session: AsyncSession):
+    engine = WatchlistEngine()
+    user_id = uuid.uuid4()
+    track_id = uuid.uuid4()
+
+    item = MagicMock()
+    item.auto_download = False
+
+    result = await engine._handle_download(db_session, user_id, track_id, item, "Track")
+    assert result is False
+
+
+@pytest.mark.asyncio
+async def test_remove_watchlist_item_not_found(db_session: AsyncSession):
+    engine = WatchlistEngine()
+    result = await engine.remove_from_watchlist(db_session, uuid.uuid4(), uuid.uuid4())
+    assert result is False
+
+
+@pytest.mark.asyncio
+async def test_update_watchlist_item_not_found(db_session: AsyncSession):
+    engine = WatchlistEngine()
+    result = await engine.update_watchlist_item(db_session, uuid.uuid4(), uuid.uuid4(), {"auto_download": True})
+    assert result is None
+
+
+@pytest.mark.asyncio
+async def test_add_to_watchlist_auto_download_triggers_check(db_session: AsyncSession):
+    engine = WatchlistEngine()
+    user_id = uuid.uuid4()
+    item_data = {
+        "watch_type": "playlist",
+        "source": "spotify",
+        "source_id": "sid_auto",
+        "source_name": "Auto DL Playlist",
+        "auto_download": True,
+    }
+    with patch.object(engine, "check_for_updates", new_callable=AsyncMock) as mock_check:
+        mock_check.return_value = 0
+        result = await engine.add_to_watchlist(db_session, user_id, item_data)
+        assert result.auto_download is True
+        mock_check.assert_called_once()
+
+
+@pytest.mark.asyncio
+async def test_check_for_updates_empty_tracks(db_session: AsyncSession):
+    engine = WatchlistEngine()
+    user_id = uuid.uuid4()
+
+    item = Watchlist(
+        user_id=user_id,
+        watch_type="playlist",
+        source="spotify",
+        source_id="sid_empty",
+        source_name="Empty Playlist",
+        auto_download=True,
+    )
+    db_session.add(item)
+    await db_session.commit()
+
+    with patch(
+        "app.services.watchlist.WatchlistItemProcessor.fetch_tracks_for_item", new_callable=AsyncMock
+    ) as mock_fetch:
+        mock_fetch.return_value = []
+        count = await engine.check_for_updates(db_session, user_id)
+        assert count == 0
+
+
+@pytest.mark.asyncio
+async def test_check_for_updates_no_source(db_session: AsyncSession):
+    engine = WatchlistEngine()
+    user_id = uuid.uuid4()
+
+    item = Watchlist(
+        user_id=user_id,
+        watch_type="playlist",
+        source=None,
+        source_id="sid_nosource",
+        source_name="No Source",
+        auto_download=True,
+    )
+    db_session.add(item)
+    await db_session.commit()
+
+    with patch(
+        "app.services.watchlist.WatchlistItemProcessor.fetch_tracks_for_item", new_callable=AsyncMock
+    ) as mock_fetch:
+        mock_fetch.return_value = [{"id": "t1", "title": "Track"}]
+        count = await engine.check_for_updates(db_session, user_id)
+        assert count == 0
+
+
+@pytest.mark.asyncio
+async def test_check_for_updates_fetch_exception(db_session: AsyncSession):
+    engine = WatchlistEngine()
+    user_id = uuid.uuid4()
+
+    item = Watchlist(
+        user_id=user_id,
+        watch_type="playlist",
+        source="spotify",
+        source_id="sid_err",
+        source_name="Error Playlist",
+        auto_download=True,
+    )
+    db_session.add(item)
+    await db_session.commit()
+
+    with patch(
+        "app.services.watchlist.WatchlistItemProcessor.fetch_tracks_for_item", new_callable=AsyncMock
+    ) as mock_fetch:
+        mock_fetch.side_effect = RuntimeError("Fetch failed")
+        count = await engine.check_for_updates(db_session, user_id)
+        assert count == 0

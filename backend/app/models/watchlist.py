@@ -47,8 +47,8 @@ class Watchlist(Base):
     created_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(UTC))
 
     # Relationships
-    user: Mapped["User"] = relationship("User", back_populates="watchlist")
-    items: Mapped[list["WatchlistItem"]] = relationship(
+    user: Mapped[User] = relationship("User", back_populates="watchlist")
+    items: Mapped[list[WatchlistItem]] = relationship(
         "WatchlistItem", back_populates="watchlist", cascade="all, delete-orphan"
     )
 

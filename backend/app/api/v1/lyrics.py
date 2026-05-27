@@ -2,7 +2,7 @@
 Lyrics API endpoint.
 """
 
-from typing import Annotated, Optional
+from typing import Annotated
 from uuid import UUID
 
 from app.core.dependencies import get_current_active_user
@@ -24,12 +24,12 @@ class LyricsResponse(BaseModel):
     """Response model for lyrics endpoint."""
 
     found: bool
-    lyrics: Optional[str] = None
-    synced_lyrics: Optional[str] = None
-    title: Optional[str] = None
-    artist: Optional[str] = None
-    url: Optional[str] = None
-    album: Optional[str] = None
+    lyrics: str | None = None
+    synced_lyrics: str | None = None
+    title: str | None = None
+    artist: str | None = None
+    url: str | None = None
+    album: str | None = None
     cached: bool = False
 
 

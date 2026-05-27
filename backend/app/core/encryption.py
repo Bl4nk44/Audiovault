@@ -5,7 +5,6 @@ Uses Fernet symmetric encryption with keys derived from settings.
 
 import base64
 import logging
-from typing import Optional
 
 from cryptography.fernet import Fernet, InvalidToken
 from cryptography.hazmat.primitives import hashes
@@ -23,7 +22,7 @@ class EncryptionService:
     Uses Fernet symmetric encryption.
     """
 
-    def __init__(self, secret_key: Optional[str] = None, salt: Optional[bytes] = None):
+    def __init__(self, secret_key: str | None = None, salt: bytes | None = None):
         """
         Initialize encryption service.
 
@@ -31,7 +30,7 @@ class EncryptionService:
             secret_key: Secret key for encryption, defaults to JWT_SECRET_KEY
             salt: Salt for key derivation, defaults to application salt
         """
-        self._fernet: Optional[Fernet] = None
+        self._fernet: Fernet | None = None
         self._secret_key = secret_key
         self._salt = salt or _DEFAULT_SALT
 
@@ -96,7 +95,7 @@ class EncryptionService:
             return decrypted.decode()
         except InvalidToken:
             logger.error("Decryption failed: invalid token or wrong key")
-            raise ValueError("Decryption failed: invalid token")
+            raise ValueError("Decryption failed: invalid token") from None
         except Exception as e:
             logger.error(f"Decryption failed: {e}")
             raise ValueError("Decryption failed") from e

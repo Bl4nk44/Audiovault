@@ -26,7 +26,7 @@ class WatchlistItem(Base):
     added_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(UTC))
 
     # Relationships
-    watchlist: Mapped["Watchlist"] = relationship("Watchlist", back_populates="items")
-    track: Mapped["Track"] = relationship("Track", back_populates="watchlist_items")
+    watchlist: Mapped[Watchlist] = relationship("Watchlist", back_populates="items")
+    track: Mapped[Track] = relationship("Track", back_populates="watchlist_items")
 
     __table_args__ = (UniqueConstraint("watchlist_id", "track_id", name="unique_watchlist_track"),)

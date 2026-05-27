@@ -1,10 +1,10 @@
 > """
 > Subsonic API implementation for Audiovault.
-  
+
 > This module provides Subsonic REST API compatibility,
 > enabling clients like Sonixd, Amperfy, and DSub to connect.
 > """
-  
+
 > from app.api.subsonic.router import router
-  
+
 > __all__ = ["router"]

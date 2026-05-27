@@ -2,10 +2,10 @@
 > from app.models.user import User
 > from app.services.tidal_service import tidal_service
 > from fastapi import APIRouter, Depends
-  
+
 > router = APIRouter()
-  
-  
+
+
 > @router.get("/search")
 > async def search_tidal(
 >     q: str,
@@ -19,6 +19,6 @@
 !             playlist_info = await tidal_service.get_playlist_info(q)
 !             if playlist_info:
 !                 return [playlist_info]
-  
+
 !         return await tidal_service.get_tracks(q)
 !     return []

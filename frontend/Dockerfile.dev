@@ -21,5 +21,9 @@ EXPOSE 5173
 # Switch to non-root user
 USER node
 
+# Health check — Vite dev server
+HEALTHCHECK --interval=30s --timeout=5s --start-period=20s --retries=3 \
+  CMD wget -q --spider http://localhost:5173/ || exit 1
+
 # Command for Dev
 CMD ["npm", "run", "dev", "--", "--host"]

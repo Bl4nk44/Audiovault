@@ -1,7 +1,7 @@
 import os
 import shutil
 from datetime import UTC, datetime
-from typing import Annotated, Any, Optional
+from typing import Annotated, Any
 from uuid import UUID
 
 from app.core.config import settings
@@ -41,7 +41,7 @@ async def get_dashboard_stats(
     }
 
 
-async def _get_count(db: AsyncSession, user_id: UUID, status: Optional[str] = None) -> int:
+async def _get_count(db: AsyncSession, user_id: UUID, status: str | None = None) -> int:
     query = select(func.count(Download.id)).where(Download.user_id == user_id)
     if status:
         query = query.where(Download.status == status)

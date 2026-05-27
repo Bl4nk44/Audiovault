@@ -1,6 +1,6 @@
 # Personal Streaming Server
 
-Turn Audiovault into your personal streaming service, accessible from anywhere. 
+Turn Audiovault into your personal streaming service, accessible from anywhere.
 Audiovault implements the Subsonic API (v1.16.1), allowing you to stream your music library to almost any device using compatible clients.
 
 ## Compatible Clients

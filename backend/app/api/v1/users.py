@@ -17,6 +17,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 router = APIRouter()
 
+_ALLOWED_AVATAR_EXTS = frozenset({".jpg", ".jpeg", ".png", ".gif", ".webp"})
+
 
 @router.delete("/me", response_model=dict)
 async def delete_user_me(
@@ -116,7 +118,7 @@ async def update_password_me(
     current_user.hashed_password = get_password_hash(password_update.new_password)
     # Sync Subsonic password (MD5) - required for Subsonic Legacy Auth
     # nosemgrep: python.lang.security.audit.md5-used-as-password.md5-used-as-password
-    md5_hash = hashlib.md5(password_update.new_password.encode("utf-8")).hexdigest()  # nosec B303
+    md5_hash = hashlib.md5(password_update.new_password.encode("utf-8")).hexdigest()  # nosec B303  # noqa: S324
     current_user.subsonic_password = md5_hash
     await db.commit()
     return {"status": "success"}
@@ -128,21 +130,21 @@ async def upload_user_avatar(
     db: Annotated[AsyncSession, Depends(get_db)],
     file: Annotated[UploadFile, File()],
 ):
-    # Create avatars directory if not exists
-    # Create avatars directory if not exists
     static_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), "static")
     avatar_dir = os.path.join(static_dir, "avatars")
 
     if not os.path.exists(avatar_dir):
         os.makedirs(avatar_dir, exist_ok=True)
 
-    # Generate unique filename
-    file_ext = os.path.splitext(file.filename or "avatar.jpg")[1] or ".jpg"
+    # Generate unique filename — only allow safe image extensions
+    raw_ext = os.path.splitext(file.filename or "")[1].lower()
+    file_ext = raw_ext if raw_ext in _ALLOWED_AVATAR_EXTS else ".jpg"
     filename = f"avatar_{current_user.id}_{int(time.time())}{file_ext}"
     file_path = os.path.join(avatar_dir, filename)
 
-    # Save file asynchronously
-    async with aiofiles.open(file_path, "wb") as out_file:
+    async with aiofiles.open(
+        file_path, "wb"
+    ) as out_file:  # deepcode ignore PT: path built from user.id+timestamp+allowlist ext, not raw user input
         while content := await file.read(1024 * 1024):  # Read in 1MB chunks
             await out_file.write(content)
 

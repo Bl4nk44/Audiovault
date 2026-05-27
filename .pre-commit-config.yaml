@@ -1,0 +1,47 @@
+# Note: `pre-commit install` conflicts with the global core.hooksPath set by ggshield (~/.gitconfig).
+# Run manually: `pre-commit run --all-files` or via CI.
+# ggshield runs on git commit via its own global hook — no `pre-commit install` required.
+
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v5.0.0
+    hooks:
+      - id: trailing-whitespace
+      - id: end-of-file-fixer
+      - id: check-yaml
+      - id: check-json
+      - id: detect-private-key
+      - id: check-merge-conflict
+
+  # Python — ruff (linting + formatting), config in pyproject.toml
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.15.12
+    hooks:
+      - id: ruff
+        args: [--fix]
+        files: ^backend/
+      - id: ruff-format
+        files: ^backend/
+
+  # Secret scanning
+  - repo: https://github.com/gitguardian/ggshield
+    rev: v1.50.2
+    hooks:
+      - id: ggshield
+
+  # SAST — uses .semgrep.yml from project root
+  - repo: https://github.com/semgrep/semgrep
+    rev: v1.75.0
+    hooks:
+      - id: semgrep
+        args: ["--config=.semgrep.yml", "--error", "--exclude=backend/tests"]
+
+  # TypeScript/React — ESLint flat config
+  - repo: local
+    hooks:
+      - id: eslint-frontend
+        name: ESLint (frontend)
+        entry: npm --prefix frontend run lint
+        language: system
+        files: ^frontend/src/.*\.[jt]sx?$
+        pass_filenames: false

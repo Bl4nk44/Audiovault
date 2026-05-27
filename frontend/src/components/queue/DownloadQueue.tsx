@@ -17,19 +17,19 @@ export default function DownloadQueue() {
     try {
       const response = await api.get("/downloads/queue");
       const fetchedQueue = response.data || [];
-      
+
       const sortedQueue = fetchedQueue.sort((a: Download, b: Download) => {
         const errorStatuses = ["error", "failed"];
         const aIsError = errorStatuses.includes(a.status);
         const bIsError = errorStatuses.includes(b.status);
-        
+
         if (aIsError && !bIsError) return -1;
         if (!aIsError && bIsError) return 1;
         if (aIsError && bIsError) return 0;
-        
+
         return a.status === "downloading" ? -1 : 1;
       });
-      
+
       setQueue(sortedQueue);
     } catch (error) {
       console.error("Failed to fetch queue", error);
@@ -50,6 +50,8 @@ export default function DownloadQueue() {
   }, []);
 
   useEffect(() => {
+    // Initial + polled data fetch from the backend (external system) — belongs in an effect
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     fetchQueue();
     const interval = setInterval(fetchQueue, 2000);
 
