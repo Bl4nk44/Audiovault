@@ -4,6 +4,7 @@ import socket
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
+
 from app.utils.url_helper import SSRFValidationError, extract_domain, resolve_redirects, validate_url
 
 

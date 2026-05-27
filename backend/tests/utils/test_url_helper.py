@@ -1,4 +1,5 @@
 import pytest
+
 from app.utils.url_helper import (
     extract_domain,
     is_allowed_domain,
