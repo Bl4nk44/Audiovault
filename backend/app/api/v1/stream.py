@@ -8,6 +8,13 @@ import aiofiles
 import httpx
 import mutagen.mp4
 import yt_dlp
+from fastapi import APIRouter, Depends, HTTPException, Request
+from fastapi.responses import RedirectResponse, Response
+from mutagen import File as MutagenFile
+from mutagen.id3 import APIC, ID3
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
+
 from app.api.subsonic.handlers.media import ALLOWED_IMAGE_DOMAINS
 from app.core.cache import cache_manager
 from app.core.executors import stream_executor
@@ -17,12 +24,6 @@ from app.models.download import Download
 from app.models.track import Track
 from app.services.deezer_service import DeezerService
 from app.services.youtube_service import YouTubeService
-from fastapi import APIRouter, Depends, HTTPException, Request
-from fastapi.responses import RedirectResponse, Response
-from mutagen import File as MutagenFile
-from mutagen.id3 import APIC, ID3
-from sqlalchemy import select
-from sqlalchemy.ext.asyncio import AsyncSession
 
 router = APIRouter()
 logger = logging.getLogger(__name__)

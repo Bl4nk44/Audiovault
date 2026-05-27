@@ -3,6 +3,7 @@ import uuid
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
+
 from app.models.album import Album
 from app.models.artist import Artist
 from app.models.download import Download

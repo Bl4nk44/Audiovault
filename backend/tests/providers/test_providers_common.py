@@ -1,6 +1,7 @@
 from unittest.mock import AsyncMock, MagicMock
 
 import pytest
+
 from app.providers.soundcloud_provider import SoundCloudProvider
 from app.providers.spotify_provider import SpotifyProvider
 from app.providers.youtube_provider import YouTubeProvider

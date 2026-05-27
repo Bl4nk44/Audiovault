@@ -2,14 +2,15 @@ import logging
 from datetime import UTC, datetime
 from typing import Annotated
 
+from fastapi import APIRouter, Depends, HTTPException, Request
+from sqlalchemy.ext.asyncio import AsyncSession
+
 from app.core.dependencies import get_current_user
 from app.db.database import get_db
 from app.models.user import User
 from app.schemas.lastfm import NowPlayingRequest, ScrobbleRequest
 from app.schemas.recommendation import RecommendationResponse
 from app.services.lastfm_service import LastfmError, LastfmService
-from fastapi import APIRouter, Depends, HTTPException, Request
-from sqlalchemy.ext.asyncio import AsyncSession
 
 logger = logging.getLogger(__name__)
 

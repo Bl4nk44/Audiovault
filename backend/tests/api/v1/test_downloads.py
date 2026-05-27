@@ -2,9 +2,10 @@ import uuid
 from unittest.mock import AsyncMock, patch
 
 import pytest
+from sqlalchemy import select
+
 from app.models.download import Download
 from app.models.track import Track
-from sqlalchemy import select
 
 
 @pytest.fixture

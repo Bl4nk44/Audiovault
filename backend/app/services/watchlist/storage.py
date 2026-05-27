@@ -1,10 +1,11 @@
 import uuid
 
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.future import select
+
 from app.models.download import Download
 from app.models.track import Track
 from app.models.watchlist_item import WatchlistItem
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.future import select
 
 
 class WatchlistStorage:

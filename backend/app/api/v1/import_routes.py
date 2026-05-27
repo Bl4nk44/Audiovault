@@ -1,12 +1,13 @@
 import logging
 from typing import Annotated
 
+from fastapi import APIRouter, Depends, HTTPException
+from pydantic import BaseModel, model_validator
+
 from app.core.dependencies import get_current_active_user
 from app.models.user import User
 from app.providers import provider_manager
 from app.schemas.metadata import PlaylistMetadata
-from fastapi import APIRouter, Depends, HTTPException
-from pydantic import BaseModel, model_validator
 
 router = APIRouter()
 logger = logging.getLogger(__name__)

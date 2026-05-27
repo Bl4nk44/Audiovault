@@ -1,9 +1,10 @@
 import uuid
 
 import pytest
+from httpx import AsyncClient
+
 from app.models.playlist import Playlist
 from app.models.track import Track
-from httpx import AsyncClient
 
 
 @pytest.fixture

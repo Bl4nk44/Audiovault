@@ -3,6 +3,7 @@
 from unittest.mock import AsyncMock, patch
 
 import pytest
+
 from app.api.v1.lastfm import get_lastfm_service
 from app.main import app
 from app.services.lastfm_service import LastfmError, LastfmService

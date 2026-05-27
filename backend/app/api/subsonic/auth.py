@@ -18,13 +18,14 @@ import secrets
 from datetime import UTC, datetime, timedelta
 from typing import Annotated
 
+from fastapi import Depends, HTTPException, Query, status
+from sqlalchemy import and_, select
+from sqlalchemy.ext.asyncio import AsyncSession
+
 from app.core.security import verify_password
 from app.db.database import get_db
 from app.models.subsonic import SubsonicAuthToken
 from app.models.user import User
-from fastapi import Depends, HTTPException, Query, status
-from sqlalchemy import and_, select
-from sqlalchemy.ext.asyncio import AsyncSession
 
 logger = logging.getLogger(__name__)
 

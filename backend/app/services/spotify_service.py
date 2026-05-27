@@ -31,6 +31,7 @@ from typing import Any
 from urllib.parse import parse_qs, urlencode, urlparse
 
 import httpx
+
 from app.core.config import settings
 from app.services.spotify_partner import partner_client  # noqa: E402
 

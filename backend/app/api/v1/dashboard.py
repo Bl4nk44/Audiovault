@@ -4,16 +4,17 @@ from datetime import UTC, datetime
 from typing import Annotated, Any
 from uuid import UUID
 
-from app.core.config import settings
-from app.core.dependencies import get_current_active_user
-from app.db.database import get_db
-from app.models.download import Download
-from app.models.user import User
 from fastapi import APIRouter, Depends
 from sqlalchemy import func
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 from sqlalchemy.orm import selectinload
+
+from app.core.config import settings
+from app.core.dependencies import get_current_active_user
+from app.db.database import get_db
+from app.models.download import Download
+from app.models.user import User
 
 router = APIRouter()
 

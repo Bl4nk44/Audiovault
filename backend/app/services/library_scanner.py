@@ -4,16 +4,17 @@ import os
 from uuid import UUID
 
 import aiofiles
+from mutagen import File as MutagenFile
+from mutagen.easyid3 import EasyID3
+from sqlalchemy import delete, select
+from sqlalchemy.ext.asyncio import AsyncSession
+
 from app.core.config import settings
 from app.core.executors import stream_executor
 from app.models.album import Album
 from app.models.artist import Artist
 from app.models.download import Download
 from app.models.track import Track
-from mutagen import File as MutagenFile
-from mutagen.easyid3 import EasyID3
-from sqlalchemy import delete, select
-from sqlalchemy.ext.asyncio import AsyncSession
 
 logger = logging.getLogger(__name__)
 
@@ -290,7 +291,9 @@ class LibraryScannerService:
         if os.path.isabs(line):
             track_path = os.path.abspath(line)
         else:
-            track_path = os.path.abspath(os.path.join(base_dir, line))
+            track_path = os.path.abspath(
+                os.path.join(base_dir, line)  # nosemgrep: path-traversal  # commonpath check below
+            )
 
         # Security: ensure resolved path stays within the allowed download directory
         try:

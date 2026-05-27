@@ -17,6 +17,12 @@ from uuid import UUID
 
 import aiofiles
 import httpx
+from fastapi import APIRouter, Depends, Query, Request
+from fastapi.responses import FileResponse, Response, StreamingResponse
+from mutagen import File as MutagenFile
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
+
 from app.api.subsonic.auth import subsonic_auth
 from app.api.subsonic.utils import get_content_type, parse_cover_art_id
 from app.db.database import get_db
@@ -26,11 +32,6 @@ from app.models.download import Download
 from app.models.track import Track
 from app.models.user import User
 from app.schemas.subsonic.base import subsonic_error
-from fastapi import APIRouter, Depends, Query, Request
-from fastapi.responses import FileResponse, Response, StreamingResponse
-from mutagen import File as MutagenFile
-from sqlalchemy import select
-from sqlalchemy.ext.asyncio import AsyncSession
 
 logger = logging.getLogger(__name__)
 

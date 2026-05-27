@@ -1,10 +1,11 @@
 import uuid
 
 import pytest
+from sqlalchemy import select
+
 from app.models.playlist import Playlist, PlaylistTrack
 from app.models.playlist_version import PlaylistVersion
 from app.models.track import Track
-from sqlalchemy import select
 
 
 @pytest.fixture

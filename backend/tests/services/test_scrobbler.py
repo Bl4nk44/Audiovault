@@ -1,6 +1,7 @@
 from unittest.mock import AsyncMock, Mock
 
 import pytest
+
 from app.models.user import User
 from app.services.lastfm_service import LastfmError, LastfmService
 from app.services.scrobbler import AudiovaultScrobbler

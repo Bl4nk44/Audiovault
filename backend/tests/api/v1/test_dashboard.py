@@ -3,10 +3,11 @@ from datetime import UTC, datetime, timedelta
 from unittest.mock import patch
 
 import pytest
+from httpx import AsyncClient
+
 from app.api.v1.dashboard import _calculate_time_ago, _get_filename
 from app.models.download import Download
 from app.models.track import Track
-from httpx import AsyncClient
 
 
 @pytest.mark.asyncio

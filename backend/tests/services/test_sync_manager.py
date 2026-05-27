@@ -2,12 +2,13 @@ import uuid
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
+from sqlalchemy.ext.asyncio import AsyncSession
+
 from app.models.download import Download
 from app.models.track import Track
 from app.models.watchlist import Watchlist
 from app.models.watchlist_item import WatchlistItem
 from app.services.sync_manager import SyncManager
-from sqlalchemy.ext.asyncio import AsyncSession
 
 
 @pytest.fixture

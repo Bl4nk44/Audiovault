@@ -2,12 +2,13 @@ import logging
 import os
 import uuid
 
-from app.models.download import Download
-from app.services.download_manager import download_manager
 from sqlalchemy import text, update
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 from sqlalchemy.orm import joinedload
+
+from app.models.download import Download
+from app.services.download_manager import download_manager
 
 logger = logging.getLogger(__name__)
 

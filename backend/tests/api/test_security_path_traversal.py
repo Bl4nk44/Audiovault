@@ -4,10 +4,11 @@ from uuid import uuid4
 
 import anyio
 import pytest
-from app.models.download import Download
-from app.models.user import User
 from httpx import AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession
+
+from app.models.download import Download
+from app.models.user import User
 
 # Pytest fixtures and helpers typically available in the project
 

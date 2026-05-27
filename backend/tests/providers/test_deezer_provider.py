@@ -2,6 +2,7 @@ from unittest.mock import AsyncMock, patch
 
 import pytest
 import pytest_asyncio
+
 from app.providers.deezer_provider import DeezerProvider
 from app.schemas.metadata import PlaylistMetadata
 

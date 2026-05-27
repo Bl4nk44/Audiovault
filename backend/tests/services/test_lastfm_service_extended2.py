@@ -15,6 +15,7 @@ from unittest.mock import AsyncMock, Mock, patch
 
 import httpx
 import pytest
+
 from app.schemas.recommendation import RecommendedArtist
 from app.services.lastfm_service import (
     LastfmAPIError,

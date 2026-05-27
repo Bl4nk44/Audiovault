@@ -1,6 +1,7 @@
 from unittest.mock import patch
 
 import pytest
+
 from app.providers.youtube_provider import YouTubeProvider
 
 

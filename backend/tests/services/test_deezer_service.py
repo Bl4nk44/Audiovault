@@ -1,6 +1,7 @@
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
+
 from app.services.deezer_service import DeezerService
 
 # Deezer returns HTTP 200 with this body when the rate-limit quota is hit

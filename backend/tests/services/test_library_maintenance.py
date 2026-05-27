@@ -2,10 +2,11 @@ import uuid
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
+from sqlalchemy.ext.asyncio import AsyncSession
+
 from app.models.download import Download
 from app.models.track import Track
 from app.services.library_maintenance import library_maintenance_service
-from sqlalchemy.ext.asyncio import AsyncSession
 
 UID1 = str(uuid.uuid4())
 

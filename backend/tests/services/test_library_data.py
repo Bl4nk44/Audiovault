@@ -3,11 +3,12 @@ import uuid
 from unittest.mock import MagicMock, patch
 
 import pytest
+from sqlalchemy.ext.asyncio import AsyncSession
+
 from app.models.download import Download
 from app.models.track import Track
 from app.models.user import User
 from app.services.library_data import library_data_service
-from sqlalchemy.ext.asyncio import AsyncSession
 
 
 @pytest.mark.asyncio

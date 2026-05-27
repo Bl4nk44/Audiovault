@@ -4,6 +4,7 @@ import uuid
 from unittest.mock import AsyncMock, patch
 
 import pytest
+
 from app.models.track import Track
 from app.models.watchlist import Watchlist
 from app.models.watchlist_item import WatchlistItem

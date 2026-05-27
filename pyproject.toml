@@ -31,6 +31,9 @@ version = "0.4.2"
 [tool.ruff]
 line-length = 120
 target-version = "py314"
+# Treat backend/ as a source root so `app` resolves as first-party regardless
+# of the working directory ruff is invoked from (repo root vs. cd backend in CI).
+src = ["backend"]
 
 [tool.ruff.lint]
 select = [
@@ -50,6 +53,9 @@ ignore = [
 
 [tool.ruff.lint.per-file-ignores]
 "backend/tests/**" = ["S"]
+
+[tool.ruff.lint.isort]
+known-first-party = ["app"]
 
 [tool.mypy]
 python_version = "3.14"

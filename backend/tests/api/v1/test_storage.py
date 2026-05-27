@@ -2,10 +2,11 @@ import uuid
 from datetime import datetime
 
 import pytest
+from httpx import AsyncClient
+
 from app.core.security import create_access_token
 from app.models.download import Download
 from app.models.user import User
-from httpx import AsyncClient
 
 
 @pytest.fixture

@@ -1,13 +1,14 @@
 from typing import Annotated
 
-from app.core.dependencies import get_current_active_user
-from app.db.database import get_db
-from app.models.credentials import ServiceCredentials
-from app.models.user import User
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
+
+from app.core.dependencies import get_current_active_user
+from app.db.database import get_db
+from app.models.credentials import ServiceCredentials
+from app.models.user import User
 
 router = APIRouter()
 

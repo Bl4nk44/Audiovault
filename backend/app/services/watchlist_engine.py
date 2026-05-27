@@ -2,6 +2,9 @@ import logging
 import uuid
 from datetime import UTC, datetime
 
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.future import select
+
 from app.models.download import Download
 from app.models.watchlist import Watchlist
 from app.schemas.download import DownloadCreate
@@ -9,8 +12,6 @@ from app.services.download_manager import download_manager
 from app.services.spotify_service import spotify_service as _spotify_singleton
 from app.services.watchlist import WatchlistItemProcessor, WatchlistStorage
 from app.services.youtube_service import YouTubeService
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.future import select
 
 logger = logging.getLogger(__name__)
 
@@ -116,8 +117,9 @@ class WatchlistEngine:
         if item:
             if item.watch_type == "playlist" and item.source_name:
                 logger.info(f"Removing pending downloads for playlist: {item.source_name}")
-                from app.models.download import Download
                 from sqlalchemy import delete
+
+                from app.models.download import Download
 
                 await db.execute(
                     delete(Download).where(

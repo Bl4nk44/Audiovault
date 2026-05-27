@@ -4,9 +4,10 @@ from unittest.mock import AsyncMock, MagicMock
 from uuid import uuid4
 
 import pytest
+from fastapi import HTTPException
+
 from app.models.schemas import UserCreate
 from app.services.auth_manager import AuthManager
-from fastapi import HTTPException
 
 
 @pytest.fixture
@@ -62,6 +63,7 @@ async def test_register_username_already_taken(manager, mock_db):
 @pytest.mark.asyncio
 async def test_refresh_wrong_token_type_raises_401(manager, mock_db):
     import jwt
+
     from app.core.config import settings
 
     # Create an access token (type="access") instead of refresh
@@ -81,6 +83,7 @@ async def test_refresh_wrong_token_type_raises_401(manager, mock_db):
 @pytest.mark.asyncio
 async def test_refresh_no_user_id_raises_401(manager, mock_db):
     import jwt
+
     from app.core.config import settings
 
     token = jwt.encode(
@@ -99,6 +102,7 @@ async def test_refresh_no_user_id_raises_401(manager, mock_db):
 @pytest.mark.asyncio
 async def test_refresh_invalid_uuid_format_raises_401(manager, mock_db):
     import jwt
+
     from app.core.config import settings
 
     token = jwt.encode(
@@ -117,6 +121,7 @@ async def test_refresh_invalid_uuid_format_raises_401(manager, mock_db):
 @pytest.mark.asyncio
 async def test_refresh_user_not_found_raises_401(manager, mock_db):
     import jwt
+
     from app.core.config import settings
 
     user_id = str(uuid4())

@@ -2,8 +2,9 @@ import logging
 import re
 from typing import Any
 
-from app.services.base_music_service import BaseMusicService
 from ytmusicapi import YTMusic
+
+from app.services.base_music_service import BaseMusicService
 
 logger = logging.getLogger(__name__)
 

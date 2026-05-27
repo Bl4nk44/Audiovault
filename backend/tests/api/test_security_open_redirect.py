@@ -1,11 +1,12 @@
 from uuid import uuid4
 
 import pytest
+from httpx import AsyncClient
+from sqlalchemy.ext.asyncio import AsyncSession
+
 from app.models.album import Album
 from app.models.track import Track
 from app.models.user import User
-from httpx import AsyncClient
-from sqlalchemy.ext.asyncio import AsyncSession
 
 
 @pytest.mark.asyncio

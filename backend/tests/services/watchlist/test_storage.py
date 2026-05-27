@@ -6,11 +6,12 @@ Covers: track creation/update, finding tracks, linking watchlist items, existing
 import uuid
 
 import pytest
+from sqlalchemy.future import select
+
 from app.models.download import Download
 from app.models.track import Track
 from app.models.watchlist_item import WatchlistItem
 from app.services.watchlist.storage import WatchlistStorage
-from sqlalchemy.future import select
 
 
 @pytest.fixture

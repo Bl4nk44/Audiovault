@@ -5,6 +5,7 @@ Tests for ProviderManager to improve coverage.
 from unittest.mock import AsyncMock, MagicMock
 
 import pytest
+
 from app.providers.manager import ProviderManager
 
 

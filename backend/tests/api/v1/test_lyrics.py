@@ -2,10 +2,11 @@ import uuid
 from unittest.mock import AsyncMock, patch
 
 import pytest
+from httpx import AsyncClient
+
 from app.core.dependencies import get_current_active_user
 from app.main import app
 from app.models.user import User
-from httpx import AsyncClient
 
 
 @pytest.fixture

@@ -1,6 +1,7 @@
 from unittest.mock import AsyncMock, patch
 
 import pytest
+
 from app.providers.spotify_provider import SpotifyProvider
 
 

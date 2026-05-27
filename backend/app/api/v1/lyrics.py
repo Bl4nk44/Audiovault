@@ -5,15 +5,16 @@ Lyrics API endpoint.
 from typing import Annotated
 from uuid import UUID
 
+from fastapi import APIRouter, Depends, HTTPException, Query
+from pydantic import BaseModel
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
+
 from app.core.dependencies import get_current_active_user
 from app.db.database import get_db
 from app.models.track import Track
 from app.models.user import User
 from app.services.lyrics_service import lyrics_service
-from fastapi import APIRouter, Depends, HTTPException, Query
-from pydantic import BaseModel
-from sqlalchemy import select
-from sqlalchemy.ext.asyncio import AsyncSession
 
 USE_CACHE_DESCRIPTION = "Whether to use cached results instead of fetching from external APIs"
 

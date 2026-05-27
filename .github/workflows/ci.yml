@@ -32,7 +32,9 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install -r backend/requirements.txt
-          pip install ruff mypy
+          # Pin ruff to match .pre-commit-config.yaml (ruff-pre-commit rev) so CI and
+          # local pre-commit never diverge on lint/format/isort behavior.
+          pip install ruff==0.15.12 mypy
 
       - name: Run Ruff Check
         run: |

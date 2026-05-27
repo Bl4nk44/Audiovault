@@ -2,12 +2,13 @@ import logging
 import time
 from typing import Annotated
 
-from app.core.dependencies import get_current_active_user
-from app.models.user import User
-from app.services.spotify_service import SpotifyService, spotify_service
 from fastapi import APIRouter, Depends, HTTPException
 from fastapi.responses import RedirectResponse
 from pydantic import BaseModel
+
+from app.core.dependencies import get_current_active_user
+from app.models.user import User
+from app.services.spotify_service import SpotifyService, spotify_service
 
 router = APIRouter()
 logger = logging.getLogger(__name__)
