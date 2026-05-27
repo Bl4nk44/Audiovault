@@ -3,6 +3,25 @@
 All notable changes to Audiovault will be documented in this file.
 ## [0.5.2] - 2026-05-27
 
+### Features
+
+- **recommendations**: Expose Last.fm artist `rank` through the schema, type, and UI badge
+- **deezer**: Add request throttling with quota-error retry/backoff to avoid silent HTTP 200 quota failures
+
+### CI/CD
+
+- **security**: Set least-privilege top-level `permissions` on security and dependency-report workflows
+- **docker**: Add HEALTHCHECK to frontend dev image
+
+### Documentation
+
+- **security**: Document the layered security tooling (CI/CD, pre-commit, dependency monitoring) in SECURITY.md
+
+### Tests
+
+- **deezer**: Cover throttling and quota retry behaviour
+- **lastfm**: Cover artist rank parsing
+
 ### Miscellaneous
 
 - Ignore SQLite db artifacts, untrack stray audiovault.db (#101)
@@ -560,5 +579,3 @@ All notable changes to Audiovault will be documented in this file.
 - Add Amperfy iOS compatibility tests for Subsonic API
 
 ## [0.9.0] - 2026-01-11
-
-
