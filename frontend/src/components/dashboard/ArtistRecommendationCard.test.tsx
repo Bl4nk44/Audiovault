@@ -10,6 +10,7 @@ describe("ArtistRecommendationCard", () => {
     url: "http://last.fm/artist",
     image_url: "http://example.com/artist.jpg",
     match: 0.85,
+    rank: null,
     tags: ["rock", "indie"],
     mbid: "test-mbid"
   };
