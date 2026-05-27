@@ -11,6 +11,13 @@ from httpx import ASGITransport, AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 from sqlalchemy.pool import StaticPool
 
+# pytest-asyncio 1.x: set default loop scope for all async fixtures/tests
+def pytest_configure(config):
+    config.addinivalue_line(
+        "markers", "asyncio: mark test as async"
+    )
+
+
 # Use in-memory SQLite for tests
 SQLALCHEMY_DATABASE_URL = "sqlite+aiosqlite:///:memory:"
 
@@ -24,14 +31,6 @@ TestingSessionLocal = async_sessionmaker(
     bind=engine,
     expire_on_commit=False,
 )
-
-
-@pytest.fixture(scope="session")
-def event_loop():
-    """Create an instance of the default event loop for each test case."""
-    loop = asyncio.get_event_loop_policy().new_event_loop()
-    yield loop
-    loop.close()
 
 
 @pytest.fixture(scope="function")
@@ -210,12 +209,6 @@ async def normal_user_token_headers(normal_user):
 
     token = create_access_token(subject=normal_user.id)
     return {"Authorization": f"Bearer {token}"}
-
-
-@pytest.fixture(scope="session", autouse=True)
-async def cleanup_engine():
-    yield
-    await engine.dispose()
 
 
 @pytest.fixture(scope="function")
