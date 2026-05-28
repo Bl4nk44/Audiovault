@@ -16,9 +16,6 @@ on:
     - cron: '0 2 * * 0'
   workflow_dispatch:
 
-permissions:
-  contents: read
-
 jobs:
   # ==============================================
   # Trivy Vulnerability Scanning
@@ -267,6 +264,8 @@ jobs:
   socket-scan:
     name: Socket Supply Chain Scan
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     # Pomiń gdy brak sekretu (np. fork PR) — nie wywalaj buildu.
     if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
 
@@ -294,6 +293,8 @@ jobs:
   license-check:
     name: License Compliance
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     if: github.event_name == 'push' || github.event_name == 'schedule'
 
     steps:

@@ -97,9 +97,9 @@ async def _check_production_update(settings):
                 else:
                     logger.warning(f"Failed to fetch updates from GitHub (Prod): {response.status}")
                     return {"error": "Could not fetch updates"}
-    except Exception as e:
-        logger.error(f"Error checking for updates (Prod): {e}")
-        return {"error": str(e)}
+    except Exception:
+        logger.exception("Error checking for updates (Prod)")
+        return {"error": "Could not fetch updates"}
 
 
 def _get_local_git_sha(git_dir: Path) -> str:
@@ -155,9 +155,9 @@ async def _check_development_update():
                     logger.warning(f"Failed to fetch updates from GitHub (Dev): {response.status}")
                     return {"error": "Could not fetch updates"}
 
-    except Exception as e:
-        logger.error(f"Error checking for updates (Dev): {e}")
-        return {"error": str(e)}
+    except Exception:
+        logger.exception("Error checking for updates (Dev)")
+        return {"error": "Could not fetch updates"}
 
 
 @router.get("/check-update")
@@ -221,5 +221,5 @@ async def get_system_stats():
             "network": {"sent": net_sent, "recv": net_recv},
         }
     except Exception as e:
-        logger.error(f"Error gathering system stats: {e}")
-        raise HTTPException(status_code=500, detail=f"Failed to gather system stats: {str(e)}") from e
+        logger.exception("Error gathering system stats")
+        raise HTTPException(status_code=500, detail="Failed to gather system stats") from e

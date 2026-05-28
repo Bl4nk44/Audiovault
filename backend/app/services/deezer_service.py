@@ -6,6 +6,8 @@ from typing import Any
 
 import aiohttp
 
+from app.utils.log_sanitize import sanitize_log
+
 logger = logging.getLogger(__name__)
 
 # Deezer enforces ~50 requests / 5s. A recommendation refresh fires dozens of
@@ -59,13 +61,19 @@ class DeezerService:
 
             error = data.get("error") if isinstance(data, dict) else None
             if error and error.get("code") == DEEZER_QUOTA_ERROR_CODE:
-                logger.warning(f"Deezer quota exceeded for {path}, retry {attempt + 1}/{retries} in {backoff}s")
+                logger.warning(
+                    "Deezer quota exceeded for %s, retry %d/%d in %ss",
+                    sanitize_log(path),
+                    attempt + 1,
+                    retries,
+                    backoff,
+                )
                 await asyncio.sleep(backoff)
                 backoff *= 2
                 continue
             return data
 
-        logger.error(f"Deezer quota still exceeded after {retries} attempts for {path}")
+        logger.error("Deezer quota still exceeded after %d attempts for %s", retries, sanitize_log(path))
         return None
 
     async def _maybe_resolve_short_link(self, query: str) -> str:
@@ -74,7 +82,7 @@ class DeezerService:
 
             resolved = await resolve_redirects(query)
             if resolved != query:
-                logger.info(f"Resolved Deezer short link to: {resolved}")
+                logger.info("Resolved Deezer short link to: %s", sanitize_log(resolved))
                 return resolved
         return query
 
@@ -97,7 +105,7 @@ class DeezerService:
         )
         if url_match:
             kind, deezer_id = url_match.groups()
-            logger.info(f"Detected Deezer URL: kind={kind}, id={deezer_id}")
+            logger.info("Detected Deezer URL: kind=%s, id=%s", sanitize_log(kind), sanitize_log(deezer_id))
             result = await self._handle_direct_url(kind, deezer_id)
             if result is not None:
                 return result

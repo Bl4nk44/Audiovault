@@ -4,6 +4,8 @@ from typing import Any
 
 import yt_dlp
 
+from app.utils.log_sanitize import sanitize_log
+
 logger = logging.getLogger(__name__)
 
 
@@ -35,7 +37,7 @@ class BaseMusicService:
                 lambda: yt_dlp.YoutubeDL(ydl_opts).extract_info(url, download=False),
             )
         except Exception as e:
-            logger.error(f"Error extracting metadata from {url} using yt-dlp: {e}")
+            logger.error("Error extracting metadata from %s using yt-dlp: %s", sanitize_log(url), sanitize_log(e))
             return None
 
     async def get_tracks(self, url: str) -> list[dict[str, Any]]:

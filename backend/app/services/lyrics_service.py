@@ -8,6 +8,7 @@ import logging
 
 from app.core.cache import cache_manager
 from app.core.config import settings
+from app.utils.log_sanitize import sanitize_log
 
 logger = logging.getLogger(__name__)
 
@@ -145,11 +146,21 @@ class LyricsService:
                         "source": "lrclib",
                     }
                 elif response.status_code == 404:
-                    logger.info(f"LRCLIB: No lyrics found for {artist} - {title}")
+                    logger.info("LRCLIB: No lyrics found for %s - %s", sanitize_log(artist), sanitize_log(title))
                 else:
-                    logger.warning(f"LRCLIB: API error {response.status_code} for {artist} - {title}")
+                    logger.warning(
+                        "LRCLIB: API error %s for %s - %s",
+                        response.status_code,
+                        sanitize_log(artist),
+                        sanitize_log(title),
+                    )
         except Exception as e:
-            logger.error(f"LRCLIB: Request failed for {artist} - {title}: {e}")
+            logger.error(
+                "LRCLIB: Request failed for %s - %s: %s",
+                sanitize_log(artist),
+                sanitize_log(title),
+                sanitize_log(e),
+            )
 
         return {"found": False, "lyrics": None, "synced_lyrics": None}
 
@@ -159,7 +170,7 @@ class LyricsService:
             cached_str = await cache_manager.get(cache_key)
             if cached_str:
                 cached = json.loads(cached_str)
-                logger.debug(f"Lyrics cache hit for {artist} - {title}")
+                logger.debug("Lyrics cache hit for %s - %s", sanitize_log(artist), sanitize_log(title))
                 return cached
         except Exception as e:
             logger.warning(f"Cache read error: {e}")
@@ -171,7 +182,7 @@ class LyricsService:
             song = genius.search_song(title, artist)
 
             if not song:
-                logger.info(f"No lyrics found for {artist} - {title}")
+                logger.info("No lyrics found for %s - %s", sanitize_log(artist), sanitize_log(title))
                 # Cache negative result for shorter time (1 hour)
                 await self._cache_result(cache_key, {"found": False, "lyrics": None}, 3600)
                 return {"found": False, "lyrics": None}
@@ -188,12 +199,17 @@ class LyricsService:
 
             # Cache successful result
             await self._cache_result(cache_key, result, LYRICS_CACHE_TTL)
-            logger.debug(f"Cached lyrics for {artist} - {title}")
+            logger.debug("Cached lyrics for %s - %s", sanitize_log(artist), sanitize_log(title))
 
             return result
 
         except Exception as e:
-            logger.error(f"Failed to fetch lyrics for {artist} - {title}: {e}")
+            logger.error(
+                "Failed to fetch lyrics for %s - %s: %s",
+                sanitize_log(artist),
+                sanitize_log(title),
+                sanitize_log(e),
+            )
             return None
 
     async def _cache_result(self, key: str, data: dict, ttl: int):

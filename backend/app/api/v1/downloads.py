@@ -14,6 +14,7 @@ from app.models.download import Download
 from app.models.user import User
 from app.schemas.download import DownloadCreate
 from app.services.download_manager import download_manager
+from app.utils.log_sanitize import sanitize_log
 
 router = APIRouter()
 
@@ -371,7 +372,7 @@ async def download_album(
             raise
         except Exception as e:
             # nosemgrep: python.fastapi.log.tainted-log-injection-stdlib-fastapi.tainted-log-injection-stdlib-fastapi
-            _logger.error(f"Error fetching album {album_id}: {e}")
+            _logger.error("Error fetching album %s: %s", sanitize_log(album_id), sanitize_log(e))
             raise HTTPException(status_code=404, detail="Album not found") from e
         tracks = await service.get_album_tracks(album_id)
     else:

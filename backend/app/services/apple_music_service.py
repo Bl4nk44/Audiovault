@@ -2,6 +2,7 @@ import logging
 from typing import Any
 
 from app.services.base_music_service import BaseMusicService
+from app.utils.log_sanitize import sanitize_log
 
 # Lazy import or direct import if circular dependency is not an issue.
 # Assuming unl_helper is fine.
@@ -24,7 +25,7 @@ class AppleMusicService(BaseMusicService):
             from app.utils.url_helper import resolve_redirects
 
             resolved = await resolve_redirects(url)
-            logger.info(f"Resolved Apple Music short link to: {resolved}")
+            logger.info("Resolved Apple Music short link to: %s", sanitize_log(resolved))
             return resolved
         return url
 
