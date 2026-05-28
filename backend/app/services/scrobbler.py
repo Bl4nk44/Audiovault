@@ -3,6 +3,7 @@ import time
 
 from app.models.user import User
 from app.services.lastfm_service import LastfmError, LastfmService
+from app.utils.log_sanitize import sanitize_log
 
 logger = logging.getLogger(__name__)
 
@@ -25,7 +26,12 @@ class AudiovaultScrobbler:
                 session_key=user.lastfm_session_key,
                 album=album,
             )
-            logger.debug(f"Updated Now Playing for {user.username}: {artist_to_scrobble} - {track}")
+            logger.debug(
+                "Updated Now Playing for %s: %s - %s",
+                sanitize_log(user.username),
+                sanitize_log(artist_to_scrobble),
+                sanitize_log(track),
+            )
         except LastfmError as e:
             logger.error(f"Failed to update now playing for {user.username}: {e}")
 
@@ -51,7 +57,12 @@ class AudiovaultScrobbler:
                 timestamp=timestamp or int(time.time()),
                 album=album,
             )
-            logger.info(f"Scrobbled for {user.username}: {artist_to_scrobble} - {track}")
+            logger.info(
+                "Scrobbled for %s: %s - %s",
+                sanitize_log(user.username),
+                sanitize_log(artist_to_scrobble),
+                sanitize_log(track),
+            )
             return True
         except LastfmError as e:
             logger.error(f"Failed to scrobble for {user.username}: {e}")

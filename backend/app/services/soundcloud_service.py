@@ -5,6 +5,8 @@ from urllib.parse import urlparse
 
 import yt_dlp
 
+from app.utils.log_sanitize import sanitize_log
+
 logger = logging.getLogger(__name__)
 
 _SOUNDCLOUD_HOSTS = {"soundcloud.com", "www.soundcloud.com", "on.soundcloud.com", "m.soundcloud.com"}
@@ -41,13 +43,13 @@ class SoundCloudService:
         }
 
         try:
-            logger.info(f"Extracting SoundCloud metadata from: {url}")
+            logger.info("Extracting SoundCloud metadata from: %s", sanitize_log(url))
 
             if "on.soundcloud.com" in url:
                 from app.utils.url_helper import resolve_redirects
 
                 url = await resolve_redirects(url)
-                logger.info(f"Resolved SoundCloud short link to: {url}")
+                logger.info("Resolved SoundCloud short link to: %s", sanitize_log(url))
 
             loop = asyncio.get_running_loop()
             info = await loop.run_in_executor(

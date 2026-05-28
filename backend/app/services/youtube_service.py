@@ -5,6 +5,7 @@ from typing import Any
 from ytmusicapi import YTMusic
 
 from app.services.base_music_service import BaseMusicService
+from app.utils.log_sanitize import sanitize_log
 
 logger = logging.getLogger(__name__)
 
@@ -16,7 +17,7 @@ class YouTubeService(BaseMusicService):
         self.source_name = "youtube"
 
     def search(self, query: str, limit: int = 20, type: str = "song") -> list[dict[str, Any]]:
-        logger.info(f"YouTube search query: {query}, type: {type}")
+        logger.info("YouTube search query: %s, type: %s", sanitize_log(query), sanitize_log(type))
 
         video_match = re.search(
             r"(?:youtube\.com/(?:watch\?v=|shorts/)|youtu\.be/|music\.youtube\.com/watch\?v=)([a-zA-Z0-9_-]+)",
@@ -67,7 +68,7 @@ class YouTubeService(BaseMusicService):
             if results:
                 return [self._format_track(results[0])]
         except Exception as e:
-            logger.warning(f"Error fetching video details for {video_id}: {e}")
+            logger.warning("Error fetching video details for %s: %s", sanitize_log(video_id), sanitize_log(e))
             return []
         return []
 
@@ -86,7 +87,7 @@ class YouTubeService(BaseMusicService):
                 }
             ]
         except Exception as e:
-            logger.error(f"Error fetching YouTube playlist {playlist_id}: {e}")
+            logger.error("Error fetching YouTube playlist %s: %s", sanitize_log(playlist_id), sanitize_log(e))
         return []
 
     def _search_channel(self, channel_id: str) -> list[dict[str, Any]]:
@@ -104,7 +105,7 @@ class YouTubeService(BaseMusicService):
                     }
                 ]
         except Exception as e:
-            logger.warning(f"Error fetching channel details {channel_id}: {e}")
+            logger.warning("Error fetching channel details %s: %s", sanitize_log(channel_id), sanitize_log(e))
         return []
 
     def _search_keywords(self, query: str, limit: int, type: str) -> list[dict[str, Any]]:
@@ -196,7 +197,7 @@ class YouTubeService(BaseMusicService):
                 "tracks": tracks,
             }
         except Exception as e:
-            logger.error(f"Error fetching YouTube playlist details {playlist_id}: {e}")
+            logger.error("Error fetching YouTube playlist details %s: %s", sanitize_log(playlist_id), sanitize_log(e))
             return None
 
     def _format_track(self, item: dict[str, Any], album_name=None) -> dict[str, Any]:

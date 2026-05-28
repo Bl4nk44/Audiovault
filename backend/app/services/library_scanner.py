@@ -15,6 +15,7 @@ from app.models.album import Album
 from app.models.artist import Artist
 from app.models.download import Download
 from app.models.track import Track
+from app.utils.log_sanitize import sanitize_log
 
 logger = logging.getLogger(__name__)
 
@@ -188,7 +189,9 @@ class LibraryScannerService:
                 else:
                     playlist_name = parts[0]
         except Exception as e:
-            logger.debug(f"Failed to infer source info for {full_path}: {e}")  # Fallback to default
+            logger.debug(
+                "Failed to infer source info for %s: %s", sanitize_log(full_path), sanitize_log(e)
+            )  # Fallback to default
 
         return source, playlist_name
 
@@ -248,7 +251,7 @@ class LibraryScannerService:
                 playlist = Playlist(name=name, owner_id=user_id)
                 db.add(playlist)
                 await db.flush()
-                logger.info(f"Created new playlist from file: {name}")
+                logger.info("Created new playlist from file: %s", sanitize_log(name))
 
             # Parse file and collect matched tracks FIRST
             base_dir = os.path.dirname(full_path)
@@ -279,12 +282,12 @@ class LibraryScannerService:
                     db.add(pt)
 
                 await db.commit()
-                logger.info(f"Imported playlist {name} with {len(matched_tracks)} tracks")
+                logger.info("Imported playlist %s with %d tracks", sanitize_log(name), len(matched_tracks))
             else:
-                logger.info(f"Playlist {name}: No tracks matched, keeping existing data")
+                logger.info("Playlist %s: No tracks matched, keeping existing data", sanitize_log(name))
 
         except Exception as e:
-            logger.error(f"Failed to import playlist {full_path}: {e}")
+            logger.error("Failed to import playlist %s: %s", sanitize_log(full_path), sanitize_log(e))
 
     async def _find_track_for_playlist_line(self, db: AsyncSession, line: str, base_dir: str, user_id: str):
         # Resolve track path with path traversal protection
@@ -409,7 +412,7 @@ class LibraryScannerService:
             return True
 
         except Exception as e:
-            logger.error(f"Failed to import {filename}: {str(e)}")
+            logger.error("Failed to import %s: %s", sanitize_log(filename), sanitize_log(e))
             raise e
 
     async def _handle_scan_file(self, db, user_id, full_path, filename, root_dir, known_paths) -> bool:

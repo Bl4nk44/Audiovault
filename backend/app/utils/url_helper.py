@@ -5,6 +5,8 @@ from urllib.parse import urlparse
 
 import aiohttp
 
+from app.utils.log_sanitize import sanitize_log
+
 logger = logging.getLogger(__name__)
 
 # Allowed domains for music services
@@ -131,7 +133,7 @@ async def resolve_redirects(url: str) -> str:
     # Validate initial URL
     is_valid, error = validate_url(url)
     if not is_valid:
-        logger.warning(f"SSRF validation failed for {url}: {error}")
+        logger.warning("SSRF validation failed for %s: %s", sanitize_log(url), sanitize_log(error))
         raise SSRFValidationError(error)
 
     try:
@@ -143,14 +145,18 @@ async def resolve_redirects(url: str) -> str:
                 # Validate final URL too (in case of open redirect)
                 is_valid, error = validate_url(final_url)
                 if not is_valid:
-                    logger.warning(f"SSRF validation failed for redirect {final_url}: {error}")
+                    logger.warning(
+                        "SSRF validation failed for redirect %s: %s",
+                        sanitize_log(final_url),
+                        sanitize_log(error),
+                    )
                     raise SSRFValidationError(f"Redirect blocked: {error}")
 
                 return final_url
     except SSRFValidationError:
         raise
     except Exception as e:
-        logger.warning(f"Failed to resolve URL {url}: {e}")
+        logger.warning("Failed to resolve URL %s: %s", sanitize_log(url), sanitize_log(e))
         # If head fails (e.g. 405 Method Not Allowed), try GET
         try:
             async with aiohttp.ClientSession() as session:
@@ -166,5 +172,5 @@ async def resolve_redirects(url: str) -> str:
         except SSRFValidationError:
             raise
         except Exception as e2:
-            logger.error(f"Failed to resolve URL {url} with GET: {e2}")
+            logger.error("Failed to resolve URL %s with GET: %s", sanitize_log(url), sanitize_log(e2))
             return url
