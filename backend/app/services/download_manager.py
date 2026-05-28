@@ -4,6 +4,7 @@ import os
 import uuid
 from collections.abc import Sequence
 from datetime import UTC, datetime
+from pathlib import Path
 
 import aiofiles
 import yt_dlp
@@ -954,27 +955,24 @@ class DownloadManager:
         user_download_dir = self._get_user_download_dir(downloads[0], parent_dir)
 
         try:
-            base_real = os.path.realpath(settings.DOWNLOAD_DIR)
+            base = Path(settings.DOWNLOAD_DIR).resolve(strict=False)
         except OSError, ValueError:
             return
 
         safe_name = sanitize_filename(playlist_name)
-        m3u8_path = os.path.join(user_download_dir, f"{safe_name}.m3u8")
         try:
-            m3u8_real = os.path.realpath(m3u8_path)
-            if os.path.commonpath([base_real, m3u8_real]) == base_real and os.path.exists(m3u8_real):
-                os.remove(m3u8_real)  # nosec B610 — path verified under DOWNLOAD_DIR via commonpath
+            m3u8 = (Path(user_download_dir) / f"{safe_name}.m3u8").resolve(strict=False)
+            if m3u8.is_relative_to(base) and m3u8.exists():
+                m3u8.unlink()
                 logger.info("Removed playlist file")
         except (OSError, ValueError) as e:
             logger.error("Failed to remove playlist file: %s", type(e).__name__)
 
         safe_dir_name = playlist_name.replace("/", "-").replace("\\", "-")
         try:
-            parent_real = os.path.realpath(parent_dir)
-            if os.path.commonpath([base_real, parent_real]) == base_real and safe_dir_name in os.path.basename(
-                parent_real
-            ):
-                os.rmdir(parent_real)  # nosec B610 — path verified under DOWNLOAD_DIR via commonpath
+            parent = Path(parent_dir).resolve(strict=False)
+            if parent.is_relative_to(base) and safe_dir_name in parent.name:
+                parent.rmdir()
                 logger.info("Removed empty directory")
         except (OSError, ValueError) as e:
             logger.debug("Failed to remove directory: %s", type(e).__name__)
