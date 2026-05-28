@@ -86,7 +86,8 @@ jobs:
           cache: "pip"
 
       - name: Setup FFmpeg
-        uses: FedericoCarboni/setup-ffmpeg@v3
+        run: |
+          sudo apt-get update -qq && sudo apt-get install -y --no-install-recommends ffmpeg
 
       - name: Install dependencies
         run: |
