@@ -953,25 +953,31 @@ class DownloadManager:
         parent_dir = os.path.dirname(downloads[0].file_path)
         user_download_dir = self._get_user_download_dir(downloads[0], parent_dir)
 
-        m3u8_path = os.path.join(  # nosemgrep: path-traversal
-            user_download_dir, f"{sanitize_filename(playlist_name)}.m3u8"
-        )
-        safe_m3u8 = self._safe_under_download_dir(m3u8_path)
-        if safe_m3u8 and os.path.exists(safe_m3u8):
-            try:
-                os.remove(safe_m3u8)
-                logger.info("Removed playlist file %s", safe_m3u8)
-            except Exception as e:
-                logger.error("Failed to remove playlist file %s: %s", safe_m3u8, e)
+        try:
+            base_real = os.path.realpath(settings.DOWNLOAD_DIR)
+        except OSError, ValueError:
+            return
+
+        safe_name = sanitize_filename(playlist_name)
+        m3u8_path = os.path.join(user_download_dir, f"{safe_name}.m3u8")
+        try:
+            m3u8_real = os.path.realpath(m3u8_path)
+            if os.path.commonpath([base_real, m3u8_real]) == base_real and os.path.exists(m3u8_real):
+                os.remove(m3u8_real)  # nosec B610 — path verified under DOWNLOAD_DIR via commonpath
+                logger.info("Removed playlist file")
+        except (OSError, ValueError) as e:
+            logger.error("Failed to remove playlist file: %s", type(e).__name__)
 
         safe_dir_name = playlist_name.replace("/", "-").replace("\\", "-")
-        safe_parent = self._safe_under_download_dir(parent_dir)
-        if safe_parent and safe_dir_name in os.path.basename(safe_parent):
-            try:
-                os.rmdir(safe_parent)
-                logger.info("Removed empty directory %s", safe_parent)
-            except Exception as e:
-                logger.debug("Failed to remove directory %s: %s", safe_parent, e)
+        try:
+            parent_real = os.path.realpath(parent_dir)
+            if os.path.commonpath([base_real, parent_real]) == base_real and safe_dir_name in os.path.basename(
+                parent_real
+            ):
+                os.rmdir(parent_real)  # nosec B610 — path verified under DOWNLOAD_DIR via commonpath
+                logger.info("Removed empty directory")
+        except (OSError, ValueError) as e:
+            logger.debug("Failed to remove directory: %s", type(e).__name__)
 
     async def _delete_db_records(self, db, downloads):
         # 4. Delete DB records
