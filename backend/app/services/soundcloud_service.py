@@ -1,10 +1,13 @@
 import asyncio
 import logging
 from typing import Any
+from urllib.parse import urlparse
 
 import yt_dlp
 
 logger = logging.getLogger(__name__)
+
+_SOUNDCLOUD_HOSTS = {"soundcloud.com", "www.soundcloud.com", "on.soundcloud.com", "m.soundcloud.com"}
 
 
 class SoundCloudService:
@@ -12,7 +15,11 @@ class SoundCloudService:
         pass  # No state required
 
     def can_handle(self, url: str) -> bool:
-        return "soundcloud.com" in url or "on.soundcloud.com" in url
+        try:
+            host = (urlparse(url).hostname or "").lower()
+        except ValueError:
+            return False
+        return host in _SOUNDCLOUD_HOSTS
 
     def _extract_tracks_from_info(self, info: dict, url: str) -> list[dict[str, Any]]:
         entries = info.get("entries", [])

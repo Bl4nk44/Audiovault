@@ -720,9 +720,16 @@ class DownloadManager:
 
     def _resolve_direct_soundcloud(self, download: Download, track_info) -> str:
         if track_info:
+            from urllib.parse import urlparse
+
             meta = track_info.metadata_content or {}
-            if "soundcloud.com" in str(download.track_id):
-                return str(download.track_id)
+            track_id_str = str(download.track_id)
+            try:
+                host = (urlparse(track_id_str).hostname or "").lower()
+            except ValueError:
+                host = ""
+            if host == "soundcloud.com" or host.endswith(".soundcloud.com"):
+                return track_id_str
             if meta.get("source_url"):
                 return meta["source_url"]
             return f"scsearch1:{track_info.artist} - {track_info.title}"
@@ -928,6 +935,19 @@ class DownloadManager:
                 )
         return user_dir
 
+    @staticmethod
+    def _path_under_download_dir(target: str) -> bool:
+        """Ensure target is contained within configured DOWNLOAD_DIR (defense against traversal)."""
+        try:
+            base = os.path.realpath(settings.DOWNLOAD_DIR)
+            resolved = os.path.realpath(target)
+        except OSError, ValueError:
+            return False
+        try:
+            return os.path.commonpath([base, resolved]) == base
+        except ValueError:
+            return False
+
     def _cleanup_empty_directory(self, downloads, playlist_name):
         if not (downloads and downloads[0].file_path):
             return
@@ -937,7 +957,7 @@ class DownloadManager:
         m3u8_path = os.path.join(  # nosemgrep: path-traversal
             user_download_dir, f"{sanitize_filename(playlist_name)}.m3u8"
         )
-        if os.path.exists(m3u8_path):
+        if os.path.exists(m3u8_path) and self._path_under_download_dir(m3u8_path):
             try:
                 os.remove(m3u8_path)
                 logger.info(f"Removed playlist file {m3u8_path}")
@@ -945,7 +965,7 @@ class DownloadManager:
                 logger.error(f"Failed to remove playlist file {m3u8_path}: {e}")
 
         safe_dir_name = playlist_name.replace("/", "-").replace("\\", "-")
-        if safe_dir_name in os.path.basename(parent_dir):
+        if safe_dir_name in os.path.basename(parent_dir) and self._path_under_download_dir(parent_dir):
             try:
                 os.rmdir(parent_dir)
                 logger.info(f"Removed empty directory {parent_dir}")
