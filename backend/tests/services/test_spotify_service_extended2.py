@@ -733,7 +733,7 @@ def test_proxy_base_returns_configured_url(service):
 async def test_proxy_get_returns_none_when_no_base(service):
     """_proxy_get returns None immediately when no proxy configured."""
     with patch.object(service, "_proxy_base", return_value=None):
-        result = await service._proxy_get("track", "t1")
+        result = await service._proxy_get("track", "4cOdK2wGLETKBW3PvgPWqT")
     assert result is None
 
 
@@ -752,7 +752,7 @@ async def test_proxy_get_success(service):
         mock_cls.return_value.__aexit__ = AsyncMock(return_value=False)
         mock_client.get = AsyncMock(return_value=mock_resp)
 
-        result = await service._proxy_get("track", "t1")
+        result = await service._proxy_get("track", "4cOdK2wGLETKBW3PvgPWqT")
 
     assert result == {"id": "t1", "title": "Track"}
 
@@ -768,7 +768,7 @@ async def test_proxy_get_exception_returns_none(service):
         mock_cls.return_value.__aexit__ = AsyncMock(return_value=False)
         mock_client.get = AsyncMock(side_effect=RuntimeError("unreachable"))
 
-        result = await service._proxy_get("track", "t1")
+        result = await service._proxy_get("track", "4cOdK2wGLETKBW3PvgPWqT")
 
     assert result is None
 
