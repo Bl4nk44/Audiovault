@@ -271,7 +271,7 @@ async def test_query_success():
     client._client_token = "ctok"
     client._client_token_expires = time.time() + 3600
 
-    expected = {"data": {"playlistV2": {}}}
+    expected: dict = {"data": {"playlistV2": {}}}
 
     mock_resp = MagicMock()
     mock_resp.status_code = 200
