@@ -226,7 +226,7 @@ async def test_import_playlist_creates_playlist_with_tracks(scanner, db_session,
     db_session.add(dl)
     await db_session.commit()
 
-    with tempfile.NamedTemporaryFile(suffix=".m3u", mode="w", delete=False, dir=os.path.dirname("/tmp/")) as f:
+    with tempfile.NamedTemporaryFile(suffix=".m3u", mode="w", delete=False) as f:
         f.write("/music/test_track.mp3\n")
         playlist_path = f.name
 

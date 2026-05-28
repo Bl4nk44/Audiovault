@@ -44,7 +44,7 @@ async def test_get_indexes(client: AsyncClient, subsonic_auth_params, db_session
     db_session.add(track)
     await db_session.flush()
 
-    download = Download(track_id=track.id, user_id=admin_user.id, status="completed", file_path="/tmp/test.mp3")
+    download = Download(track_id=track.id, user_id=admin_user.id, status="completed", file_path="/test_audio/test.mp3")
     db_session.add(download)
     await db_session.commit()
 
@@ -95,7 +95,7 @@ async def test_get_music_directory_artist(client: AsyncClient, subsonic_auth_par
     db_session.add(track)
     await db_session.flush()
 
-    download = Download(track_id=track.id, user_id=admin_user.id, status="completed", file_path="/tmp/dir.mp3")
+    download = Download(track_id=track.id, user_id=admin_user.id, status="completed", file_path="/test_audio/dir.mp3")
     db_session.add(download)
     await db_session.commit()
 
@@ -121,7 +121,9 @@ async def test_get_artist_details(client: AsyncClient, subsonic_auth_params, db_
     db_session.add(track)
     await db_session.flush()
 
-    download = Download(track_id=track.id, user_id=admin_user.id, status="completed", file_path="/tmp/details.mp3")
+    download = Download(
+        track_id=track.id, user_id=admin_user.id, status="completed", file_path="/test_audio/details.mp3"
+    )
     db_session.add(download)
     await db_session.commit()
 
@@ -147,7 +149,7 @@ async def test_get_album(client: AsyncClient, subsonic_auth_params, db_session, 
     db_session.add(track)
     await db_session.flush()
 
-    download = Download(track_id=track.id, user_id=admin_user.id, status="completed", file_path="/tmp/full.mp3")
+    download = Download(track_id=track.id, user_id=admin_user.id, status="completed", file_path="/test_audio/full.mp3")
     db_session.add(download)
     await db_session.commit()
 
@@ -165,7 +167,9 @@ async def test_get_song(client: AsyncClient, subsonic_auth_params, db_session, a
     db_session.add(track)
     await db_session.flush()
 
-    download = Download(track_id=track.id, user_id=admin_user.id, status="completed", file_path="/tmp/single.mp3")
+    download = Download(
+        track_id=track.id, user_id=admin_user.id, status="completed", file_path="/test_audio/single.mp3"
+    )
     db_session.add(download)
     await db_session.commit()
 
@@ -186,7 +190,7 @@ async def test_get_artists_id3(client: AsyncClient, subsonic_auth_params, db_ses
     db_session.add(track)
     await db_session.flush()
 
-    download = Download(track_id=track.id, user_id=admin_user.id, status="completed", file_path="/tmp/id3.mp3")
+    download = Download(track_id=track.id, user_id=admin_user.id, status="completed", file_path="/test_audio/id3.mp3")
     db_session.add(download)
     await db_session.commit()
 
@@ -235,7 +239,7 @@ async def test_get_indexes_non_alpha(client: AsyncClient, subsonic_auth_params, 
     db_session.add(track)
     await db_session.flush()
 
-    download = Download(track_id=track.id, user_id=admin_user.id, status="completed", file_path="/tmp/num.mp3")
+    download = Download(track_id=track.id, user_id=admin_user.id, status="completed", file_path="/test_audio/num.mp3")
     db_session.add(download)
     await db_session.commit()
 
@@ -265,7 +269,7 @@ async def test_get_music_directory_album(client: AsyncClient, subsonic_auth_para
     db_session.add(track)
     await db_session.flush()
 
-    download = Download(track_id=track.id, user_id=admin_user.id, status="completed", file_path="/tmp/alb.mp3")
+    download = Download(track_id=track.id, user_id=admin_user.id, status="completed", file_path="/test_audio/alb.mp3")
     db_session.add(download)
     await db_session.commit()
 
@@ -312,7 +316,7 @@ async def test_browse_handlers_explicit(db_session: AsyncSession, admin_user: Us
     track = Track(id=uuid.uuid4(), title="Explicit Song", artist_id=artist.id, album_id=album.id, duration_ms=1000)
     db_session.add(track)
     await db_session.flush()
-    download = Download(track_id=track.id, user_id=admin_user.id, status="completed", file_path="/tmp/exp.mp3")
+    download = Download(track_id=track.id, user_id=admin_user.id, status="completed", file_path="/test_audio/exp.mp3")
     db_session.add(download)
     await db_session.commit()
 

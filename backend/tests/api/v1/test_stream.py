@@ -33,7 +33,7 @@ async def test_get_track_cover_success(client: AsyncClient, db_session):
         id=download_id,
         track_id=track_id,
         user_id=user.id,
-        file_path="/tmp/fake.mp3",
+        file_path="/test_audio/fake.mp3",
         status="completed",
     )
     db_session.add(download)
@@ -186,14 +186,14 @@ async def test_get_track_cover_embedded_fallback(client: AsyncClient, db_session
         id=uuid.uuid4(),
         track_id=track_id,
         user_id=user.id,
-        file_path="/tmp/embedded.mp3",
+        file_path="/test_audio/embedded.mp3",
         status="completed",
     )
     db_session.add(download)
     await db_session.commit()
 
     with (
-        patch("os.path.exists", side_effect=lambda p: p == "/tmp/embedded.mp3"),
+        patch("os.path.exists", side_effect=lambda p: p == "/test_audio/embedded.mp3"),
         patch("app.api.v1.stream._resolve_local_cover_file", new_callable=AsyncMock, return_value=(None, None)),
         patch("app.api.v1.stream._extract_embedded_cover_art", new_callable=AsyncMock) as m_embed,
     ):
