@@ -1,6 +1,34 @@
 # Changelog
 
 All notable changes to Audiovault will be documented in this file.
+
+## [0.5.3] - 2026-05-28
+
+### Bug Fixes
+
+- **security**: Resolve SonarCloud S5443 and wire Trivy/Semgrep/CodeQL findings to GitHub Code Scanning
+- **lint**: Resolve ruff I001 import sorting and Semgrep pre-commit findings
+- **lint**: Fix F821 forward reference `Playlist` in `PlaylistTrack` via `TYPE_CHECKING` import and quoted annotation
+- **lint**: Fix Ruff I001 in `tests/utils` — separate third-party and first-party import blocks
+- **lint**: Add `pyproject.toml` with Ruff isort `known-first-party` config
+- **lint**: Remove unused `asyncio` import, sort import block (Ruff I001/F401)
+
+### Tests
+
+- **pytest-asyncio**: Set `asyncio_default_fixture_loop_scope` for pytest-asyncio 1.x
+- **pytest-asyncio**: Replace deprecated `event_loop` fixture for pytest-asyncio 1.x
+
+### CI/CD
+
+- Remove changelog automation and agent config validator workflows
+
+### Miscellaneous
+
+- Consolidate ruff config to single root source of truth
+- Restore full v0.5.2 entries dropped by changelog bot
+- Remove `AGENTS.md`
+- Remove `repomix.config.json` (tooling deprecated)
+
 ## [0.5.2] - 2026-05-27
 
 ### Features
