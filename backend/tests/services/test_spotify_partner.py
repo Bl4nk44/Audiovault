@@ -366,7 +366,7 @@ def test_fmt_track_valid():
                 "artists": {"items": [{"profile": {"name": "Test Artist"}, "uri": "spotify:artist:x1"}]},
                 "albumOfTrack": {
                     "name": "Test Album",
-                    "coverArt": {"sources": [{"url": "http://img", "width": 300}]},
+                    "coverArt": {"sources": [{"url": "https://img", "width": 300}]},
                 },
                 "trackDuration": {"totalMilliseconds": 210000},
             },
@@ -453,7 +453,7 @@ async def test_get_playlist_single_page():
         "data": {
             "playlistV2": {
                 "name": "My Playlist",
-                "images": {"items": [{"sources": [{"url": "http://cover.jpg"}]}]},
+                "images": {"items": [{"sources": [{"url": "https://cover.jpg"}]}]},
                 "content": {
                     "totalCount": 2,
                     "items": [
@@ -497,7 +497,7 @@ async def test_get_playlist_single_page():
     assert result["title"] == "My Playlist"
     assert len(result["tracks"]) == 2
     assert result["tracks"][0]["title"] == "Track 1"
-    assert result["image_url"] == "http://cover.jpg"
+    assert result["image_url"] == "https://cover.jpg"
     mock_cache.set.assert_called_once()
 
 

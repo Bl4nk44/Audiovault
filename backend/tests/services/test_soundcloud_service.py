@@ -34,7 +34,7 @@ def test_can_handle_typosquat_subdomain_rejected(service):
 
 def test_can_handle_invalid_url_returns_false(service):
     """ValueError from urlparse falls back to False."""
-    assert service.can_handle("http://[invalid") is False
+    assert service.can_handle("https://[invalid") is False
     assert service.can_handle("") is False
 
 

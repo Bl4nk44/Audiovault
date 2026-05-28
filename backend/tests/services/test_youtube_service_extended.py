@@ -285,14 +285,14 @@ def test_is_youtube_host_non_youtube(service):
 
 
 def test_is_youtube_host_invalid_url_returns_false(service):
-    assert service._is_youtube_host("http://[invalid") is False
+    assert service._is_youtube_host("https://[invalid") is False
 
 
 def test_try_channel_url_match_http_query_calls_search_channel(service):
     channel_match = MagicMock()
     channel_match.group.return_value = "UCabc"
     with patch.object(service, "_search_channel", return_value=[{"id": "UCabc"}]) as mock_sc:
-        result = service._try_channel_url_match("http://youtube.com/channel/UCabc", channel_match)
+        result = service._try_channel_url_match("https://youtube.com/channel/UCabc", channel_match)
     mock_sc.assert_called_once_with("UCabc")
     assert result == [{"id": "UCabc"}]
 
@@ -317,5 +317,5 @@ def test_try_channel_url_match_no_results_returns_none(service):
     channel_match = MagicMock()
     channel_match.group.return_value = "UC"
     with patch.object(service, "_search_channel", return_value=[]):
-        result = service._try_channel_url_match("http://youtube.com/x", channel_match)
+        result = service._try_channel_url_match("https://youtube.com/x", channel_match)
     assert result is None

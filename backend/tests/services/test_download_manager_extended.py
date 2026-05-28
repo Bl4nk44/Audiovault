@@ -141,7 +141,7 @@ async def test_notify_start_emits(dm):
     download = MagicMock(id=uuid.uuid4())
     download.track.title = "Song"
     download.track.artist = "Artist"
-    download.track.metadata_content = {"image_url": "http://img"}
+    download.track.metadata_content = {"image_url": "https://img"}
 
     with patch("app.services.download_manager.socket_manager.emit", new_callable=AsyncMock) as mock_emit:
         await dm._notify_start(download)
@@ -454,6 +454,59 @@ def test_resolve_direct_soundcloud_no_track_info(dm):
     assert result == ""
 
 
+def test_resolve_direct_soundcloud_invalid_url_falls_back(dm):
+    """ValueError from urlparse → host = '' → falls through to search fallback."""
+    download = MagicMock(track_id="https://[broken")
+    track_info = MagicMock(metadata_content={}, artist="A", title="T")
+    result = dm._resolve_direct_soundcloud(download, track_info)
+    assert result.startswith("scsearch1:")
+
+
+def test_cleanup_empty_directory_removes_m3u8_and_parent(dm, tmp_path):
+    """Happy-path: m3u8 + empty parent dir under DOWNLOAD_DIR both removed."""
+    user_dir = tmp_path / "playlist"
+    user_dir.mkdir()
+    track_file = user_dir / "track1.mp3"
+    track_file.write_text("audio")
+    m3u8_file = user_dir / "playlist.m3u8"
+    m3u8_file.write_text("#EXTM3U\n")
+
+    download = MagicMock(file_path=str(track_file))
+    track_file.unlink()  # simulate already-deleted track
+
+    with patch("app.services.download_manager.settings") as mock_settings:
+        mock_settings.DOWNLOAD_DIR = str(tmp_path)
+        with patch.object(dm, "_get_user_download_dir", return_value=str(user_dir)):
+            with patch("app.services.download_manager.sanitize_filename", side_effect=lambda x: x):
+                dm._cleanup_empty_directory([download], "playlist")
+
+    assert not m3u8_file.exists()
+    assert not user_dir.exists()
+
+
+def test_cleanup_empty_directory_no_downloads_returns(dm):
+    dm._cleanup_empty_directory([], "x")  # should not raise
+
+
+def test_cleanup_empty_directory_traversal_rejected(dm, tmp_path):
+    """Parent dir outside DOWNLOAD_DIR is rejected by is_relative_to barrier."""
+    outside = tmp_path / "outside"
+    outside.mkdir()
+    track = outside / "t.mp3"
+    track.write_text("x")
+    download = MagicMock(file_path=str(track))
+
+    safe_root = tmp_path / "safe"
+    safe_root.mkdir()
+    with patch("app.services.download_manager.settings") as mock_settings:
+        mock_settings.DOWNLOAD_DIR = str(safe_root)
+        with patch.object(dm, "_get_user_download_dir", return_value=str(outside)):
+            with patch("app.services.download_manager.sanitize_filename", side_effect=lambda x: x):
+                dm._cleanup_empty_directory([download], "playlist")
+
+    assert outside.exists()  # not removed because outside DOWNLOAD_DIR
+
+
 # ---------------------------------------------------------------------------
 # _resolve_url
 # ---------------------------------------------------------------------------
@@ -617,7 +670,9 @@ async def test_write_m3u_file(dm, tmp_path):
     await dm._write_m3u_file([dl1, dl2], target_dir, playlist_path)
 
     assert os.path.exists(playlist_path)
-    content = open(playlist_path).read()
+    from pathlib import Path as _Path
+
+    content = _Path(playlist_path).read_text()
     assert "#EXTM3U" in content
     assert "Song 1" in content
     assert "song1.mp3" in content
