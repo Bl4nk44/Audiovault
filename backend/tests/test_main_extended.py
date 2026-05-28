@@ -1,5 +1,4 @@
 import os
-import shutil
 
 import pytest
 from httpx import AsyncClient
@@ -44,19 +43,16 @@ async def test_main_lifecycle(db_session):
 
 
 @pytest.mark.asyncio
-async def test_setup_static_dirs():
+async def test_setup_static_dirs(tmp_path):
     from fastapi import FastAPI
 
     from app.core.config import settings
     from app.main import setup_static_dirs
 
     test_app = FastAPI()
-    temp_dir = "/tmp/audiovault_test_static"
-    if os.path.exists(temp_dir):
-        shutil.rmtree(temp_dir)
+    temp_dir = str(tmp_path / "audiovault_test_static")
     os.makedirs(temp_dir)
 
-    # Temporarily override setting
     old_dir = settings.DOWNLOAD_DIR
     settings.DOWNLOAD_DIR = temp_dir
 
@@ -64,4 +60,3 @@ async def test_setup_static_dirs():
         setup_static_dirs(test_app)
     finally:
         settings.DOWNLOAD_DIR = old_dir
-        shutil.rmtree(temp_dir)

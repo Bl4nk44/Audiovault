@@ -26,7 +26,7 @@ async def sample_playlist(db_session, admin_user):
     pt = PlaylistTrack(playlist_id=playlist.id, track_id=track.id, order=0)
     db_session.add(pt)
 
-    download = Download(track_id=track.id, user_id=admin_user.id, status="completed", file_path="/tmp/pl.mp3")
+    download = Download(track_id=track.id, user_id=admin_user.id, status="completed", file_path="/test_audio/pl.mp3")
     db_session.add(download)
 
     await db_session.commit()

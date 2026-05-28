@@ -45,7 +45,7 @@ async def sample_tracks(db_session: AsyncSession, test_user: User):
 
         # Add Download
         download = Download(
-            track_id=track.id, user_id=test_user.id, status="completed", file_path=f"/tmp/test_song_{i}.mp3"
+            track_id=track.id, user_id=test_user.id, status="completed", file_path=f"/test_audio/test_song_{i}.mp3"
         )
         db_session.add(download)
 

@@ -44,7 +44,7 @@ async def test_sync_manager_analyze_safety_warning(db_session):
 
 
 @pytest.mark.asyncio
-async def test_sync_manager_execute_success(db_session):
+async def test_sync_manager_execute_success(db_session, tmp_path):
     manager = SyncManager()
     user_id = uuid.uuid4()
     watchlist_id = uuid.uuid4()
@@ -62,7 +62,7 @@ async def test_sync_manager_execute_success(db_session):
     db_session.add(wi)
 
     # Setup download and file
-    temp_dir = f"/tmp/sync_test_{uuid.uuid4()}"
+    temp_dir = str(tmp_path / f"sync_test_{uuid.uuid4()}")
     os.makedirs(temp_dir, exist_ok=True)
     file_path = os.path.join(temp_dir, "test.mp3")
     await anyio.Path(file_path).write_text("test")

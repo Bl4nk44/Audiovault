@@ -35,7 +35,7 @@ async def sample_data(db_session: AsyncSession, test_user: User):
     await db_session.flush()
 
     # Add Download
-    download = Download(track_id=track.id, user_id=test_user.id, status="completed", file_path="/tmp/test.mp3")
+    download = Download(track_id=track.id, user_id=test_user.id, status="completed", file_path="/test_audio/test.mp3")
     db_session.add(download)
 
     await db_session.commit()

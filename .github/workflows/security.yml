@@ -52,6 +52,13 @@ jobs:
           name: trivy-fs-results-sarif
           path: trivy-results.sarif
 
+      - name: Upload Trivy FS SARIF to Code Scanning
+        uses: github/codeql-action/upload-sarif@v3
+        if: always()
+        with:
+          sarif_file: trivy-results.sarif
+          category: trivy-fs
+
       - name: Run Trivy vulnerability scanner (filesystem JSON)
         uses: aquasecurity/trivy-action@v0.35.0
         with:
@@ -126,6 +133,13 @@ jobs:
           name: trivy-docker-${{ matrix.image.name }}-sarif
           path: trivy-docker-${{ matrix.image.name }}.sarif
 
+      - name: Upload Trivy Docker SARIF to Code Scanning
+        uses: github/codeql-action/upload-sarif@v3
+        if: always()
+        with:
+          sarif_file: trivy-docker-${{ matrix.image.name }}.sarif
+          category: trivy-docker-${{ matrix.image.name }}
+
       - name: Run Trivy on Docker image (JSON)
         uses: aquasecurity/trivy-action@v0.35.0
         with:
@@ -193,6 +207,13 @@ jobs:
           name: semgrep-results-sarif
           path: semgrep-results.sarif
 
+      - name: Upload Semgrep SARIF to Code Scanning
+        uses: github/codeql-action/upload-sarif@v3
+        if: always()
+        with:
+          sarif_file: semgrep-results.sarif
+          category: semgrep
+
   # ==============================================
   # Secret Scanning
   # ==============================================
@@ -225,6 +246,13 @@ jobs:
         with:
           name: trivy-secrets-sarif
           path: trivy-secrets.sarif
+
+      - name: Upload Trivy secrets SARIF to Code Scanning
+        uses: github/codeql-action/upload-sarif@v3
+        if: always()
+        with:
+          sarif_file: trivy-secrets.sarif
+          category: trivy-secrets
 
   # ==============================================
   # Socket.dev Supply Chain Scan (SCA)

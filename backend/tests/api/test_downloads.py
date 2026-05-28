@@ -46,7 +46,7 @@ async def test_get_library(client: AsyncClient, db_session: AsyncSession, overri
         track_id=track.id,
         status="completed",
         source="spotify",
-        file_path="/tmp/test_lib.mp3",
+        file_path="/test_audio/test_lib.mp3",
     )
     dl.track = track  # Manual rel assignment for unit test, but here it's full integration?
     # In full integration with DB, relationship loads via foreign keys.

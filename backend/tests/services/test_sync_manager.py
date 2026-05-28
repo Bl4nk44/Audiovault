@@ -54,7 +54,7 @@ async def test_execute_sync_success(sync_manager):
     m_ref = MagicMock()
     m_ref.scalar.return_value = 0
     m_dl = MagicMock()
-    m_dl.scalar_one_or_none.return_value = Download(user_id=user_id, track_id=track_uuid, file_path="/tmp/s.mp3")
+    m_dl.scalar_one_or_none.return_value = Download(user_id=user_id, track_id=track_uuid, file_path="/test_audio/s.mp3")
 
     db_mock.execute.side_effect = [MagicMock(), m_ref, m_dl]
 

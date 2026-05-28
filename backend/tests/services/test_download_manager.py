@@ -197,12 +197,12 @@ async def test_dm_handle_completion_metadata(download_manager):
     db_mock = MagicMock()
     db_mock.execute = AsyncMock()
     db_mock.commit = AsyncMock()
-    download = MagicMock(id="dl1", file_path="/tmp/test.mp3", source="spotify")
+    download = MagicMock(id="dl1", file_path="/test_audio/test.mp3", source="spotify")
     download.track.id = "track1"
     download.track.metadata_content = {}
     download.user.username = "testuser"
 
-    container = {"path": "/tmp/test.mp3"}
+    container = {"path": "/test_audio/test.mp3"}
 
     with (
         patch("os.path.exists", return_value=True),

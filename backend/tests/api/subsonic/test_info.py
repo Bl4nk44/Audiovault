@@ -40,7 +40,9 @@ async def test_subsonic_get_similar_songs2(client: AsyncClient, subsonic_auth_pa
     db_session.add(similar_track)
     await db_session.flush()
 
-    download = Download(track_id=similar_track.id, user_id=admin_user.id, status="completed", file_path="/tmp/sim.mp3")
+    download = Download(
+        track_id=similar_track.id, user_id=admin_user.id, status="completed", file_path="/test_audio/sim.mp3"
+    )
     db_session.add(download)
     await db_session.commit()
 

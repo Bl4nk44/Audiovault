@@ -65,7 +65,7 @@ async def test_handle_download_archived(db_session: AsyncSession):
         track_id=track_id,
         status="completed",
         archived=True,
-        file_path="/tmp/test.mp3",
+        file_path="/test_audio/test.mp3",
     )
     db_session.add(download)
     await db_session.commit()
