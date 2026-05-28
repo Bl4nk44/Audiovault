@@ -376,9 +376,31 @@ class SpotifyService:
     def _proxy_base(self) -> str | None:
         return getattr(settings, "SPOTIFY_HOST_PROXY", None)  # type: ignore[attr-defined]
 
+    @staticmethod
+    def _validate_proxy_base(base: str) -> bool:
+        """SSRF guard: require http(s) scheme + non-empty host on admin-configured proxy URL."""
+        try:
+            parsed = urlparse(base)
+        except ValueError:
+            return False
+        return parsed.scheme in {"http", "https"} and bool(parsed.netloc)
+
+    _RESOURCE_ID_RE = re.compile(r"^[A-Za-z0-9]{16,32}$")
+    _RESOURCE_TYPES = frozenset({"track", "album", "playlist", "artist", "episode", "show"})
+
     async def _proxy_get(self, resource_type: str, resource_id: str) -> dict[str, Any] | None:
         base = self._proxy_base()
-        if not base:
+        if not base or not self._validate_proxy_base(base):
+            return None
+        type_ok = resource_type in self._RESOURCE_TYPES
+        id_ok = bool(self._RESOURCE_ID_RE.match(resource_id))
+        if not (type_ok and id_ok):
+            logger.warning(
+                "Spotify proxy: rejected request (type_ok=%s, id_ok=%s, id_len=%d)",
+                type_ok,
+                id_ok,
+                len(resource_id) if isinstance(resource_id, str) else -1,
+            )
             return None
         url = f"{base.rstrip('/')}/{resource_type}/{resource_id}"
         async with httpx.AsyncClient() as client:

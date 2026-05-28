@@ -4,6 +4,7 @@ import os
 import uuid
 from collections.abc import Sequence
 from datetime import UTC, datetime
+from pathlib import Path
 
 import aiofiles
 import yt_dlp
@@ -720,9 +721,16 @@ class DownloadManager:
 
     def _resolve_direct_soundcloud(self, download: Download, track_info) -> str:
         if track_info:
+            from urllib.parse import urlparse
+
             meta = track_info.metadata_content or {}
-            if "soundcloud.com" in str(download.track_id):
-                return str(download.track_id)
+            track_id_str = str(download.track_id)
+            try:
+                host = (urlparse(track_id_str).hostname or "").lower()
+            except ValueError:
+                host = ""
+            if host == "soundcloud.com" or host.endswith(".soundcloud.com"):
+                return track_id_str
             if meta.get("source_url"):
                 return meta["source_url"]
             return f"scsearch1:{track_info.artist} - {track_info.title}"
@@ -928,29 +936,46 @@ class DownloadManager:
                 )
         return user_dir
 
+    @staticmethod
+    def _safe_under_download_dir(target: str) -> str | None:
+        """Resolve target; return realpath only if it stays under DOWNLOAD_DIR. None otherwise."""
+        try:
+            base = os.path.realpath(settings.DOWNLOAD_DIR)
+            resolved = os.path.realpath(target)
+            if os.path.commonpath([base, resolved]) == base:
+                return resolved
+        except OSError, ValueError:
+            pass
+        return None
+
     def _cleanup_empty_directory(self, downloads, playlist_name):
         if not (downloads and downloads[0].file_path):
             return
         parent_dir = os.path.dirname(downloads[0].file_path)
         user_download_dir = self._get_user_download_dir(downloads[0], parent_dir)
 
-        m3u8_path = os.path.join(  # nosemgrep: path-traversal
-            user_download_dir, f"{sanitize_filename(playlist_name)}.m3u8"
-        )
-        if os.path.exists(m3u8_path):
-            try:
-                os.remove(m3u8_path)
-                logger.info(f"Removed playlist file {m3u8_path}")
-            except Exception as e:
-                logger.error(f"Failed to remove playlist file {m3u8_path}: {e}")
+        try:
+            base = Path(settings.DOWNLOAD_DIR).resolve(strict=False)
+        except OSError, ValueError:
+            return
+
+        safe_name = sanitize_filename(playlist_name)
+        try:
+            m3u8 = (Path(user_download_dir) / f"{safe_name}.m3u8").resolve(strict=False)
+            if m3u8.is_relative_to(base) and m3u8.exists():
+                m3u8.unlink()
+                logger.info("Removed playlist file")
+        except (OSError, ValueError) as e:
+            logger.error("Failed to remove playlist file: %s", type(e).__name__)
 
         safe_dir_name = playlist_name.replace("/", "-").replace("\\", "-")
-        if safe_dir_name in os.path.basename(parent_dir):
-            try:
-                os.rmdir(parent_dir)
-                logger.info(f"Removed empty directory {parent_dir}")
-            except Exception as e:
-                logger.debug(f"Failed to remove directory {parent_dir}: {e}")
+        try:
+            parent = Path(parent_dir).resolve(strict=False)
+            if parent.is_relative_to(base) and safe_dir_name in parent.name:
+                parent.rmdir()
+                logger.info("Removed empty directory")
+        except (OSError, ValueError) as e:
+            logger.debug("Failed to remove directory: %s", type(e).__name__)
 
     async def _delete_db_records(self, db, downloads):
         # 4. Delete DB records

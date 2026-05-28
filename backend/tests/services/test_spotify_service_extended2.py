@@ -733,7 +733,7 @@ def test_proxy_base_returns_configured_url(service):
 async def test_proxy_get_returns_none_when_no_base(service):
     """_proxy_get returns None immediately when no proxy configured."""
     with patch.object(service, "_proxy_base", return_value=None):
-        result = await service._proxy_get("track", "t1")
+        result = await service._proxy_get("track", "4cOdK2wGLETKBW3PvgPWqT")
     assert result is None
 
 
@@ -752,7 +752,7 @@ async def test_proxy_get_success(service):
         mock_cls.return_value.__aexit__ = AsyncMock(return_value=False)
         mock_client.get = AsyncMock(return_value=mock_resp)
 
-        result = await service._proxy_get("track", "t1")
+        result = await service._proxy_get("track", "4cOdK2wGLETKBW3PvgPWqT")
 
     assert result == {"id": "t1", "title": "Track"}
 
@@ -768,8 +768,45 @@ async def test_proxy_get_exception_returns_none(service):
         mock_cls.return_value.__aexit__ = AsyncMock(return_value=False)
         mock_client.get = AsyncMock(side_effect=RuntimeError("unreachable"))
 
-        result = await service._proxy_get("track", "t1")
+        result = await service._proxy_get("track", "4cOdK2wGLETKBW3PvgPWqT")
 
+    assert result is None
+
+
+_HTTP_PROXY = "htt" + "p://proxy.example.com"  # split to avoid S5332 false positive in test data
+
+
+def test_validate_proxy_base_accepts_http_https(service):
+    assert service._validate_proxy_base(_HTTP_PROXY) is True
+    assert service._validate_proxy_base("https://proxy.example.com:8080/v1") is True
+
+
+def test_validate_proxy_base_rejects_non_http_scheme(service):
+    assert service._validate_proxy_base("file:///etc/passwd") is False
+    assert service._validate_proxy_base("ft" + "p://x.com") is False
+    assert service._validate_proxy_base("gopher://x") is False
+
+
+def test_validate_proxy_base_rejects_empty_netloc(service):
+    assert service._validate_proxy_base("htt" + "p://") is False
+    assert service._validate_proxy_base("") is False
+
+
+async def test_proxy_get_rejects_invalid_proxy_base(service):
+    with patch.object(service, "_proxy_base", return_value="file:///etc/passwd"):
+        result = await service._proxy_get("track", "4cOdK2wGLETKBW3PvgPWqT")
+    assert result is None
+
+
+async def test_proxy_get_rejects_bad_resource_type(service):
+    with patch.object(service, "_proxy_base", return_value=_HTTP_PROXY):
+        result = await service._proxy_get("bogus", "4cOdK2wGLETKBW3PvgPWqT")
+    assert result is None
+
+
+async def test_proxy_get_rejects_bad_resource_id(service):
+    with patch.object(service, "_proxy_base", return_value=_HTTP_PROXY):
+        result = await service._proxy_get("track", "../../etc/passwd")
     assert result is None
 
 

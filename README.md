@@ -8,7 +8,7 @@
 [![GitHub Stars](https://img.shields.io/github/stars/Bl4nk44/Audiovault?logo=github)](https://github.com/Bl4nk44/Audiovault/stargazers)
 [![Docker Pulls](https://img.shields.io/docker/pulls/bl4nk404/audiovault?logo=docker)](https://hub.docker.com/r/bl4nk404/audiovault)
 [![Security monitoring by GitGuardian](https://img.shields.io/badge/Protected_by-GitGuardian-darkblue?logo=gitguardian&logoColor=white)](https://www.gitguardian.com/)
-[![SonarQube](https://img.shields.io/badge/Quality-SonarQube-4E9BCD?logo=sonarqube&logoColor=white)](https://sonarqube.org/)
+[![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=Bl4nk44_Audiovault&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=Bl4nk44_Audiovault)
 [![Semgrep](https://img.shields.io/badge/Semgrep-Scanned-00D26A?logo=semgrep)](https://semgrep.dev/)
 [![Checkov](https://img.shields.io/badge/IaC-Checkov-blue?logo=paloaltonetworks&logoColor=white)](https://www.checkov.io/)
 [![Aikido](https://img.shields.io/badge/SAST%2FSCA-Aikido-FF6B35?logo=aikido&logoColor=white)](https://aikido.dev/)

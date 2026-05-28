@@ -34,9 +34,19 @@ class YouTubeService(BaseMusicService):
         return self._search_keywords(query, limit, type)
 
     def _try_channel_url_match(self, query: str, channel_match) -> list | None:
-        if query.startswith("http") or "youtube.com" in query:
+        if query.startswith("http") or self._is_youtube_host(query):
             return self._search_channel(channel_match.group(1)) or None
         return None
+
+    @staticmethod
+    def _is_youtube_host(value: str) -> bool:
+        from urllib.parse import urlparse
+
+        try:
+            host = (urlparse(value).hostname or "").lower()
+        except ValueError:
+            return False
+        return host == "youtube.com" or host.endswith(".youtube.com")
 
     def _try_direct_match(self, query, video_match, playlist_match, channel_match, search_type):
         if video_match and not playlist_match and search_type in ["song", "track", "all"]:

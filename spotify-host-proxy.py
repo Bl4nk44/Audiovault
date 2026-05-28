@@ -20,9 +20,10 @@ import re
 import sys
 import urllib.error
 import urllib.request
+from urllib.parse import urlparse
 
 PORT = 3001
-HOST = "0.0.0.0"
+HOST = "0.0.0.0"  # noqa: S104  # Proxy must listen on all host interfaces for Docker container reachability
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
 log = logging.getLogger("spotify-proxy")
@@ -37,12 +38,23 @@ _HEADERS = {
 }
 
 _EMBED_BASE = "https://open.spotify.com/embed"
+_ALLOWED_RESOURCE_TYPES = frozenset({"playlist", "album", "track"})
+_RESOURCE_ID_RE = re.compile(r"^[A-Za-z0-9]{16,32}$")
 
 
 def _fetch_embed(resource_type: str, resource_id: str) -> dict:
+    # SSRF guard: only allow fixed resource types and strictly alphanumeric IDs.
+    if resource_type not in _ALLOWED_RESOURCE_TYPES:
+        raise ValueError(f"invalid resource_type: {resource_type!r}")
+    if not _RESOURCE_ID_RE.match(resource_id):
+        raise ValueError(f"invalid resource_id format: {resource_id!r}")
     url = f"{_EMBED_BASE}/{resource_type}/{resource_id}"
-    req = urllib.request.Request(url, headers=_HEADERS)
-    with urllib.request.urlopen(req, timeout=12) as resp:
+    parsed = urlparse(url)
+    if parsed.scheme != "https" or parsed.hostname != "open.spotify.com":
+        raise ValueError(f"refusing non-spotify URL: {url}")
+    req = urllib.request.Request(url, headers=_HEADERS)  # noqa: S310  # URL scheme+host validated above
+    # SSRF-safe: scheme/host pinned above + alphanumeric path components only.
+    with urllib.request.urlopen(req, timeout=12) as resp:  # noqa: S310  # nosec B310  # nosemgrep: python.lang.security.audit.dynamic-urllib-use-detected.dynamic-urllib-use-detected
         html = resp.read().decode("utf-8", errors="replace")
 
     m = re.search(r'<script id="__NEXT_DATA__"[^>]*>(.*?)</script>', html, re.S)

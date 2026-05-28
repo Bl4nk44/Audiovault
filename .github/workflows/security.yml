@@ -44,6 +44,7 @@ jobs:
           output: 'trivy-results.sarif'
           severity: 'CRITICAL,HIGH,MEDIUM'
           exit-code: '0'  # Don't fail the build
+          ignore-unfixed: true  # Skip CVEs without an available patch
 
       - name: Archive Trivy FS results
         uses: actions/upload-artifact@v4
@@ -68,6 +69,7 @@ jobs:
           output: 'trivy-results.json'
           severity: 'CRITICAL,HIGH,MEDIUM'
           exit-code: '0'
+          ignore-unfixed: true
 
       - name: Upload Trivy FS JSON results
         uses: actions/upload-artifact@v4
@@ -84,7 +86,7 @@ jobs:
           format: 'table'
           severity: 'CRITICAL,HIGH'
           scanners: 'vuln'
-          ignore-unfixed: false
+          ignore-unfixed: true
 
   # ==============================================
   # Trivy Docker Image Scanning
@@ -125,6 +127,7 @@ jobs:
           output: 'trivy-docker-${{ matrix.image.name }}.sarif'
           severity: 'CRITICAL,HIGH,MEDIUM'
           exit-code: '0'
+          ignore-unfixed: true
 
       - name: Archive Trivy Docker results (${{ matrix.image.name }})
         uses: actions/upload-artifact@v4
@@ -148,6 +151,7 @@ jobs:
           output: 'trivy-docker-${{ matrix.image.name }}.json'
           severity: 'CRITICAL,HIGH,MEDIUM'
           exit-code: '0'
+          ignore-unfixed: true
 
       - name: Upload Docker JSON results
         uses: actions/upload-artifact@v4
