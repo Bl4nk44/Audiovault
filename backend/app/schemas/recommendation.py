@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 
 class RecommendedTrack(BaseModel):
@@ -42,4 +42,4 @@ class RecommendationResponse(BaseModel):
     source: str
     cache_status: str = "miss"
     lastfm_connected: bool = False
-    generated_at: datetime = datetime.now()
+    generated_at: datetime = Field(default_factory=datetime.now)

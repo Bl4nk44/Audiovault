@@ -8,6 +8,7 @@ from app.core.dependencies import get_current_active_user
 from app.models.user import User
 from app.providers import provider_manager
 from app.schemas.metadata import PlaylistMetadata
+from app.utils.log_sanitize import sanitize_log
 
 router = APIRouter()
 logger = logging.getLogger(__name__)
@@ -75,9 +76,7 @@ async def import_playlist(
     using the Universal Provider system.
     Returns the extracted metadata for preview.
     """
-    logger.info(
-        f"Importing playlist from URL: {request.url}"
-    )  # nosemgrep: python.fastapi.log.tainted-log-injection-stdlib-fastapi.tainted-log-injection-stdlib-fastapi
+    logger.info("Importing playlist from URL: %s", sanitize_log(request.url))
 
     try:
         playlist = await provider_manager.extract_playlist(request.url)

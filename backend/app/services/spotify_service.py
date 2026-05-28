@@ -34,6 +34,7 @@ import httpx
 
 from app.core.config import settings
 from app.services.spotify_partner import partner_client  # noqa: E402
+from app.utils.log_sanitize import sanitize_log
 
 logger = logging.getLogger(__name__)
 
@@ -366,7 +367,7 @@ class SpotifyService:
                 resp.raise_for_status()
                 return resp.json()
             except Exception as e:
-                logger.error(f"Spotify API [{endpoint}]: {e}")
+                logger.error("Spotify API [%s]: %s", sanitize_log(endpoint), sanitize_log(e))
                 return None
 
     # ------------------------------------------------------------------ #
@@ -409,7 +410,7 @@ class SpotifyService:
                 resp.raise_for_status()
                 return resp.json()
             except Exception as e:
-                logger.debug(f"Host proxy unavailable ({url}): {e}")
+                logger.debug("Host proxy unavailable (%s): %s", sanitize_log(url), sanitize_log(e))
                 return None
 
     # ------------------------------------------------------------------ #

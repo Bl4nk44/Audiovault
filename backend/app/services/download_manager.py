@@ -21,6 +21,7 @@ from app.models.track import Track
 from app.schemas.download import DownloadCreate
 from app.services.fallback_service import fallback_service
 from app.services.socket_manager import socket_manager
+from app.utils.log_sanitize import sanitize_log
 from app.utils.sanitization import sanitize_filename
 
 logger = logging.getLogger(__name__)
@@ -166,7 +167,7 @@ class DownloadManager:
         self.paused_downloads.add(download_id)
         # If it's currently running, we can't easily stop yt-dlp except via the hook exception
         # The hook will raise exception and process_download will catch it and update DB
-        logger.info(f"Requested pause for {download_id}")
+        logger.info("Requested pause for %s", sanitize_log(download_id))
 
     async def resume_pending_downloads(self, db: AsyncSession):
         """Resume downloads that were pending or interrupted during restart."""
@@ -584,7 +585,7 @@ class DownloadManager:
             await db.commit()
             await self.queue.put(download.id)
             await self.start_worker()
-            logger.info(f"Resumed download {download_id}")
+            logger.info("Resumed download %s", sanitize_log(download_id))
 
     async def cancel_download(self, db: AsyncSession, download_id: str):
         # Remove from pause list if there
@@ -606,7 +607,7 @@ class DownloadManager:
         if download:
             await db.delete(download)
             await db.commit()
-            logger.info(f"Cancelled and deleted download {download_id}")
+            logger.info("Cancelled and deleted download %s", sanitize_log(download_id))
 
             await socket_manager.emit("download:cancelled", {"download_id": download_id})
 
@@ -874,7 +875,9 @@ class DownloadManager:
             downloads = await self._get_playlist_downloads(db, user_id, source, playlist_name)
 
             if not downloads:
-                logger.info(f"No downloads found for playlist {playlist_name} ({source})")
+                logger.info(
+                    "No downloads found for playlist %s (%s)", sanitize_log(playlist_name), sanitize_log(source)
+                )
                 return
 
             self._delete_physical_files(downloads)
@@ -894,10 +897,14 @@ class DownloadManager:
                 await db.execute(delete(PlaylistTrack).where(PlaylistTrack.playlist_id == playlist_obj.id))
                 await db.execute(delete(Playlist).where(Playlist.id == playlist_obj.id))
 
-            logger.info(f"Deleted playlist {playlist_name} for user {user_id} and synced with playlists/tracks tables")
+            logger.info(
+                "Deleted playlist %s for user %s and synced with playlists/tracks tables",
+                sanitize_log(playlist_name),
+                sanitize_log(user_id),
+            )
 
         except Exception as e:
-            logger.error(f"Error deleting playlist {playlist_name}: {e}")
+            logger.error("Error deleting playlist %s: %s", sanitize_log(playlist_name), sanitize_log(e))
             raise e
 
     async def _get_playlist_downloads(self, db: AsyncSession, user_id, source, playlist_name):
