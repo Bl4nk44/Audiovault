@@ -393,7 +393,9 @@ class SpotifyService:
         if not base or not self._validate_proxy_base(base):
             return None
         if resource_type not in self._RESOURCE_TYPES or not self._RESOURCE_ID_RE.match(resource_id):
-            logger.warning(f"Spotify proxy: rejected resource_type={resource_type!r} resource_id={resource_id!r}")
+            safe_type = "".join(c for c in str(resource_type)[:32] if c.isalnum() or c in "_-")
+            safe_id = "".join(c for c in str(resource_id)[:64] if c.isalnum() or c in "_-")
+            logger.warning("Spotify proxy: rejected resource_type=%s resource_id=%s", safe_type, safe_id)
             return None
         url = f"{base.rstrip('/')}/{resource_type}/{resource_id}"
         async with httpx.AsyncClient() as client:

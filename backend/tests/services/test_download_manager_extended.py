@@ -624,23 +624,33 @@ async def test_write_m3u_file(dm, tmp_path):
 
 
 # ---------------------------------------------------------------------------
-# _path_under_download_dir
+# _safe_under_download_dir
 # ---------------------------------------------------------------------------
 
 
-def test_path_under_download_dir_safe(tmp_path):
-    sub = str(tmp_path / "user" / "file.mp3")
+def test_safe_under_download_dir_safe(tmp_path):
+    sub_dir = tmp_path / "user"
+    sub_dir.mkdir()
+    target = sub_dir / "file.mp3"
+    target.write_text("x")
     with patch("app.services.download_manager.settings") as mock_settings:
         mock_settings.DOWNLOAD_DIR = str(tmp_path)
-        result = DownloadManager._path_under_download_dir(sub)
-    assert result is True
+        result = DownloadManager._safe_under_download_dir(str(target))
+    assert result == os.path.realpath(str(target))
 
 
-def test_path_under_download_dir_traversal(tmp_path):
+def test_safe_under_download_dir_traversal(tmp_path):
     with patch("app.services.download_manager.settings") as mock_settings:
         mock_settings.DOWNLOAD_DIR = str(tmp_path)
-        result = DownloadManager._path_under_download_dir("/etc/passwd")
-    assert result is False
+        result = DownloadManager._safe_under_download_dir("/etc/passwd")
+    assert result is None
+
+
+def test_safe_under_download_dir_invalid_base(tmp_path):
+    with patch("app.services.download_manager.settings") as mock_settings:
+        mock_settings.DOWNLOAD_DIR = "\x00invalid"
+        result = DownloadManager._safe_under_download_dir(str(tmp_path / "a"))
+    assert result is None
 
 
 # ---------------------------------------------------------------------------

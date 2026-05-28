@@ -936,17 +936,16 @@ class DownloadManager:
         return user_dir
 
     @staticmethod
-    def _path_under_download_dir(target: str) -> bool:
-        """Ensure target is contained within configured DOWNLOAD_DIR (defense against traversal)."""
+    def _safe_under_download_dir(target: str) -> str | None:
+        """Resolve target; return realpath only if it stays under DOWNLOAD_DIR. None otherwise."""
         try:
             base = os.path.realpath(settings.DOWNLOAD_DIR)
             resolved = os.path.realpath(target)
+            if os.path.commonpath([base, resolved]) == base:
+                return resolved
         except OSError, ValueError:
-            return False
-        try:
-            return os.path.commonpath([base, resolved]) == base
-        except ValueError:
-            return False
+            pass
+        return None
 
     def _cleanup_empty_directory(self, downloads, playlist_name):
         if not (downloads and downloads[0].file_path):
@@ -957,20 +956,22 @@ class DownloadManager:
         m3u8_path = os.path.join(  # nosemgrep: path-traversal
             user_download_dir, f"{sanitize_filename(playlist_name)}.m3u8"
         )
-        if os.path.exists(m3u8_path) and self._path_under_download_dir(m3u8_path):
+        safe_m3u8 = self._safe_under_download_dir(m3u8_path)
+        if safe_m3u8 and os.path.exists(safe_m3u8):
             try:
-                os.remove(m3u8_path)
-                logger.info(f"Removed playlist file {m3u8_path}")
+                os.remove(safe_m3u8)
+                logger.info("Removed playlist file %s", safe_m3u8)
             except Exception as e:
-                logger.error(f"Failed to remove playlist file {m3u8_path}: {e}")
+                logger.error("Failed to remove playlist file %s: %s", safe_m3u8, e)
 
         safe_dir_name = playlist_name.replace("/", "-").replace("\\", "-")
-        if safe_dir_name in os.path.basename(parent_dir) and self._path_under_download_dir(parent_dir):
+        safe_parent = self._safe_under_download_dir(parent_dir)
+        if safe_parent and safe_dir_name in os.path.basename(safe_parent):
             try:
-                os.rmdir(parent_dir)
-                logger.info(f"Removed empty directory {parent_dir}")
+                os.rmdir(safe_parent)
+                logger.info("Removed empty directory %s", safe_parent)
             except Exception as e:
-                logger.debug(f"Failed to remove directory {parent_dir}: {e}")
+                logger.debug("Failed to remove directory %s: %s", safe_parent, e)
 
     async def _delete_db_records(self, db, downloads):
         # 4. Delete DB records

@@ -263,3 +263,59 @@ def test_format_track_duration_none_string(service):
     }
     result = service._format_track(item)
     assert result["duration_ms"] == 0
+
+
+# ─── _is_youtube_host & _try_channel_url_match ───────────────────────────────
+
+
+def test_is_youtube_host_apex_and_subdomain(service):
+    assert service._is_youtube_host("https://youtube.com/channel/UCabc") is True
+    assert service._is_youtube_host("https://www.youtube.com/c/abc") is True
+    assert service._is_youtube_host("https://m.youtube.com/x") is True
+
+
+def test_is_youtube_host_typosquat_rejected(service):
+    """youtube.com appearing as substring in a different host must not match."""
+    assert service._is_youtube_host("https://youtube.com.evil.tld/a") is False
+
+
+def test_is_youtube_host_non_youtube(service):
+    assert service._is_youtube_host("https://vimeo.com/x") is False
+    assert service._is_youtube_host("") is False
+
+
+def test_is_youtube_host_invalid_url_returns_false(service):
+    assert service._is_youtube_host("http://[invalid") is False
+
+
+def test_try_channel_url_match_http_query_calls_search_channel(service):
+    channel_match = MagicMock()
+    channel_match.group.return_value = "UCabc"
+    with patch.object(service, "_search_channel", return_value=[{"id": "UCabc"}]) as mock_sc:
+        result = service._try_channel_url_match("http://youtube.com/channel/UCabc", channel_match)
+    mock_sc.assert_called_once_with("UCabc")
+    assert result == [{"id": "UCabc"}]
+
+
+def test_try_channel_url_match_youtube_host_calls_search_channel(service):
+    channel_match = MagicMock()
+    channel_match.group.return_value = "UCxyz"
+    with patch.object(service, "_search_channel", return_value=[{"id": "UCxyz"}]) as mock_sc:
+        result = service._try_channel_url_match("https://www.youtube.com/c/x", channel_match)
+    mock_sc.assert_called_once_with("UCxyz")
+    assert result == [{"id": "UCxyz"}]
+
+
+def test_try_channel_url_match_non_url_returns_none(service):
+    channel_match = MagicMock()
+    channel_match.group.return_value = "UC"
+    result = service._try_channel_url_match("just keywords", channel_match)
+    assert result is None
+
+
+def test_try_channel_url_match_no_results_returns_none(service):
+    channel_match = MagicMock()
+    channel_match.group.return_value = "UC"
+    with patch.object(service, "_search_channel", return_value=[]):
+        result = service._try_channel_url_match("http://youtube.com/x", channel_match)
+    assert result is None

@@ -22,6 +22,22 @@ def test_can_handle_non_soundcloud(service):
     assert service.can_handle("https://spotify.com/track/123") is False
 
 
+def test_can_handle_www_and_mobile_hosts(service):
+    assert service.can_handle("https://www.soundcloud.com/u/t") is True
+    assert service.can_handle("https://m.soundcloud.com/u/t") is True
+
+
+def test_can_handle_typosquat_subdomain_rejected(service):
+    """Defense against substring matching attacks (e.g. soundcloud.com.evil.tld)."""
+    assert service.can_handle("https://soundcloud.com.evil.tld/track") is False
+
+
+def test_can_handle_invalid_url_returns_false(service):
+    """ValueError from urlparse falls back to False."""
+    assert service.can_handle("http://[invalid") is False
+    assert service.can_handle("") is False
+
+
 @pytest.mark.asyncio
 async def test_get_tracks_playlist(service):
     mock_info = {

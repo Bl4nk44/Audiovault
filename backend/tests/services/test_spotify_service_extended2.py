@@ -773,6 +773,40 @@ async def test_proxy_get_exception_returns_none(service):
     assert result is None
 
 
+def test_validate_proxy_base_accepts_http_https(service):
+    assert service._validate_proxy_base("http://proxy.example.com") is True
+    assert service._validate_proxy_base("https://proxy.example.com:8080/v1") is True
+
+
+def test_validate_proxy_base_rejects_non_http_scheme(service):
+    assert service._validate_proxy_base("file:///etc/passwd") is False
+    assert service._validate_proxy_base("ftp://x.com") is False
+    assert service._validate_proxy_base("gopher://x") is False
+
+
+def test_validate_proxy_base_rejects_empty_netloc(service):
+    assert service._validate_proxy_base("http://") is False
+    assert service._validate_proxy_base("") is False
+
+
+async def test_proxy_get_rejects_invalid_proxy_base(service):
+    with patch.object(service, "_proxy_base", return_value="file:///etc/passwd"):
+        result = await service._proxy_get("track", "4cOdK2wGLETKBW3PvgPWqT")
+    assert result is None
+
+
+async def test_proxy_get_rejects_bad_resource_type(service):
+    with patch.object(service, "_proxy_base", return_value="http://proxy.example.com"):
+        result = await service._proxy_get("bogus", "4cOdK2wGLETKBW3PvgPWqT")
+    assert result is None
+
+
+async def test_proxy_get_rejects_bad_resource_id(service):
+    with patch.object(service, "_proxy_base", return_value="http://proxy.example.com"):
+        result = await service._proxy_get("track", "../../etc/passwd")
+    assert result is None
+
+
 # ─────────────────────────────────────────────────────────────────────────────
 # get_track proxy hit (line 456)
 # ─────────────────────────────────────────────────────────────────────────────

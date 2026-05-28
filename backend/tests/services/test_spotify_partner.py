@@ -159,10 +159,13 @@ async def test_refresh_access_token_calls_totp_refresh_when_stale():
 
 @pytest.mark.asyncio
 async def test_refresh_client_token():
+    import secrets as _secrets
+
     client = SpotifyPartnerClient()
     client._client_id = "test_id"
 
-    token_data = {"granted_token": {"token": "test_client_token"}}
+    expected = _secrets.token_urlsafe(16)
+    token_data = {"granted_token": {"token": expected}}
 
     mock_resp = MagicMock()
     mock_resp.raise_for_status = MagicMock()
@@ -176,7 +179,7 @@ async def test_refresh_client_token():
     with patch("httpx.AsyncClient", return_value=mock_http):
         await client._refresh_client_token()
 
-    assert client._client_token == "test_client_token"
+    assert client._client_token == expected
     assert client._client_token_expires > time.time()
 
 
