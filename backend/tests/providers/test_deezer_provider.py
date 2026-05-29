@@ -75,3 +75,63 @@ async def test_extract_playlist_playlist(deezer_provider):
 async def test_extract_playlist_invalid(deezer_provider):
     result = await deezer_provider.extract_playlist("https://google.com")
     assert result is None
+
+
+def test_name_property(deezer_provider):
+    assert deezer_provider.name == "deezer"
+
+
+def test_domains_property(deezer_provider):
+    assert {"deezer.com", "www.deezer.com"}.issubset(set(deezer_provider.domains))
+
+
+@pytest.mark.asyncio
+async def test_extract_playlist_album(deezer_provider):
+    with patch("app.providers.deezer_provider.deezer_service") as mock_service:
+        mock_service.get_album_tracks = AsyncMock(
+            return_value=[
+                {"id": "10", "title": "Album Song", "artist": "Artist", "album": "My Album"},
+            ]
+        )
+
+        result = await deezer_provider.extract_playlist("https://deezer.com/album/10")
+
+        assert result is not None
+        assert result.title == "Deezer Album"
+        assert len(result.tracks) == 1
+        assert result.tracks[0].source_url == "https://deezer.com/track/10"
+
+
+@pytest.mark.asyncio
+async def test_extract_playlist_empty_tracks_returns_none(deezer_provider):
+    with patch("app.providers.deezer_provider.deezer_service") as mock_service:
+        mock_service.get_playlist_tracks = AsyncMock(return_value=[])
+
+        result = await deezer_provider.extract_playlist("https://deezer.com/playlist/999")
+
+        assert result is None
+
+
+@pytest.mark.asyncio
+async def test_get_track_returns_first_track(deezer_provider):
+    with patch("app.providers.deezer_provider.deezer_service") as mock_service:
+        mock_service.get_track = AsyncMock(
+            return_value={
+                "id": "42",
+                "title": "Solo Track",
+                "artist": "Solo Artist",
+                "album": "Solo Album",
+            }
+        )
+
+        result = await deezer_provider.get_track("https://deezer.com/track/42")
+
+        assert result is not None
+        assert result.title == "Solo Track"
+        assert result.source == "deezer"
+
+
+@pytest.mark.asyncio
+async def test_get_track_invalid_url_returns_none(deezer_provider):
+    result = await deezer_provider.get_track("https://not-deezer.com/nothing")
+    assert result is None
