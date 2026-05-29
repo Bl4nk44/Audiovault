@@ -82,8 +82,7 @@ def test_name_property(deezer_provider):
 
 
 def test_domains_property(deezer_provider):
-    assert "deezer.com" in deezer_provider.domains
-    assert "www.deezer.com" in deezer_provider.domains
+    assert {"deezer.com", "www.deezer.com"}.issubset(set(deezer_provider.domains))
 
 
 @pytest.mark.asyncio
