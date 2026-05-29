@@ -125,52 +125,52 @@ def validate_url(url: str) -> tuple[bool, str]:
     return True, ""
 
 
+_REDIRECT_STATUSES = frozenset({301, 302, 303, 307, 308})
+_MAX_REDIRECTS = 10
+
+
+async def _follow_redirect_chain(session: aiohttp.ClientSession, url: str, use_get: bool) -> str:
+    """Follow redirects manually, validating each hop before making the request."""
+    current_url = url
+    for _ in range(_MAX_REDIRECTS):
+        method = session.get if use_get else session.head
+        async with method(current_url, allow_redirects=False) as response:
+            if response.status not in _REDIRECT_STATUSES:
+                return current_url
+            location = str(response.headers.get("Location", ""))
+            if not location:
+                return current_url
+            # Resolve relative redirects
+            if not location.startswith(("http://", "https://")):
+                location = str(response.url.origin()) + location
+            is_valid, error = validate_url(location)
+            if not is_valid:
+                raise SSRFValidationError(f"Redirect blocked: {error}")
+            current_url = location
+    return current_url
+
+
 async def resolve_redirects(url: str) -> str:
     """
     Follows redirects to get the final URL.
-    Validates URL for SSRF protection before making requests.
+    Validates each redirect hop before making the request (SSRF protection).
     """
-    # Validate initial URL
     is_valid, error = validate_url(url)
     if not is_valid:
         logger.warning("SSRF validation failed for %s: %s", sanitize_log(url), sanitize_log(error))
         raise SSRFValidationError(error)
 
-    try:
-        async with aiohttp.ClientSession() as session:
-            # Head request first to be faster/lighter
-            async with session.head(url, allow_redirects=True) as response:
-                final_url = str(response.url)
-
-                # Validate final URL too (in case of open redirect)
-                is_valid, error = validate_url(final_url)
-                if not is_valid:
-                    logger.warning(
-                        "SSRF validation failed for redirect %s: %s",
-                        sanitize_log(final_url),
-                        sanitize_log(error),
-                    )
-                    raise SSRFValidationError(f"Redirect blocked: {error}")
-
-                return final_url
-    except SSRFValidationError:
-        raise
-    except Exception as e:
-        logger.warning("Failed to resolve URL %s: %s", sanitize_log(url), sanitize_log(e))
-        # If head fails (e.g. 405 Method Not Allowed), try GET
+    async with aiohttp.ClientSession() as session:
         try:
-            async with aiohttp.ClientSession() as session:
-                async with session.get(url, allow_redirects=True) as response:
-                    final_url = str(response.url)
-
-                    # Validate final URL
-                    is_valid, error = validate_url(final_url)
-                    if not is_valid:
-                        raise SSRFValidationError(f"Redirect blocked: {error}")
-
-                    return final_url
+            return await _follow_redirect_chain(session, url, use_get=False)
         except SSRFValidationError:
             raise
-        except Exception as e2:
-            logger.error("Failed to resolve URL %s with GET: %s", sanitize_log(url), sanitize_log(e2))
-            return url
+        except Exception as e:
+            logger.warning("HEAD failed for %s: %s — retrying with GET", sanitize_log(url), sanitize_log(e))
+            try:
+                return await _follow_redirect_chain(session, url, use_get=True)
+            except SSRFValidationError:
+                raise
+            except Exception as e2:
+                logger.error("Failed to resolve URL %s with GET: %s", sanitize_log(url), sanitize_log(e2))
+                return url
