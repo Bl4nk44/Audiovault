@@ -1,7 +1,7 @@
 import ipaddress
 import logging
 import socket
-from urllib.parse import urlparse
+from urllib.parse import urljoin, urlparse
 
 import aiohttp
 
@@ -140,9 +140,8 @@ async def _follow_redirect_chain(session: aiohttp.ClientSession, url: str, use_g
             location = str(response.headers.get("Location", ""))
             if not location:
                 return current_url
-            # Resolve relative redirects
-            if not location.startswith(("http://", "https://")):
-                location = str(response.url.origin()) + location
+            # Resolve relative redirects against the current URL
+            location = urljoin(current_url, location)
             is_valid, error = validate_url(location)
             if not is_valid:
                 raise SSRFValidationError(f"Redirect blocked: {error}")

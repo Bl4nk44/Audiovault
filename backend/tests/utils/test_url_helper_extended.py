@@ -186,11 +186,10 @@ async def test_resolve_redirects_empty_location_header():
 
 @pytest.mark.asyncio
 async def test_resolve_redirects_relative_location():
-    """Relative redirect Location is resolved against the response origin."""
+    """Relative redirect Location is resolved against the current URL."""
     mock_redirect = MagicMock()
     mock_redirect.status = 302
     mock_redirect.headers = {"Location": "/artist/track"}
-    mock_redirect.url.origin.return_value = "https://soundcloud.com"
     mock_redirect.__aenter__ = AsyncMock(return_value=mock_redirect)
     mock_redirect.__aexit__ = AsyncMock(return_value=False)
 
@@ -210,7 +209,7 @@ async def test_resolve_redirects_relative_location():
     ):
         result = await resolve_redirects("https://on.soundcloud.com/abc")
 
-    assert result == "https://soundcloud.com/artist/track"
+    assert result == "https://on.soundcloud.com/artist/track"
 
 
 @pytest.mark.asyncio
