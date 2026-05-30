@@ -15,7 +15,7 @@
     "@tailwindcss/vite": "^4.2.2",
     "@tanstack/react-query": "^5.99.0",
     "@testing-library/dom": "^10.4.1",
-    "axios": "1.15.2",
+    "axios": "1.16.0",
     "clsx": "^2.1.1",
     "date-fns": "^4.1.0",
     "engine.io-client": "^6.6.5",
