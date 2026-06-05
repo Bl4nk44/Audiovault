@@ -2,6 +2,26 @@
 
 All notable changes to Audiovault will be documented in this file.
 
+## [0.5.5] - 2026-06-05
+
+### Security
+
+- **dependency CVE fixes**: bump `aiohttp` 3.13.5 → 3.14.0 (GHSA-hg6j-4rv6-33pg, GHSA-jg22-mg44-37j8) and `PyJWT` 2.12.1 → 2.13.0 (PYSEC-2026-175/177/178/179, incl. one 7.4 HIGH); osv-scanner clean (6 CVE → 0), socket scan passes
+- **Python runtime**: pin `python:3.14.5-slim-bookworm` (latest patch with CVE fixes) — 3.15 still beta until Oct 2026, rejected
+- **SSRF via redirect chain**: resolve redirects with `urljoin` and re-validate each hop against the host allowlist in `url_helper` (closes allowlist bypass through redirect)
+
+### Dependencies
+
+- Backend bumps: fastapi 0.136.3, uvicorn 0.49.0, sqlalchemy 2.0.50, redis 8.0.0, python-socketio 5.16.2, lyricsgenius 3.12.2, ytmusicapi 1.12.0, python-multipart 0.0.32, psycopg2-binary 2.9.12, pytest-asyncio 1.4.0, fakeredis 2.36.0, ruff 0.15.16, mypy 2.1.0, greenlet 3.5.1
+- Frontend bumps (within-major): @tanstack/react-query, framer-motion, react-router-dom, axios 1.16.1, vite 8.0.13, rollup, eslint, tailwindcss, jsdom, typescript-eslint, @types/\*
+- **react/react-dom version mismatch fix**: pin both to exact 19.2.5 — caret range let react-dom drift to 19.2.6 while react stayed 19.2.5; React requires an exact version match
+
+### Tests
+
+- `url_helper`: cover redirect branches, drop hardcoded IPs
+- `deezer`: rewrite domains assertion to avoid CodeQL false positive
+- coverage: boost from 87.6% to 89%
+
 ## [0.5.4] - 2026-05-29
 
 ### Security
