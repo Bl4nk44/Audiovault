@@ -506,6 +506,77 @@ async def test_get_playlist_single_page():
 # ---------------------------------------------------------------------------
 
 
+# ---------------------------------------------------------------------------
+# _paginate_tracks / _first_image_url / _cache_set_playlist
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.asyncio
+async def test_paginate_tracks_fetches_remaining_pages():
+    client = SpotifyPartnerClient()
+    page = {
+        "data": {
+            "playlistV2": {
+                "content": {
+                    "items": [
+                        {
+                            "itemV2": {
+                                "__typename": "TrackResponseWrapper",
+                                "data": {
+                                    "uri": "spotify:track:p1",
+                                    "name": "Paged",
+                                    "artists": {"items": [{"profile": {"name": "A"}, "uri": "spotify:artist:a"}]},
+                                    "albumOfTrack": {"name": "Alb"},
+                                    "trackDuration": {"totalMilliseconds": 1000},
+                                },
+                            }
+                        }
+                    ]
+                }
+            }
+        }
+    }
+    with (
+        patch("app.services.spotify_partner._jitter", new_callable=AsyncMock),
+        patch.object(client, "_query", new_callable=AsyncMock, return_value=page) as mock_q,
+    ):
+        # batch=1, total=3 → loop runs for offsets 1 and 2
+        tracks = await client._paginate_tracks({"uri": "u"}, batch=1, total=3)
+
+    assert len(tracks) == 2
+    assert mock_q.await_count == 2
+
+
+@pytest.mark.asyncio
+async def test_paginate_tracks_stops_on_empty_page():
+    client = SpotifyPartnerClient()
+    with (
+        patch("app.services.spotify_partner._jitter", new_callable=AsyncMock),
+        patch.object(client, "_query", new_callable=AsyncMock, return_value=None),
+    ):
+        tracks = await client._paginate_tracks({"uri": "u"}, batch=1, total=5)
+    assert tracks == []
+
+
+def test_first_image_url_none_when_no_images():
+    assert SpotifyPartnerClient._first_image_url({}) is None
+    assert SpotifyPartnerClient._first_image_url({"images": {"items": []}}) is None
+
+
+def test_first_image_url_returns_first_source():
+    pl = {"images": {"items": [{"sources": [{"url": "https://cover"}]}]}}
+    assert SpotifyPartnerClient._first_image_url(pl) == "https://cover"
+
+
+@pytest.mark.asyncio
+async def test_cache_set_playlist_swallows_error():
+    client = SpotifyPartnerClient()
+    with patch("app.core.cache.cache_manager") as mock_cache:
+        mock_cache.set = AsyncMock(side_effect=Exception("Redis down"))
+        # Must not raise
+        await client._cache_set_playlist("sp:pl:x", {"id": "x"})
+
+
 @pytest.mark.asyncio
 async def test_invalidate_playlist_cache():
     client = SpotifyPartnerClient()
