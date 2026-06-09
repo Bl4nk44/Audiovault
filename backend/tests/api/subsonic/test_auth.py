@@ -2,10 +2,10 @@ import hashlib
 from datetime import UTC, datetime, timedelta
 
 import pytest
-from fastapi import HTTPException
 from httpx import AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.api.subsonic.auth import SubsonicAuthError
 from app.core.security import get_password_hash
 from app.models.subsonic import SubsonicAuthToken
 from app.models.user import User
@@ -25,10 +25,10 @@ async def test_user(db_session: AsyncSession):
 @pytest.mark.asyncio
 async def test_ping_no_auth(client: AsyncClient):
     response = await client.get("/rest/ping.view?u=nonexistent&p=wrong&c=test&v=1.16.1&f=json")
-    assert response.status_code == 401
+    # Subsonic spec: auth failures return HTTP 200 with an error envelope
+    assert response.status_code == 200
     data = response.json()
-    # FastAPI wraps error detail in "detail" key
-    sub_resp = data["detail"]["subsonic-response"]
+    sub_resp = data["subsonic-response"]
     assert sub_resp["status"] == "failed"
     assert sub_resp["error"]["code"] == 40
 
@@ -81,9 +81,10 @@ async def test_subsonic_auth_inactive_user(client: AsyncClient, db_session: Asyn
     await db_session.commit()
 
     response = await client.get("/rest/ping.view?u=inactive&p=pass&c=test&v=1.16.1&f=json")
-    assert response.status_code == 403
+    assert response.status_code == 200
     data = response.json()
-    assert data["detail"]["subsonic-response"]["error"]["code"] == 50
+    assert data["subsonic-response"]["status"] == "failed"
+    assert data["subsonic-response"]["error"]["code"] == 50
 
 
 @pytest.mark.asyncio
@@ -100,13 +101,15 @@ async def test_subsonic_auth_hex_password(client: AsyncClient, test_user: User):
 async def test_subsonic_auth_invalid_hex_password(client: AsyncClient, test_user: User):
     # Invalid hex string
     response = await client.get("/rest/ping.view?u=testuser&p=enc:not_hex_at_all&c=test&v=1.16.1&f=json")
-    assert response.status_code == 401
+    assert response.status_code == 200
+    assert response.json()["subsonic-response"]["status"] == "failed"
 
 
 @pytest.mark.asyncio
 async def test_subsonic_auth_invalid_token(client: AsyncClient, test_user: User):
     response = await client.get("/rest/ping.view?u=testuser&t=invalidhash&s=somesalt&c=test&v=1.16.1&f=json")
-    assert response.status_code == 401
+    assert response.status_code == 200
+    assert response.json()["subsonic-response"]["status"] == "failed"
 
 
 @pytest.mark.asyncio
@@ -123,12 +126,30 @@ async def test_subsonic_auth_expired_token(client: AsyncClient, test_user: User,
     token_hash = hashlib.md5(f"{token_val}{req_salt}".encode()).hexdigest()
 
     response = await client.get(f"/rest/ping.view?u=testuser&t={token_hash}&s={req_salt}&c=test&v=1.16.1&f=json")
-    assert response.status_code == 401
+    assert response.status_code == 200
+    assert response.json()["subsonic-response"]["status"] == "failed"
+
+
+@pytest.mark.asyncio
+async def test_ping_without_view_suffix(client: AsyncClient, test_user: User):
+    """The optional .view suffix may be omitted (OpenSubsonic clients)."""
+    response = await client.get("/rest/ping?u=testuser&p=testpass&c=test&v=1.16.1&f=json")
+    assert response.status_code == 200
+    assert response.json()["subsonic-response"]["status"] == "ok"
+
+
+@pytest.mark.asyncio
+async def test_auth_failure_xml_format(client: AsyncClient):
+    """Auth failures in XML mode return HTTP 200 with a well-formed error envelope."""
+    response = await client.get("/rest/ping.view?u=nonexistent&p=wrong&c=test&v=1.16.1&f=xml")
+    assert response.status_code == 200
+    assert response.headers["content-type"].startswith("application/xml")
+    assert 'status="failed"' in response.text
+    assert 'code="40"' in response.text
 
 
 @pytest.mark.asyncio
 async def test_subsonic_auth_error_class():
-    from app.api.subsonic.auth import SubsonicAuthError
 
     err = SubsonicAuthError(40, "Test error")
     assert err.code == 40
@@ -173,14 +194,14 @@ async def test_subsonic_auth_explicit_call(db_session: AsyncSession, test_user: 
     assert user.id == test_user.id
 
     # Invalid user
-    with pytest.raises(HTTPException) as exc:
+    with pytest.raises(SubsonicAuthError) as exc:
         await subsonic_auth(u="nonexistent", _c="test", db=db_session)
-    assert exc.value.status_code == 401
+    assert exc.value.code == 40
 
     # Inactive user
     test_user.is_active = False
     db_session.add(test_user)
     await db_session.commit()
-    with pytest.raises(HTTPException) as exc:
+    with pytest.raises(SubsonicAuthError) as exc:
         await subsonic_auth(u="testuser", p="testpass", _c="test", db=db_session)
-    assert exc.value.status_code == 403
+    assert exc.value.code == 50

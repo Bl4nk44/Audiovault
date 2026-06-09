@@ -9,6 +9,7 @@ import xml.etree.ElementTree as ET  # nosec B405
 from typing import Any
 
 from fastapi import Response
+from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 
 # Pattern to match illegal XML 1.0 characters (control chars except tab, newline, carriage return)
@@ -137,6 +138,22 @@ def subsonic_response(data: dict[str, Any] | None = None, f: str = "json") -> An
     else:
         xml_str = '<?xml version="1.0" encoding="UTF-8"?>\n' + dict_to_xml("subsonic-response", response)
         return Response(content=xml_str, media_type="application/xml")
+
+
+def subsonic_error_response(code: int, message: str | None = None, f: str = "json") -> Response:
+    """
+    Build a Subsonic error as a concrete Response object (always HTTP 200).
+
+    Unlike subsonic_error (which returns a plain dict for JSON so FastAPI can
+    serialize it from a handler return), this always returns a Response. It is
+    meant for exception handlers, where the Subsonic spec requires HTTP 200 with
+    the error envelope in the body rather than a transport-level 4xx status.
+    """
+    result = subsonic_error(code, message, f)
+    if isinstance(result, Response):
+        # XML branch already returns a 200 Response
+        return result
+    return JSONResponse(status_code=200, content=result)
 
 
 def subsonic_error(code: int, message: str | None = None, f: str = "json") -> Any:

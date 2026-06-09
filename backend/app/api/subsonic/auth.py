@@ -18,7 +18,7 @@ import secrets
 from datetime import UTC, datetime, timedelta
 from typing import Annotated
 
-from fastapi import Depends, HTTPException, Query, status
+from fastapi import Depends, Query
 from sqlalchemy import and_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -225,28 +225,12 @@ async def subsonic_auth(
     user = await get_user_by_username(db, u)
 
     if not user:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail={
-                "subsonic-response": {
-                    "status": "failed",
-                    "version": "1.16.1",
-                    "error": {"code": 40, "message": "Wrong username or password"},
-                }
-            },
-        )
+        # Subsonic spec: auth failures return HTTP 200 with an error envelope,
+        # not an HTTP 401. Handled by the SubsonicAuthError exception handler.
+        raise SubsonicAuthError(40, "Wrong username or password")
 
     if not user.is_active:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail={
-                "subsonic-response": {
-                    "status": "failed",
-                    "version": "1.16.1",
-                    "error": {"code": 50, "message": "User is disabled"},
-                }
-            },
-        )
+        raise SubsonicAuthError(50, "User is disabled")
 
     auth_success = False
 
@@ -263,16 +247,7 @@ async def subsonic_auth(
 
     if not auth_success:
         logger.warning(f"Subsonic auth failed for user {u}. Token provided: {bool(t)}, Password provided: {bool(p)}")
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail={
-                "subsonic-response": {
-                    "status": "failed",
-                    "version": "1.16.1",
-                    "error": {"code": 40, "message": "Wrong username or password"},
-                }
-            },
-        )
+        raise SubsonicAuthError(40, "Wrong username or password")
 
     return user
 

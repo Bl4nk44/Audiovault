@@ -34,10 +34,8 @@ async def test_subsonic_get_license(client: AsyncClient, subsonic_auth_params):
 async def test_subsonic_auth_failure(client: AsyncClient):
     params = {"u": "wrong_user", "p": "wrong_pass", "c": "pytest", "v": "1.16.1", "f": "json"}
     response = await client.get("/rest/ping.view", params=params)
-    assert response.status_code == 401
+    # Subsonic spec: auth failures return HTTP 200 with an error envelope
+    assert response.status_code == 200
     data = response.json()
-    # FastAPI returns {"detail": {"subsonic-response": {...}}}
-    assert "detail" in data
-    assert "subsonic-response" in data["detail"]
-    assert data["detail"]["subsonic-response"]["status"] == "failed"
-    assert data["detail"]["subsonic-response"]["error"]["code"] == 40
+    assert data["subsonic-response"]["status"] == "failed"
+    assert data["subsonic-response"]["error"]["code"] == 40

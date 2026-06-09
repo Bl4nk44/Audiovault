@@ -12,6 +12,8 @@ from uvicorn.middleware.proxy_headers import ProxyHeadersMiddleware
 
 from app import models  # noqa: F401 - Ensure models are registered
 from app.api.subsonic import router as subsonic_router
+from app.api.subsonic.auth import SubsonicAuthError
+from app.api.subsonic.middleware import SubsonicViewSuffixMiddleware
 from app.api.v1 import (
     amazon_music,
     apple_music,
@@ -45,6 +47,7 @@ from app.core.config import settings
 from app.db.base import Base
 from app.db.database import AsyncSessionLocal, engine
 from app.db.init_data import init_db
+from app.schemas.subsonic.base import subsonic_error_response
 from app.services.download_manager import download_manager
 from app.services.scheduler import scheduler_service
 from app.services.socket_manager import socket_manager
@@ -82,6 +85,17 @@ application.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# Subsonic: allow calling endpoints without the optional ``.view`` suffix
+application.add_middleware(SubsonicViewSuffixMiddleware)
+
+
+@application.exception_handler(SubsonicAuthError)
+async def subsonic_auth_exception_handler(request, exc: SubsonicAuthError):
+    """Render Subsonic auth failures as HTTP 200 with an error envelope (per spec)."""
+    response_format = request.query_params.get("f", "xml")
+    return subsonic_error_response(exc.code, exc.message, response_format)
+
 
 # Include Routers
 application.include_router(auth.router, prefix="/api/v1/auth", tags=["auth"])
