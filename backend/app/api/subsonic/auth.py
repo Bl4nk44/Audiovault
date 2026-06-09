@@ -26,6 +26,7 @@ from app.core.security import verify_password
 from app.db.database import get_db
 from app.models.subsonic import SubsonicAuthToken
 from app.models.user import User
+from app.utils.log_sanitize import sanitize_log
 
 logger = logging.getLogger(__name__)
 
@@ -246,7 +247,7 @@ async def subsonic_auth(
         auth_success = verify_password(password, user.hashed_password)
 
     if not auth_success:
-        logger.warning(f"Subsonic auth failed for user {u}. Token provided: {bool(t)}, Password provided: {bool(p)}")
+        logger.warning(f"Subsonic auth failed for user {sanitize_log(u)}. has_token={bool(t)} has_pw={bool(p)}")
         raise SubsonicAuthError(40, "Wrong username or password")
 
     return user

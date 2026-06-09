@@ -344,4 +344,4 @@ async def stream_track(
         raise he
     except Exception as e:
         logger.error(f"Streaming error: {e}")
-        raise HTTPException(status_code=500, detail=str(e)) from e
+        raise HTTPException(status_code=500, detail="Internal streaming error") from e
