@@ -233,42 +233,50 @@ async def _youtube_search_url(query: str) -> str | None:
     return None
 
 
+async def _lookup_track_by_external_id(db: AsyncSession, track_id: str) -> Track | None:
+    """Find a track by any of its known external platform IDs."""
+    for col in (Track.spotify_id, Track.deezer_id, Track.youtube_id):
+        result = await db.execute(select(Track).where(col == track_id))
+        db_track = result.scalar_one_or_none()
+        if db_track:
+            return db_track
+    return None
+
+
+async def _youtube_url_from_track(db_track: Track) -> str | None:
+    """Resolve a YouTube URL from a DB track, by direct ID or title/artist search."""
+    if db_track.youtube_id:
+        return f"https://www.youtube.com/watch?v={db_track.youtube_id}"
+    if db_track.title and db_track.artist:
+        return await _youtube_search_url(f"{db_track.artist} - {db_track.title}")
+    return None
+
+
+async def _youtube_url_from_deezer(track_id: str) -> str | None:
+    """For a numeric ID, resolve via Deezer public API then YouTube search."""
+    if not track_id.isdigit():
+        return None
+    deezer_track = await DeezerService().get_track(track_id)
+    if not deezer_track:
+        return None
+    return await _youtube_search_url(f"{deezer_track['artist']} - {deezer_track['title']}")
+
+
 async def _resolve_stream_url(track_id: str, db: AsyncSession) -> str:
     cached_url = await cache_manager.get(f"stream_url:{track_id}")
     if cached_url:
         return cached_url
 
-    youtube_url: str | None = None
-
     # 1. Direct YouTube ID (exactly 11 alphanumeric chars)
     if len(track_id) == 11 and track_id.replace("-", "").replace("_", "").isalnum():
-        youtube_url = f"https://www.youtube.com/watch?v={track_id}"
+        youtube_url: str | None = f"https://www.youtube.com/watch?v={track_id}"
     else:
-        # 2. Look up track in DB by any known external ID
-        db_track: Track | None = None
-        for col, val in [
-            (Track.spotify_id, track_id),
-            (Track.deezer_id, track_id),
-            (Track.youtube_id, track_id),
-        ]:
-            result = await db.execute(select(Track).where(col == val))
-            db_track = result.scalar_one_or_none()
-            if db_track:
-                break
-
+        # 2. Look up track in DB by any known external ID, else 3. fall back to Deezer
+        db_track = await _lookup_track_by_external_id(db, track_id)
         if db_track:
-            if db_track.youtube_id:
-                youtube_url = f"https://www.youtube.com/watch?v={db_track.youtube_id}"
-            elif db_track.title and db_track.artist:
-                youtube_url = await _youtube_search_url(f"{db_track.artist} - {db_track.title}")
+            youtube_url = await _youtube_url_from_track(db_track)
         else:
-            # 3. Numeric ID → try Deezer public API (no auth needed, no rate limits)
-            if track_id.isdigit():
-                deezer = DeezerService()
-                deezer_track = await deezer.get_track(track_id)
-                if deezer_track:
-                    query = f"{deezer_track['artist']} - {deezer_track['title']}"
-                    youtube_url = await _youtube_search_url(query)
+            youtube_url = await _youtube_url_from_deezer(track_id)
 
         if not youtube_url:
             raise HTTPException(status_code=404, detail="Stream not found")
@@ -336,4 +344,4 @@ async def stream_track(
         raise he
     except Exception as e:
         logger.error(f"Streaming error: {e}")
-        raise HTTPException(status_code=500, detail=str(e)) from e
+        raise HTTPException(status_code=500, detail="Internal streaming error") from e

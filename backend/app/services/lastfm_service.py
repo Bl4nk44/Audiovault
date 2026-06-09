@@ -33,7 +33,7 @@ LASTFM_TEXT_KEY = "#text"
 
 
 class LastfmService:
-    BASE_URL = "http://ws.audioscrobbler.com/2.0/"
+    BASE_URL = "https://ws.audioscrobbler.com/2.0/"
 
     # Class-level rate limiter (shared across instances)
     _request_times: list = []
@@ -111,7 +111,7 @@ class LastfmService:
             origins = list(settings.BACKEND_CORS_ORIGINS)
             callback_base = origins[0] if origins else "http://localhost:3000"
         callback_url = f"{callback_base}/recommendations"
-        return f"http://www.last.fm/api/auth/?api_key={settings.LASTFM_API_KEY}&cb={callback_url}"
+        return f"https://www.last.fm/api/auth/?api_key={settings.LASTFM_API_KEY}&cb={callback_url}"
 
     async def get_session(self, token: str) -> dict[str, Any]:
         """Exchange token for session."""

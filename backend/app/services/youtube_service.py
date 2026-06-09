@@ -1,6 +1,6 @@
 import logging
 import re
-from typing import Any
+from typing import Any, Literal
 
 from ytmusicapi import YTMusic
 
@@ -110,7 +110,7 @@ class YouTubeService(BaseMusicService):
 
     def _search_keywords(self, query: str, limit: int, type: str) -> list[dict[str, Any]]:
         # Map frontend types to ytmusicapi filter types
-        yt_filter = "songs"
+        yt_filter: Literal["songs", "artists", "community_playlists"] = "songs"
         if type == "artist":
             yt_filter = "artists"
         elif type == "playlist":

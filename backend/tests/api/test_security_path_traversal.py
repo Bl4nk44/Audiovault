@@ -137,8 +137,11 @@ async def test_users_delete_library_path_traversal(
     db_session.add(weird_user)
     await db_session.commit()
 
-    # Try deleting weird user library
-    # The sanitize_filename should convert "../../root" to something safe like ".._.._root"
-    # We just ensure it doesn't crash or delete parent dirs.
-    # Placeholder as it's harder to mock auth for a newly created weird user in a single basic test without full setup.
-    assert True
+    # The library path is derived via sanitize_filename, which must strip every
+    # path separator so a crafted username cannot escape the user's own directory.
+    from app.utils.sanitization import sanitize_filename
+
+    safe_name = sanitize_filename(weird_user.username)
+    assert "/" not in safe_name
+    assert "\\" not in safe_name
+    assert safe_name not in ("", ".", "..")

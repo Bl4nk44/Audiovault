@@ -19,6 +19,15 @@ import {
 import { useStore } from "../store/useStore";
 import type { LastfmStatus, RecommendationResponse, RecommendedTrack } from "../types/lastfm";
 
+const GRID_CLASS = "grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6";
+const SKELETON_KEYS = Array.from({ length: 10 }, (_, i) => `rec-skeleton-${i}`);
+
+const EmptyState: React.FC<{ message: string }> = ({ message }) => (
+  <div className="text-center py-20 text-zinc-500 bg-zinc-900/20 rounded-2xl border border-white/5">
+    <p>{message}</p>
+  </div>
+);
+
 const RecommendationsPage: React.FC = () => {
   const { t } = useTranslation();
   const [recommendations, setRecommendations] = useState<RecommendationResponse | null>(null);
@@ -134,6 +143,49 @@ const RecommendationsPage: React.FC = () => {
       console.error("Play error", e);
       toast.error("Failed to play track", { id: toastId });
     }
+  };
+
+  const renderTabContent = () => {
+    if (activeTab === "tracks") {
+      const tracks = recommendations?.tracks ?? [];
+      return tracks.length > 0 ? (
+        <div className={GRID_CLASS}>
+          {tracks.map((track, idx) => (
+            <RecommendationCard
+              key={`${track.artist}-${track.name}-${idx}`}
+              track={track}
+              onPlay={handlePlayTrack}
+            />
+          ))}
+        </div>
+      ) : (
+        <EmptyState message="No track recommendations found. Try listening to more music!" />
+      );
+    }
+
+    if (activeTab === "artists") {
+      const artists = recommendations?.artists ?? [];
+      return artists.length > 0 ? (
+        <div className={GRID_CLASS}>
+          {artists.map((artist, idx) => (
+            <ArtistRecommendationCard key={`${artist.name}-${idx}`} artist={artist} />
+          ))}
+        </div>
+      ) : (
+        <EmptyState message="No artist recommendations found yet." />
+      );
+    }
+
+    const playlists = recommendations?.playlists ?? [];
+    return playlists.length > 0 ? (
+      <div className={GRID_CLASS}>
+        {playlists.map((playlist, idx) => (
+          <PlaylistRecommendationCard key={`${playlist.id}-${idx}`} playlist={playlist} />
+        ))}
+      </div>
+    ) : (
+      <EmptyState message="No playlist recommendations found yet." />
+    );
   };
 
   return (
@@ -257,59 +309,13 @@ const RecommendationsPage: React.FC = () => {
           </div>
 
           {loading && !refreshing ? (
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
-              {[...new Array(10)].map((_, i) => (
-                <div key={i} className="aspect-[3/4] bg-zinc-900 rounded-xl animate-pulse" />
+            <div className={GRID_CLASS}>
+              {SKELETON_KEYS.map((key) => (
+                <div key={key} className="aspect-[3/4] bg-zinc-900 rounded-xl animate-pulse" />
               ))}
             </div>
           ) : (
-            <>
-              {activeTab === "tracks" &&
-                (recommendations?.tracks && recommendations.tracks.length > 0 ? (
-                  <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
-                    {recommendations.tracks.map((track, idx) => (
-                      <RecommendationCard
-                        key={`${track.artist}-${track.name}-${idx}`}
-                        track={track}
-                        onPlay={handlePlayTrack}
-                      />
-                    ))}
-                  </div>
-                ) : (
-                  <div className="text-center py-20 text-zinc-500 bg-zinc-900/20 rounded-2xl border border-white/5">
-                    <p>No track recommendations found. Try listening to more music!</p>
-                  </div>
-                ))}
-
-              {activeTab === "artists" &&
-                (recommendations?.artists && recommendations.artists.length > 0 ? (
-                  <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
-                    {recommendations.artists.map((artist, idx) => (
-                      <ArtistRecommendationCard key={`${artist.name}-${idx}`} artist={artist} />
-                    ))}
-                  </div>
-                ) : (
-                  <div className="text-center py-20 text-zinc-500 bg-zinc-900/20 rounded-2xl border border-white/5">
-                    <p>No artist recommendations found yet.</p>
-                  </div>
-                ))}
-
-              {activeTab === "playlists" &&
-                (recommendations?.playlists && recommendations.playlists.length > 0 ? (
-                  <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
-                    {recommendations.playlists.map((playlist, idx) => (
-                      <PlaylistRecommendationCard
-                        key={`${playlist.id}-${idx}`}
-                        playlist={playlist}
-                      />
-                    ))}
-                  </div>
-                ) : (
-                  <div className="text-center py-20 text-zinc-500 bg-zinc-900/20 rounded-2xl border border-white/5">
-                    <p>No playlist recommendations found yet.</p>
-                  </div>
-                ))}
-            </>
+            renderTabContent()
           )}
         </div>
       )}
