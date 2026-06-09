@@ -69,15 +69,10 @@ export default function Dashboard() {
         setDashboardStats((prev) => {
           const newData = response.data;
           // Preserve local progress if ID matches
-          if (
-            prev.active_download &&
-            newData.active_download &&
-            prev.active_download.id === newData.active_download.id
-          ) {
-            newData.active_download.progress = Math.max(
-              prev.active_download.progress,
-              newData.active_download.progress
-            );
+          const prevDl = prev.active_download;
+          const newDl = newData.active_download;
+          if (prevDl && newDl && prevDl.id === newDl.id) {
+            newDl.progress = Math.max(prevDl.progress, newDl.progress);
           }
           return newData;
         });
@@ -93,7 +88,6 @@ export default function Dashboard() {
     // WebSocket listeners for real-time progress
     const handleProgress = (e: Event) => {
       const detail = (e as CustomEvent).detail;
-      console.log("Dashboard received download:progress", detail);
       const { download_id, progress, status, track } = detail;
       setDashboardStats((prev) => {
         // If we have track info, we can construct/update the active download immediately
