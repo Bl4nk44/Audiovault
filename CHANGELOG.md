@@ -2,6 +2,26 @@
 
 All notable changes to Audiovault will be documented in this file.
 
+## [0.5.6] - 2026-06-09
+
+### Security
+
+- **Subsonic auth log injection (CWE-117)**: pass user-controlled username through `sanitize_log()` before logging the failed-auth warning in `api/subsonic/auth.py`
+- **stream error leak**: `api/v1/stream.py` now returns a generic `500` detail instead of the raw exception string (information disclosure); full error still logged server-side
+- **Last.fm transport**: enforce `https` for Last.fm requests + real path-traversal assertion in tests
+- **ReDoS-safe Spotify regex**: rewrite GraphQL-hash discovery regex to linear-time (single quantifier + substring filter) in `services/spotify_partner.py`
+- **libxml2 CVE-2026-6732**: patch in the frontend production Docker image
+- **Subsonic protocol**: spec-compliant auth error envelopes (HTTP 200 + error code, not 401) + optional `.view` suffix routing
+
+### Refactor
+
+- **frontend**: cut `RecommendationsPage` cognitive complexity; add optional chaining in `Dashboard`
+- **backend**: reduce cognitive complexity across touched modules
+
+### Types
+
+- annotate `yt_filter` as `Literal` to satisfy mypy
+
 ## [0.5.5] - 2026-06-05
 
 ### Security
