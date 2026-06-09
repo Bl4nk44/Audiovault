@@ -201,7 +201,11 @@ class SpotifyPartnerClient:
         headers = _browser_headers(self._ua, origin=_OPEN_SPOTIFY)
         async with httpx.AsyncClient(headers=headers) as client:
             html_resp = await client.get(_OPEN_SPOTIFY, timeout=10.0)
-            js_urls = re.findall(r'src="(https://[^"]+spotifycdn\.com[^"]+\.js)"', html_resp.text)
+            # Single-quantifier regex (linear time) + substring filter avoids the
+            # catastrophic backtracking of two unbounded [^"]+ around a literal.
+            js_urls = [
+                url for url in re.findall(r'src="(https://[^"]+\.js)"', html_resp.text) if "spotifycdn.com" in url
+            ]
             for url in js_urls:
                 try:
                     js_resp = await client.get(url, timeout=30.0)
@@ -319,18 +323,62 @@ class SpotifyPartnerClient:
     # Public API                                                           #
     # ------------------------------------------------------------------ #
 
-    async def get_playlist(self, playlist_id: str) -> dict[str, Any] | None:
-        # Check Redis cache first
+    def _tracks_from_content(self, content: dict[str, Any]) -> list[dict]:
+        """Map raw GraphQL playlist items to formatted track dicts."""
+        tracks: list[dict] = []
+        for item in content.get("items") or []:
+            t = self._fmt_track_from_item(item)
+            if t:
+                tracks.append(t)
+        return tracks
+
+    async def _paginate_tracks(self, variables: dict[str, Any], batch: int, total: int) -> list[dict]:
+        """Fetch remaining playlist pages after the first batch."""
+        tracks: list[dict] = []
+        offset = batch
+        while offset < total:
+            await _jitter()
+            page_data = await self._query("fetchPlaylist", {**variables, "offset": offset})
+            if not page_data:
+                break
+            content = (page_data.get("data") or {}).get("playlistV2", {}).get("content", {})
+            tracks.extend(self._tracks_from_content(content))
+            offset += batch
+        return tracks
+
+    @staticmethod
+    def _first_image_url(pl: dict[str, Any]) -> str | None:
+        images = (pl.get("images") or {}).get("items") or []
+        if not images:
+            return None
+        sources = images[0].get("sources") or []
+        return sources[0].get("url") if sources else None
+
+    async def _cache_get_playlist(self, cache_key: str) -> dict[str, Any] | None:
         from app.core.cache import cache_manager
 
-        cache_key = f"sp:pl:{playlist_id}"
         try:
             cached = await cache_manager.get(cache_key)
             if cached:
-                logger.debug(f"Spotify playlist {playlist_id} served from cache")
                 return json.loads(cached)
         except Exception as e:
             logger.debug(f"Cache read error: {e}")
+        return None
+
+    async def _cache_set_playlist(self, cache_key: str, result: dict[str, Any]) -> None:
+        from app.core.cache import cache_manager
+
+        try:
+            await cache_manager.set(cache_key, json.dumps(result), expire=_CACHE_TTL_PLAYLIST)
+        except Exception as e:
+            logger.debug(f"Cache write error: {e}")
+
+    async def get_playlist(self, playlist_id: str) -> dict[str, Any] | None:
+        cache_key = f"sp:pl:{playlist_id}"
+        cached = await self._cache_get_playlist(cache_key)
+        if cached is not None:
+            logger.debug(f"Spotify playlist {playlist_id} served from cache")
+            return cached
 
         batch = 343
         variables: dict[str, Any] = {
@@ -350,50 +398,20 @@ class SpotifyPartnerClient:
 
         content = pl.get("content") or {}
         total = content.get("totalCount") or 0
-        tracks: list[dict] = []
-
-        for item in content.get("items") or []:
-            t = self._fmt_track_from_item(item)
-            if t:
-                tracks.append(t)
-
-        # Paginate until all tracks are fetched
-        offset = batch
-        while offset < total:
-            await _jitter()
-            page_data = await self._query("fetchPlaylist", {**variables, "offset": offset})
-            if not page_data:
-                break
-            page_items = (page_data.get("data") or {}).get("playlistV2", {}).get("content", {}).get("items") or []
-            for item in page_items:
-                t = self._fmt_track_from_item(item)
-                if t:
-                    tracks.append(t)
-            offset += batch
-
-        images = (pl.get("images") or {}).get("items") or []
-        image_url = None
-        if images:
-            sources = images[0].get("sources") or []
-            if sources:
-                image_url = sources[0].get("url")
+        tracks = self._tracks_from_content(content)
+        tracks.extend(await self._paginate_tracks(variables, batch, total))
 
         result = {
             "id": playlist_id,
             "title": pl.get("name"),
-            "image_url": image_url,
+            "image_url": self._first_image_url(pl),
             "source": "spotify",
             "type": "playlist",
             "track_count": total,
             "tracks": tracks,
         }
 
-        # Cache the result
-        try:
-            await cache_manager.set(cache_key, json.dumps(result), expire=_CACHE_TTL_PLAYLIST)
-        except Exception as e:
-            logger.debug(f"Cache write error: {e}")
-
+        await self._cache_set_playlist(cache_key, result)
         return result
 
     async def invalidate_playlist_cache(self, playlist_id: str) -> None:
