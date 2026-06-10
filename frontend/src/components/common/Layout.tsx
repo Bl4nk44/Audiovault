@@ -6,12 +6,12 @@ import DownloadNotifications from "./DownloadNotifications";
 import MobileNav from "./MobileNav";
 import { useEffect, useRef } from "react";
 import api from "../../services/api";
-import toast from "react-hot-toast";
-import { UpdateToast } from "./UpdateToast";
 import { useSocketEvents } from "../../hooks/useSocketEvents";
+import { useStore } from "../../store/useStore";
 
 export default function Layout() {
   const isDev = import.meta.env.DEV;
+  const { addNotification } = useStore();
 
   // Initialize socket connection for real-time download progress
   useSocketEvents();
@@ -26,17 +26,10 @@ export default function Layout() {
       try {
         const { data } = await api.get("/system/check-update");
         if (data.update_available) {
-          toast((t) => (
-            <UpdateToast
-              t={t}
-              text={
-                isDev
-                  ? "New commits on dev branch."
-                  : `Version ${data.latest_version} is available.`
-              }
-              url={data.release_url}
-            />
-          ));
+          const message = isDev
+            ? "New commits on dev branch."
+            : `Version ${data.latest_version} is available.`;
+          addNotification("info", message);
         }
       } catch (error) {
         console.error("Failed to check for updates:", error);
@@ -44,7 +37,7 @@ export default function Layout() {
     };
 
     checkUpdates();
-  }, [isDev]);
+  }, [isDev, addNotification]);
 
   return (
     <div className="flex h-screen text-foreground overflow-hidden p-0 md:p-3 gap-0 md:gap-3 relative group bg-background">

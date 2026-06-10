@@ -287,17 +287,7 @@ const RecommendationsPage: React.FC = () => {
             </button>
           </div>
 
-          <div className="flex items-center justify-between mb-6">
-            <div className="flex items-center gap-2">
-              <span className="text-sm font-medium text-zinc-400">Source:</span>
-              <span className="px-2 py-1 bg-zinc-800 rounded text-xs text-white border border-white/10 uppercase font-bold tracking-wider">
-                {recommendations?.source || "Loading..."}
-              </span>
-              {recommendations?.cache_status === "hit" && (
-                <span className="text-xs text-zinc-600">Cached</span>
-              )}
-            </div>
-
+          <div className="flex items-center justify-end mb-6">
             <button
               onClick={() => fetchRecommendations(true)}
               disabled={refreshing || loading}
