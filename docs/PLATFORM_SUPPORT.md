@@ -30,6 +30,24 @@ If a download fails (region lock, broken link, platform restriction), Audiovault
 2. **Cross-platform search** — falls back to SoundCloud or YouTube if the primary source fails
 3. **Proxy support** — uses Invidious or a configured host proxy to bypass regional restrictions
 
+## Direct URL Import
+
+You can paste a URL from any supported platform directly into the Audiovault search bar. The app auto-detects the platform from the URL and routes the request to the correct provider — no need to select a source manually.
+
+**Supported URL types:**
+
+| Platform | Example URLs |
+|---|---|
+| Spotify | `https://open.spotify.com/playlist/...`, `https://open.spotify.com/album/...`, `https://open.spotify.com/track/...` |
+| YouTube | `https://www.youtube.com/watch?v=...`, `https://youtu.be/...`, `https://www.youtube.com/playlist?list=...` |
+| Deezer | `https://www.deezer.com/playlist/...`, `https://www.deezer.com/album/...` |
+| SoundCloud | `https://soundcloud.com/artist/track`, `https://soundcloud.com/artist/sets/playlist` |
+| Apple Music | `https://music.apple.com/...`, `https://apple.co/...` (short links resolved automatically) |
+| Tidal | `https://listen.tidal.com/...`, `https://tidal.com/browse/...` |
+| Amazon Music | `https://music.amazon.com/...` |
+
+Pasting an album or playlist URL imports all tracks. Individual track URLs download a single file.
+
 ## Adding New Platforms
 
-New platforms are registered in `backend/app/providers/manager.py` and `backend/app/api/v1/platform_registry.py`. Each platform needs a provider (metadata) and optionally a dedicated service (download logic). See the `platform-integrator` subagent for end-to-end scaffolding.
+New platforms are registered in `backend/app/providers/__init__.py` via `provider_manager.register_provider()`. Each platform needs a provider class (metadata + URL detection) and optionally a dedicated service (download logic). `GenericProvider` (yt-dlp wildcard) must remain last in the registration order. See the `platform-integrator` subagent for end-to-end scaffolding.

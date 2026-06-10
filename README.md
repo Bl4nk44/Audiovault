@@ -43,6 +43,7 @@ Audiovault is a powerful, self-hosted application designed to import, manage, an
 ### Extensive Platform Support
 
 - **Supported Services**: Spotify, YouTube, Deezer, SoundCloud, Apple Music, Tidal, Amazon Music
+- **Direct Link Import**: Paste any playlist, album, or track URL straight into the search bar — Audiovault detects the platform automatically and imports all tracks
 - **Zero-Config Spotify**: Uses Spotify's internal Partner GraphQL API — no developer app, no API keys, no account required. Works from Docker and VPS without restrictions. Supports playlists of any size (no 50- or 100-track limit).
 - **Robust Fallback**: Automatically tries alternative sources if a primary fetch fails
 - [Read the Platform & Fallback Guide](docs/PLATFORM_SUPPORT.md)
@@ -71,9 +72,10 @@ Audiovault is a powerful, self-hosted application designed to import, manage, an
 
 ### Personal Streaming Server
 
-- **Subsonic API Support**: Native implementation for compatibility with mobile apps
-- **Mobile Apps**: Stream using Symfonium, Amperfy, DSub, and more
-- **Remote Access**: Seamless integration with Tailscale for secure streaming
+- **Subsonic API**: Native v1.16.1 / OpenSubsonic implementation — compatible with virtually any Subsonic client
+- **Mobile Apps**: Stream with Symfonium (Android) or Amperfy (iOS), including lock screen controls and background playback
+- **Desktop Clients**: Sonixd, Feishin, Supersonic for Windows / macOS / Linux
+- **Remote Access**: Tailscale for zero-config encrypted access, or any reverse proxy with HTTPS
 - [Read the Streaming Server Guide](docs/STREAMING_SERVER.md)
 
 ## 🚀 Getting Started
