@@ -207,7 +207,7 @@ class SpotifyPartnerClient:
             js_urls = [
                 url
                 for url in re.findall(r'src="(https://[^"]+\.js)"', html_resp.text)
-                if urllib.parse.urlparse(url).netloc.endswith("spotifycdn.com")
+                if (h := urllib.parse.urlparse(url).netloc) == "spotifycdn.com" or h.endswith(".spotifycdn.com")
             ]
             for url in js_urls:
                 try:
