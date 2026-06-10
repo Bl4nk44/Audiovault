@@ -84,6 +84,7 @@ export default function ArtistProfile() {
       source_name: artist.name,
       watch_type: "artist",
       auto_download: false,
+      auto_sync_deletions: false,
       new_items_count: 0,
       metadata_content: { image_url: heroImage || undefined },
     });

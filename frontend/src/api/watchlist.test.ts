@@ -37,6 +37,7 @@ describe("watchlistApi", () => {
         source_id: "sp-123",
         source_name: "Test Artist",
         auto_download: true,
+        auto_sync_deletions: false,
         new_items_count: 0,
       };
       const responseItem = { ...newItem, id: "wl-new" };

@@ -44,6 +44,7 @@ const mockItem: WatchlistItem = {
   check_interval_hours: 60,
   watch_type: "playlist",
   auto_download: true,
+  auto_sync_deletions: false,
   new_items_count: 0,
   last_checked_at: "2023-01-01",
   created_at: "2023-01-01",

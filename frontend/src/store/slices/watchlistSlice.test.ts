@@ -30,6 +30,7 @@ describe("watchlistSlice", () => {
     source_id: "spotify-artist-123",
     source_name: "Test Artist",
     auto_download: true,
+    auto_sync_deletions: false,
     new_items_count: 5,
   };
 
@@ -118,6 +119,7 @@ describe("watchlistSlice", () => {
         source_id: "spotify-artist-123",
         source_name: "Test Artist",
         auto_download: true,
+        auto_sync_deletions: false,
         new_items_count: 5,
       });
 
@@ -135,6 +137,7 @@ describe("watchlistSlice", () => {
         source_id: "test",
         source_name: "Test",
         auto_download: true,
+        auto_sync_deletions: false,
         new_items_count: 0,
       });
 

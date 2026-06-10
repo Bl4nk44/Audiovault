@@ -84,6 +84,7 @@ export default function PlaylistDetails() {
         source_name: playlist.title,
         watch_type: "playlist",
         auto_download: true,
+        auto_sync_deletions: false,
         new_items_count: 0,
         metadata_content: { image_url: heroImage || undefined },
       });
