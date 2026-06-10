@@ -30,7 +30,7 @@ describe("WatchlistItem Component", () => {
   const mockOnRemove = vi.fn();
   const mockOnSync = vi.fn();
 
-  const playlistItemOff = { ...mockItem, watch_type: "playlist", auto_sync_deletions: false } as any;
+  const playlistItemOff = { ...mockItem, watch_type: "playlist", auto_sync_deletions: false };
 
   beforeEach(() => {
     vi.clearAllMocks();

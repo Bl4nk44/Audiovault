@@ -242,8 +242,8 @@ class SyncManager:
                         "files_deleted": exec_result["files_soft_deleted"],
                     }
                 )
-            except Exception as e:
-                logger.error(f"auto_sync_deletions failed for {wl.source_name}: {e}")
+            except Exception:
+                logger.exception(f"auto_sync_deletions failed for {wl.source_name}")
                 skipped.append({"watchlist_name": wl.source_name, "reason": "Sync failed"})
 
         return {"synced": synced, "skipped": skipped}
