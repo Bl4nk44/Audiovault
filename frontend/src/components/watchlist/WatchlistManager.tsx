@@ -11,7 +11,14 @@ export default function WatchlistManager() {
   const { watchlist, syncWatchlist, removeFromWatchlist } = useStore();
   const [isLoading, setIsLoading] = useState(true);
   const [isChecking, setIsChecking] = useState(false);
-  const [viewMode, setViewMode] = useState<"list" | "grid">("grid");
+  const [viewMode, setViewMode] = useState<"list" | "grid">(
+    () => (localStorage.getItem("watchlist:viewMode") as "list" | "grid") || "grid"
+  );
+
+  const handleSetViewMode = (mode: "list" | "grid") => {
+    localStorage.setItem("watchlist:viewMode", mode);
+    setViewMode(mode);
+  };
   const [selectedSyncItem, setSelectedSyncItem] = useState<WatchlistItemType | null>(null);
 
   useEffect(() => {
@@ -57,7 +64,7 @@ export default function WatchlistManager() {
       <div className="flex justify-between items-center">
         <div className="flex bg-card/40 rounded-lg p-1 border border-border">
           <button
-            onClick={() => setViewMode("grid")}
+            onClick={() => handleSetViewMode("grid")}
             className={`p-2 rounded-md transition-all cursor-pointer ${
               viewMode === "grid"
                 ? "bg-secondary text-foreground shadow-sm"
@@ -68,7 +75,7 @@ export default function WatchlistManager() {
             <LayoutGrid size={18} />
           </button>
           <button
-            onClick={() => setViewMode("list")}
+            onClick={() => handleSetViewMode("list")}
             className={`p-2 rounded-md transition-all cursor-pointer ${
               viewMode === "list"
                 ? "bg-secondary text-foreground shadow-sm"
