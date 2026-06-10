@@ -750,7 +750,14 @@ const PlaylistView = ({
 export default function Library() {
   const { t } = useTranslation();
   const [items, setItems] = useState<LibraryItem[]>([]);
-  const [displayMode, setDisplayMode] = useState<"grid" | "list">("grid");
+  const [displayMode, setDisplayMode] = useState<"grid" | "list">(
+    () => (localStorage.getItem("library:displayMode") as "grid" | "list") || "grid"
+  );
+
+  const handleSetDisplayMode = (mode: "grid" | "list") => {
+    localStorage.setItem("library:displayMode", mode);
+    setDisplayMode(mode);
+  };
   const [folders, setFolders] = useState<FolderStructure>({});
   const [loading, setLoading] = useState(true);
 
@@ -1010,7 +1017,7 @@ export default function Library() {
       <div className="flex items-center justify-between">
         <div className="flex bg-card/40 rounded-lg p-1 border border-border">
           <button
-            onClick={() => setDisplayMode("grid")}
+            onClick={() => handleSetDisplayMode("grid")}
             className={`p-2 rounded-md transition-all cursor-pointer ${
               displayMode === "grid"
                 ? "bg-secondary text-foreground shadow-sm"
@@ -1021,7 +1028,7 @@ export default function Library() {
             <LayoutGrid size={18} />
           </button>
           <button
-            onClick={() => setDisplayMode("list")}
+            onClick={() => handleSetDisplayMode("list")}
             className={`p-2 rounded-md transition-all cursor-pointer ${
               displayMode === "list"
                 ? "bg-secondary text-foreground shadow-sm"

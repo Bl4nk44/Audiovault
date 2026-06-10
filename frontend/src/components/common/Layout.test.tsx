@@ -4,14 +4,14 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import api from "../../services/api";
 import Layout from "./Layout";
 
-// Mock dependencies
+const mockAddNotification = vi.fn();
+
 vi.mock("../../services/api");
 vi.mock("../../hooks/useSocketEvents", () => ({
   useSocketEvents: vi.fn(),
 }));
-
-vi.mock("react-hot-toast", () => ({
-  default: vi.fn(),
+vi.mock("../../store/useStore", () => ({
+  useStore: () => ({ addNotification: mockAddNotification }),
 }));
 
 // Mock child components to avoid deep rendering issues and focus on Layout logic
@@ -22,7 +22,6 @@ vi.mock("./DownloadNotifications", () => ({
   default: () => <div data-testid="download-notifications">Notifications</div>,
 }));
 vi.mock("../player/Player", () => ({ default: () => <div data-testid="player">Player</div> }));
-vi.mock("./UpdateToast", () => ({ UpdateToast: () => <div>Toast</div> }));
 
 describe("Layout Component", () => {
   beforeEach(() => {
@@ -56,18 +55,17 @@ describe("Layout Component", () => {
     });
   });
 
-  it("does not toast if no update available", async () => {
+  it("does not notify if no update available", async () => {
     renderLayout();
 
     await waitFor(() => {
       expect(api.get).toHaveBeenCalled();
     });
 
-    const toast = await import("react-hot-toast");
-    expect(toast.default).not.toHaveBeenCalled();
+    expect(mockAddNotification).not.toHaveBeenCalled();
   });
 
-  it("shows toast if update available", async () => {
+  it("adds notification if update available", async () => {
     (api.get as any).mockResolvedValue({
       data: {
         update_available: true,
@@ -79,10 +77,7 @@ describe("Layout Component", () => {
     renderLayout();
 
     await waitFor(() => {
-      expect(api.get).toHaveBeenCalled();
+      expect(mockAddNotification).toHaveBeenCalledWith("info", expect.any(String));
     });
-
-    const toast = await import("react-hot-toast");
-    expect(toast.default).toHaveBeenCalled();
   });
 });

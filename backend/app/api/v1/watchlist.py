@@ -8,6 +8,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.dependencies import get_current_active_user
 from app.db.database import get_db
 from app.models.user import User
+from app.services.sync_manager import sync_manager
 from app.services.watchlist_engine import watchlist_engine
 
 router = APIRouter()
@@ -33,9 +34,9 @@ async def add_to_watchlist(
 
     logger = logging.getLogger(__name__)
     logger.info(
-        f"Watchlist add request: {request.dict()}"
+        f"Watchlist add request: {request.model_dump()}"
     )  # nosemgrep: python.fastapi.log.tainted-log-injection-stdlib-fastapi.tainted-log-injection-stdlib-fastapi
-    return await watchlist_engine.add_to_watchlist(db, current_user.id, request.dict())
+    return await watchlist_engine.add_to_watchlist(db, current_user.id, request.model_dump())
 
 
 @router.get("/list")
@@ -59,7 +60,8 @@ async def remove_from_watchlist(
 
 
 class WatchlistUpdateRequest(BaseModel):
-    auto_download: bool
+    auto_download: bool | None = None
+    auto_sync_deletions: bool | None = None
 
 
 @router.patch("/{watchlist_id}", responses={404: {"description": "Not found"}})
@@ -70,7 +72,7 @@ async def update_watchlist_item(
     db: Annotated[AsyncSession, Depends(get_db)] = ...,
 ):
     item = await watchlist_engine.update_watchlist_item(
-        db, watchlist_id, current_user.id, request.dict(exclude_unset=True)
+        db, watchlist_id, current_user.id, request.model_dump(exclude_unset=True)
     )
     if not item:
         raise HTTPException(status_code=404, detail="Item not found")
@@ -84,3 +86,16 @@ async def check_updates(
 ):
     count = await watchlist_engine.check_for_updates(db, current_user.id)
     return {"status": "success", "new_downloads": count}
+
+
+@router.post("/sync-all-deletions")
+async def sync_all_deletions(
+    current_user: Annotated[User, Depends(get_current_active_user)] = ...,
+    db: Annotated[AsyncSession, Depends(get_db)] = ...,
+):
+    """
+    Manually trigger deletion sync for all playlist watchlists.
+    Skips playlists that trigger safety warnings.
+    """
+    result = await sync_manager.auto_sync_all_deletions(db, str(current_user.id), only_auto=False)
+    return result

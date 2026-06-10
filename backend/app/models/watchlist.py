@@ -35,6 +35,7 @@ class Watchlist(Base):
 
     # Settings
     auto_download: Mapped[bool] = mapped_column(Boolean, default=False)
+    auto_sync_deletions: Mapped[bool] = mapped_column(Boolean, default=False)
     check_interval_hours: Mapped[int] = mapped_column(Integer, default=24)
 
     # Status

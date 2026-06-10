@@ -50,6 +50,7 @@ export interface WatchlistItem {
   source_id: string;
   source_name: string;
   auto_download: boolean;
+  auto_sync_deletions: boolean;
   check_interval_hours?: number;
   last_checked_at?: string;
   new_items_count: number;

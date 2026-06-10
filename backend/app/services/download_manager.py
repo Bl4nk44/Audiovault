@@ -174,7 +174,10 @@ class DownloadManager:
         logger.info("Checking for pending downloads to resume...")
         try:
             result = await db.execute(
-                select(Download).where(Download.status.in_(["pending", "downloading", "processing"]))
+                select(Download).where(
+                    Download.status.in_(["pending", "downloading", "processing"]),
+                    Download.archived.is_(False),
+                )
             )
             pending_downloads = result.scalars().all()
 

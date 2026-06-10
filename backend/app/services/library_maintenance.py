@@ -84,7 +84,7 @@ class LibraryMaintenanceService:
         return len(requeued_ids)
 
     async def clear_history(self, db: AsyncSession, user_id: str):
-        """Archive all completed downloads."""
+        """Archive all downloads (clear entire queue/history)."""
         try:
             u_uuid = uuid.UUID(str(user_id))
         except ValueError:
@@ -97,14 +97,7 @@ class LibraryMaintenanceService:
         except Exception:
             await db.rollback()
 
-        stmt = (
-            update(Download)
-            .where(
-                Download.user_id == u_uuid,
-                Download.status.in_(["completed", "failed", "cancelled", "error"]),
-            )
-            .values(archived=True)
-        )
+        stmt = update(Download).where(Download.user_id == u_uuid).values(archived=True)
         await db.execute(stmt)
         await db.commit()
 

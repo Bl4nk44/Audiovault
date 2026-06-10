@@ -196,6 +196,58 @@ class SyncManager:
             logger.error(f"Failed to soft delete {file_path}: {e}")
             return False
 
+    async def auto_sync_all_deletions(
+        self,
+        db: AsyncSession,
+        user_id: str | UUID,
+        only_auto: bool = True,
+    ) -> dict:
+        """
+        Runs analyze + execute for playlist watchlists.
+        only_auto=True  → only items with auto_sync_deletions=True (scheduler use)
+        only_auto=False → all playlist items (manual "Sync All" button)
+        Skips items that trigger a safety warning.
+        """
+        u_uuid = self._to_uuid(user_id)
+        result = await db.execute(
+            select(Watchlist).where(
+                Watchlist.user_id == u_uuid,
+                Watchlist.watch_type == "playlist",
+            )
+        )
+        watchlists = result.scalars().all()
+
+        synced = []
+        skipped = []
+
+        for wl in watchlists:
+            if only_auto and not wl.auto_sync_deletions:
+                continue
+            try:
+                report = await self.analyze_watchlist(db, u_uuid, wl.id)
+                if report["safety_warning"]:
+                    skipped.append({"watchlist_name": wl.source_name, "reason": report["warning_message"]})
+                    del self._pending_reports[report["sync_token"]]
+                    continue
+                if report["to_remove_count"] == 0:
+                    del self._pending_reports[report["sync_token"]]
+                    synced.append({"watchlist_name": wl.source_name, "removed_count": 0, "files_deleted": 0})
+                    continue
+                approved = [i["track_id"] for i in report["to_remove_items"]]
+                exec_result = await self.execute_sync(db, u_uuid, report["sync_token"], approved)
+                synced.append(
+                    {
+                        "watchlist_name": wl.source_name,
+                        "removed_count": exec_result["removed_from_playlist"],
+                        "files_deleted": exec_result["files_soft_deleted"],
+                    }
+                )
+            except Exception:
+                logger.exception(f"auto_sync_deletions failed for {wl.source_name}")
+                skipped.append({"watchlist_name": wl.source_name, "reason": "Sync failed"})
+
+        return {"synced": synced, "skipped": skipped}
+
     async def _fetch_playlist_tracks(self, item: Watchlist) -> list[dict]:
         if not item.source:
             return []

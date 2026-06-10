@@ -89,3 +89,18 @@ async def test_check_updates_trigger_api(client: AsyncClient, admin_token_header
         response = await client.post("/api/v1/watchlist/check-updates", headers=admin_token_headers)
         assert response.status_code == 200
         assert response.json()["new_downloads"] == 5
+
+
+@pytest.mark.asyncio
+async def test_sync_all_deletions_api(client: AsyncClient, admin_token_headers):
+    mock_result = {"synced": [{"watchlist_name": "P1", "removed_count": 3, "files_deleted": 1}], "skipped": []}
+    with patch(
+        "app.api.v1.watchlist.sync_manager.auto_sync_all_deletions",
+        new_callable=AsyncMock,
+        return_value=mock_result,
+    ):
+        response = await client.post("/api/v1/watchlist/sync-all-deletions", headers=admin_token_headers)
+        assert response.status_code == 200
+        data = response.json()
+        assert data["synced"][0]["removed_count"] == 3
+        assert data["skipped"] == []

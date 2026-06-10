@@ -30,6 +30,8 @@ describe("WatchlistItem Component", () => {
   const mockOnRemove = vi.fn();
   const mockOnSync = vi.fn();
 
+  const playlistItemOff = { ...mockItem, watch_type: "playlist", auto_sync_deletions: false };
+
   beforeEach(() => {
     vi.clearAllMocks();
   });
@@ -99,5 +101,109 @@ describe("WatchlistItem Component", () => {
   it("renders with list view by default", () => {
     render(<WatchlistItem item={mockItem} onRemove={mockOnRemove} />);
     expect(screen.getByText("spotify • playlist")).toBeInTheDocument();
+  });
+
+  it("handles auto-sync-deletions toggle successfully", async () => {
+    (api.patch as unknown as Mock).mockResolvedValue({});
+    render(<WatchlistItem item={playlistItemOff} onRemove={mockOnRemove} />);
+
+    const toggleBtn = screen.getByTitle("watchlist.autoSyncDeletionsOff");
+    fireEvent.click(toggleBtn);
+
+    await waitFor(() => {
+      expect(api.patch).toHaveBeenCalledWith(
+        "/watchlist/1",
+        expect.objectContaining({ auto_sync_deletions: true })
+      );
+      expect(notify.success).toHaveBeenCalledWith("watchlist.autoSyncDeletionsOn");
+    });
+  });
+
+  it("handles auto-sync-deletions toggle failure", async () => {
+    (api.patch as unknown as Mock).mockRejectedValue(new Error("Fail"));
+    render(<WatchlistItem item={playlistItemOff} onRemove={mockOnRemove} />);
+
+    const toggleBtn = screen.getByTitle("watchlist.autoSyncDeletionsOff");
+    fireEvent.click(toggleBtn);
+
+    await waitFor(() => {
+      expect(notify.error).toHaveBeenCalledWith("Failed to update settings");
+      expect(screen.getByTitle("watchlist.autoSyncDeletionsOff")).toBeInTheDocument(); // reverted
+    });
+  });
+
+  it("handles remove in list view", () => {
+    render(<WatchlistItem item={mockItem} onRemove={mockOnRemove} />);
+    const removeBtn = screen.getByTitle("watchlist.removeFromWatchlist");
+    fireEvent.click(removeBtn);
+    expect(mockOnRemove).toHaveBeenCalledWith("1");
+  });
+
+  it("shows new_items_count badge in list view", () => {
+    render(<WatchlistItem item={{ ...mockItem, new_items_count: 3 }} onRemove={mockOnRemove} />);
+    expect(screen.getByText(/3/)).toBeInTheDocument();
+  });
+
+  it("navigates to playlist in list view", () => {
+    render(<WatchlistItem item={mockItem} onRemove={mockOnRemove} />);
+    fireEvent.click(screen.getAllByTitle("watchlist.viewDetails")[0]);
+    expect(mockNavigate).toHaveBeenCalledWith(
+      expect.stringContaining("/library?source=spotify")
+    );
+  });
+
+  it("navigates to channel in list view", () => {
+    const channelItem = { ...mockItem, watch_type: "channel", source_id: "ch1" };
+    render(<WatchlistItem item={channelItem} onRemove={mockOnRemove} />);
+    fireEvent.click(screen.getAllByTitle("watchlist.viewDetails")[0]);
+    expect(mockNavigate).toHaveBeenCalledWith(
+      expect.stringContaining("/library?source=spotify")
+    );
+  });
+
+  it("grid view: sync button calls onSync", () => {
+    render(<WatchlistItem item={mockItem} onRemove={mockOnRemove} onSync={mockOnSync} viewMode="grid" />);
+    const syncBtn = screen.getByTitle("watchlist.syncDeletions");
+    fireEvent.click(syncBtn);
+    expect(mockOnSync).toHaveBeenCalledWith(mockItem);
+  });
+
+  it("grid view: remove button calls onRemove", () => {
+    render(<WatchlistItem item={mockItem} onRemove={mockOnRemove} viewMode="grid" />);
+    const removeBtn = screen.getByTitle("watchlist.removeFromWatchlist");
+    fireEvent.click(removeBtn);
+    expect(mockOnRemove).toHaveBeenCalledWith("1");
+  });
+
+  it("grid view: shows new_items_count badge", () => {
+    render(<WatchlistItem item={{ ...mockItem, new_items_count: 7 }} onRemove={mockOnRemove} viewMode="grid" />);
+    expect(screen.getByText(/7/)).toBeInTheDocument();
+  });
+
+  it("grid view: auto-sync-deletions toggle for playlist", async () => {
+    (api.patch as unknown as Mock).mockResolvedValue({});
+    const playlistItem = { ...mockItem, watch_type: "playlist", auto_sync_deletions: true };
+    render(<WatchlistItem item={playlistItem} onRemove={mockOnRemove} viewMode="grid" />);
+
+    const toggleBtn = screen.getByTitle("watchlist.autoSyncDeletionsOn");
+    fireEvent.click(toggleBtn);
+
+    await waitFor(() => {
+      expect(api.patch).toHaveBeenCalledWith(
+        "/watchlist/1",
+        expect.objectContaining({ auto_sync_deletions: false })
+      );
+    });
+  });
+
+  it("grid view: image error shows fallback", async () => {
+    const { container } = render(<WatchlistItem item={mockItem} onRemove={mockOnRemove} viewMode="grid" />);
+    const img = screen.queryByAltText("Test Playlist");
+    if (img) fireEvent.error(img);
+
+    await waitFor(() => {
+      const fallback = container.querySelector(".uppercase");
+      expect(fallback).not.toBeNull();
+    });
   });
 });
