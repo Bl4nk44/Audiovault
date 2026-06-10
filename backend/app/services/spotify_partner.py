@@ -21,6 +21,7 @@ import random
 import re
 import struct
 import time
+import urllib.parse
 from typing import Any
 
 import httpx
@@ -201,10 +202,12 @@ class SpotifyPartnerClient:
         headers = _browser_headers(self._ua, origin=_OPEN_SPOTIFY)
         async with httpx.AsyncClient(headers=headers) as client:
             html_resp = await client.get(_OPEN_SPOTIFY, timeout=10.0)
-            # Single-quantifier regex (linear time) + substring filter avoids the
-            # catastrophic backtracking of two unbounded [^"]+ around a literal.
+            # Single-quantifier regex (linear time) + netloc check ensures
+            # spotifycdn.com is the actual host, not an arbitrary path segment.
             js_urls = [
-                url for url in re.findall(r'src="(https://[^"]+\.js)"', html_resp.text) if "spotifycdn.com" in url
+                url
+                for url in re.findall(r'src="(https://[^"]+\.js)"', html_resp.text)
+                if urllib.parse.urlparse(url).netloc.endswith("spotifycdn.com")
             ]
             for url in js_urls:
                 try:
