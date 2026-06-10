@@ -176,4 +176,42 @@ describe("WatchlistManager Component", () => {
       expect(notify.error).toHaveBeenCalledWith("Failed to check for updates");
     });
   });
+
+  it("syncs all deletions successfully", async () => {
+    (api.post as unknown as Mock).mockResolvedValue({
+      data: {
+        synced: [{ removed_count: 3 }, { removed_count: 2 }],
+        skipped: ["item1"],
+      },
+    });
+
+    render(<WatchlistManager />);
+    await waitFor(() => expect(screen.getByText("Artist 1")).toBeInTheDocument());
+
+    const syncBtn = screen.getByText("Sync Deletions");
+    fireEvent.click(syncBtn);
+
+    expect(screen.getByText("Syncing...")).toBeInTheDocument();
+
+    await waitFor(() => {
+      expect(api.post).toHaveBeenCalledWith("/watchlist/sync-all-deletions");
+      expect(notify.success).toHaveBeenCalledWith("Sync complete. Removed: 5, Skipped: 1");
+      expect(mockSyncWatchlist).toHaveBeenCalledTimes(2);
+    });
+  });
+
+  it("handles sync all deletions error", async () => {
+    (api.post as unknown as Mock).mockRejectedValue(new Error("Sync Error"));
+
+    render(<WatchlistManager />);
+    await waitFor(() => expect(screen.getByText("Artist 1")).toBeInTheDocument());
+
+    const syncBtn = screen.getByText("Sync Deletions");
+    fireEvent.click(syncBtn);
+
+    await waitFor(() => {
+      expect(notify.error).toHaveBeenCalledWith("Sync all deletions failed");
+      expect(screen.getByText("Sync Deletions")).toBeInTheDocument(); // loading state cleared
+    });
+  });
 });
