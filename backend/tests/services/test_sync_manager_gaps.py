@@ -165,3 +165,152 @@ async def test_fetch_artist_tracks_unknown_source(manager):
     wl = Watchlist(watch_type="artist", source="deezer", source_id="x")
     result = await manager._fetch_artist_tracks(wl)
     assert result == []
+
+
+# ─── auto_sync_all_deletions ──────────────────────────────────────────────────
+
+
+@pytest.mark.asyncio
+async def test_auto_sync_all_deletions_empty(manager, db_session):
+    """No playlist watchlists → returns empty synced/skipped."""
+    result = await manager.auto_sync_all_deletions(db_session, uuid.uuid4(), only_auto=False)
+    assert result == {"synced": [], "skipped": []}
+
+
+@pytest.mark.asyncio
+async def test_auto_sync_all_deletions_only_auto_skips_disabled(manager, db_session):
+    """only_auto=True skips watchlist with auto_sync_deletions=False."""
+    user_id = uuid.uuid4()
+    wl = Watchlist(
+        id=uuid.uuid4(),
+        user_id=user_id,
+        watch_type="playlist",
+        source="spotify",
+        source_name="P1",
+        source_id="s1",
+        auto_sync_deletions=False,
+    )
+    db_session.add(wl)
+    await db_session.commit()
+
+    result = await manager.auto_sync_all_deletions(db_session, user_id, only_auto=True)
+    assert result == {"synced": [], "skipped": []}
+
+
+@pytest.mark.asyncio
+async def test_auto_sync_all_deletions_safety_warning_skipped(manager, db_session):
+    """Watchlist with safety_warning=True is skipped, pending report cleaned up."""
+    user_id = uuid.uuid4()
+    wl = Watchlist(
+        id=uuid.uuid4(),
+        user_id=user_id,
+        watch_type="playlist",
+        source="spotify",
+        source_name="Risky",
+        source_id="s2",
+        auto_sync_deletions=True,
+    )
+    db_session.add(wl)
+    await db_session.commit()
+
+    token = "tok-warn"
+    manager._pending_reports[token] = {}
+    report = {
+        "safety_warning": True,
+        "warning_message": "Too many deletions",
+        "sync_token": token,
+    }
+    manager.analyze_watchlist = AsyncMock(return_value=report)
+
+    result = await manager.auto_sync_all_deletions(db_session, user_id, only_auto=False)
+
+    assert len(result["skipped"]) == 1
+    assert result["skipped"][0]["reason"] == "Too many deletions"
+    assert token not in manager._pending_reports
+
+
+@pytest.mark.asyncio
+async def test_auto_sync_all_deletions_nothing_to_remove(manager, db_session):
+    """to_remove_count == 0 → synced with removed_count=0, no execute_sync called."""
+    user_id = uuid.uuid4()
+    wl = Watchlist(
+        id=uuid.uuid4(),
+        user_id=user_id,
+        watch_type="playlist",
+        source="spotify",
+        source_name="Clean",
+        source_id="s3",
+        auto_sync_deletions=True,
+    )
+    db_session.add(wl)
+    await db_session.commit()
+
+    token = "tok-empty"
+    manager._pending_reports[token] = {}
+    report = {"safety_warning": False, "to_remove_count": 0, "sync_token": token}
+    manager.analyze_watchlist = AsyncMock(return_value=report)
+    manager.execute_sync = AsyncMock()
+
+    result = await manager.auto_sync_all_deletions(db_session, user_id, only_auto=False)
+
+    assert result["synced"] == [{"watchlist_name": "Clean", "removed_count": 0, "files_deleted": 0}]
+    manager.execute_sync.assert_not_called()
+    assert token not in manager._pending_reports
+
+
+@pytest.mark.asyncio
+async def test_auto_sync_all_deletions_executes_sync(manager, db_session):
+    """Items to remove → execute_sync called, result appended to synced."""
+    user_id = uuid.uuid4()
+    wl = Watchlist(
+        id=uuid.uuid4(),
+        user_id=user_id,
+        watch_type="playlist",
+        source="spotify",
+        source_name="Stale",
+        source_id="s4",
+        auto_sync_deletions=True,
+    )
+    db_session.add(wl)
+    await db_session.commit()
+
+    token = "tok-exec"
+    manager._pending_reports[token] = {}
+    report = {
+        "safety_warning": False,
+        "to_remove_count": 2,
+        "sync_token": token,
+        "to_remove_items": [{"track_id": "t1"}, {"track_id": "t2"}],
+    }
+    exec_result = {"removed_from_playlist": 2, "files_soft_deleted": 1}
+    manager.analyze_watchlist = AsyncMock(return_value=report)
+    manager.execute_sync = AsyncMock(return_value=exec_result)
+
+    result = await manager.auto_sync_all_deletions(db_session, user_id, only_auto=False)
+
+    assert result["synced"] == [{"watchlist_name": "Stale", "removed_count": 2, "files_deleted": 1}]
+    manager.execute_sync.assert_called_once_with(db_session, user_id, token, ["t1", "t2"])
+
+
+@pytest.mark.asyncio
+async def test_auto_sync_all_deletions_exception_caught(manager, db_session):
+    """Exception during per-watchlist processing → appended to skipped, others continue."""
+    user_id = uuid.uuid4()
+    wl = Watchlist(
+        id=uuid.uuid4(),
+        user_id=user_id,
+        watch_type="playlist",
+        source="spotify",
+        source_name="Broken",
+        source_id="s5",
+        auto_sync_deletions=True,
+    )
+    db_session.add(wl)
+    await db_session.commit()
+
+    manager.analyze_watchlist = AsyncMock(side_effect=RuntimeError("network error"))
+
+    result = await manager.auto_sync_all_deletions(db_session, user_id, only_auto=False)
+
+    assert result["synced"] == []
+    assert result["skipped"] == [{"watchlist_name": "Broken", "reason": "Sync failed"}]

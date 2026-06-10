@@ -235,3 +235,39 @@ async def test_scheduled_retry_downloads_error_does_not_raise(scheduler_svc):
 async def test_check_stuck_downloads_is_noop(scheduler_svc):
     result = await scheduler_svc.check_stuck_downloads()
     assert result is None
+
+
+@pytest.mark.asyncio
+async def test_scheduled_watchlist_sync_calls_auto_sync_deletions(scheduler_svc):
+    """auto_sync_all_deletions called per user; non-empty result triggers logger.info branch."""
+    mock_user = MagicMock()
+    mock_user.id = 1
+    mock_user.username = "testuser"
+
+    deletion_result = {"synced": [{"watchlist_name": "P1", "removed_count": 2, "files_deleted": 0}], "skipped": []}
+
+    with (
+        patch("app.services.scheduler.cache_manager") as mock_cache,
+        patch("app.services.scheduler.AsyncSessionLocal") as mock_session_cls,
+        patch("app.services.scheduler.watchlist_engine") as mock_engine,
+        patch("app.services.scheduler.sync_manager") as mock_sync,
+        patch("app.services.scheduler.select"),
+    ):
+        mock_cache.redis = AsyncMock()
+        mock_cache.redis.get = AsyncMock(return_value=None)
+        mock_cache.redis.set = AsyncMock()
+        mock_cache.redis.delete = AsyncMock()
+
+        mock_db = AsyncMock()
+        mock_result = MagicMock()
+        mock_result.scalars.return_value.all.return_value = [mock_user]
+        mock_db.execute = AsyncMock(return_value=mock_result)
+        mock_session_cls.return_value.__aenter__ = AsyncMock(return_value=mock_db)
+        mock_session_cls.return_value.__aexit__ = AsyncMock(return_value=False)
+
+        mock_engine.check_for_updates = AsyncMock(return_value=0)
+        mock_sync.auto_sync_all_deletions = AsyncMock(return_value=deletion_result)
+
+        await scheduler_svc.scheduled_watchlist_sync()
+
+        mock_sync.auto_sync_all_deletions.assert_called_once_with(mock_db, 1, only_auto=True)
