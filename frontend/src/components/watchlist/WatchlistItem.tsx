@@ -46,6 +46,7 @@ export default function WatchlistItem({
   const { t } = useTranslation();
   const navigate = useNavigate();
   const [autoDownload, setAutoDownload] = useState(item.auto_download);
+  const [autoSyncDeletions, setAutoSyncDeletions] = useState(item.auto_sync_deletions);
   const [imageError, setImageError] = useState(false);
 
   const toggleAutoDownload = async (e: React.MouseEvent) => {
@@ -57,6 +58,19 @@ export default function WatchlistItem({
       toast.success(`Auto-download ${newValue ? "enabled" : "disabled"}`);
     } catch {
       setAutoDownload(!newValue);
+      toast.error("Failed to update settings");
+    }
+  };
+
+  const toggleAutoSyncDeletions = async (e: React.MouseEvent) => {
+    e.stopPropagation();
+    const newValue = !autoSyncDeletions;
+    setAutoSyncDeletions(newValue);
+    try {
+      await api.patch(`/watchlist/${item.id}`, { auto_sync_deletions: newValue });
+      toast.success(t(newValue ? "watchlist.autoSyncDeletionsOn" : "watchlist.autoSyncDeletionsOff"));
+    } catch {
+      setAutoSyncDeletions(!newValue);
       toast.error("Failed to update settings");
     }
   };
@@ -149,8 +163,25 @@ export default function WatchlistItem({
             </span>
           </div>
 
-          <div role="none" className="pointer-events-auto shrink-0 pb-0.5" onClick={(e) => e.stopPropagation()}>
+          <div className="pointer-events-auto shrink-0 pb-0.5 flex flex-col gap-1" role="none" onClick={(e) => e.stopPropagation()}>
             <AutoDownloadSwitch autoDownload={autoDownload} onToggle={toggleAutoDownload} />
+            {item.watch_type === "playlist" && (
+              <button
+                onClick={toggleAutoSyncDeletions}
+                className={`relative w-11 h-6 rounded-full transition-all duration-300 flex items-center cursor-pointer border ${
+                  autoSyncDeletions
+                    ? "bg-blue-500/20 border-blue-500 shadow-[0_0_10px_rgba(59,130,246,0.4)]"
+                    : "bg-secondary/40 border-border"
+                }`}
+                title={t(autoSyncDeletions ? "watchlist.autoSyncDeletionsOn" : "watchlist.autoSyncDeletionsOff")}
+              >
+                <div
+                  className={`absolute w-4 h-4 rounded-full shadow-sm transform transition-all duration-300 ${
+                    autoSyncDeletions ? "translate-x-6 bg-blue-400" : "translate-x-1 bg-muted-foreground"
+                  }`}
+                />
+              </button>
+            )}
           </div>
         </div>
       </button>
@@ -197,6 +228,25 @@ export default function WatchlistItem({
         <div role="none" onClick={(e) => e.stopPropagation()}>
           <AutoDownloadSwitch autoDownload={autoDownload} onToggle={toggleAutoDownload} />
         </div>
+        {item.watch_type === "playlist" && (
+          <div role="none" onClick={(e) => e.stopPropagation()}>
+            <button
+              onClick={toggleAutoSyncDeletions}
+              className={`relative w-11 h-6 rounded-full transition-all duration-300 flex items-center cursor-pointer border ${
+                autoSyncDeletions
+                  ? "bg-blue-500/20 border-blue-500 shadow-[0_0_10px_rgba(59,130,246,0.4)]"
+                  : "bg-secondary/40 border-border"
+              }`}
+              title={t(autoSyncDeletions ? "watchlist.autoSyncDeletionsOn" : "watchlist.autoSyncDeletionsOff")}
+            >
+              <div
+                className={`absolute w-4 h-4 rounded-full shadow-sm transform transition-all duration-300 ${
+                  autoSyncDeletions ? "translate-x-6 bg-blue-400" : "translate-x-1 bg-muted-foreground"
+                }`}
+              />
+            </button>
+          </div>
+        )}
 
         {item.new_items_count > 0 && (
           <span className="bg-primary text-primary-foreground text-xs px-2 py-1 rounded-full pointer-events-none">

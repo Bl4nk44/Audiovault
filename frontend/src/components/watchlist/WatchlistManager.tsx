@@ -1,4 +1,4 @@
-import { LayoutGrid, List, Loader2, RefreshCw } from "lucide-react";
+import { LayoutGrid, List, Loader2, RefreshCw, Trash2 } from "lucide-react";
 import { useEffect, useState } from "react";
 import api from "../../services/api";
 import { useStore } from "../../store/useStore";
@@ -11,6 +11,7 @@ export default function WatchlistManager() {
   const { watchlist, syncWatchlist, removeFromWatchlist } = useStore();
   const [isLoading, setIsLoading] = useState(true);
   const [isChecking, setIsChecking] = useState(false);
+  const [isSyncingDeletions, setIsSyncingDeletions] = useState(false);
   const [viewMode, setViewMode] = useState<"list" | "grid">(
     () => (localStorage.getItem("watchlist:viewMode") as "list" | "grid") || "grid"
   );
@@ -43,11 +44,29 @@ export default function WatchlistManager() {
     try {
       const res = await api.post("/watchlist/check-updates");
       toast.success(`Check complete. ${res.data.new_downloads} new items found.`);
-      syncWatchlist(); // Refresh list to update counts/dates
+      syncWatchlist();
     } catch {
       toast.error("Failed to check for updates");
     } finally {
       setIsChecking(false);
+    }
+  };
+
+  const handleSyncAllDeletions = async () => {
+    setIsSyncingDeletions(true);
+    try {
+      const res = await api.post("/watchlist/sync-all-deletions");
+      const totalRemoved = (res.data.synced as { removed_count: number }[]).reduce(
+        (sum, s) => sum + s.removed_count,
+        0
+      );
+      const skippedCount = (res.data.skipped as unknown[]).length;
+      toast.success(`Sync complete. Removed: ${totalRemoved}, Skipped: ${skippedCount}`);
+      syncWatchlist();
+    } catch {
+      toast.error("Sync all deletions failed");
+    } finally {
+      setIsSyncingDeletions(false);
     }
   };
 
@@ -87,14 +106,25 @@ export default function WatchlistManager() {
           </button>
         </div>
 
-        <button
-          onClick={handleCheckUpdates}
-          disabled={isChecking}
-          className="flex items-center gap-2 px-4 py-2 bg-secondary hover:bg-secondary/80 rounded-lg text-sm font-medium transition-colors disabled:opacity-50 cursor-pointer"
-        >
-          <RefreshCw size={16} className={isChecking ? "animate-spin" : ""} />
-          {isChecking ? "Checking..." : "Check for Updates"}
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={handleSyncAllDeletions}
+            disabled={isSyncingDeletions}
+            className="flex items-center gap-2 px-4 py-2 bg-secondary hover:bg-secondary/80 rounded-lg text-sm font-medium transition-colors disabled:opacity-50 cursor-pointer"
+            title="Remove tracks no longer present in any watched playlist"
+          >
+            <Trash2 size={16} className={isSyncingDeletions ? "animate-pulse" : ""} />
+            {isSyncingDeletions ? "Syncing..." : "Sync Deletions"}
+          </button>
+          <button
+            onClick={handleCheckUpdates}
+            disabled={isChecking}
+            className="flex items-center gap-2 px-4 py-2 bg-secondary hover:bg-secondary/80 rounded-lg text-sm font-medium transition-colors disabled:opacity-50 cursor-pointer"
+          >
+            <RefreshCw size={16} className={isChecking ? "animate-spin" : ""} />
+            {isChecking ? "Checking..." : "Check for Updates"}
+          </button>
+        </div>
       </div>
 
       <div

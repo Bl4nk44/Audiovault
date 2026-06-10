@@ -9,6 +9,7 @@ from app.db.database import AsyncSessionLocal
 from app.models.user import User
 from app.services.download_manager import download_manager
 from app.services.recommendation_engine import recommendation_engine
+from app.services.sync_manager import sync_manager
 from app.services.watchlist_engine import watchlist_engine
 
 logger = logging.getLogger(__name__)
@@ -82,7 +83,6 @@ class SchedulerService:
 
             total_new = 0
             async with AsyncSessionLocal() as db:
-                # Get all users (in future might want to shard this)
                 stmt = select(User)
                 result = await db.execute(stmt)
                 users = result.scalars().all()
@@ -92,6 +92,14 @@ class SchedulerService:
                         logger.info(f"Syncing for user: {user.username}")
                         new_count = await watchlist_engine.check_for_updates(db, user.id)
                         total_new += new_count
+                        # Auto-sync deletions for watchlists with auto_sync_deletions=True
+                        deletion_result = await sync_manager.auto_sync_all_deletions(db, user.id, only_auto=True)
+                        if deletion_result["synced"] or deletion_result["skipped"]:
+                            logger.info(
+                                f"Auto-sync deletions for {user.username}: "
+                                f"synced={len(deletion_result['synced'])}, "
+                                f"skipped={len(deletion_result['skipped'])}"
+                            )
                     except Exception as e:
                         logger.error(f"Error syncing for user {user.username}: {e}")
 
