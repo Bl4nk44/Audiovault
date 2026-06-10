@@ -71,6 +71,22 @@ async def test_scheduled_watchlist_sync_already_locked(scheduler_svc):
         mock_cache.redis.set.assert_not_called()
 
 
+def _setup_watchlist_sync_mocks(mock_cache, mock_session_cls, users: list):
+    """Wire up cache redis + async DB session mocks for scheduled_watchlist_sync tests."""
+    mock_cache.redis = AsyncMock()
+    mock_cache.redis.get = AsyncMock(return_value=None)
+    mock_cache.redis.set = AsyncMock()
+    mock_cache.redis.delete = AsyncMock()
+
+    mock_db = AsyncMock()
+    mock_result = MagicMock()
+    mock_result.scalars.return_value.all.return_value = users
+    mock_db.execute = AsyncMock(return_value=mock_result)
+    mock_session_cls.return_value.__aenter__ = AsyncMock(return_value=mock_db)
+    mock_session_cls.return_value.__aexit__ = AsyncMock(return_value=False)
+    return mock_db
+
+
 @pytest.mark.asyncio
 async def test_scheduled_watchlist_sync_success(scheduler_svc):
     mock_user = MagicMock()
@@ -83,18 +99,7 @@ async def test_scheduled_watchlist_sync_success(scheduler_svc):
         patch("app.services.scheduler.watchlist_engine") as mock_engine,
         patch("app.services.scheduler.select"),
     ):
-        mock_cache.redis = AsyncMock()
-        mock_cache.redis.get = AsyncMock(return_value=None)
-        mock_cache.redis.set = AsyncMock()
-        mock_cache.redis.delete = AsyncMock()
-
-        mock_db = AsyncMock()
-        mock_result = MagicMock()
-        mock_result.scalars.return_value.all.return_value = [mock_user]
-        mock_db.execute = AsyncMock(return_value=mock_result)
-        mock_session_cls.return_value.__aenter__ = AsyncMock(return_value=mock_db)
-        mock_session_cls.return_value.__aexit__ = AsyncMock(return_value=False)
-
+        mock_db = _setup_watchlist_sync_mocks(mock_cache, mock_session_cls, [mock_user])
         mock_engine.check_for_updates = AsyncMock(return_value=3)
 
         await scheduler_svc.scheduled_watchlist_sync()
@@ -116,21 +121,9 @@ async def test_scheduled_watchlist_sync_user_error_continues(scheduler_svc):
         patch("app.services.scheduler.watchlist_engine") as mock_engine,
         patch("app.services.scheduler.select"),
     ):
-        mock_cache.redis = AsyncMock()
-        mock_cache.redis.get = AsyncMock(return_value=None)
-        mock_cache.redis.set = AsyncMock()
-        mock_cache.redis.delete = AsyncMock()
-
-        mock_db = AsyncMock()
-        mock_result = MagicMock()
-        mock_result.scalars.return_value.all.return_value = [mock_user]
-        mock_db.execute = AsyncMock(return_value=mock_result)
-        mock_session_cls.return_value.__aenter__ = AsyncMock(return_value=mock_db)
-        mock_session_cls.return_value.__aexit__ = AsyncMock(return_value=False)
-
+        _setup_watchlist_sync_mocks(mock_cache, mock_session_cls, [mock_user])
         mock_engine.check_for_updates = AsyncMock(side_effect=RuntimeError("boom"))
 
-        # Should not raise — errors per user are caught
         await scheduler_svc.scheduled_watchlist_sync()
 
         mock_cache.redis.delete.assert_called_once()
@@ -253,18 +246,7 @@ async def test_scheduled_watchlist_sync_calls_auto_sync_deletions(scheduler_svc)
         patch("app.services.scheduler.sync_manager") as mock_sync,
         patch("app.services.scheduler.select"),
     ):
-        mock_cache.redis = AsyncMock()
-        mock_cache.redis.get = AsyncMock(return_value=None)
-        mock_cache.redis.set = AsyncMock()
-        mock_cache.redis.delete = AsyncMock()
-
-        mock_db = AsyncMock()
-        mock_result = MagicMock()
-        mock_result.scalars.return_value.all.return_value = [mock_user]
-        mock_db.execute = AsyncMock(return_value=mock_result)
-        mock_session_cls.return_value.__aenter__ = AsyncMock(return_value=mock_db)
-        mock_session_cls.return_value.__aexit__ = AsyncMock(return_value=False)
-
+        mock_db = _setup_watchlist_sync_mocks(mock_cache, mock_session_cls, [mock_user])
         mock_engine.check_for_updates = AsyncMock(return_value=0)
         mock_sync.auto_sync_all_deletions = AsyncMock(return_value=deletion_result)
 
