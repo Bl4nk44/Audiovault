@@ -244,7 +244,7 @@ class SyncManager:
                 )
             except Exception as e:
                 logger.error(f"auto_sync_deletions failed for {wl.source_name}: {e}")
-                skipped.append({"watchlist_name": wl.source_name, "reason": str(e)})
+                skipped.append({"watchlist_name": wl.source_name, "reason": "Sync failed"})
 
         return {"synced": synced, "skipped": skipped}
 

@@ -177,6 +177,12 @@ describe("WatchlistManager Component", () => {
     });
   });
 
+  const renderAndClickSyncDeletions = async () => {
+    render(<WatchlistManager />);
+    await waitFor(() => expect(screen.getByText("Artist 1")).toBeInTheDocument());
+    fireEvent.click(screen.getByText("Sync Deletions"));
+  };
+
   it("syncs all deletions successfully", async () => {
     (api.post as unknown as Mock).mockResolvedValue({
       data: {
@@ -185,11 +191,7 @@ describe("WatchlistManager Component", () => {
       },
     });
 
-    render(<WatchlistManager />);
-    await waitFor(() => expect(screen.getByText("Artist 1")).toBeInTheDocument());
-
-    const syncBtn = screen.getByText("Sync Deletions");
-    fireEvent.click(syncBtn);
+    await renderAndClickSyncDeletions();
 
     expect(screen.getByText("Syncing...")).toBeInTheDocument();
 
@@ -203,11 +205,7 @@ describe("WatchlistManager Component", () => {
   it("handles sync all deletions error", async () => {
     (api.post as unknown as Mock).mockRejectedValue(new Error("Sync Error"));
 
-    render(<WatchlistManager />);
-    await waitFor(() => expect(screen.getByText("Artist 1")).toBeInTheDocument());
-
-    const syncBtn = screen.getByText("Sync Deletions");
-    fireEvent.click(syncBtn);
+    await renderAndClickSyncDeletions();
 
     await waitFor(() => {
       expect(notify.error).toHaveBeenCalledWith("Sync all deletions failed");

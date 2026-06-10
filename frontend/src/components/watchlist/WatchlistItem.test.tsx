@@ -30,6 +30,8 @@ describe("WatchlistItem Component", () => {
   const mockOnRemove = vi.fn();
   const mockOnSync = vi.fn();
 
+  const playlistItemOff = { ...mockItem, watch_type: "playlist", auto_sync_deletions: false } as any;
+
   beforeEach(() => {
     vi.clearAllMocks();
   });
@@ -103,8 +105,7 @@ describe("WatchlistItem Component", () => {
 
   it("handles auto-sync-deletions toggle successfully", async () => {
     (api.patch as unknown as Mock).mockResolvedValue({});
-    const playlistItem = { ...mockItem, watch_type: "playlist", auto_sync_deletions: false };
-    render(<WatchlistItem item={playlistItem} onRemove={mockOnRemove} />);
+    render(<WatchlistItem item={playlistItemOff} onRemove={mockOnRemove} />);
 
     const toggleBtn = screen.getByTitle("watchlist.autoSyncDeletionsOff");
     fireEvent.click(toggleBtn);
@@ -120,8 +121,7 @@ describe("WatchlistItem Component", () => {
 
   it("handles auto-sync-deletions toggle failure", async () => {
     (api.patch as unknown as Mock).mockRejectedValue(new Error("Fail"));
-    const playlistItem = { ...mockItem, watch_type: "playlist", auto_sync_deletions: false };
-    render(<WatchlistItem item={playlistItem} onRemove={mockOnRemove} />);
+    render(<WatchlistItem item={playlistItemOff} onRemove={mockOnRemove} />);
 
     const toggleBtn = screen.getByTitle("watchlist.autoSyncDeletionsOff");
     fireEvent.click(toggleBtn);
