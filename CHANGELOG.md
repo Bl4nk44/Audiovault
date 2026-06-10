@@ -2,6 +2,38 @@
 
 All notable changes to Audiovault will be documented in this file.
 
+## [0.5.7] - 2026-06-10
+
+### Features
+
+- **Watchlist deletion sync**: new "Sync Deletions" button manually removes tracks that disappeared from a remote playlist; per-playlist `auto_sync_deletions` toggle runs the same logic automatically on each scheduler cycle (`only_auto=True`)
+- **Sync all deletions API**: `POST /api/v1/watchlist/sync-all-deletions` runs analyze + execute across all playlist watchlists in a single request, returning `synced`/`skipped` breakdown
+
+### Fixed
+
+- **Security**: sanitize exception message in sync-all-deletions response — raw `str(e)` replaced with `"Sync failed"` to prevent information disclosure; full trace still logged server-side
+- **Security**: use `logger.exception()` instead of `logger.error(f"…{e}")` in `auto_sync_deletions` to capture stack trace without leaking it to API consumers
+- **TypeScript**: add missing `auto_sync_deletions: boolean` to `WatchlistItem` interface usages (6 call sites) — caught by Docker build `tsc`, not Vitest
+- **UI**: route watchlist update notification to bell icon; restore DEV badge; remove source label from notifications
+- **UI**: persist grid/list view mode across navigation (Zustand store)
+- **Downloads**: clear all statuses on history clear; skip archived items on resume
+
+### Tests
+
+- Backend: 8 new tests covering `SyncManager.auto_sync_all_deletions` (6 paths: empty, `only_auto` skip, safety warning, zero removals, execute, exception), `POST /sync-all-deletions` API, and scheduler integration (`only_auto=True`)
+- Frontend: 13 new tests for `WatchlistItem` (grid/list view, auto-sync toggle, badge, image fallback); 2 new tests for `WatchlistManager` (sync-all-deletions success + error)
+
+### Docs
+
+- Add build-from-source guide to `CONTRIBUTING.md` (native setup: Python, Node, ffmpeg, aria2, PostgreSQL, Redis)
+- Fix Vite dev server in `docker-compose.dev.yml` — use `Dockerfile.dev` (was pointing to production nginx Dockerfile)
+- Expand streaming server guide and platform support docs
+
+### Code Quality
+
+- SonarQube: exclude `i18n/locales/*.ts` from analysis (translation files — structural duplication is inherent)
+- SonarQube: extract `_setup_watchlist_sync_mocks()` helper in `test_scheduler.py` to eliminate 11-line duplicated setup block
+
 ## [0.5.6] - 2026-06-09
 
 ### Security
