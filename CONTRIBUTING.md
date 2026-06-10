@@ -21,12 +21,31 @@ Use the [Feature Request Template](.github/ISSUE_TEMPLATE/feature_request.md) or
 
 ## Development Setup
 
+### How it works
+
+Audiovault ships two Docker Compose files:
+
+| File | Purpose | Images |
+|------|---------|--------|
+| `docker-compose.yml` | Production / end-user deployment | Pre-built from Docker Hub |
+| `docker-compose.dev.yml` | Development override | Built from local source |
+
+The dev override changes two things: backend mounts `./backend` as a volume (uvicorn `--reload` watches for changes), and frontend uses `frontend/Dockerfile.dev` which runs the Vite dev server with hot module replacement.
+
+### Ports
+
+| Service | Dev mode | Prod mode |
+|---------|----------|-----------|
+| Frontend | `http://localhost:5173` (Vite) | `http://localhost:2137` (nginx) |
+| Backend API | `http://localhost:8000` | `http://localhost:8000` |
+| API docs | `http://localhost:8000/docs` | `http://localhost:8000/docs` |
+
 ### Prerequisites
 
 - Git
 - Docker & Docker Compose
 
-### Getting Started
+### Getting Started (Docker — recommended)
 
 ```bash
 # Fork and clone
@@ -37,9 +56,65 @@ git remote add upstream https://github.com/Bl4nk44/Audiovault.git
 # Configure environment
 cp .env.example .env
 
-# Start
+# Build and start (dev mode — hot-reload enabled)
 docker compose -f docker-compose.yml -f docker-compose.dev.yml up --build
+
+# Frontend: http://localhost:5173
+# Backend:  http://localhost:8000/docs
 ```
+
+> **Note:** On the first run Docker builds both images from source, which takes a few minutes. Subsequent starts are fast unless you change `requirements.txt` or `package.json`.
+
+### Getting Started (Native — without Docker)
+
+Use this when you need faster iteration without Docker overhead or when debugging low-level issues. Requires PostgreSQL and Redis running separately (use the Docker services or your host installs).
+
+**System requirements:**
+
+| Dependency | Version | Notes |
+|------------|---------|-------|
+| Python | 3.14+ | pyenv recommended |
+| Node.js | 24 LTS | nvm recommended |
+| ffmpeg | any | `apt install ffmpeg` / `brew install ffmpeg` |
+| aria2 | any | `apt install aria2` / `brew install aria2` |
+| PostgreSQL | 16 | or use `docker compose up db -d` |
+| Redis | 7+ | or use `docker compose up redis -d` |
+
+**Backend:**
+
+```bash
+cd Audiovault
+
+# Start only DB + Redis via Docker (skip if you have them locally)
+docker compose up db redis -d
+
+# Create virtualenv and install deps
+python -m venv .venv
+source .venv/bin/activate
+pip install -r backend/requirements.txt
+
+# Configure environment (edit DATABASE_URL / REDIS_URL to point at localhost)
+cp .env.example .env
+
+# Run migrations
+cd backend
+alembic upgrade head
+
+# Start dev server
+uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+```
+
+**Frontend:**
+
+```bash
+cd Audiovault/frontend
+
+npm ci
+npm run dev
+# http://localhost:5173
+```
+
+> **CORS:** In native mode the frontend runs on `http://localhost:5173`. Make sure your `.env` contains `BACKEND_CORS_ORIGINS=http://localhost:5173` (already set in `.env.example`).
 
 ### Pre-commit Hooks
 
