@@ -25,8 +25,10 @@ RUN npm run build
 # Production Stage
 FROM public.ecr.aws/docker/library/nginx:stable-alpine AS production
 
-# Patch OS packages for known CVEs (CVE-2026-6732: libxml2 DoS via crafted XSD)
-RUN apk upgrade --no-cache libxml2
+# Patch OS packages for known CVEs:
+# - libxml2: CVE-2026-6732 DoS via crafted XSD
+# - libssl3/libcrypto3: OpenSSL 3.5.7 fixes (CVE-2026-45447 PKCS#7 UAF + 14 more)
+RUN apk upgrade --no-cache libxml2 libssl3 libcrypto3
 
 # Copy built assets from builder
 COPY --from=build /app/dist /usr/share/nginx/html
