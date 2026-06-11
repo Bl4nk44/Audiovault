@@ -23,7 +23,8 @@ COPY VERSION .
 # Create non-root user and downloads directory
 RUN useradd -m -u 1000 appuser && \
     mkdir -p /downloads /cache && \
-    chown -R appuser:appuser /app /downloads /cache
+    chown -R appuser:appuser /app /downloads /cache && \
+    chmod +x /app/entrypoint.sh
 
 USER appuser
 
@@ -34,5 +35,5 @@ EXPOSE 8000
 HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
     CMD curl -f http://localhost:8000/health || exit 1
 
-# Start application
+ENTRYPOINT ["/app/entrypoint.sh"]
 CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
