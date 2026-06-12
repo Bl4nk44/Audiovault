@@ -44,7 +44,6 @@ from app.api.v1 import (
 from app.api.v1 import settings as settings_router
 from app.core.cache import cache_manager
 from app.core.config import settings
-from app.db.base import Base
 from app.db.database import AsyncSessionLocal, engine
 from app.db.init_data import init_db
 from app.schemas.subsonic.base import subsonic_error_response
@@ -176,35 +175,6 @@ setup_static_dirs(application)
 application.mount("/socket.io", socket_manager.app)
 
 
-def _run_alembic_upgrade():
-    """Run Alembic migrations via subprocess to avoid asyncio.run() conflict."""
-    import subprocess
-    import sys
-
-    result = subprocess.run(
-        [sys.executable, "-m", "alembic", "upgrade", "head"],
-        capture_output=True,
-        text=True,
-        cwd="/app",
-    )
-    if result.returncode != 0:
-        raise RuntimeError(f"Alembic upgrade failed: {result.stderr}")
-    return result.stdout
-
-
-def _run_alembic_stamp_head():
-    """Stamp the DB to head so Alembic won't re-run migrations after create_all."""
-    import subprocess
-    import sys
-
-    subprocess.run(
-        [sys.executable, "-m", "alembic", "stamp", "head"],
-        capture_output=True,
-        text=True,
-        cwd="/app",
-    )
-
-
 _BANNER = (
     "\n"
     "  " + "─" * 54 + "\n"
@@ -238,17 +208,7 @@ async def startup_event():
             logger.info("Database not ready, retrying in 2 seconds... (%d/%d)", i + 1, retries)
             await asyncio.sleep(2)
 
-    # Run migrations — DB is ready; fall back to create_all if migrations fail
-    try:
-        _run_alembic_upgrade()
-        logger.info("✅ Alembic migrations applied successfully")
-    except Exception as e:
-        logger.warning("⚠️ Alembic migration failed: %s. Falling back to create_all.", e)
-        async with engine.begin() as conn:
-            await conn.run_sync(Base.metadata.create_all)
-        # Stamp to head so subsequent restarts don't re-run failed migrations.
-        _run_alembic_stamp_head()
-        logger.info("✅ DB stamped to head after create_all fallback")
+    # Migrations run in entrypoint.sh (alembic upgrade head) before the app boots.
 
     # Init data
     async with AsyncSessionLocal() as session:
