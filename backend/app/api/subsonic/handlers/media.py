@@ -29,6 +29,7 @@ from app.db.database import get_db
 from app.models.album import Album
 from app.models.artist import Artist
 from app.models.download import Download
+from app.models.playlist import PlaylistTrack
 from app.models.track import Track
 from app.models.user import User
 from app.schemas.subsonic.base import subsonic_error
@@ -393,6 +394,15 @@ async def _resolve_local_file_path(db: AsyncSession, item_type: str, item_id_str
         if download:
             file_path = download.file_path
 
+    elif item_type == "pl":
+        # Playlist — use the first track's downloaded file for embedded/local art
+        track_id = await _resolve_playlist_first_track(db, item_id)
+        if track_id:
+            result = await db.execute(select(Download).where(Download.track_id == track_id).limit(1))
+            download = result.scalars().first()
+            if download:
+                file_path = download.file_path
+
     if file_path and os.path.exists(file_path):
         return file_path
     return None
@@ -496,6 +506,17 @@ async def _resolve_artist_image(db: AsyncSession, item_id: UUID) -> str | None:
     return None
 
 
+async def _resolve_playlist_first_track(db: AsyncSession, playlist_id: UUID) -> UUID | None:
+    """First track of a playlist (lowest order) — used to derive playlist cover art."""
+    res = await db.execute(
+        select(PlaylistTrack.track_id)
+        .where(PlaylistTrack.playlist_id == playlist_id)
+        .order_by(PlaylistTrack.order)
+        .limit(1)
+    )
+    return res.scalars().first()
+
+
 async def _resolve_image_url(db: AsyncSession, item_type: str, item_id_str: str) -> str | None:
     """Helper to resolve remote image URL from DB"""
     try:
@@ -509,6 +530,9 @@ async def _resolve_image_url(db: AsyncSession, item_type: str, item_id_str: str)
         return await _resolve_track_image(db, item_id)
     elif item_type == "ar":
         return await _resolve_artist_image(db, item_id)
+    elif item_type == "pl":
+        track_id = await _resolve_playlist_first_track(db, item_id)
+        return await _resolve_track_image(db, track_id) if track_id else None
     return None
 
 

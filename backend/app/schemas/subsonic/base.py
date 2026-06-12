@@ -111,6 +111,24 @@ def dict_to_xml(tag: str, d: Any) -> str:
     return ET.tostring(elem, encoding="unicode", method="xml")
 
 
+def strip_none(value: Any) -> Any:
+    """
+    Recursively drop keys whose value is None from dicts (lists handled too).
+
+    The Subsonic JSON profile must omit optional fields rather than emit them as
+    ``null``. Strict clients (notably Symfonium, which uses a Moshi/Kotlin parser
+    with non-nullable field types) abort parsing the whole response on an
+    unexpected ``null`` and report a sync failure, while lenient clients
+    (Amperfy, substreamer) tolerate it. The XML branch already skips None in
+    ``_build_xml_element``; this keeps the JSON branch consistent.
+    """
+    if isinstance(value, dict):
+        return {k: strip_none(v) for k, v in value.items() if v is not None}
+    if isinstance(value, list):
+        return [strip_none(item) for item in value]
+    return value
+
+
 def subsonic_response(data: dict[str, Any] | None = None, f: str = "json") -> Any:
     """
     Build a successful Subsonic response.
@@ -134,7 +152,7 @@ def subsonic_response(data: dict[str, Any] | None = None, f: str = "json") -> An
         response.update(data)
 
     if f == "json":
-        return {"subsonic-response": response}
+        return {"subsonic-response": strip_none(response)}
     else:
         xml_str = '<?xml version="1.0" encoding="UTF-8"?>\n' + dict_to_xml("subsonic-response", response)
         return Response(content=xml_str, media_type="application/xml")
