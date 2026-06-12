@@ -128,6 +128,27 @@ async def test_search2_empty_query_returns_all(client: AsyncClient, test_user: U
 
 
 @pytest.mark.asyncio
+async def test_search_legacy_returns_matches(client: AsyncClient, test_user: User, sample_data):
+    artist, album, track = sample_data
+    response = await client.get("/rest/search.view?any=Test&u=testuser&p=testpass&c=test&v=1.16.1&f=json")
+    assert response.status_code == 200
+    body = response.json()["subsonic-response"]
+    assert body["status"] == "ok"
+    matches = body["searchResult"]["match"]
+    assert any(m["title"] == "Test Song" for m in matches)
+
+
+@pytest.mark.asyncio
+async def test_search_legacy_empty_matches_all(client: AsyncClient, test_user: User, sample_data):
+    artist, album, track = sample_data
+    response = await client.get("/rest/search.view?u=testuser&p=testpass&c=test&v=1.16.1&f=json")
+    assert response.status_code == 200
+    body = response.json()["subsonic-response"]
+    assert body["status"] == "ok"
+    assert any(m["title"] == "Test Song" for m in body["searchResult"]["match"])
+
+
+@pytest.mark.asyncio
 async def test_substreamer_folder_browse_unchanged(client: AsyncClient, test_user: User, sample_data):
     artist, album, track = sample_data
     auth = "u=testuser&p=testpass&c=Substreamer&v=1.13.0&f=json"

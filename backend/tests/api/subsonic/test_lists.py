@@ -308,3 +308,70 @@ async def test_get_album_info2(client: AsyncClient, test_user: User, sample_trac
     body = response.json()["subsonic-response"]
     assert body["status"] == "ok"
     assert "albumInfo" in body
+
+
+@pytest.mark.asyncio
+async def test_get_album_info_folder(client: AsyncClient, test_user: User, sample_tracks):
+    album_id = str(sample_tracks[0].album_id)
+    response = await client.get(f"/rest/getAlbumInfo.view?id={album_id}&u=testuser&p=testpass&c=test&v=1.16.1&f=json")
+    assert response.status_code == 200
+    body = response.json()["subsonic-response"]
+    assert body["status"] == "ok"
+    assert "largeImageUrl" in body["albumInfo"]
+
+
+@pytest.mark.asyncio
+async def test_get_album_info_invalid_id(client: AsyncClient, test_user: User):
+    response = await client.get("/rest/getAlbumInfo.view?id=not-a-uuid&u=testuser&p=testpass&c=test&v=1.16.1&f=json")
+    assert response.status_code == 200
+    body = response.json()["subsonic-response"]
+    assert body["status"] == "failed"
+    assert body["error"]["code"] == 10
+
+
+@pytest.mark.asyncio
+async def test_get_album_info_not_found(client: AsyncClient, test_user: User):
+    import uuid
+
+    response = await client.get(
+        f"/rest/getAlbumInfo.view?id={uuid.uuid4()}&u=testuser&p=testpass&c=test&v=1.16.1&f=json"
+    )
+    assert response.status_code == 200
+    body = response.json()["subsonic-response"]
+    assert body["status"] == "failed"
+    assert body["error"]["code"] == 70
+
+
+@pytest.mark.asyncio
+async def test_get_album_list_alphabetical_by_artist(client: AsyncClient, test_user: User, sample_tracks):
+    response = await client.get(
+        "/rest/getAlbumList2.view?type=alphabeticalByArtist&u=testuser&p=testpass&c=test&v=1.16.1&f=json"
+    )
+    assert response.status_code == 200
+    body = response.json()["subsonic-response"]
+    assert body["status"] == "ok"
+    assert "albumList2" in body
+
+
+@pytest.mark.asyncio
+async def test_get_album_list_unknown_type_falls_back(client: AsyncClient, test_user: User, sample_tracks):
+    # Unknown sort type must hit the default ordering branch, not error.
+    response = await client.get(
+        "/rest/getAlbumList2.view?type=somethingWeird&u=testuser&p=testpass&c=test&v=1.16.1&f=json"
+    )
+    assert response.status_code == 200
+    body = response.json()["subsonic-response"]
+    assert body["status"] == "ok"
+    assert "albumList2" in body
+
+
+def test_genre_expr_postgres_branch():
+    # _genre_expr picks a dialect-specific extraction; the Postgres branch is not
+    # exercised by the SQLite test DB, so cover it directly with a fake dialect.
+    from types import SimpleNamespace
+
+    from app.api.subsonic.handlers.lists import _genre_expr
+
+    fake_db = SimpleNamespace(bind=SimpleNamespace(dialect=SimpleNamespace(name="postgresql")))
+    expr = _genre_expr(fake_db)  # type: ignore[arg-type]
+    assert "json_extract_path_text" in str(expr).lower()
