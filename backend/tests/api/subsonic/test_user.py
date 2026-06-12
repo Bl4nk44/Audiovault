@@ -73,6 +73,36 @@ async def test_subsonic_scrobble(client: AsyncClient, subsonic_auth_params, db_s
 
 
 @pytest.mark.asyncio
+async def test_subsonic_scrobble_unknown_track_is_noop(
+    client: AsyncClient, subsonic_auth_params, db_session, admin_user
+):
+    # Amperfy scrobbles a track id that no longer exists in the library. On
+    # Postgres the unguarded INSERT into listening_history violates the track_id
+    # FK and returns 500. Scrobbling an unknown id must be a best-effort no-op
+    # that returns ok and writes no history/now-playing rows.
+    from sqlalchemy import func
+    from sqlalchemy import select as sqlalchemy_select
+
+    from app.models.history import ListeningHistory
+    from app.models.subsonic import SubsonicNowPlaying
+
+    unknown_uuid = uuid.uuid4()
+    params = {**subsonic_auth_params, "id": str(unknown_uuid), "submission": True}
+    response = await client.get("/rest/scrobble.view", params=params)
+    assert response.status_code == 200
+    assert response.json()["subsonic-response"]["status"] == "ok"
+
+    hist = await db_session.scalar(
+        sqlalchemy_select(func.count(ListeningHistory.id)).where(ListeningHistory.track_id == unknown_uuid)
+    )
+    assert hist == 0
+    np = await db_session.scalar(
+        sqlalchemy_select(func.count(SubsonicNowPlaying.id)).where(SubsonicNowPlaying.track_id == unknown_uuid)
+    )
+    assert np == 0
+
+
+@pytest.mark.asyncio
 async def test_subsonic_get_now_playing(client: AsyncClient, subsonic_auth_params, db_session, admin_user):
     # This might require an entry in SubsonicNowPlaying table
     response = await client.get("/rest/getNowPlaying.view", params=subsonic_auth_params)
