@@ -36,13 +36,7 @@ def log_subsonic_request(request: Request):
     if "t" in params:
         params["t"] = "***"
 
-    log_line = f"DEBUG: {path} | Params: {params}\n"
-    try:
-        with open("/app/subsonic_debug.log", "a") as f:
-            f.write(log_line)
-    except Exception as e:
-        logger.warning("Failed to write subsonic debug log: %s", e)
-    logger.debug(log_line.rstrip())
+    logger.debug("Subsonic request: %s | Params: %s", path, params)
 
 
 # Create main router with logging dependency
@@ -75,12 +69,6 @@ def catch_all_subsonic(request: Request, path_name: str):
     safe_method = sanitize_log(request.method)
     safe_path = sanitize_log(path_name)
     safe_params = sanitize_log(dict(request.query_params))
-    log_line = f"DEBUG 404: {safe_method} /rest/{safe_path} | Params: {safe_params}\n"
-    try:
-        with open("/app/subsonic_debug.log", "a") as f:
-            f.write(log_line)
-    except Exception as e:
-        logger.warning("Failed to write subsonic debug log: %s", e)
-    logger.debug("%s", log_line.rstrip())
+    logger.debug("Subsonic 404: %s /rest/%s | Params: %s", safe_method, safe_path, safe_params)
     response_format = request.query_params.get("f", "xml")
     return subsonic_error(70, "The requested data was not found", f=response_format)
