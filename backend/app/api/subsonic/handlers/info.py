@@ -17,6 +17,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.api.subsonic.auth import subsonic_auth
 from app.api.subsonic.utils import build_song_response
 from app.db.database import get_db
+from app.models.album import Album
 from app.models.artist import Artist
 from app.models.download import Download
 from app.models.track import Track
@@ -205,19 +206,61 @@ async def get_newest_podcasts(
     return subsonic_response({"newestPodcasts": {"episode": []}}, f=f)
 
 
-@router.get("/getBookmarks.view")
-@router.post("/getBookmarks.view")
-async def get_bookmarks(
+async def _album_info(db: AsyncSession, album_id_raw: str, wrapper: str, f: str):
+    """Shared body for getAlbumInfo / getAlbumInfo2."""
+    try:
+        album_id = UUID(album_id_raw)
+    except ValueError:
+        return subsonic_error(10, "Invalid album ID", f=f)
+
+    album = (await db.execute(select(Album).where(Album.id == album_id))).scalar_one_or_none()
+    if not album:
+        return subsonic_error(70, "Album not found", f=f)
+
+    info: dict[str, Any] = {
+        "notes": "",
+        "musicBrainzId": None,
+        "smallImageUrl": f"/api/subsonic/getCoverArt.view?id=al-{album.id}&size=64",
+        "mediumImageUrl": f"/api/subsonic/getCoverArt.view?id=al-{album.id}&size=126",
+        "largeImageUrl": f"/api/subsonic/getCoverArt.view?id=al-{album.id}&size=300",
+    }
+    info = {k: v for k, v in info.items() if v is not None}
+    return subsonic_response({wrapper: info}, f=f)
+
+
+@router.get("/getAlbumInfo.view")
+@router.post("/getAlbumInfo.view")
+async def get_album_info(
+    id: Annotated[str, Query(description="Album ID")],
     f: Annotated[str, Query(description=_RESPONSE_FORMAT)] = "xml",
     current_user: Annotated[User, Depends(subsonic_auth)] = ...,
     db: Annotated[AsyncSession, Depends(get_db)] = ...,
 ):
-    """
-    Get all bookmarks.
+    """Get album notes/images (folder view). Notes not sourced yet; images derived."""
+    return await _album_info(db, id, "albumInfo", f)
 
-    Returns empty list as bookmarks are not implemented.
-    """
-    return subsonic_response({"bookmarks": {"bookmark": []}}, f=f)
+
+@router.get("/getAlbumInfo2.view")
+@router.post("/getAlbumInfo2.view")
+async def get_album_info2(
+    id: Annotated[str, Query(description="Album ID")],
+    f: Annotated[str, Query(description=_RESPONSE_FORMAT)] = "xml",
+    current_user: Annotated[User, Depends(subsonic_auth)] = ...,
+    db: Annotated[AsyncSession, Depends(get_db)] = ...,
+):
+    """Get album notes/images (ID3 view)."""
+    return await _album_info(db, id, "albumInfo", f)
+
+
+@router.get("/getVideos.view")
+@router.post("/getVideos.view")
+async def get_videos(
+    f: Annotated[str, Query(description=_RESPONSE_FORMAT)] = "xml",
+    current_user: Annotated[User, Depends(subsonic_auth)] = ...,
+    db: Annotated[AsyncSession, Depends(get_db)] = ...,
+):
+    """Get all videos. Audiovault is audio-only; returns an empty list."""
+    return subsonic_response({"videos": {"video": []}}, f=f)
 
 
 @router.get("/getInternetRadioStations.view")

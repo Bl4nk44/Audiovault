@@ -10,6 +10,7 @@ from typing import TYPE_CHECKING
 from uuid import UUID, uuid4
 
 from sqlalchemy import (
+    JSON,
     Boolean,
     DateTime,
     ForeignKey,
@@ -167,3 +168,88 @@ class SubsonicNowPlaying(Base):
         Index("ix_subsonic_now_playing_user", "user_id"),
         Index("ix_subsonic_now_playing_updated", "updated_at"),
     )
+
+
+class SubsonicPlayQueue(Base):
+    """
+    Saved play queue per user (savePlayQueue / getPlayQueue).
+
+    Subsonic stores a single play queue per user: an ordered list of track ids,
+    the currently playing track, and the playback position. Re-saving replaces
+    the previous queue, so there is at most one row per user.
+    """
+
+    __tablename__ = "subsonic_play_queues"
+
+    id: Mapped[UUID] = mapped_column(Uuid(as_uuid=True), primary_key=True, default=uuid4)
+    user_id: Mapped[UUID] = mapped_column(
+        Uuid(as_uuid=True),
+        ForeignKey(_USERS_FK, ondelete="CASCADE"),
+        nullable=False,
+        unique=True,
+    )
+
+    # Ordered list of track id strings in the queue
+    track_ids: Mapped[list] = mapped_column(JSON, nullable=False, default=list)
+    # Currently playing track (may be absent from the queue if cleared)
+    current_track_id: Mapped[UUID | None] = mapped_column(
+        Uuid(as_uuid=True),
+        ForeignKey(_TRACKS_FK, ondelete="SET NULL"),
+        nullable=True,
+    )
+    # Playback position within the current track, in milliseconds
+    position_ms: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+
+    # Client that last saved the queue
+    changed_by: Mapped[str | None] = mapped_column(String(100), nullable=True)
+    changed_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True),
+        default=lambda: datetime.now(UTC),
+        onupdate=lambda: datetime.now(UTC),
+    )
+
+    user: Mapped[User] = relationship("User", backref="subsonic_play_queue")
+
+    __table_args__ = (Index("ix_subsonic_play_queues_user", "user_id", unique=True),)
+
+
+class SubsonicBookmark(Base):
+    """
+    Per-user playback bookmark for a track (createBookmark / getBookmarks).
+
+    A bookmark marks a position within a track so playback can resume later.
+    There is at most one bookmark per (user, track).
+    """
+
+    __tablename__ = "subsonic_bookmarks"
+
+    id: Mapped[UUID] = mapped_column(Uuid(as_uuid=True), primary_key=True, default=uuid4)
+    user_id: Mapped[UUID] = mapped_column(
+        Uuid(as_uuid=True),
+        ForeignKey(_USERS_FK, ondelete="CASCADE"),
+        nullable=False,
+    )
+    track_id: Mapped[UUID] = mapped_column(
+        Uuid(as_uuid=True),
+        ForeignKey(_TRACKS_FK, ondelete="CASCADE"),
+        nullable=False,
+    )
+
+    # Position within the track, in milliseconds
+    position_ms: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    comment: Mapped[str | None] = mapped_column(String(500), nullable=True)
+
+    created_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True),
+        default=lambda: datetime.now(UTC),
+    )
+    changed_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True),
+        default=lambda: datetime.now(UTC),
+        onupdate=lambda: datetime.now(UTC),
+    )
+
+    user: Mapped[User] = relationship("User", backref="subsonic_bookmarks")
+    track: Mapped[Track] = relationship("Track", backref="subsonic_bookmarks")
+
+    __table_args__ = (Index("ix_subsonic_bookmarks_user_track", "user_id", "track_id", unique=True),)
