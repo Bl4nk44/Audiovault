@@ -2,6 +2,19 @@
 
 All notable changes to Audiovault will be documented in this file.
 
+## [0.5.8] - 2026-06-12
+
+### Fixed
+
+- **Startup**: remove duplicate Alembic migration run on boot — migrations no longer execute twice during container startup
+- **UI**: theme-aware surfaces (light/dark) and removal of the redundant playlist source badge
+
+### Build
+
+- **Reproducible deps**: add PEP 751 `pylock.toml` generated from `requirements.txt`; Dockerfile installs from the lock for deterministic builds (SonarQube S8565)
+- **Pre-commit hook**: enforce `pylock.toml` regeneration whenever `requirements.txt` changes, blocking out-of-sync commits
+- Remove unused `uv.lock`
+
 ## [0.5.7] - 2026-06-10
 
 ### Features
