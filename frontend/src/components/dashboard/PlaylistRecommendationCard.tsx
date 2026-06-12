@@ -26,9 +26,9 @@ const PlaylistRecommendationCard: React.FC<PlaylistRecommendationCardProps> = ({
         if (e.key === "Enter" || e.key === " ")
           handleEnterPlaylist(e as unknown as React.MouseEvent);
       }}
-      className="text-left w-full cursor-pointer group relative bg-zinc-900/50 hover:bg-zinc-800 transition-all duration-300 rounded-xl overflow-hidden border border-white/5 hover:border-primary/30 focus:outline-none focus:ring-2 focus:ring-primary"
+      className="text-left w-full cursor-pointer group relative bg-card/50 hover:bg-secondary transition-all duration-300 rounded-xl overflow-hidden border border-white/5 hover:border-primary/30 focus:outline-none focus:ring-2 focus:ring-primary"
     >
-      <div className="relative aspect-square w-full bg-zinc-800 overflow-hidden">
+      <div className="relative aspect-square w-full bg-secondary overflow-hidden">
         {playlist.image_url ? (
           <img
             src={playlist.image_url}
@@ -36,7 +36,7 @@ const PlaylistRecommendationCard: React.FC<PlaylistRecommendationCardProps> = ({
             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
           />
         ) : (
-          <div className="w-full h-full flex items-center justify-center bg-zinc-800 text-zinc-600">
+          <div className="w-full h-full flex items-center justify-center bg-secondary text-zinc-600">
             <IoList size={64} className="opacity-20" />
           </div>
         )}
@@ -51,11 +51,6 @@ const PlaylistRecommendationCard: React.FC<PlaylistRecommendationCardProps> = ({
           >
             <IoPlay size={32} className="ml-1" />
           </a>
-        </div>
-
-        {/* Source Badge */}
-        <div className="absolute top-2 right-2 px-2 py-0.5 rounded-full bg-black/60 backdrop-blur text-[10px] font-bold text-primary border border-white/5 uppercase">
-          {playlist.source}
         </div>
       </div>
 

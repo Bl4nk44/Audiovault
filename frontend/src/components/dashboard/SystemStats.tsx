@@ -55,8 +55,8 @@ export default function SystemStats() {
 
         prevRef.current = { recv: data.network.recv, sent: data.network.sent, ts: now };
         setStats(data);
-      } catch (err) {
-        console.debug("Failed to fetch system stats", err);
+      } catch {
+        // Transient polling failure — ignore and retry on next interval
       }
     };
 
@@ -70,13 +70,13 @@ export default function SystemStats() {
     return (
       <div className="bg-white/5 border border-white/5 rounded-3xl p-6 backdrop-blur-xl animate-pulse min-h-[300px]">
         <div className="flex items-center gap-3 mb-6">
-          <div className="p-2 bg-gray-700 rounded-lg w-10 h-10"></div>
-          <div className="h-6 bg-gray-700 rounded w-40"></div>
+          <div className="p-2 bg-muted rounded-lg w-10 h-10"></div>
+          <div className="h-6 bg-muted rounded w-40"></div>
         </div>
         <div className="flex justify-around items-center h-40">
-          <div className="w-40 h-20 bg-gray-700 rounded-t-full opacity-20"></div>
-          <div className="w-40 h-20 bg-gray-700 rounded-t-full opacity-20"></div>
-          <div className="w-40 h-20 bg-gray-700 rounded-t-full opacity-20"></div>
+          <div className="w-40 h-20 bg-muted rounded-t-full opacity-20"></div>
+          <div className="w-40 h-20 bg-muted rounded-t-full opacity-20"></div>
+          <div className="w-40 h-20 bg-muted rounded-t-full opacity-20"></div>
         </div>
       </div>
     );

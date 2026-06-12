@@ -477,7 +477,7 @@ const PlaylistView = ({
                             className="w-full h-full object-cover"
                           />
                         ) : (
-                          <div className="w-full h-full bg-gray-800 flex items-center justify-center">
+                          <div className="w-full h-full bg-secondary flex items-center justify-center">
                             <Music size={32} className="text-gray-600" />
                           </div>
                         )}
@@ -613,7 +613,7 @@ const PlaylistView = ({
                                   className="w-full h-full object-cover"
                                 />
                               ) : (
-                                <div className="w-full h-full bg-gray-800 flex items-center justify-center">
+                                <div className="w-full h-full bg-secondary flex items-center justify-center">
                                   <Music size={16} />
                                 </div>
                               )}
