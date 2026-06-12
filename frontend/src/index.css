@@ -97,6 +97,16 @@
     --background: 230 40% 10%;
     --foreground: 230 20% 98%;
     --primary: 250 80% 70%;
+
+    --card: 230 40% 13%;
+    --card-foreground: 230 20% 98%;
+    --popover: 230 40% 13%;
+    --popover-foreground: 230 20% 98%;
+    --secondary: 230 25% 18%;
+    --muted: 230 25% 18%;
+    --muted-foreground: 230 15% 65%;
+    --border: 230 25% 26%;
+    --input: 230 25% 18%;
   }
 
   .ocean {
@@ -111,6 +121,16 @@
     --foreground: 195 20% 98%;
     --primary: 180 80% 50%;
     --ring: 180 80% 50%;
+
+    --card: 195 55% 10%;
+    --card-foreground: 195 20% 98%;
+    --popover: 195 55% 10%;
+    --popover-foreground: 195 20% 98%;
+    --secondary: 195 40% 15%;
+    --muted: 195 40% 15%;
+    --muted-foreground: 195 25% 65%;
+    --border: 195 40% 24%;
+    --input: 195 40% 15%;
   }
 
   .forest {
@@ -125,6 +145,16 @@
     --foreground: 150 20% 98%;
     --primary: 142 70% 45%;
     --ring: 142 70% 45%;
+
+    --card: 150 45% 8%;
+    --card-foreground: 150 20% 98%;
+    --popover: 150 45% 8%;
+    --popover-foreground: 150 20% 98%;
+    --secondary: 150 35% 13%;
+    --muted: 150 35% 13%;
+    --muted-foreground: 150 20% 65%;
+    --border: 150 35% 22%;
+    --input: 150 35% 13%;
   }
 
   .sunset {
@@ -140,6 +170,16 @@
     --primary: 15 90% 55%;
     --accent: 35 100% 50%;
     --ring: 15 90% 55%;
+
+    --card: 0 40% 8%;
+    --card-foreground: 10 20% 98%;
+    --popover: 0 40% 8%;
+    --popover-foreground: 10 20% 98%;
+    --secondary: 10 35% 13%;
+    --muted: 10 35% 13%;
+    --muted-foreground: 15 25% 68%;
+    --border: 10 35% 22%;
+    --input: 10 35% 13%;
   }
 
   .neon {
@@ -159,6 +199,16 @@
     --primary: 320 100% 50%;
     --accent: 180 100% 50%;
     --ring: 320 100% 50%;
+
+    --card: 260 45% 7%;
+    --card-foreground: 280 20% 98%;
+    --popover: 260 45% 7%;
+    --popover-foreground: 280 20% 98%;
+    --secondary: 260 40% 13%;
+    --muted: 260 40% 13%;
+    --muted-foreground: 280 25% 68%;
+    --border: 280 40% 24%;
+    --input: 260 40% 13%;
   }
 }
 

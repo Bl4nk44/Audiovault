@@ -107,7 +107,7 @@ export default function UserMenu() {
                       onClick={() => switchSession(session.user.id)}
                       className="flex items-center gap-3 flex-1 min-w-0 text-left"
                     >
-                      <div className="w-8 h-8 rounded-full bg-gray-700 flex items-center justify-center">
+                      <div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center">
                         <User size={14} className="text-gray-300" />
                       </div>
                       <span className="text-sm font-medium text-gray-200 truncate">

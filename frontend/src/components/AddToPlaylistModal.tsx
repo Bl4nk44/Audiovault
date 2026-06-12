@@ -110,9 +110,9 @@ const AddToPlaylistModal: React.FC<AddToPlaylistModalProps> = ({ isOpen, onClose
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm">
-      <div className="w-full max-w-md bg-zinc-900 border border-white/10 rounded-xl shadow-2xl overflow-hidden">
+      <div className="w-full max-w-md bg-card border border-white/10 rounded-xl shadow-2xl overflow-hidden">
         {/* Header */}
-        <div className="flex items-center justify-between p-4 border-b border-white/5 bg-zinc-800/50">
+        <div className="flex items-center justify-between p-4 border-b border-white/5 bg-secondary/50">
           <h2 className="text-lg font-bold text-white flex items-center gap-2">
             <IoMusicalNote className="text-primary" />
             {t("playlist.modal.title", "Add to Playlist")}
@@ -150,7 +150,7 @@ const AddToPlaylistModal: React.FC<AddToPlaylistModalProps> = ({ isOpen, onClose
                 value={newPlaylistName}
                 onChange={(e) => setNewPlaylistName(e.target.value)}
                 placeholder={t("playlist.create.placeholder", "Playlist name")}
-                className="w-full bg-zinc-950 border border-white/10 rounded px-3 py-2 text-white focus:outline-none focus:border-primary mb-2"
+                className="w-full bg-background border border-white/10 rounded px-3 py-2 text-white focus:outline-none focus:border-primary mb-2"
               />
               <div className="flex justify-end gap-2">
                 <button
@@ -201,7 +201,7 @@ const AddToPlaylistModal: React.FC<AddToPlaylistModalProps> = ({ isOpen, onClose
                   className="w-full flex items-center gap-3 p-2 rounded-lg hover:bg-white/5 text-left transition-colors group"
                 >
                   {/* Placeholder Cover */}
-                  <div className="w-10 h-10 flex items-center justify-center bg-zinc-800 rounded text-zinc-600 group-hover:text-zinc-400">
+                  <div className="w-10 h-10 flex items-center justify-center bg-secondary rounded text-zinc-600 group-hover:text-zinc-400">
                     <IoMusicalNote size={20} />
                   </div>
                   <div className="flex-1 min-w-0">

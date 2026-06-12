@@ -57,8 +57,8 @@ export const LastfmProfileCard: React.FC<LastfmProfileCardProps> = ({ username }
 
   if (loading) {
     return (
-      <div className="bg-zinc-900/50 rounded-xl p-4 border border-white/5 animate-pulse">
-        <div className="h-20 bg-zinc-800 rounded-lg" />
+      <div className="bg-card/50 rounded-xl p-4 border border-white/5 animate-pulse">
+        <div className="h-20 bg-secondary rounded-lg" />
       </div>
     );
   }
@@ -70,7 +70,7 @@ export const LastfmProfileCard: React.FC<LastfmProfileCardProps> = ({ username }
   const { user, friends } = profile;
 
   return (
-    <div className="bg-gradient-to-br from-zinc-900 to-zinc-950 rounded-xl p-5 border border-white/5 shadow-xl">
+    <div className="bg-gradient-to-br from-card to-background rounded-xl p-5 border border-white/5 shadow-xl">
       {/* User Stats */}
       <div className="flex items-start gap-4 mb-5">
         {/* Avatar */}
@@ -82,7 +82,7 @@ export const LastfmProfileCard: React.FC<LastfmProfileCardProps> = ({ username }
               className="w-16 h-16 rounded-full object-cover border-2 border-red-500"
             />
           ) : (
-            <div className="w-16 h-16 rounded-full bg-zinc-800 flex items-center justify-center border-2 border-red-500">
+            <div className="w-16 h-16 rounded-full bg-secondary flex items-center justify-center border-2 border-red-500">
               <IoPersonCircle className="w-10 h-10 text-zinc-500" />
             </div>
           )}
@@ -119,28 +119,28 @@ export const LastfmProfileCard: React.FC<LastfmProfileCardProps> = ({ username }
 
       {/* Stats Grid */}
       <div className="grid grid-cols-4 gap-3 mb-5">
-        <div className="bg-zinc-800/50 rounded-lg p-3 text-center">
+        <div className="bg-secondary/50 rounded-lg p-3 text-center">
           <div className="text-red-400 font-bold text-lg">{formatNumber(user.playcount)}</div>
           <div className="text-xs text-zinc-500 flex items-center justify-center gap-1">
             <IoMusicalNotes className="w-3 h-3" />
             Scrobbles
           </div>
         </div>
-        <div className="bg-zinc-800/50 rounded-lg p-3 text-center">
+        <div className="bg-secondary/50 rounded-lg p-3 text-center">
           <div className="text-primary font-bold text-lg">{formatNumber(user.artist_count)}</div>
           <div className="text-xs text-zinc-500 flex items-center justify-center gap-1">
             <IoPeople className="w-3 h-3" />
             {t("lastfm.profile.artists", "Artists")}
           </div>
         </div>
-        <div className="bg-zinc-800/50 rounded-lg p-3 text-center">
+        <div className="bg-secondary/50 rounded-lg p-3 text-center">
           <div className="text-emerald-400 font-bold text-lg">{formatNumber(user.track_count)}</div>
           <div className="text-xs text-zinc-500 flex items-center justify-center gap-1">
             <IoMusicalNotes className="w-3 h-3" />
             {t("lastfm.profile.tracks", "Tracks")}
           </div>
         </div>
-        <div className="bg-zinc-800/50 rounded-lg p-3 text-center">
+        <div className="bg-secondary/50 rounded-lg p-3 text-center">
           <div className="text-amber-400 font-bold text-lg">{formatNumber(user.album_count)}</div>
           <div className="text-xs text-zinc-500 flex items-center justify-center gap-1">
             <IoDisc className="w-3 h-3" />
@@ -162,7 +162,7 @@ export const LastfmProfileCard: React.FC<LastfmProfileCardProps> = ({ username }
                 href={friend.url}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="group flex items-center gap-2 bg-zinc-800/50 hover:bg-zinc-700/50 rounded-full px-3 py-1.5 transition-colors"
+                className="group flex items-center gap-2 bg-secondary/50 hover:bg-muted/50 rounded-full px-3 py-1.5 transition-colors"
                 title={friend.realname || friend.name}
               >
                 {friend.image_url ? (
@@ -172,7 +172,7 @@ export const LastfmProfileCard: React.FC<LastfmProfileCardProps> = ({ username }
                     className="w-6 h-6 rounded-full object-cover"
                   />
                 ) : (
-                  <div className="w-6 h-6 rounded-full bg-zinc-700 flex items-center justify-center">
+                  <div className="w-6 h-6 rounded-full bg-muted flex items-center justify-center">
                     <IoPersonCircle className="w-4 h-4 text-zinc-500" />
                   </div>
                 )}

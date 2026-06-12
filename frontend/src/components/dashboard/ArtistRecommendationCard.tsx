@@ -41,8 +41,8 @@ const ArtistRecommendationCard: React.FC<ArtistRecommendationCardProps> = ({ art
   };
 
   return (
-    <div className="group relative bg-zinc-900/50 hover:bg-zinc-800 transition-all duration-300 rounded-xl overflow-hidden border border-white/5 hover:border-primary/30">
-      <div className="relative aspect-square w-full bg-zinc-800 overflow-hidden">
+    <div className="group relative bg-card/50 hover:bg-secondary transition-all duration-300 rounded-xl overflow-hidden border border-white/5 hover:border-primary/30">
+      <div className="relative aspect-square w-full bg-secondary overflow-hidden">
         {artist.image_url ? (
           <img
             src={artist.image_url}
@@ -50,7 +50,7 @@ const ArtistRecommendationCard: React.FC<ArtistRecommendationCardProps> = ({ art
             className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
           />
         ) : (
-          <div className="w-full h-full flex items-center justify-center bg-zinc-800 text-zinc-600">
+          <div className="w-full h-full flex items-center justify-center bg-secondary text-zinc-600">
             <IoPerson size={64} className="opacity-20" />
           </div>
         )}

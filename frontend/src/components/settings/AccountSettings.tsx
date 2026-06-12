@@ -375,7 +375,7 @@ export default function AccountSettings() {
             id="deleteLibrary"
             checked={deleteLibrary}
             onChange={(e) => setDeleteLibrary(e.target.checked)}
-            className="mt-1 w-4 h-4 rounded border-gray-600 bg-gray-700 text-red-500 focus:ring-red-500 focus:ring-offset-gray-900"
+            className="mt-1 w-4 h-4 rounded border-border bg-muted text-red-500 focus:ring-red-500 focus:ring-offset-gray-900"
           />
           <label
             htmlFor="deleteLibrary"

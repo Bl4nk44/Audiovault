@@ -23,7 +23,7 @@ const GRID_CLASS = "grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-
 const SKELETON_KEYS = Array.from({ length: 10 }, (_, i) => `rec-skeleton-${i}`);
 
 const EmptyState: React.FC<{ message: string }> = ({ message }) => (
-  <div className="text-center py-20 text-zinc-500 bg-zinc-900/20 rounded-2xl border border-white/5">
+  <div className="text-center py-20 text-zinc-500 bg-card/20 rounded-2xl border border-white/5">
     <p>{message}</p>
   </div>
 );
@@ -211,7 +211,7 @@ const RecommendationsPage: React.FC = () => {
               {t("lastfm.connect", "Connect Last.fm")}
             </button>
           ) : (
-            <div className="flex items-center gap-4 bg-zinc-900/50 border border-white/5 px-4 py-2 rounded-lg">
+            <div className="flex items-center gap-4 bg-card/50 border border-white/5 px-4 py-2 rounded-lg">
               <div className="flex items-center gap-2">
                 <SiLastdotfm className="text-[#ba0000]" size={20} />
                 <span className="text-sm">
@@ -236,7 +236,7 @@ const RecommendationsPage: React.FC = () => {
       )}
 
       {!status.connected ? (
-        <div className="flex flex-col items-center justify-center py-20 text-center bg-zinc-900/30 border border-white/5 rounded-2xl border-dashed">
+        <div className="flex flex-col items-center justify-center py-20 text-center bg-card/30 border border-white/5 rounded-2xl border-dashed">
           <div className="w-16 h-16 bg-[#ba0000]/10 text-[#ba0000] rounded-full flex items-center justify-center mb-4">
             <SiLastdotfm size={32} />
           </div>
@@ -254,7 +254,7 @@ const RecommendationsPage: React.FC = () => {
         </div>
       ) : (
         <div>
-          <div className="flex items-center gap-1 p-1 bg-zinc-900/80 backdrop-blur rounded-xl border border-white/5 w-fit mb-8 shadow-inner">
+          <div className="flex items-center gap-1 p-1 bg-card/80 backdrop-blur rounded-xl border border-white/5 w-fit mb-8 shadow-inner">
             <button
               onClick={() => setActiveTab("tracks")}
               className={`cursor-pointer px-5 py-2.5 rounded-lg text-sm font-bold transition-all ${
@@ -291,7 +291,7 @@ const RecommendationsPage: React.FC = () => {
             <button
               onClick={() => fetchRecommendations(true)}
               disabled={refreshing || loading}
-              className="cursor-pointer p-2 text-zinc-400 hover:text-white bg-zinc-800 hover:bg-zinc-700 rounded-lg transition-colors disabled:opacity-50"
+              className="cursor-pointer p-2 text-zinc-400 hover:text-white bg-secondary hover:bg-muted rounded-lg transition-colors disabled:opacity-50"
               title="Refresh Recommendations"
             >
               <IoRefresh className={refreshing ? "animate-spin" : ""} size={20} />
@@ -301,7 +301,7 @@ const RecommendationsPage: React.FC = () => {
           {loading && !refreshing ? (
             <div className={GRID_CLASS}>
               {SKELETON_KEYS.map((key) => (
-                <div key={key} className="aspect-[3/4] bg-zinc-900 rounded-xl animate-pulse" />
+                <div key={key} className="aspect-[3/4] bg-card rounded-xl animate-pulse" />
               ))}
             </div>
           ) : (

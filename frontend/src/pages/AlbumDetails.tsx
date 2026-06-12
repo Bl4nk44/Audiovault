@@ -88,7 +88,7 @@ export default function AlbumDetails() {
           {albumCover ? (
             <img src={albumCover} alt={album.title} className="w-full h-full object-cover" />
           ) : (
-            <div className="w-full h-full bg-gray-800 flex items-center justify-center">
+            <div className="w-full h-full bg-secondary flex items-center justify-center">
               <Disc className="w-24 h-24 text-gray-600" />
             </div>
           )}

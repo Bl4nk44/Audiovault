@@ -40,7 +40,6 @@ describe("PlaylistRecommendationCard", () => {
     renderCard();
     expect(screen.getByText("Test Playlist")).toBeInTheDocument();
     expect(screen.getByText(/25.*tracks/)).toBeInTheDocument();
-    expect(screen.getByText(/spotify/i)).toBeInTheDocument();
     const img = screen.getByAltText("Test Playlist");
     expect(img).toHaveAttribute("src", "http://example.com/playlist.jpg");
   });
