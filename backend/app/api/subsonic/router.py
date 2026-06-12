@@ -15,6 +15,7 @@ from app.api.subsonic.handlers import (
     lyrics,
     media,
     playlist,
+    playqueue,
     search,
     system,  # Contains ping, getLicense, getToken
     user,
@@ -59,6 +60,7 @@ router.include_router(user.router)
 router.include_router(lists.router)
 router.include_router(lyrics.router)
 router.include_router(info.router)
+router.include_router(playqueue.router)
 
 
 @router.api_route("/{path_name:path}", methods=["GET", "POST"])

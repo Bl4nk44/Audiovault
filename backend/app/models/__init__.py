@@ -7,7 +7,13 @@ from .history import ListeningHistory
 from .playlist import Playlist, PlaylistTrack
 from .playlist_version import PlaylistVersion
 from .starred import StarredAlbum, StarredArtist, StarredTrack
-from .subsonic import SubsonicAuthToken, SubsonicNowPlaying, SubsonicRating
+from .subsonic import (
+    SubsonicAuthToken,
+    SubsonicBookmark,
+    SubsonicNowPlaying,
+    SubsonicPlayQueue,
+    SubsonicRating,
+)
 from .track import Track
 from .user import User
 from .watchlist import Watchlist
@@ -32,5 +38,7 @@ __all__ = [
     "SubsonicAuthToken",
     "SubsonicRating",
     "SubsonicNowPlaying",
+    "SubsonicPlayQueue",
+    "SubsonicBookmark",
     "AuditLog",
 ]

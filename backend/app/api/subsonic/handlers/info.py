@@ -206,21 +206,6 @@ async def get_newest_podcasts(
     return subsonic_response({"newestPodcasts": {"episode": []}}, f=f)
 
 
-@router.get("/getBookmarks.view")
-@router.post("/getBookmarks.view")
-async def get_bookmarks(
-    f: Annotated[str, Query(description=_RESPONSE_FORMAT)] = "xml",
-    current_user: Annotated[User, Depends(subsonic_auth)] = ...,
-    db: Annotated[AsyncSession, Depends(get_db)] = ...,
-):
-    """
-    Get all bookmarks.
-
-    Returns empty list as bookmarks are not implemented.
-    """
-    return subsonic_response({"bookmarks": {"bookmark": []}}, f=f)
-
-
 async def _album_info(db: AsyncSession, album_id_raw: str, wrapper: str, f: str):
     """Shared body for getAlbumInfo / getAlbumInfo2."""
     try:
