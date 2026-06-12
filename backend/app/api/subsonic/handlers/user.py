@@ -365,6 +365,13 @@ async def scrobble(
     track_result = await db.execute(select(Track).where(Track.id == track_id))
     track_obj = track_result.scalar_one_or_none()
 
+    # Clients (e.g. Amperfy) may scrobble a track id that is no longer in the
+    # library. Both ListeningHistory and SubsonicNowPlaying have a FK to tracks,
+    # so writing them would raise a ForeignKeyViolation (HTTP 500). Per Subsonic,
+    # scrobbling an unknown id is a best-effort no-op that still returns ok.
+    if track_obj is None:
+        return subsonic_response(f=f)
+
     if submission:
         await _record_submission(db, scrobbler_service, current_user, track_id, track_obj, time)
 
