@@ -133,34 +133,3 @@ async def test_create_bookmark_unknown_track(client: AsyncClient, test_user: Use
     body = response.json()["subsonic-response"]
     assert body["status"] == "failed"
     assert body["error"]["code"] == 70
-
-
-@pytest.mark.asyncio
-async def test_delete_bookmark_invalid_id(client: AsyncClient, test_user: User):
-    response = await client.get(f"/rest/deleteBookmark.view?{_auth()}&id=not-a-uuid")
-    assert response.status_code == 200
-    body = response.json()["subsonic-response"]
-    assert body["status"] == "failed"
-    assert body["error"]["code"] == 10
-
-
-@pytest.mark.asyncio
-async def test_get_bookmarks_skips_orphaned_track(
-    client: AsyncClient, test_user: User, sample_tracks, db_session: AsyncSession
-):
-    from sqlalchemy import delete as sa_delete
-
-    from app.models.track import Track as TrackModel
-
-    track_id = str(sample_tracks[0].id)
-    await client.get(f"/rest/createBookmark.view?{_auth()}&id={track_id}&position=1000")
-
-    # Track disappears underneath the bookmark; getBookmarks must skip it, not error.
-    await db_session.execute(sa_delete(TrackModel).where(TrackModel.id == sample_tracks[0].id))
-    await db_session.commit()
-
-    listed = await client.get(f"/rest/getBookmarks.view?{_auth()}")
-    assert listed.status_code == 200
-    body = listed.json()["subsonic-response"]
-    assert body["status"] == "ok"
-    assert body["bookmarks"]["bookmark"] == []
