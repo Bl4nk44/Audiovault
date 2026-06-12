@@ -31,6 +31,23 @@ router = APIRouter()
 _RESPONSE_FORMAT = "Response format"
 
 
+def _normalize_query(query: str | None) -> str:
+    """
+    Build a SQL LIKE term from a Subsonic search query.
+
+    Per the OpenSubsonic spec, an empty query means "match everything" — it is
+    the only way for clients (Symfonium, Feishin, ...) to enumerate the full
+    library. Clients express "empty" in three ways, all of which must match all:
+      * query omitted entirely
+      * query=        (empty string)
+      * query=""      (two literal quote chars, sent URL-encoded as %22%22)
+
+    See: https://github.com/opensubsonic/open-subsonic-api/discussions/4
+    """
+    normalized = (query or "").strip().strip('"').strip()
+    return f"%{normalized.lower()}%" if normalized else "%"
+
+
 async def _search_artists(
     db: AsyncSession, current_user: User, search_term: str, count: int, offset: int, id3: bool = False
 ) -> list:
@@ -226,11 +243,8 @@ async def search_legacy(
     # Build search query
     query_text = any or title or album or artist or ""
 
-    if not query_text:
-        return subsonic_response({"searchResult": {"match": []}})
-
-    # Search tracks
-    search_term = f"%{query_text.lower()}%"
+    # Search tracks (empty criteria => match all, per Subsonic enumeration use)
+    search_term = _normalize_query(query_text)
 
     result = await db.execute(
         select(Track, Download)  # nosemgrep: python.fastapi.db.generic-sql-fastapi.generic-sql-fastapi
@@ -259,7 +273,7 @@ async def search_legacy(
 @router.get("/search2.view")
 @router.post("/search2.view")
 async def search2(
-    query: Annotated[str, Query(description="Search query")],
+    query: Annotated[str | None, Query(description="Search query (empty = all)")] = None,
     artist_count: Annotated[int, Query(alias="artistCount", description="Max artists to return")] = 20,
     artist_offset: Annotated[int, Query(alias="artistOffset", description="Artist offset")] = 0,
     album_count: Annotated[int, Query(alias="albumCount", description="Max albums to return")] = 20,
@@ -286,7 +300,7 @@ async def search2(
     Returns:
         Search results with artists, albums, and songs
     """
-    search_term = f"%{query.lower()}%"
+    search_term = _normalize_query(query)
     artists_result = (
         await _search_artists(db, current_user, search_term, artist_count, artist_offset) if artist_count > 0 else []
     )
@@ -302,7 +316,7 @@ async def search2(
 @router.get("/search3.view")
 @router.post("/search3.view")
 async def search3(
-    query: Annotated[str, Query(description="Search query")],
+    query: Annotated[str | None, Query(description="Search query (empty = all)")] = None,
     artist_count: Annotated[int, Query(alias="artistCount", description="Max artists to return")] = 20,
     artist_offset: Annotated[int, Query(alias="artistOffset", description="Artist offset")] = 0,
     album_count: Annotated[int, Query(alias="albumCount", description="Max albums to return")] = 20,
@@ -328,7 +342,7 @@ async def search3(
     Returns:
         Search results in ID3 format
     """
-    search_term = f"%{query.lower()}%"
+    search_term = _normalize_query(query)
     artists_result = (
         await _search_artists(db, current_user, search_term, artist_count, artist_offset, id3=True)
         if artist_count > 0
