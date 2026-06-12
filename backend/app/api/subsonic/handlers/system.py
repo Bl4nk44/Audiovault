@@ -226,6 +226,30 @@ async def get_scan_status(
     )
 
 
+@router.get("/startScan.view")
+@router.post("/startScan.view")
+async def start_scan(
+    f: Annotated[str, Query(description=_RESPONSE_FORMAT)] = "xml",
+    current_user: Annotated[User, Depends(subsonic_auth)] = ...,
+):
+    """
+    Trigger a media library scan.
+
+    Audiovault has no on-disk library to scan (content is download-driven), so
+    this is a no-op that returns a completed, not-scanning status. Clients only
+    need a valid scanStatus envelope to proceed.
+    """
+    return subsonic_response(
+        {
+            "scanStatus": {
+                "scanning": False,
+                "count": 0,
+            }
+        },
+        f=f,
+    )
+
+
 @router.get("/getOpenSubsonicExtensions.view")
 @router.post("/getOpenSubsonicExtensions.view")
 async def get_open_subsonic_extensions(

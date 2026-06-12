@@ -223,6 +223,35 @@ async def get_album_list(
     return subsonic_response({wrapper: {"album": album_list}}, f=f)
 
 
+@router.get("/getSongsByGenre.view")
+@router.post("/getSongsByGenre.view")
+async def get_songs_by_genre(
+    genre: Annotated[str, Query(description="Genre name")],
+    count: Annotated[int, Query(description="Max songs")] = 10,
+    offset: Annotated[int, Query(description="Offset")] = 0,
+    music_folder_id: Annotated[str | None, Query(alias="musicFolderId", description="Music folder ID")] = None,
+    f: Annotated[str, Query(description=_RESPONSE_FORMAT)] = "xml",
+    current_user: Annotated[User, Depends(subsonic_auth)] = ...,
+    db: Annotated[AsyncSession, Depends(get_db)] = ...,
+):
+    """Get downloaded songs in a given genre (ID3 tag based)."""
+    count = min(count, 500)
+    result = await db.execute(
+        select(Track, Download)
+        .join(Download, Download.track_id == Track.id)
+        .where(
+            Download.user_id == current_user.id,
+            Download.status == "completed",
+            _genre_expr(db) == genre,
+        )
+        .order_by(Track.title)
+        .offset(offset)
+        .limit(count)
+    )
+    songs = [build_song_response(track, download) for track, download in result.all()]
+    return subsonic_response({"songsByGenre": {"song": songs}}, f=f)
+
+
 @router.get("/getRandomSongs.view")
 @router.post("/getRandomSongs.view")
 async def get_random_songs(
