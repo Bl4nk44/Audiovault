@@ -45,3 +45,11 @@ repos:
         language: system
         files: ^frontend/src/.*\.[jt]sx?$
         pass_filenames: false
+
+      # Lock sync — pylock.toml must be regenerated when requirements.txt changes
+      - id: pylock-sync
+        name: pylock.toml in sync with requirements.txt
+        entry: scripts/check-pylock-sync.sh
+        language: system
+        files: ^backend/requirements\.txt$
+        pass_filenames: false

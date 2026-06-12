@@ -9,12 +9,12 @@ RUN apt-get update && apt-get upgrade -y && apt-get install -y --no-install-reco
     aria2 \
     && rm -rf /var/lib/apt/lists/*
 
-# Copy requirements
-COPY backend/requirements.txt .
+# Copy dependency lock (PEP 751) + source manifest
+COPY pylock.toml backend/requirements.txt ./
 
-# Install Python dependencies
+# Install Python dependencies from the lock for reproducible builds
 RUN pip install --upgrade pip && \
-    pip install --no-cache-dir -r requirements.txt
+    pip install --no-cache-dir -r pylock.toml
 
 # Copy application code
 COPY backend/ .
