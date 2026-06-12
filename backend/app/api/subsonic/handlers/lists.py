@@ -12,8 +12,8 @@ Handles list-based endpoints:
 from typing import Annotated
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, Query
-from sqlalchemy import func, select
+from fastapi import APIRouter, Depends, Query, Request
+from sqlalchemy import Integer, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.subsonic.auth import subsonic_auth
@@ -34,17 +34,36 @@ router = APIRouter()
 _RESPONSE_FORMAT = "Response format"
 
 
+def _genre_expr(db: AsyncSession):
+    """Dialect-aware extraction of the genre value from Track.metadata_content."""
+    is_postgres = db.bind.dialect.name == "postgresql" if hasattr(db.bind, "dialect") else True
+    if is_postgres:
+        return func.json_extract_path_text(Track.metadata_content, "genre")
+    return func.json_extract(Track.metadata_content, "$.genre")
+
+
+def _album_year_expr():
+    """Numeric year parsed from the leading YYYY of Album.release_date (NULL-safe)."""
+    return func.cast(func.substr(Album.release_date, 1, 4), Integer)
+
+
 def _apply_album_list_ordering(query, list_type: str):
     if list_type == "random":
         return query.order_by(func.random())
-    if list_type == "newest" or list_type == "recent" or list_type == "starred":
+    if list_type in ("newest", "recent", "starred", "frequent"):
         return query.order_by(Album.created_at.desc())
-    if list_type in ("alphabetical", "byName"):
+    if list_type == "byYear":
+        return query.order_by(_album_year_expr())
+    if list_type in ("alphabetical", "byName", "alphabeticalByName", "alphabeticalByArtist", "byGenre"):
         return query.order_by(Album.title)
     return query.order_by(Album.id)
 
 
-async def _build_album_list_item(db: AsyncSession, album: Album, current_user: User) -> dict:
+def _album_year(album: Album) -> int | None:
+    return int(album.release_date[:4]) if album.release_date and len(album.release_date) >= 4 else None
+
+
+async def _build_album_list_item(db: AsyncSession, album: Album, current_user: User, id3: bool = False) -> dict:
     artist_name = "Unknown Artist"
     if album.artist_id:
         artist_obj = await db.get(Artist, album.artist_id)
@@ -58,16 +77,30 @@ async def _build_album_list_item(db: AsyncSession, album: Album, current_user: U
         )
         or 0
     )
+    artist_id = str(album.artist_id) if album.artist_id else None
+    if id3:
+        # getAlbumList2 — ID3 shape
+        return {
+            "id": str(album.id),
+            "name": album.title,
+            "artist": artist_name,
+            "artistId": artist_id,
+            "coverArt": f"al-{album.id}",
+            "songCount": sc,
+            "year": _album_year(album),
+            "created": format_subsonic_date(album.created_at),
+        }
+    # getAlbumList — folder/directory shape
     return {
         "id": str(album.id),
-        "parent": str(album.artist_id) if album.artist_id else None,
+        "parent": artist_id,
         "title": album.title,
         "artist": artist_name,
-        "artistId": str(album.artist_id) if album.artist_id else None,
+        "artistId": artist_id,
         "isDir": True,
         "coverArt": f"al-{album.id}",
         "songCount": sc,
-        "year": int(album.release_date[:4]) if album.release_date and len(album.release_date) >= 4 else None,
+        "year": _album_year(album),
         "created": format_subsonic_date(album.created_at),
     }
 
@@ -140,6 +173,7 @@ async def get_genres(
 @router.get("/getAlbumList2.view")
 @router.post("/getAlbumList2.view")
 async def get_album_list(
+    request: Request,
     type: Annotated[
         str,
         Query(description="List type: random, newest, frequent, recent, starred, alphabetical, byName, byYear"),
@@ -157,19 +191,36 @@ async def get_album_list(
     """
     Get list of albums.
 
-    Supports various sorting types.
+    getAlbumList (folder/directory shape, wrapper ``albumList``) and getAlbumList2
+    (ID3 shape, wrapper ``albumList2``) share this handler; the response shape is
+    chosen by the request path. Supports the sort/filter ``type`` values clients
+    actually send, plus byYear (fromYear/toYear) and byGenre (genre) filtering.
     """
+    id3 = request.url.path.endswith("getAlbumList2.view")
     size = min(size, 500)
+
     query = (
         select(Album)
         .join(Track, Track.album_id == Album.id)
         .outerjoin(Download, (Download.track_id == Track.id) & (Download.user_id == current_user.id))
         .group_by(Album.id)
     )
+
+    if type == "byYear":
+        year_expr = _album_year_expr()
+        if from_year is not None:
+            query = query.where(year_expr >= from_year)
+        if to_year is not None:
+            query = query.where(year_expr <= to_year)
+    if type == "byGenre" and genre:
+        query = query.where(_genre_expr(db) == genre)
+
     query = _apply_album_list_ordering(query, type).offset(offset).limit(size)
     result = await db.execute(query)  # nosemgrep: python.fastapi.db.generic-sql-fastapi.generic-sql-fastapi
-    album_list = [await _build_album_list_item(db, album, current_user) for album in result.scalars().all()]
-    return subsonic_response({"albumList2": {"album": album_list}}, f=f)
+    album_list = [await _build_album_list_item(db, album, current_user, id3=id3) for album in result.scalars().all()]
+
+    wrapper = "albumList2" if id3 else "albumList"
+    return subsonic_response({wrapper: {"album": album_list}}, f=f)
 
 
 @router.get("/getRandomSongs.view")

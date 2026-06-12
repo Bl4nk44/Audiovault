@@ -184,3 +184,73 @@ async def test_get_album_list_default_type(client: AsyncClient, test_user: User,
     assert response.status_code == 200
     data = response.json()
     assert data["subsonic-response"]["status"] == "ok"
+
+
+# --- getAlbumList (folder) vs getAlbumList2 (ID3): correct wrapper + keys ---
+# getAlbumList is the v1/folder-style endpoint and must return the "albumList"
+# wrapper with directory-style entries (title/isDir). getAlbumList2 is the ID3
+# endpoint and must return "albumList2" with ID3 entries (name/artistId).
+# The old code returned "albumList2" for both, so folder-mode clients (DSub,
+# play:Sub) saw an empty list.
+
+
+@pytest.mark.asyncio
+async def test_get_album_list_returns_album_list_wrapper(client: AsyncClient, test_user: User, sample_tracks):
+    response = await client.get(
+        "/rest/getAlbumList.view?type=alphabeticalByName&u=testuser&p=testpass&c=DSub&v=1.13.0&f=json"
+    )
+    assert response.status_code == 200
+    body = response.json()["subsonic-response"]
+    assert body["status"] == "ok"
+    assert "albumList" in body
+    albums = body["albumList"]["album"]
+    assert any(a["title"] == "Test Album" for a in albums)
+    assert all(a.get("isDir") is True for a in albums)
+
+
+@pytest.mark.asyncio
+async def test_get_album_list2_uses_id3_keys(client: AsyncClient, test_user: User, sample_tracks):
+    response = await client.get(
+        "/rest/getAlbumList2.view?type=alphabeticalByName&u=testuser&p=testpass&c=test&v=1.16.1&f=json"
+    )
+    assert response.status_code == 200
+    body = response.json()["subsonic-response"]
+    albums = body["albumList2"]["album"]
+    assert any(a.get("name") == "Test Album" for a in albums)
+    assert all("artistId" in a for a in albums)
+
+
+@pytest.mark.asyncio
+async def test_get_album_list_by_genre(client: AsyncClient, test_user: User, sample_tracks):
+    response = await client.get(
+        "/rest/getAlbumList2.view?type=byGenre&genre=Rock&u=testuser&p=testpass&c=test&v=1.16.1&f=json"
+    )
+    assert response.status_code == 200
+    body = response.json()["subsonic-response"]
+    assert body["status"] == "ok"
+    assert "albumList2" in body
+
+
+@pytest.mark.asyncio
+async def test_get_album_list_by_year(client: AsyncClient, test_user: User, sample_tracks):
+    response = await client.get(
+        "/rest/getAlbumList.view?type=byYear&fromYear=1900&toYear=2100&u=testuser&p=testpass&c=test&v=1.16.1&f=json"
+    )
+    assert response.status_code == 200
+    body = response.json()["subsonic-response"]
+    assert body["status"] == "ok"
+    assert "albumList" in body
+
+
+# --- Unknown endpoint must degrade softly: HTTP 200 + Subsonic error, not 404 ---
+# Subsonic clients expect HTTP 200 with an error envelope for every request.
+# A raw HTTP 404 makes some clients abort the whole sync.
+
+
+@pytest.mark.asyncio
+async def test_unknown_endpoint_returns_200_error_envelope(client: AsyncClient, test_user: User):
+    response = await client.get("/rest/getThisDoesNotExist.view?u=testuser&p=testpass&c=test&v=1.16.1&f=json")
+    assert response.status_code == 200
+    body = response.json()["subsonic-response"]
+    assert body["status"] == "failed"
+    assert body["error"]["code"] == 70
