@@ -1,9 +1,10 @@
 import { useEffect, useState } from "react";
 
 import { motion } from "framer-motion";
-import { Download, FileText, FolderOpen, Globe, Palette, Save, User } from "lucide-react";
+import { Download, FileText, FolderOpen, Globe, Palette, Save, User, UserPlus } from "lucide-react";
 import { useTranslation } from "../../hooks/useTranslation";
 import api from "../../services/api";
+import { setRegistrationEnabled as apiSetRegistration } from "../../services/auth";
 import { useStore } from "../../store/useStore";
 import { notify as toast } from "../../utils/notify";
 import AccountSettings from "./AccountSettings";
@@ -11,7 +12,9 @@ import AccountSettings from "./AccountSettings";
 export default function SettingsPanel() {
   const { t } = useTranslation();
   const updateUserPreferences = useStore((state) => state.updateUserPreferences);
+  const isAdmin = useStore((state) => state.user?.is_admin === true);
   const [activeTab, setActiveTab] = useState("general");
+  const [registrationEnabled, setRegistrationEnabled] = useState(true);
   const [settings, setSettings] = useState({
     spotifyClientId: "",
     spotifyClientSecret: "",
@@ -41,11 +44,27 @@ export default function SettingsPanel() {
     try {
       const response = await api.get("/settings/");
       setSettings((prev) => ({ ...prev, ...response.data }));
+      if (isAdmin) {
+        const reg = await api.get("/settings/registration");
+        setRegistrationEnabled(reg.data.enabled);
+      }
     } catch (error) {
       console.error("Failed to fetch settings:", error);
       toast.error(t("common.error"));
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleToggleRegistration = async () => {
+    const next = !registrationEnabled;
+    try {
+      await apiSetRegistration(next);
+      setRegistrationEnabled(next);
+      toast.success(t("common.saved"));
+    } catch (error) {
+      console.error("Failed to update registration setting:", error);
+      toast.error(t("common.error"));
     }
   };
 
@@ -221,6 +240,32 @@ export default function SettingsPanel() {
                   className="w-full px-4 py-3 rounded-xl bg-black/20 border border-white/10 text-white focus:outline-none focus:border-primary/50"
                 />
               </div>
+
+              {isAdmin && (
+                <div className="flex items-center justify-between gap-4 pt-2 border-t border-white/10">
+                  <div className="space-y-1">
+                    <label className="text-sm font-medium text-muted-foreground ml-1 flex items-center gap-2">
+                      <UserPlus size={16} /> {t("settings.registration")}
+                    </label>
+                    <p className="text-xs text-gray-500 ml-1">{t("settings.registrationDesc")}</p>
+                  </div>
+                  <button
+                    type="button"
+                    role="switch"
+                    aria-checked={registrationEnabled}
+                    onClick={handleToggleRegistration}
+                    className={`relative inline-flex h-6 w-11 shrink-0 items-center rounded-full transition-colors cursor-pointer ${
+                      registrationEnabled ? "bg-primary" : "bg-gray-600"
+                    }`}
+                  >
+                    <span
+                      className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                        registrationEnabled ? "translate-x-6" : "translate-x-1"
+                      }`}
+                    />
+                  </button>
+                </div>
+              )}
             </div>
           </motion.div>
         )}

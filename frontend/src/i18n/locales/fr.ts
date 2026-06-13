@@ -88,6 +88,8 @@ export const fr = {
     appearance: "Apparence",
     files: "Fichiers et Stockage",
     integrations: "Intégrations",
+    registration: "Autoriser les nouvelles inscriptions",
+    registrationDesc: "Lorsque désactivé, personne ne peut créer de nouveau compte.",
     subtitle: "Gérez vos clés API et les préférences de l'application.",
     preview: "Aperçu :",
     availableTags: "Balises disponibles :",

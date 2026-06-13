@@ -88,6 +88,8 @@ export const en = {
     appearance: "Appearance",
     files: "Files & Storage",
     integrations: "Integrations",
+    registration: "Allow new registrations",
+    registrationDesc: "When off, no one can create a new account.",
     subtitle: "Manage your API keys and application preferences.",
     preview: "Preview:",
     availableTags: "Available tags:",

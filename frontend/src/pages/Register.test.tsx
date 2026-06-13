@@ -1,6 +1,6 @@
-import { describe, it, expect, vi } from "vitest";
+import { describe, it, expect, vi, afterEach } from "vitest";
 import { render, screen } from "@testing-library/react";
-import { MemoryRouter } from "react-router-dom";
+import { MemoryRouter, Route, Routes } from "react-router-dom";
 import Register from "./Register";
 
 // Mock framer-motion
@@ -21,6 +21,12 @@ vi.mock("framer-motion", () => ({
 // Mock RegisterForm
 vi.mock("../components/auth/RegisterForm", () => ({
   default: () => <div data-testid="register-form">RegisterForm Mock</div>,
+}));
+
+// Mock registration status hook (mutable so tests can flip the flag)
+const regState = vi.hoisted(() => ({ enabled: true }));
+vi.mock("../hooks/useRegistrationStatus", () => ({
+  useRegistrationStatus: () => ({ data: { enabled: regState.enabled }, isLoading: false }),
 }));
 
 describe("Register", () => {
@@ -62,5 +68,24 @@ describe("Register", () => {
     renderRegister();
 
     expect(screen.getByText(/Already have an account/)).toBeTruthy();
+  });
+
+  it("redirects to /login when registration is disabled", () => {
+    regState.enabled = false;
+    render(
+      <MemoryRouter initialEntries={["/register"]}>
+        <Routes>
+          <Route path="/register" element={<Register />} />
+          <Route path="/login" element={<div>Login Page</div>} />
+        </Routes>
+      </MemoryRouter>
+    );
+
+    expect(screen.getByText("Login Page")).toBeTruthy();
+    expect(screen.queryByRole("heading", { name: /join audiovault/i })).toBeNull();
+  });
+
+  afterEach(() => {
+    regState.enabled = true;
   });
 });

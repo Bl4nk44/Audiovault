@@ -37,6 +37,7 @@ async def init_db(db: AsyncSession) -> None:
                 username=admin_username,
                 hashed_password=get_password_hash(admin_password),
                 is_active=True,
+                is_admin=True,
             )
             db.add(user)
             await db.commit()
@@ -48,6 +49,10 @@ async def init_db(db: AsyncSession) -> None:
             masked_email = f"{admin_email[0]}***@{admin_email.split('@')[-1]}" if "@" in admin_email else "***"
             logger.info(f"Admin email: {masked_email}")
         else:
+            # Ensure the bootstrap admin retains admin rights (e.g. existing deployments)
+            if not user.is_admin:
+                user.is_admin = True
+                await db.commit()
             logger.info("Admin user already exists")
     except Exception as e:
         logger.error(f"Error creating default admin user: {e}")

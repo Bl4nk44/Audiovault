@@ -57,6 +57,10 @@ class Settings(BaseSettings):
 
     DOWNLOAD_DIR: str = os.getenv("DOWNLOAD_DIR", os.path.join(os.getcwd(), "downloads"))
     MAX_PARALLEL_DOWNLOADS: int = 3
+
+    # Master kill-switch for new account registration.
+    # When false, registration is force-disabled regardless of the runtime DB toggle.
+    REGISTRATION_ENABLED: bool = True
     STORAGE_QUOTA_GB: int = 500
     LOG_LEVEL: str = "INFO"
     ENVIRONMENT: str = "production"

@@ -6,6 +6,7 @@ from app.core.config import settings
 from app.core.security import create_access_token, create_refresh_token, get_password_hash, verify_password
 from app.models.schemas import UserCreate, UserLogin
 from app.models.user import User
+from app.services.app_settings_service import is_registration_enabled
 
 
 class AuthManager:
@@ -13,6 +14,13 @@ class AuthManager:
         self.db = db
 
     async def register_user(self, user_in: UserCreate) -> User:
+        # Global gate: admin can disable new account creation at runtime
+        if not await is_registration_enabled(self.db):
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Registration is disabled",
+            )
+
         # Check if user exists — generic message to prevent user enumeration
         result = await self.db.execute(select(User).where(User.email == user_in.email))
         if result.scalar_one_or_none():

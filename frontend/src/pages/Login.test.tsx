@@ -1,4 +1,4 @@
-import { describe, it, expect, vi } from "vitest";
+import { describe, it, expect, vi, afterEach } from "vitest";
 import { render, screen } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 import Login from "./Login";
@@ -23,6 +23,12 @@ vi.mock("../components/auth/LoginForm", () => ({
 // Mock Logo
 vi.mock("../components/common/Logo", () => ({
   default: () => <div data-testid="logo">Logo Mock</div>,
+}));
+
+// Mock registration status hook (mutable so tests can flip the flag)
+const regState = vi.hoisted(() => ({ enabled: true }));
+vi.mock("../hooks/useRegistrationStatus", () => ({
+  useRegistrationStatus: () => ({ data: { enabled: regState.enabled }, isLoading: false }),
 }));
 
 describe("Login", () => {
@@ -64,5 +70,17 @@ describe("Login", () => {
     renderLogin();
 
     expect(screen.getByText(/Don't have an account/)).toBeTruthy();
+  });
+
+  it("hides the sign-up link when registration is disabled", () => {
+    regState.enabled = false;
+    renderLogin();
+
+    expect(screen.queryByRole("link", { name: /create account/i })).toBeNull();
+    expect(screen.queryByText(/Don't have an account/)).toBeNull();
+  });
+
+  afterEach(() => {
+    regState.enabled = true;
   });
 });

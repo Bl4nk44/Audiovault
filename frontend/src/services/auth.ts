@@ -15,3 +15,13 @@ export const getMe = async () => {
   const response = await api.get("/auth/me");
   return response.data;
 };
+
+export const getRegistrationStatus = async (): Promise<{ enabled: boolean }> => {
+  const response = await api.get("/auth/registration-status");
+  return response.data;
+};
+
+export const setRegistrationEnabled = async (enabled: boolean): Promise<{ enabled: boolean }> => {
+  const response = await api.put("/settings/registration", { enabled });
+  return response.data;
+};

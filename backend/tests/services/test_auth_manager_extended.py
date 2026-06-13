@@ -1,6 +1,6 @@
 """Extended tests for uncovered branches in AuthManager."""
 
-from unittest.mock import AsyncMock, MagicMock
+from unittest.mock import AsyncMock, MagicMock, patch
 from uuid import uuid4
 
 import pytest
@@ -14,6 +14,17 @@ from app.services.auth_manager import AuthManager
 def mock_db():
     db = AsyncMock()
     return db
+
+
+@pytest.fixture(autouse=True)
+def _registration_enabled():
+    # register_user gates on the global flag; unit tests below target the
+    # duplicate-user paths, so keep registration enabled regardless of mock_db.
+    with patch(
+        "app.services.auth_manager.is_registration_enabled",
+        new=AsyncMock(return_value=True),
+    ):
+        yield
 
 
 @pytest.fixture

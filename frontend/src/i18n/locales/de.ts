@@ -88,6 +88,8 @@ export const de = {
     appearance: "Aussehen",
     files: "Dateien & Speicher",
     integrations: "Integrationen",
+    registration: "Neue Registrierungen zulassen",
+    registrationDesc: "Wenn deaktiviert, kann niemand ein neues Konto erstellen.",
     subtitle: "Verwalten Sie Ihre API-Schlüssel und Anwendungseinstellungen.",
     preview: "Vorschau:",
     availableTags: "Verfügbare Tags:",

@@ -1,4 +1,5 @@
 from .album import Album
+from .app_setting import AppSetting
 from .artist import Artist
 from .audit_log import AuditLog
 from .credentials import ServiceCredentials
@@ -41,4 +42,5 @@ __all__ = [
     "SubsonicPlayQueue",
     "SubsonicBookmark",
     "AuditLog",
+    "AppSetting",
 ]

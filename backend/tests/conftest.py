@@ -168,7 +168,12 @@ async def admin_user(db_session):
     hashed_password = get_password_hash(password)
 
     user = User(
-        id=uuid.uuid4(), username="admin", email="admin@example.com", hashed_password=hashed_password, is_active=True
+        id=uuid.uuid4(),
+        username="admin",
+        email="admin@example.com",
+        hashed_password=hashed_password,
+        is_active=True,
+        is_admin=True,
     )
     db_session.add(user)
     await db_session.commit()

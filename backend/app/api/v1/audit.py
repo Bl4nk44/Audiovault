@@ -65,8 +65,7 @@ async def list_audit_logs(
     List audit logs with pagination and filtering.
     Only accessible by admin users.
     """
-    # Check if user is admin (by username for simplicity)
-    if current_user.username != "admin":
+    if not current_user.is_admin:
         raise HTTPException(status_code=403, detail=ADMIN_ACCESS_REQUIRED)
 
     # Build query
@@ -113,7 +112,7 @@ async def list_action_types(
     """
     Get list of all action types in audit logs.
     """
-    if current_user.username != "admin":
+    if not current_user.is_admin:
         raise HTTPException(status_code=403, detail=ADMIN_ACCESS_REQUIRED)
 
     result = await db.execute(select(AuditLog.action).distinct())
@@ -129,7 +128,7 @@ async def list_resource_types(
     """
     Get list of all resource types in audit logs.
     """
-    if current_user.username != "admin":
+    if not current_user.is_admin:
         raise HTTPException(status_code=403, detail=ADMIN_ACCESS_REQUIRED)
 
     result = await db.execute(select(AuditLog.resource_type).distinct())

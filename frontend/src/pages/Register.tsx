@@ -1,7 +1,16 @@
 import RegisterForm from "../components/auth/RegisterForm";
 import { motion } from "framer-motion";
-import { Link } from "react-router-dom";
+import { Link, Navigate } from "react-router-dom";
+import { useRegistrationStatus } from "../hooks/useRegistrationStatus";
+
 export default function Register() {
+  const { data: registration, isLoading } = useRegistrationStatus();
+
+  // Registration disabled by admin -> no public sign-up
+  if (!isLoading && registration && !registration.enabled) {
+    return <Navigate to="/login" replace />;
+  }
+
   return (
     <div className="min-h-screen w-full flex items-center justify-center p-4 bg-background">
       <motion.div

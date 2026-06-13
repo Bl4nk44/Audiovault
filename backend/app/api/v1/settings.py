@@ -9,6 +9,7 @@ from app.core.dependencies import get_current_active_user
 from app.db.database import get_db
 from app.models.credentials import ServiceCredentials
 from app.models.user import User
+from app.services.app_settings_service import is_registration_enabled, set_registration_enabled
 
 router = APIRouter()
 
@@ -23,6 +24,35 @@ class SettingsUpdate(BaseModel):
     language: str | None = None
     filenameSchema: str | None = None  # noqa: N815
     audioQuality: str | None = None  # noqa: N815
+
+
+class RegistrationToggle(BaseModel):
+    enabled: bool
+
+
+def _require_admin(user: User) -> None:
+    if not user.is_admin:
+        raise HTTPException(status_code=403, detail="Admin access required")
+
+
+@router.get("/registration")
+async def get_registration_setting(
+    current_user: Annotated[User, Depends(get_current_active_user)] = ...,
+    db: Annotated[AsyncSession, Depends(get_db)] = ...,
+):
+    _require_admin(current_user)
+    return {"enabled": await is_registration_enabled(db)}
+
+
+@router.put("/registration")
+async def update_registration_setting(
+    payload: RegistrationToggle,
+    current_user: Annotated[User, Depends(get_current_active_user)] = ...,
+    db: Annotated[AsyncSession, Depends(get_db)] = ...,
+):
+    _require_admin(current_user)
+    await set_registration_enabled(db, payload.enabled)
+    return {"enabled": payload.enabled}
 
 
 class VerifySpotify(BaseModel):

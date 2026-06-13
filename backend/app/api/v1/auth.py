@@ -15,6 +15,7 @@ from app.models.schemas import (
     UserResponse,
 )
 from app.models.user import User
+from app.services.app_settings_service import is_registration_enabled
 from app.services.auth_manager import AuthManager
 
 register_limiter = RateLimiter(Limiter(Rate(5, 60000)))
@@ -32,6 +33,12 @@ router = APIRouter()
 async def register(user_in: UserCreate, db: Annotated[AsyncSession, Depends(get_db)] = ...):
     auth_manager = AuthManager(db)
     return await auth_manager.register_user(user_in)
+
+
+@router.get("/registration-status")
+async def registration_status(db: Annotated[AsyncSession, Depends(get_db)] = ...):
+    """Public: lets the login page know whether to show the sign-up link."""
+    return {"enabled": await is_registration_enabled(db)}
 
 
 @router.post(

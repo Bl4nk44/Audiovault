@@ -39,6 +39,7 @@ class UserLogin(BaseModel):
 class UserResponse(UserBase):
     id: UUID
     is_active: bool
+    is_admin: bool = False
     created_at: datetime
     preferences: dict = {}
 

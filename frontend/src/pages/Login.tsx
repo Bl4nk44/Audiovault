@@ -2,8 +2,12 @@ import LoginForm from "../components/auth/LoginForm";
 import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
 import Logo from "../components/common/Logo";
+import { useRegistrationStatus } from "../hooks/useRegistrationStatus";
 
 export default function Login() {
+  const { data: registration } = useRegistrationStatus();
+  const registrationEnabled = registration?.enabled ?? false;
+
   return (
     <div className="min-h-screen w-full flex items-center justify-center p-4 bg-background">
       <motion.div
@@ -31,20 +35,22 @@ export default function Login() {
 
         <LoginForm />
 
-        <motion.p
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.4 }}
-          className="mt-8 text-center text-sm text-muted-foreground"
-        >
-          Don't have an account?{" "}
-          <Link
-            to="/register"
-            className="text-primary hover:text-green-400 font-medium hover:underline transition-all"
+        {registrationEnabled && (
+          <motion.p
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.4 }}
+            className="mt-8 text-center text-sm text-muted-foreground"
           >
-            Create account
-          </Link>
-        </motion.p>
+            Don't have an account?{" "}
+            <Link
+              to="/register"
+              className="text-primary hover:text-green-400 font-medium hover:underline transition-all"
+            >
+              Create account
+            </Link>
+          </motion.p>
+        )}
       </motion.div>
     </div>
   );

@@ -78,6 +78,8 @@ export const es = {
     appearance: "Apariencia",
     files: "Archivos y Almacenamiento",
     integrations: "Integraciones",
+    registration: "Permitir nuevos registros",
+    registrationDesc: "Cuando está desactivado, nadie puede crear una cuenta nueva.",
     subtitle: "Administre sus claves API y preferencias de la aplicación.",
     preview: "Vista previa:",
     availableTags: "Etiquetas disponibles:",

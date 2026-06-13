@@ -88,6 +88,8 @@ export const pl = {
     appearance: "Wygląd",
     files: "Pliki i Pamięć",
     integrations: "Integracje",
+    registration: "Zezwalaj na nowe rejestracje",
+    registrationDesc: "Gdy wyłączone, nikt nie może założyć nowego konta.",
     subtitle: "Zarządzaj kluczami API i preferencjami aplikacji.",
     preview: "Podgląd:",
     availableTags: "Dostępne tagi:",
