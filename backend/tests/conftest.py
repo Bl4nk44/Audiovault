@@ -138,8 +138,9 @@ async def client(
     for route in app.routes:
         from fastapi.routing import APIRoute
 
-        if isinstance(route, APIRoute) and route.dependencies:
-            for d in route.dependencies:
+        route_dependencies = getattr(route, "dependencies", None)
+        if isinstance(route, APIRoute) and route_dependencies:
+            for d in route_dependencies:
                 if d.dependency and type(d.dependency).__name__ == "RateLimiter":
                     app.dependency_overrides[d.dependency] = bypass_limiter
 
