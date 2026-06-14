@@ -15,6 +15,12 @@ RUN npm ci
 # Copy source code
 COPY frontend/ .
 
+# Give the runtime user ownership so the Vite dev server (USER node) can write
+# its dependency-optimize cache (node_modules/.vite). The named node_modules
+# volume inherits this ownership on first creation; without it Vite fails with
+# EACCES on mkdir and the dev app never loads.
+RUN chown -R node:node /app
+
 # Expose port
 EXPOSE 5173
 

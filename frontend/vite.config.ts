@@ -49,6 +49,9 @@ export default defineConfig({
   },
   server: {
     host: true,
+    // Dev server only (ignored by `vite build`). Allow access via any hostname
+    // so the dev build is reachable from other devices / reverse proxies on the LAN.
+    allowedHosts: true,
     proxy: {
       "/api": {
         target: process.env.BACKEND_URL || "http://localhost:8000",
@@ -57,11 +60,6 @@ export default defineConfig({
       "/rest": {
         target: process.env.BACKEND_URL || "http://localhost:8000",
         changeOrigin: true,
-        configure: (proxy) => {
-          proxy.on("proxyReq", (_, req) => {
-            console.log("VITE PROXY: [Subsonic] sending to:", req.url);
-          });
-        },
       },
       "/stream": {
         target: process.env.BACKEND_URL || "http://localhost:8000",
