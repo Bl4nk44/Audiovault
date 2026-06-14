@@ -2,6 +2,29 @@
 
 All notable changes to Audiovault will be documented in this file.
 
+## [0.5.9] - 2026-06-14
+
+### Features
+
+- **Music Discovery — more results & fresh picks**: recommendations now build from a larger candidate pool (more seeds, more similar/top tracks per seed) and return up to 60 tracks / 24 artists; the refresh button rotates the listening window, shuffles seeds and uses score-weighted random sampling (Efraimidis-Spirakis), so each refresh surfaces different — but still relevant — tracks instead of an identical list (`2e5311d`)
+- **Admin-toggleable registration lock**: admins can enable/disable open registration at runtime, with a `REGISTRATION_ENABLED` env kill-switch that overrides the admin toggle (`34965b2`)
+
+### Fixed
+
+- **Subsonic (Symfonium sync)**: omit `null` fields from JSON responses instead of emitting `null` — Symfonium's strict parser aborted sync on null; also resolve `pl-` prefixed cover art IDs (`7160786`)
+- **Subsonic**: drop file-based debug log spam, route through the logger only (`2a35daa`)
+- **i18n**: wire the recommendation/playlist UI to the app i18n system and fill locale gaps across en/pl/es/fr/de (`57f6227`)
+- **Dev build UX**: show a "Dev" badge in the sidebar footer next to the version on dev builds (`94d4900`)
+- **Dev environment**: repair the Vite dev frontend — `node`-owned `node_modules` so the dependency optimizer can write its cache (was EACCES → blank page), `BACKEND_URL=http://backend:8000` so the proxy reaches the backend, and `allowedHosts` so the dev server is reachable by hostname (`6ffe25b`)
+
+### Build
+
+- **Backend base image**: bump to the patched `python:3.14-slim-bookworm` digest (`a08dd6d`)
+
+### CI
+
+- Pin all third-party GitHub Actions to commit SHAs (`0883f13`)
+
 ## [0.5.8] - 2026-06-12
 
 ### Fixed
