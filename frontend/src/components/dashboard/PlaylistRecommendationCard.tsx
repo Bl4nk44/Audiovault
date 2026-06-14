@@ -1,5 +1,5 @@
 import React from "react";
-import { useTranslation } from "react-i18next";
+import { useTranslation } from "../../hooks/useTranslation";
 import { IoList, IoPlay } from "react-icons/io5";
 import { useNavigate } from "react-router-dom";
 import type { RecommendedPlaylist } from "../../types/lastfm";

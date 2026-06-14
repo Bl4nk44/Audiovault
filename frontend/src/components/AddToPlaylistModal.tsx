@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { toast } from "react-hot-toast";
-import { useTranslation } from "react-i18next";
+import { useTranslation } from "../hooks/useTranslation";
 import { IoAdd, IoCheckmark, IoClose, IoMusicalNote } from "react-icons/io5";
 import { playlistsApi } from "../api/playlists";
 import type { Playlist } from "../types";

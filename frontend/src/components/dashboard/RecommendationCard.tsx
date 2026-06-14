@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { useTranslation } from "react-i18next";
+import { useTranslation } from "../../hooks/useTranslation";
 import { IoAdd, IoPlay } from "react-icons/io5";
 import type { RecommendedTrack } from "../../types/lastfm";
 import AddToPlaylistModal from "../AddToPlaylistModal";
@@ -46,7 +46,7 @@ const RecommendationCard: React.FC<RecommendationCardProps> = ({ track, onPlay }
             <button
               onClick={() => setShowPlaylistModal(true)}
               className="w-10 h-10 rounded-full bg-white/10 backdrop-blur-md text-white flex items-center justify-center hover:bg-white/20 transition-colors"
-              title={t("playlist.add", "Add to playlist")}
+              title={t("playlist.addButton", "Add to playlist")}
             >
               <IoAdd size={20} />
             </button>

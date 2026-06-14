@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { toast } from "react-hot-toast";
-import { useTranslation } from "react-i18next";
+import { useTranslation } from "../hooks/useTranslation";
 import { IoMusicalNote, IoRefresh } from "react-icons/io5";
 import { SiLastdotfm } from "react-icons/si";
 import { useNavigate, useSearchParams } from "react-router-dom";

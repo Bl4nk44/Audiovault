@@ -8,6 +8,11 @@ export const es = {
     cancel: "Cancelar",
     error: "Ocurrió un error",
     verify: "Verificar",
+    artist: "Artista",
+    create: "Crear",
+    disconnect: "Desconectar",
+    tracks: "pistas",
+    view_profile: "Ver perfil",
   },
   sidebar: {
     home: "Inicio",
@@ -195,6 +200,31 @@ export const es = {
       tracks: "Pistas",
       albums: "Álbumes",
       friends: "Amigos",
+    },
+  },
+  artist: {
+    not_found: "Artista no encontrado en la biblioteca",
+  },
+  player: {
+    play: "Reproducir",
+  },
+  playlist: {
+    addButton: "Añadir a la lista",
+    modal: {
+      title: "Añadir a la lista",
+    },
+    fetch: {
+      error: "Error al cargar las listas",
+    },
+    create: {
+      error: "Error al crear la lista",
+      new: "Crear nueva lista",
+      placeholder: "Nombre de la lista",
+    },
+    add: {
+      success: "{{count}} pistas añadidas a la lista",
+      duplicates: "{{count}} pistas ya estaban en la lista",
+      error: "Error al añadir las pistas",
     },
   },
 };

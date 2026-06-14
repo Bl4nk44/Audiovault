@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { useTranslation } from "react-i18next";
+import { useTranslation } from "../../hooks/useTranslation";
 import { IoArrowForward, IoPerson } from "react-icons/io5";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-hot-toast";

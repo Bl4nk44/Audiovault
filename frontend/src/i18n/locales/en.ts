@@ -8,6 +8,11 @@ export const en = {
     cancel: "Cancel",
     error: "Error occurred",
     verify: "Verify",
+    artist: "Artist",
+    create: "Create",
+    disconnect: "Disconnect",
+    tracks: "tracks",
+    view_profile: "View Profile",
   },
   sidebar: {
     home: "Home",
@@ -196,6 +201,31 @@ export const en = {
       tracks: "Tracks",
       albums: "Albums",
       friends: "Friends",
+    },
+  },
+  artist: {
+    not_found: "Artist not found in library",
+  },
+  player: {
+    play: "Play",
+  },
+  playlist: {
+    addButton: "Add to playlist",
+    modal: {
+      title: "Add to Playlist",
+    },
+    fetch: {
+      error: "Failed to load playlists",
+    },
+    create: {
+      error: "Failed to create playlist",
+      new: "Create New Playlist",
+      placeholder: "Playlist name",
+    },
+    add: {
+      success: "Added {{count}} tracks to playlist",
+      duplicates: "{{count}} tracks were already in the playlist",
+      error: "Failed to add tracks",
     },
   },
 };

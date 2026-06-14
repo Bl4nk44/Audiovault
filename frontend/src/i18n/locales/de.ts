@@ -8,6 +8,11 @@ export const de = {
     cancel: "Abbrechen",
     error: "Fehler aufgetreten",
     verify: "Überprüfen",
+    artist: "Künstler",
+    create: "Erstellen",
+    disconnect: "Trennen",
+    tracks: "Titel",
+    view_profile: "Profil ansehen",
   },
   sidebar: {
     home: "Startseite",
@@ -195,6 +200,31 @@ export const de = {
       tracks: "Titel",
       albums: "Alben",
       friends: "Freunde",
+    },
+  },
+  artist: {
+    not_found: "Künstler nicht in der Bibliothek gefunden",
+  },
+  player: {
+    play: "Abspielen",
+  },
+  playlist: {
+    addButton: "Zur Playlist hinzufügen",
+    modal: {
+      title: "Zur Playlist hinzufügen",
+    },
+    fetch: {
+      error: "Playlists konnten nicht geladen werden",
+    },
+    create: {
+      error: "Playlist konnte nicht erstellt werden",
+      new: "Neue Playlist erstellen",
+      placeholder: "Playlist-Name",
+    },
+    add: {
+      success: "{{count}} Titel zur Playlist hinzugefügt",
+      duplicates: "{{count}} Titel waren bereits in der Playlist",
+      error: "Titel konnten nicht hinzugefügt werden",
     },
   },
 };

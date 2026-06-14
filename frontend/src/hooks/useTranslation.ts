@@ -30,24 +30,32 @@ export function useTranslation() {
   const language = (user?.preferences?.language as keyof typeof translations) || "en";
 
   const t = useCallback(
-    (path: string, defaultValue?: string): string => {
+    (path: string, defaultValue?: string, vars?: Record<string, string | number>): string => {
       const keys = path.split(".");
+
+      let result: string | undefined;
 
       // Try current language
       const currentTranslation = translations[language];
       if (currentTranslation) {
-        const found = getNestedValue(currentTranslation, keys);
-        if (found) return found;
+        result = getNestedValue(currentTranslation, keys);
       }
 
       // Fallback to English
-      if (language !== "en") {
-        const fallbackTranslation = translations["en"];
-        const found = getNestedValue(fallbackTranslation, keys);
-        if (found) return found;
+      if (result === undefined && language !== "en") {
+        result = getNestedValue(translations["en"], keys);
       }
 
-      return defaultValue || path;
+      if (result === undefined) result = defaultValue ?? path;
+
+      // Interpolate {{var}} placeholders
+      if (vars) {
+        for (const [key, value] of Object.entries(vars)) {
+          result = result.split(`{{${key}}}`).join(String(value));
+        }
+      }
+
+      return result;
     },
     [language]
   );

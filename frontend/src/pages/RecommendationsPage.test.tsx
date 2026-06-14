@@ -60,9 +60,10 @@ vi.mock("react-router-dom", async () => {
   };
 });
 
-vi.mock("react-i18next", () => ({
+vi.mock("../hooks/useTranslation", () => ({
   useTranslation: () => ({
     t: (_key: string, fallback: string) => fallback,
+    language: "en",
   }),
 }));
 
