@@ -81,6 +81,11 @@ export default function Sidebar() {
         <div className="mt-auto pt-6 border-t border-white/5 text-center px-2">
           <div className="flex items-center justify-center gap-3 mb-2 text-xs text-muted-foreground font-medium">
             <span>v{__APP_VERSION__ || "dev"}</span>
+            {import.meta.env.DEV && (
+              <span className="px-1.5 py-0.5 rounded bg-orange-500/20 text-orange-400 text-[10px] font-black tracking-wider uppercase">
+                Dev
+              </span>
+            )}
             <span className="text-white/10">|</span>
             <a
               href="https://github.com/Bl4nk44/Audiovault"
