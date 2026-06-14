@@ -9,6 +9,7 @@ from app.models.user import User
 from app.schemas.recommendation import RecommendationResponse, RecommendedArtist, RecommendedPlaylist, RecommendedTrack
 from app.services.deezer_service import DeezerService
 from app.services.lastfm_service import LastfmError, LastfmService
+from app.utils.log_sanitize import sanitize_log
 
 logger = logging.getLogger(__name__)
 
@@ -65,7 +66,11 @@ class HybridRecommendationEngine:
         try:
             target_user = user.lastfm_username or user.username
             session_key = user.lastfm_session_key
-            logger.info(f"Fetching recommendations from Last.fm for user {target_user} (variety={variety})")
+            logger.info(
+                "Fetching recommendations from Last.fm for user %s (variety=%s)",
+                sanitize_log(target_user),
+                variety,
+            )
             tracks = await self.lastfm.get_recommendations(target_user, session_key=session_key, variety=variety)
 
             # --- Spotify Image Fallback ---

@@ -135,13 +135,13 @@ async def client(
     async def bypass_limiter():
         return
 
-    for route in app.routes:
-        from fastapi.routing import APIRoute
+    # Rate limiters are module-level singletons used as Depends(...) markers.
+    # Override them directly instead of scanning app.routes — FastAPI's routing
+    # internals (APIRoute.dependencies, _IncludedRouter) shift between versions.
+    from app.api.v1.auth import login_limiter, register_limiter
 
-        if isinstance(route, APIRoute) and route.dependencies:
-            for d in route.dependencies:
-                if d.dependency and type(d.dependency).__name__ == "RateLimiter":
-                    app.dependency_overrides[d.dependency] = bypass_limiter
+    for limiter in (login_limiter, register_limiter):
+        app.dependency_overrides[limiter] = bypass_limiter
 
     # Mock download_dir to use a temp dir
     import tempfile
