@@ -1,6 +1,7 @@
 import asyncio
 import hashlib
 import logging
+import random
 import time
 from collections.abc import Coroutine
 from typing import Any, cast
@@ -341,18 +342,27 @@ class LastfmService:
             if name := self._parse_artist_name(item):
                 seed_artists.add(name)
 
-    async def _gather_seeds(self, user_id: str, session_key: str | None) -> tuple[list[tuple[str, str]], set[str]]:
-        """Gather seed tracks and artists from multiple sources."""
+    async def _gather_seeds(
+        self, user_id: str, session_key: str | None, variety: bool = False
+    ) -> tuple[list[tuple[str, str]], set[str]]:
+        """Gather seed tracks and artists from multiple sources.
+
+        With ``variety=True`` the listening period is rotated randomly so each
+        refresh pulls different seeds (and therefore different recommendations).
+        """
         seed_tracks: list = []
         seed_artists: set = set()
 
+        # Vary the listening window on refresh to surface fresh seeds.
+        period = random.choice(["7day", "1month", "3month", "6month", "12month"]) if variety else "1month"
+
         sources: list[Coroutine[Any, Any, Any]] = [
-            self.get_user_top_tracks(user_id, period="1month", limit=10),
-            self.get_user_recent_tracks(user_id, limit=10),
-            self.get_user_top_artists(user_id, limit=10),
+            self.get_user_top_tracks(user_id, period=period, limit=30),
+            self.get_user_recent_tracks(user_id, limit=30),
+            self.get_user_top_artists(user_id, period=period, limit=20),
         ]
         if session_key:
-            sources.append(self.get_recommended_artists(session_key, limit=10))
+            sources.append(self.get_recommended_artists(session_key, limit=20))
 
         results = cast(
             list[Any], await asyncio.gather(*[asyncio.create_task(s) for s in sources], return_exceptions=True)
@@ -366,9 +376,17 @@ class LastfmService:
 
         return seed_tracks, seed_artists
 
-    async def get_recommendations(self, user_id: str, session_key: str | None = None) -> list[RecommendedTrack]:
+    async def get_recommendations(
+        self, user_id: str, session_key: str | None = None, variety: bool = False, limit: int = 60
+    ) -> list[RecommendedTrack]:
+        """Generate track recommendations from the user's listening history.
 
-        seed_tracks, seed_artists = await self._gather_seeds(user_id, session_key)
+        ``variety=True`` (used on manual refresh) rotates seed periods, shuffles
+        which seeds are expanded and picks the final set via score-weighted random
+        sampling, so each refresh yields different — but still relevant — tracks.
+        ``variety=False`` is deterministic (stable for caching).
+        """
+        seed_tracks, seed_artists = await self._gather_seeds(user_id, session_key, variety=variety)
 
         # Deduplicate tracks
         unique_tracks = []
@@ -383,37 +401,60 @@ class LastfmService:
             logger.warning(f"No seeds found for user {user_id} on Last.fm")
             return []
 
+        artist_seed_list = list(seed_artists)
+        if variety:
+            # Shuffle so a different subset of seeds gets expanded each refresh.
+            random.shuffle(unique_tracks)
+            random.shuffle(artist_seed_list)
+
         # 2. Process Seeds to find Similar Tracks/Top Tracks
         sem = asyncio.Semaphore(10)
         candidates: dict[str, RecommendedTrack] = {}
 
         async def fetch_similar_for_track(name, artist):
             async with sem:
-                similar = await self.get_similar_tracks(artist, name, limit=10)
+                similar = await self.get_similar_tracks(artist, name, limit=12)
                 for sim in similar:
                     self._add_to_candidates(candidates, sim)
 
         async def fetch_top_for_artist(artist_name):
             async with sem:
                 try:
-                    data = await self._request("artist.getTopTracks", {"artist": artist_name, "limit": 10})
+                    data = await self._request("artist.getTopTracks", {"artist": artist_name, "limit": 12})
                     tracks = data.get("toptracks", {}).get("track", [])
                     for t in tracks:
                         self._add_to_candidates(candidates, t, score_mult=0.5)
                 except Exception:  # nosec B110  # noqa: S110
                     pass
 
-        tasks = [fetch_similar_for_track(n, a) for n, a in unique_tracks[:15]]
-        tasks.extend([fetch_top_for_artist(a) for a in list(seed_artists)[:10]])
+        tasks = [fetch_similar_for_track(n, a) for n, a in unique_tracks[:25]]
+        tasks.extend([fetch_top_for_artist(a) for a in artist_seed_list[:15]])
 
         await asyncio.gather(*tasks)
 
-        final_track_list = list(candidates.values())
-        final_track_list.sort(key=lambda x: x.score, reverse=True)
-        final_results = [r for r in final_track_list if f"{r.artist} - {r.name}" not in seen_tracks]
+        pool = [r for r in candidates.values() if f"{r.artist} - {r.name}" not in seen_tracks]
+        final_results = self._select_recommendations(pool, limit, variety)
 
-        logger.info(f"Generated {len(final_results)} recommendations for {user_id}")
-        return final_results[:40]
+        logger.info(f"Generated {len(final_results)} recommendations for {user_id} (variety={variety})")
+        return final_results
+
+    @staticmethod
+    def _select_recommendations(pool: list[RecommendedTrack], limit: int, variety: bool) -> list[RecommendedTrack]:
+        """Pick the final tracks from the candidate pool.
+
+        Deterministic top-N by score normally; on ``variety`` use score-weighted
+        random sampling (Efraimidis-Spirakis) so high-match tracks are favoured
+        but the selection differs on every refresh.
+        """
+        if not variety:
+            return sorted(pool, key=lambda x: x.score, reverse=True)[:limit]
+
+        # Weighted random key: score**(1/score) ranking via random()**(1/weight).
+        def weighted_key(track: RecommendedTrack) -> float:
+            weight = max(track.score, 1e-6)
+            return random.random() ** (1.0 / weight)
+
+        return sorted(pool, key=weighted_key, reverse=True)[:limit]
 
     def _add_to_candidates(
         self, candidates: dict[str, RecommendedTrack], item: dict[str, Any], score_mult: float = 1.0

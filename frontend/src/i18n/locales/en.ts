@@ -189,6 +189,8 @@ export const en = {
   recommendations: {
     title: "Music Discovery",
     subtitle: "Personalized picks based on your listening habits",
+    refreshed: "Fresh picks loaded",
+    refreshError: "Failed to refresh recommendations",
   },
   lastfm: {
     connect: "Connect Last.fm",

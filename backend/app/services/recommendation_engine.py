@@ -1,6 +1,7 @@
 import asyncio
 import json
 import logging
+import random
 from datetime import datetime
 
 from app.core.cache import cache_manager
@@ -50,7 +51,9 @@ class HybridRecommendationEngine:
             logger.error(f"Failed to parse cached recommendations: {e}")
             return None
 
-    async def _fetch_lastfm_recommendations(self, user: User, source: str) -> list[RecommendedTrack]:
+    async def _fetch_lastfm_recommendations(
+        self, user: User, source: str, variety: bool = False
+    ) -> list[RecommendedTrack]:
         if source != "auto":
             # We used to support 'lastfm' vs 'llm', now only 'auto' (which is lastfm)
             # or we can treat everything as auto for now.
@@ -62,8 +65,8 @@ class HybridRecommendationEngine:
         try:
             target_user = user.lastfm_username or user.username
             session_key = user.lastfm_session_key
-            logger.info(f"Fetching recommendations from Last.fm for user {target_user}")
-            tracks = await self.lastfm.get_recommendations(target_user, session_key=session_key)
+            logger.info(f"Fetching recommendations from Last.fm for user {target_user} (variety={variety})")
+            tracks = await self.lastfm.get_recommendations(target_user, session_key=session_key, variety=variety)
 
             # --- Spotify Image Fallback ---
             # For tracks missing images (including Last.fm placeholder)
@@ -167,7 +170,7 @@ class HybridRecommendationEngine:
         except Exception as e:
             logger.error(f"Deezer artist search error for {artist.name}: {e}")
 
-    async def _fetch_artists(self, user: User) -> list[RecommendedArtist]:
+    async def _fetch_artists(self, user: User, variety: bool = False) -> list[RecommendedArtist]:
         """Fetch recommended artists with Spotify image fallback."""
         target_user = user.lastfm_username or user.username
         session_key = user.lastfm_session_key
@@ -178,8 +181,13 @@ class HybridRecommendationEngine:
 
         try:
             logger.info(f"Fetching recommended artists for user {user.id} (lastfm_user: {target_user})")
-            artists = await self.lastfm.get_recommended_artists(session_key, limit=20, user_name=target_user)
+            # Pull a larger pool so a refresh can surface a different slice.
+            artists = await self.lastfm.get_recommended_artists(session_key, limit=50, user_name=target_user)
             logger.info(f"Fetched {len(artists)} recommended artists")
+
+            if variety:
+                random.shuffle(artists)
+            artists = artists[:24]
 
             for a in artists:
                 a.image_url = None
@@ -187,7 +195,7 @@ class HybridRecommendationEngine:
             if artists:
                 logger.info(f"Searching Deezer for images of {len(artists)} artists...")
                 deezer = DeezerService()
-                await asyncio.gather(*[self._fill_artist_image(deezer, a) for a in artists[:20]])
+                await asyncio.gather(*[self._fill_artist_image(deezer, a) for a in artists])
             return artists
         except Exception as e:
             logger.warning(f"Failed to fetch artists for user {user.id}: {e}")
@@ -206,11 +214,14 @@ class HybridRecommendationEngine:
             logger.info(f"Force refresh: clearing cache for user {user.id}")
             await self.cache.delete(cache_key)
 
+        # On manual refresh, vary seeds/selection so results actually change.
+        variety = force_refresh
+
         # 1. Fetch Tracks (Already implemented)
-        tracks = await self._fetch_lastfm_recommendations(user, source)
+        tracks = await self._fetch_lastfm_recommendations(user, source, variety=variety)
 
         # 2. Fetch Artists
-        artists = await self._fetch_artists(user)
+        artists = await self._fetch_artists(user, variety=variety)
 
         # 3. Fetch Playlists
         playlists = await self._fetch_playlists(user)

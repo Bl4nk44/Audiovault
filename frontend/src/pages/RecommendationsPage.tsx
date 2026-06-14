@@ -76,8 +76,14 @@ const RecommendationsPage: React.FC = () => {
 
       const data = await getRecommendations(force);
       setRecommendations(data);
+      if (force) {
+        toast.success(t("recommendations.refreshed", "Fresh picks loaded"));
+      }
     } catch (e) {
       console.error("Failed to fetch recommendations", e);
+      if (force) {
+        toast.error(t("recommendations.refreshError", "Failed to refresh recommendations"));
+      }
     } finally {
       setLoading(false);
       setRefreshing(false);
