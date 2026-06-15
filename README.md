@@ -183,3 +183,5 @@ This project adheres to a [Code of Conduct](CODE_OF_CONDUCT.md). By participatin
 ## 📜 License
 
 Distributed under the MIT License. See [LICENSE](LICENSE) for more information.
+
+![Alt](https://repobeats.axiom.co/api/embed/3899106cb052b5ce0965925dd8ffb1ba7f599234.svg "Repobeats analytics image")
