@@ -28,7 +28,8 @@ FROM public.ecr.aws/docker/library/nginx:stable-alpine AS production
 # Patch OS packages for known CVEs:
 # - libxml2: CVE-2026-6732 DoS via crafted XSD
 # - libssl3/libcrypto3: OpenSSL 3.5.7 fixes (CVE-2026-45447 PKCS#7 UAF + 14 more)
-RUN apk upgrade --no-cache libxml2 libssl3 libcrypto3
+# - expat: CVE-2026-45186 (DoS attr-collision) + CVE-2026-41080 (hash flooding), fix 2.8.1-r0
+RUN apk upgrade --no-cache libxml2 libssl3 libcrypto3 expat
 
 # Copy built assets from builder
 COPY --from=build /app/dist /usr/share/nginx/html
