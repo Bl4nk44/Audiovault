@@ -48,6 +48,7 @@ SPOTIFY_HOST_PROXY=http://host.docker.internal:8765  # Host proxy for embed scra
 
 # Proxy for provider media traffic (yt-dlp downloads + URL resolution) — optional
 # Supported schemes: http, https, socks4, socks5, socks5h
+# See the "Download Proxy" section below for details
 DOWNLOAD_PROXY=http://privoxy:8118        # or socks5://host:1080
 
 # Last.fm — see LASTFM_INTEGRATION.md
@@ -108,6 +109,49 @@ services:
       - POSTGRES_PASSWORD=strong_password_here
     ports: []  # Don't expose DB port publicly
 ```
+
+## Download Proxy
+
+Route all music fetching from providers through a proxy, while the rest of Audiovault connects directly. Useful when the media hosts are region-blocked, rate-limit your IP, or you simply want download traffic to leave through a specific tunnel (VPN container, Tor, Privoxy, etc.).
+
+### What goes through the proxy
+
+Everything yt-dlp does — the actual audio downloads **and** the URL/metadata resolution that precedes them (YouTube, SoundCloud, the generic provider, and on-the-fly stream URL resolution).
+
+### What stays direct
+
+- The web UI, REST API, and Subsonic streaming to your clients
+- Metadata lookups against provider APIs (Spotify, Deezer, MusicBrainz, Last.fm, Genius)
+- Database, Redis, and everything else inside the stack
+
+### Setup
+
+One variable in `.env`, then restart the backend:
+
+```bash
+DOWNLOAD_PROXY=http://privoxy:8118
+```
+
+```bash
+docker compose up -d backend
+```
+
+Supported schemes (validated on startup — the backend refuses to boot with an unsupported value):
+
+| Scheme | Example | Notes |
+|--------|---------|-------|
+| `http` / `https` | `http://privoxy:8118` | Standard HTTP(S) proxy |
+| `socks4` | `socks4://10.0.0.1:1080` | |
+| `socks5` | `socks5://user:pass@10.0.0.1:1080` | DNS resolved locally; credentials in the URL |
+| `socks5h` | `socks5h://tor:9050` | DNS resolved by the proxy (e.g. Tor) |
+
+Leave `DOWNLOAD_PROXY` unset (or empty) to keep direct connections — the default behavior.
+
+> **Docker networking**: the proxy address is resolved from inside the backend container. A proxy running in another compose service is reachable by its service name (`http://privoxy:8118`); a proxy on the Docker host needs `http://host.docker.internal:PORT`.
+
+### Verifying it works
+
+Queue a download and watch your proxy's access log — the media host traffic should appear there. If the proxy is unreachable, downloads fail with a connection error in `docker compose logs backend`; they never silently fall back to a direct connection.
 
 ## Network & Remote Access
 
