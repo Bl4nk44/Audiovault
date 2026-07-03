@@ -89,3 +89,4 @@ CLAUDE.md
 
 # Added by ggshield
 .cache_ggshield
+.semgrep/guardian.yml
