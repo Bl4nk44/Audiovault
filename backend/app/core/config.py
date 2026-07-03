@@ -48,6 +48,12 @@ class Settings(BaseSettings):
     # Host proxy for embed scraping — run spotify-host-proxy.py on WSL2 host
     SPOTIFY_HOST_PROXY: str | None = None
 
+    # Proxy for all yt-dlp traffic: media downloads + provider URL/metadata
+    # resolution (YouTube, SoundCloud, generic provider, stream resolution).
+    # The rest of the app (API, Deezer/MusicBrainz/Spotify metadata HTTP,
+    # Subsonic streaming) connects directly. Auth via user:pass@ in the URL.
+    DOWNLOAD_PROXY: str | None = None
+
     # Genius API for lyrics
     GENIUS_API_TOKEN: str | None = None
 
@@ -100,6 +106,16 @@ class Settings(BaseSettings):
                     rel_path = v.lstrip("/")
                     if os.path.exists(rel_path):
                         return rel_path
+        return v
+
+    @field_validator("DOWNLOAD_PROXY", mode="before")
+    @classmethod
+    def validate_download_proxy(cls, v: str | None) -> str | None:
+        if not v:
+            return None
+        allowed = ("http://", "https://", "socks4://", "socks5://", "socks5h://")
+        if not v.startswith(allowed):
+            raise ValueError(f"DOWNLOAD_PROXY must start with one of: {', '.join(allowed)}")
         return v
 
     model_config = SettingsConfigDict(env_file=".env", case_sensitive=True, extra="ignore")

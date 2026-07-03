@@ -5,6 +5,7 @@ from typing import Any
 import yt_dlp
 
 from app.utils.log_sanitize import sanitize_log
+from app.utils.ydl import apply_proxy
 
 logger = logging.getLogger(__name__)
 
@@ -29,6 +30,8 @@ class BaseMusicService:
         }
         if extra_opts:
             ydl_opts.update(extra_opts)
+
+        apply_proxy(ydl_opts)
 
         try:
             loop = asyncio.get_running_loop()

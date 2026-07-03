@@ -6,6 +6,7 @@ from urllib.parse import urlparse
 import yt_dlp
 
 from app.utils.log_sanitize import sanitize_log
+from app.utils.ydl import apply_proxy
 
 logger = logging.getLogger(__name__)
 
@@ -41,6 +42,7 @@ class SoundCloudService:
             "no_warnings": True,
             "ignoreerrors": True,
         }
+        apply_proxy(ydl_opts)
 
         try:
             logger.info("Extracting SoundCloud metadata from: %s", sanitize_log(url))
@@ -81,6 +83,7 @@ class SoundCloudService:
             "ignoreerrors": True,
             "playlist_items": "1",
         }
+        apply_proxy(ydl_opts)
 
         try:
             loop = asyncio.get_running_loop()

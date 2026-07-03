@@ -1,4 +1,4 @@
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
 import pytest
 
@@ -84,3 +84,23 @@ async def test_extraction_failure(generic_provider):
 
         result = await generic_provider.extract_playlist("https://fail.com")
         assert result is None
+
+
+@pytest.mark.asyncio
+async def test_extract_playlist_passes_proxy_to_ytdlp(generic_provider):
+    captured: dict = {}
+
+    def fake_ytdl(opts):
+        captured.update(opts)
+        instance = MagicMock()
+        instance.extract_info.return_value = {"title": "t", "entries": []}
+        return instance
+
+    with (
+        patch("app.utils.ydl.settings") as mock_settings,
+        patch("app.providers.generic.yt_dlp.YoutubeDL", side_effect=fake_ytdl),
+    ):
+        mock_settings.DOWNLOAD_PROXY = "http://privoxy:8118"
+        await generic_provider.extract_playlist("https://generic.com/list")
+
+    assert captured["proxy"] == "http://privoxy:8118"

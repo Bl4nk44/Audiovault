@@ -46,6 +46,10 @@ SPOTIFY_CLIENT_SECRET=your_client_secret
 SPOTIFY_SP_DC=your_sp_dc_cookie_value     # Free account cookie (~1yr TTL)
 SPOTIFY_HOST_PROXY=http://host.docker.internal:8765  # Host proxy for embed scraping
 
+# Proxy for provider media traffic (yt-dlp downloads + URL resolution) — optional
+# Supported schemes: http, https, socks4, socks5, socks5h
+DOWNLOAD_PROXY=http://privoxy:8118        # or socks5://host:1080
+
 # Last.fm — see LASTFM_INTEGRATION.md
 LASTFM_API_KEY=your_lastfm_api_key
 LASTFM_API_SECRET=your_lastfm_api_secret

@@ -1,4 +1,4 @@
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
@@ -264,3 +264,43 @@ async def test_get_tracks_uses_url_fallback_for_source_url(service):
         tracks = await service.get_tracks(original_url)
 
     assert tracks[0]["source_url"] == original_url
+
+
+@pytest.mark.asyncio
+async def test_get_tracks_passes_proxy_to_ytdlp(service):
+    captured: dict = {}
+
+    def fake_ytdl(opts):
+        captured.update(opts)
+        instance = MagicMock()
+        instance.extract_info.return_value = {"entries": []}
+        return instance
+
+    with (
+        patch("app.utils.ydl.settings") as mock_settings,
+        patch("app.services.soundcloud_service.yt_dlp.YoutubeDL", side_effect=fake_ytdl),
+    ):
+        mock_settings.DOWNLOAD_PROXY = "http://privoxy:8118"
+        await service.get_tracks("https://soundcloud.com/x/sets/y")
+
+    assert captured["proxy"] == "http://privoxy:8118"
+
+
+@pytest.mark.asyncio
+async def test_get_playlist_info_passes_proxy_to_ytdlp(service):
+    captured: dict = {}
+
+    def fake_ytdl(opts):
+        captured.update(opts)
+        instance = MagicMock()
+        instance.extract_info.return_value = {"id": "1", "title": "t", "entries": [{}]}
+        return instance
+
+    with (
+        patch("app.utils.ydl.settings") as mock_settings,
+        patch("app.services.soundcloud_service.yt_dlp.YoutubeDL", side_effect=fake_ytdl),
+    ):
+        mock_settings.DOWNLOAD_PROXY = "http://privoxy:8118"
+        await service.get_playlist_info("https://soundcloud.com/x/sets/y")
+
+    assert captured["proxy"] == "http://privoxy:8118"
