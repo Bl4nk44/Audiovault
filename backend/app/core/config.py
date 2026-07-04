@@ -113,7 +113,9 @@ class Settings(BaseSettings):
     def validate_download_proxy(cls, v: str | None) -> str | None:
         if not v:
             return None
-        allowed = ("http://", "https://", "socks4://", "socks5://", "socks5h://")
+        # Scheme whitelist for outbound proxy URLs — plain-HTTP proxies are a
+        # legitimate, standard configuration here, not an insecure endpoint.
+        allowed = ("http://", "https://", "socks4://", "socks5://", "socks5h://")  # NOSONAR python:S5332
         if not v.startswith(allowed):
             raise ValueError(f"DOWNLOAD_PROXY must start with one of: {', '.join(allowed)}")
         return v

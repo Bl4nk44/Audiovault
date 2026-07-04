@@ -7,13 +7,13 @@ from app.core.config import Settings
 
 
 def test_download_proxy_default_none():
-    s = Settings(_env_file=None)
+    s = Settings(_env_file=None)  # type: ignore[call-arg]
     assert s.DOWNLOAD_PROXY is None
 
 
 def test_download_proxy_empty_string_becomes_none():
     # docker-compose commonly passes DOWNLOAD_PROXY= (empty) when unset
-    s = Settings(_env_file=None, DOWNLOAD_PROXY="")
+    s = Settings(_env_file=None, DOWNLOAD_PROXY="")  # type: ignore[call-arg]
     assert s.DOWNLOAD_PROXY is None
 
 
@@ -28,11 +28,11 @@ def test_download_proxy_empty_string_becomes_none():
     ],
 )
 def test_download_proxy_accepts_supported_schemes(url):
-    s = Settings(_env_file=None, DOWNLOAD_PROXY=url)
+    s = Settings(_env_file=None, DOWNLOAD_PROXY=url)  # type: ignore[call-arg]
     assert s.DOWNLOAD_PROXY == url
 
 
 @pytest.mark.parametrize("url", ["privoxy:8118", "ftp://x:21", "socks://x:1080"])
 def test_download_proxy_rejects_unsupported_schemes(url):
     with pytest.raises(ValidationError):
-        Settings(_env_file=None, DOWNLOAD_PROXY=url)
+        Settings(_env_file=None, DOWNLOAD_PROXY=url)  # type: ignore[call-arg]
