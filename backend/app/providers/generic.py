@@ -5,6 +5,7 @@ import yt_dlp
 
 from app.providers.base import MusicProvider
 from app.schemas.metadata import PlaylistMetadata, TrackMetadata
+from app.utils.ydl import apply_proxy
 
 logger = logging.getLogger(__name__)
 
@@ -36,6 +37,7 @@ class GenericProvider(MusicProvider):
             "no_warnings": True,
             "ignoreerrors": True,
         }
+        apply_proxy(ydl_opts)
 
         try:
             loop = asyncio.get_running_loop()

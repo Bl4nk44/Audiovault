@@ -208,7 +208,7 @@ async def startup_event():
             logger.info("Database not ready, retrying in 2 seconds... (%d/%d)", i + 1, retries)
             await asyncio.sleep(2)
 
-    # Migrations run in entrypoint.sh (alembic upgrade head) before the app boots.
+    # DB schema is bootstrapped in entrypoint.sh (app.db.bootstrap) before the app boots.
 
     # Init data
     async with AsyncSessionLocal() as session:

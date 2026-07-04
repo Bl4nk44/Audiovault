@@ -2,6 +2,12 @@
 
 All notable changes to Audiovault will be documented in this file.
 
+## [0.6.0] - 2026-07-04
+
+### Fixed
+
+- **Fresh install crash-loop**: new installations failed on first boot with `relation "tracks" does not exist` (PostgreSQL) or an `ALTER TABLE ... IF NOT EXISTS` syntax error (SQLite) — the Alembic chain never creates the initial schema and the `create_all` startup fallback was removed in `68b4f13`. The container entrypoint now runs a dedicated bootstrap (`app.db.bootstrap`): an empty database gets the full schema via `create_all` + `alembic stamp head`, an existing database keeps the regular `alembic upgrade head` path, and an inconsistent schema (`alembic_version` present but no `tracks`) is refused with a clear error instead of being silently overwritten. Plain `postgresql://` URLs are normalized to the async driver. Covered by regression tests (`b6e24d2`)
+
 ## [0.5.9] - 2026-06-14
 
 ### Features

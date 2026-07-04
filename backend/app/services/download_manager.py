@@ -23,6 +23,7 @@ from app.services.fallback_service import fallback_service
 from app.services.socket_manager import socket_manager
 from app.utils.log_sanitize import sanitize_log
 from app.utils.sanitization import sanitize_filename
+from app.utils.ydl import apply_proxy
 
 logger = logging.getLogger(__name__)
 
@@ -702,6 +703,7 @@ class DownloadManager:
             "quiet": True,
             "no_warnings": True,
         }
+        apply_proxy(ydl_opts)
 
         schema_map = {
             "{artist}": "%(artist)s",

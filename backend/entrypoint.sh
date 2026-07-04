@@ -1,8 +1,8 @@
 #!/bin/sh
 set -e
 
-echo "Running database migrations..."
-alembic upgrade head
+echo "Bootstrapping database (initial schema / migrations)..."
+python -m app.db.bootstrap
 
 echo "Starting application..."
 exec "$@"

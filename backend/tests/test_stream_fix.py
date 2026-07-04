@@ -1,8 +1,29 @@
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
 import pytest
 
 from app.api.v1.stream import _extract_direct_url
+
+
+@pytest.mark.asyncio
+async def test_extract_direct_url_passes_proxy_to_ytdlp():
+    captured: dict = {}
+
+    def fake_ytdl(opts):
+        captured.update(opts)
+        instance = MagicMock()
+        instance.__enter__.return_value = instance
+        instance.extract_info.return_value = {"url": "http://x", "http_headers": {}}
+        return instance
+
+    with (
+        patch("app.utils.ydl.settings") as mock_settings,
+        patch("app.api.v1.stream.yt_dlp.YoutubeDL", side_effect=fake_ytdl),
+    ):
+        mock_settings.DOWNLOAD_PROXY = "http://privoxy:8118"
+        await _extract_direct_url("https://www.youtube.com/watch?v=test")
+
+    assert captured["proxy"] == "http://privoxy:8118"
 
 
 # Mock yt_dlp to return specific headers and URL

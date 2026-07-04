@@ -24,6 +24,7 @@ from app.models.download import Download
 from app.models.track import Track
 from app.services.deezer_service import DeezerService
 from app.services.youtube_service import YouTubeService
+from app.utils.ydl import apply_proxy
 
 router = APIRouter()
 logger = logging.getLogger(__name__)
@@ -291,6 +292,7 @@ async def _extract_direct_url(youtube_url: str) -> tuple[str, dict]:
         "quiet": True,
         "no_warnings": True,
     }
+    apply_proxy(ydl_opts)
 
     import functools
 
