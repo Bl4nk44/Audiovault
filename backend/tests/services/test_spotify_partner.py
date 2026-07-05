@@ -593,3 +593,105 @@ async def test_invalidate_playlist_cache_swallows_error():
         mock_cache.delete = AsyncMock(side_effect=Exception("Redis down"))
         # Should not raise
         await client.invalidate_playlist_cache("pl1")
+
+
+# ---------------------------------------------------------------------------
+# search_tracks — text search via web-player GraphQL (discussion #132)
+# ---------------------------------------------------------------------------
+
+
+def _search_response(items: list[dict]) -> dict:
+    return {"data": {"searchV2": {"tracksV2": {"items": items}}}}
+
+
+def _track_item(wrapper_key: str = "item") -> dict:
+    return {
+        wrapper_key: {
+            "__typename": "TrackResponseWrapper",
+            "data": {
+                "uri": "spotify:track:abc123",
+                "name": "Primo Victoria",
+                "artists": {"items": [{"uri": "spotify:artist:art1", "profile": {"name": "Sabaton"}}]},
+                "albumOfTrack": {
+                    "name": "Primo Victoria",
+                    "coverArt": {"sources": [{"url": "https://img", "width": 300}]},
+                },
+                "trackDuration": {"totalMilliseconds": 250000},
+            },
+        }
+    }
+
+
+@pytest.mark.asyncio
+async def test_search_tracks_returns_formatted_tracks():
+    client = SpotifyPartnerClient()
+    with patch.object(client, "_query", new_callable=AsyncMock) as mock_query:
+        mock_query.return_value = _search_response([_track_item()])
+        results = await client.search_tracks("sabaton", limit=10)
+
+    assert len(results) == 1
+    track = results[0]
+    assert track["id"] == "abc123"
+    assert track["title"] == "Primo Victoria"
+    assert track["artist"] == "Sabaton"
+    assert track["source"] == "spotify"
+
+    operation, variables = mock_query.call_args[0]
+    assert operation == "searchTracks"
+    assert variables["searchTerm"] == "sabaton"
+
+
+@pytest.mark.asyncio
+async def test_search_tracks_accepts_itemv2_wrapper():
+    """Playlist responses use itemV2; search uses item — both must parse."""
+    client = SpotifyPartnerClient()
+    with patch.object(client, "_query", new_callable=AsyncMock) as mock_query:
+        mock_query.return_value = _search_response([_track_item("itemV2")])
+        results = await client.search_tracks("sabaton")
+
+    assert len(results) == 1
+
+
+@pytest.mark.asyncio
+async def test_search_tracks_empty_on_query_failure():
+    client = SpotifyPartnerClient()
+    with patch.object(client, "_query", new_callable=AsyncMock) as mock_query:
+        mock_query.return_value = None
+        assert await client.search_tracks("sabaton") == []
+
+
+@pytest.mark.asyncio
+async def test_search_tracks_skips_non_track_items():
+    client = SpotifyPartnerClient()
+    bad = {"item": {"__typename": "EpisodeResponseWrapper", "data": {"uri": "spotify:episode:x"}}}
+    with patch.object(client, "_query", new_callable=AsyncMock) as mock_query:
+        mock_query.return_value = _search_response([bad, _track_item()])
+        results = await client.search_tracks("sabaton")
+
+    assert len(results) == 1
+    assert results[0]["id"] == "abc123"
+
+
+def test_lazy_chunk_urls_resolves_search_chunk():
+    js = (
+        'd.u=e=>""+(({4406:"xpui-routes-search",1872:"xpui-routes-playlist"})[e]||e)'
+        '+"."+({4406:"baf6d82e",1872:"deadbeef"})[e]+".js"'
+    )
+    urls = SpotifyPartnerClient._lazy_chunk_urls(js, "searchTracks")
+    assert urls == ["https://open.spotifycdn.com/cdn/build/web-player/xpui-routes-search.baf6d82e.js"]
+
+
+def test_lazy_chunk_urls_no_webpack_map():
+    assert SpotifyPartnerClient._lazy_chunk_urls("var x = 1;", "searchTracks") == []
+
+
+@pytest.mark.asyncio
+async def test_scan_js_urls_picks_operations_own_hash():
+    """Greedy matching must not capture the next operation's hash in the window."""
+    js = '"searchTracks","query","' + "a" * 64 + '",null);new E.l("searchUsers","query","' + "b" * 64 + '",null)'
+    client = SpotifyPartnerClient()
+    resp = MagicMock(text=js)
+    http = MagicMock()
+    http.get = AsyncMock(return_value=resp)
+    found, _ = await client._scan_js_urls(http, ["https://js"], "searchTracks", collect_lazy=False)
+    assert found == "a" * 64

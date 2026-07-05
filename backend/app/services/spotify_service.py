@@ -652,8 +652,9 @@ class SpotifyService:
     async def search(  # noqa: A002
         self, query: str, limit: int = 10, offset: int = 0, type: str = "track"
     ) -> list[dict[str, Any]]:
-        """Returns results only for Spotify URLs — not a general search engine."""
-        _ = limit, offset, type
+        """Resolve Spotify URLs directly; text queries go through the partner
+        GraphQL search (anonymous, no official API credentials)."""
+        _ = offset
         logger.info(f"Spotify search: {query}")
 
         if "spotify.link" in query or "spoti.fi" in query:
@@ -673,6 +674,8 @@ class SpotifyService:
                 logger.error(f"Spotify URL resolution failed: {e}")
                 return []
 
+        if type == "track":
+            return await partner_client.search_tracks(query, limit=limit)
         return []
 
 

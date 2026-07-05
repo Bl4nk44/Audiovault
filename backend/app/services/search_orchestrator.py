@@ -32,13 +32,15 @@ class SearchOrchestrator:
 
     # --- Public Search Methods ---
 
-    async def search_tracks(self, query: str, limit: int = 20) -> list[dict[str, Any]]:
-        """Search tracks across all providers and return deduplicated results."""
-        tasks = [
-            self._safe_call(self._search_deezer(query, limit)),
-            self._safe_call(self._search_musicbrainz(query, limit)),
-            self._safe_call(self._search_spotify(query, limit)),
-        ]
+    async def search_tracks(self, query: str, limit: int = 20, source: str = "all") -> list[dict[str, Any]]:
+        """Search tracks across providers (or a single one) and deduplicate."""
+        providers = {
+            "deezer": self._search_deezer,
+            "musicbrainz": self._search_musicbrainz,
+            "spotify": self._search_spotify,
+        }
+        selected = [providers[source]] if source in providers else list(providers.values())
+        tasks = [self._safe_call(fn(query, limit)) for fn in selected]
 
         results_lists = await asyncio.gather(*tasks)
         all_results = []
@@ -48,12 +50,19 @@ class SearchOrchestrator:
         deduplicated = self._deduplicate_results(all_results)
         return deduplicated[:limit]
 
-    async def search_artists(self, query: str, limit: int = 10) -> list[dict[str, Any]]:
-        """Search artists across providers."""
-        tasks = [
-            self._safe_call(self._search_deezer_artists(query, limit)),
-            self._safe_call(self._search_musicbrainz_artists(query, limit)),
-        ]
+    async def search_artists(self, query: str, limit: int = 10, source: str = "all") -> list[dict[str, Any]]:
+        """Search artists across providers. No Spotify artist search available."""
+        providers = {
+            "deezer": self._search_deezer_artists,
+            "musicbrainz": self._search_musicbrainz_artists,
+        }
+        if source in providers:
+            selected = [providers[source]]
+        elif source == "all":
+            selected = list(providers.values())
+        else:
+            return []
+        tasks = [self._safe_call(fn(query, limit)) for fn in selected]
 
         results_lists = await asyncio.gather(*tasks)
         all_results = []
@@ -63,12 +72,19 @@ class SearchOrchestrator:
         deduplicated = self._deduplicate_by_name(all_results)
         return deduplicated[:limit]
 
-    async def search_albums(self, query: str, limit: int = 10) -> list[dict[str, Any]]:
-        """Search albums across providers."""
-        tasks = [
-            self._safe_call(self._search_deezer_albums(query, limit)),
-            self._safe_call(self._search_musicbrainz_albums(query, limit)),
-        ]
+    async def search_albums(self, query: str, limit: int = 10, source: str = "all") -> list[dict[str, Any]]:
+        """Search albums across providers. No Spotify album search available."""
+        providers = {
+            "deezer": self._search_deezer_albums,
+            "musicbrainz": self._search_musicbrainz_albums,
+        }
+        if source in providers:
+            selected = [providers[source]]
+        elif source == "all":
+            selected = list(providers.values())
+        else:
+            return []
+        tasks = [self._safe_call(fn(query, limit)) for fn in selected]
 
         results_lists = await asyncio.gather(*tasks)
         all_results = []

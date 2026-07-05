@@ -32,25 +32,27 @@ async def browse_search(
     limit: int = 20,
     offset: int = 0,
     type: str = "track",
+    source: str = "all",
     current_user: Annotated[User, Depends(get_current_active_user)] = ...,
 ):
     """
-    Search across multiple music providers (Deezer, MusicBrainz, Spotify if configured).
+    Search across multiple music providers (Deezer, MusicBrainz, Spotify).
 
     Supports types: track, artist, album, playlist.
+    Supports source filter: all, deezer, spotify, musicbrainz.
     Results are deduplicated by ISRC and title+artist.
     """
     try:
         if type == "artist":
-            return await search_orchestrator.search_artists(q, limit=limit)
+            return await search_orchestrator.search_artists(q, limit=limit, source=source)
         elif type == "album":
-            return await search_orchestrator.search_albums(q, limit=limit)
+            return await search_orchestrator.search_albums(q, limit=limit, source=source)
         elif type == "playlist":
             # For playlist search, delegate to Deezer/Spotify directly
-            return await search_orchestrator.search_tracks(q, limit=limit)
+            return await search_orchestrator.search_tracks(q, limit=limit, source=source)
         else:
             # Default: track search
-            return await search_orchestrator.search_tracks(q, limit=limit)
+            return await search_orchestrator.search_tracks(q, limit=limit, source=source)
     except Exception as e:
         logger.error(f"Browse search error: {e}")
         raise HTTPException(status_code=500, detail=str(e)) from e
