@@ -385,6 +385,116 @@ def test_build_output_template_fallback_on_invalid(dm):
 
 
 # ---------------------------------------------------------------------------
+# _get_ydl_options — filename schema uses track metadata, not yt-dlp fields
+# (GitHub discussion #131: fallback via YouTube produced raw video titles)
+# ---------------------------------------------------------------------------
+
+
+def _make_track(title=None, artist=None, album=None):
+    track = MagicMock()
+    track.title = title
+    track.artist = artist
+    track.album = album
+    return track
+
+
+def _make_download(schema, track, source="deezer", playlist_name=None):
+    download = MagicMock(source=source, playlist_name=playlist_name)
+    download.user.username = "alice"
+    download.user.preferences = {"quality": "high", "filename_schema": schema}
+    download.track = track
+    return download
+
+
+def test_get_ydl_options_title_from_track_metadata(dm, tmp_path):
+    """{title} must resolve to the track's DB title, not yt-dlp's %(title)s."""
+    download = _make_download(
+        "{service}/{playlist}/{title}",
+        _make_track(title="A Dark Task", artist="Magic Sword"),
+        playlist_name="Magic Sword",
+    )
+    with (
+        patch("app.services.download_manager.settings") as mock_settings,
+        patch("os.path.exists", return_value=True),
+    ):
+        mock_settings.DOWNLOAD_DIR = str(tmp_path)
+        _, tmpl = dm._get_ydl_options(download, MagicMock())
+
+    assert tmpl == "deezer/Magic Sword/A Dark Task"
+
+
+def test_get_ydl_options_artist_album_from_track_metadata(dm, tmp_path):
+    download = _make_download(
+        "{artist}/{album}/{title}",
+        _make_track(title="Hellfire", artist="Magic Sword", album="Endless"),
+    )
+    with (
+        patch("app.services.download_manager.settings") as mock_settings,
+        patch("os.path.exists", return_value=True),
+    ):
+        mock_settings.DOWNLOAD_DIR = str(tmp_path)
+        _, tmpl = dm._get_ydl_options(download, MagicMock())
+
+    assert tmpl == "Magic Sword/Endless/Hellfire"
+
+
+def test_get_ydl_options_missing_metadata_falls_back_to_ydl_fields(dm, tmp_path):
+    """No track metadata → keep yt-dlp template fields."""
+    download = _make_download("{artist} - {title}", _make_track())
+    with (
+        patch("app.services.download_manager.settings") as mock_settings,
+        patch("os.path.exists", return_value=True),
+    ):
+        mock_settings.DOWNLOAD_DIR = str(tmp_path)
+        _, tmpl = dm._get_ydl_options(download, MagicMock())
+
+    assert tmpl == "%(artist)s - %(title)s"
+
+
+def test_get_ydl_options_escapes_percent_in_metadata(dm, tmp_path):
+    """Literal '%' in metadata must be escaped to '%%' for yt-dlp outtmpl."""
+    download = _make_download("{title}", _make_track(title="100% Love"))
+    with (
+        patch("app.services.download_manager.settings") as mock_settings,
+        patch("os.path.exists", return_value=True),
+    ):
+        mock_settings.DOWNLOAD_DIR = str(tmp_path)
+        _, tmpl = dm._get_ydl_options(download, MagicMock())
+
+    assert tmpl == "100%% Love"
+
+
+def test_get_ydl_options_sanitizes_metadata(dm, tmp_path):
+    """Path separators in metadata must not create extra directories."""
+    download = _make_download("{title}", _make_track(title="AC/DC: Live"))
+    with (
+        patch("app.services.download_manager.settings") as mock_settings,
+        patch("os.path.exists", return_value=True),
+    ):
+        mock_settings.DOWNLOAD_DIR = str(tmp_path)
+        _, tmpl = dm._get_ydl_options(download, MagicMock())
+
+    assert "/" not in tmpl
+    assert ":" not in tmpl
+
+
+def test_build_output_template_literal_schema_not_rejected(dm):
+    """Template built from literal metadata (no '%') must not fall back to default."""
+    download = MagicMock(source="deezer", playlist_name=None)
+    schema_map = {"{artist}": "Magic Sword", "{title}": "Hellfire"}
+    result = dm._build_output_template(download, "{artist} - {title}", schema_map)
+    assert result == "Magic Sword - Hellfire"
+
+
+def test_build_output_template_no_known_tags_falls_back(dm):
+    """Schema with no recognized tags → static name → fall back to default."""
+    download = MagicMock(source="deezer", playlist_name=None)
+    schema_map = {"{artist}": "Magic Sword", "{title}": "Hellfire"}
+    result = dm._build_output_template(download, "my_music", schema_map)
+    assert result == "%(artist)s - %(title)s"
+
+
+# ---------------------------------------------------------------------------
 # _get_ydl_options
 # ---------------------------------------------------------------------------
 
