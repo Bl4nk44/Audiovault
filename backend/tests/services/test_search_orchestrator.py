@@ -308,3 +308,69 @@ async def test_resolve_isrc_not_found(orchestrator: SearchOrchestrator):
     isrc = await orchestrator.resolve_isrc("Unknown", "Unknown Track")
 
     assert isrc is None
+
+
+# --- Source filter (discussion #132) ---
+
+
+@pytest.mark.asyncio
+async def test_search_tracks_source_spotify_only(orchestrator: SearchOrchestrator):
+    """source="spotify" must query only the Spotify provider."""
+    with (
+        patch.object(orchestrator, "_search_deezer", new_callable=AsyncMock) as mock_dz,
+        patch.object(orchestrator, "_search_musicbrainz", new_callable=AsyncMock) as mock_mb,
+        patch.object(orchestrator, "_search_spotify", new_callable=AsyncMock) as mock_sp,
+    ):
+        mock_sp.return_value = SPOTIFY_RESULTS
+        results = await orchestrator.search_tracks("Nirvana", source="spotify")
+
+    mock_dz.assert_not_awaited()
+    mock_mb.assert_not_awaited()
+    assert results
+    assert all(r["source"] == "spotify" for r in results)
+
+
+@pytest.mark.asyncio
+async def test_search_tracks_source_deezer_only(orchestrator: SearchOrchestrator):
+    with (
+        patch.object(orchestrator, "_search_deezer", new_callable=AsyncMock) as mock_dz,
+        patch.object(orchestrator, "_search_spotify", new_callable=AsyncMock) as mock_sp,
+        patch.object(orchestrator, "_search_musicbrainz", new_callable=AsyncMock) as mock_mb,
+    ):
+        mock_dz.return_value = DEEZER_RESULTS
+        results = await orchestrator.search_tracks("Nirvana", source="deezer")
+
+    mock_sp.assert_not_awaited()
+    mock_mb.assert_not_awaited()
+    assert all(r["source"] == "deezer" for r in results)
+
+
+@pytest.mark.asyncio
+async def test_search_tracks_source_all_aggregates(orchestrator: SearchOrchestrator):
+    with (
+        patch.object(orchestrator, "_search_deezer", new_callable=AsyncMock) as mock_dz,
+        patch.object(orchestrator, "_search_musicbrainz", new_callable=AsyncMock) as mock_mb,
+        patch.object(orchestrator, "_search_spotify", new_callable=AsyncMock) as mock_sp,
+    ):
+        mock_dz.return_value = DEEZER_RESULTS
+        mock_mb.return_value = []
+        mock_sp.return_value = SPOTIFY_RESULTS
+        results = await orchestrator.search_tracks("Nirvana", source="all")
+
+    mock_dz.assert_awaited_once()
+    mock_sp.assert_awaited_once()
+    assert results
+
+
+@pytest.mark.asyncio
+async def test_search_artists_source_spotify_returns_empty(orchestrator: SearchOrchestrator):
+    """No Spotify artist search available — spotify filter yields no artists."""
+    with (
+        patch.object(orchestrator, "_search_deezer_artists", new_callable=AsyncMock) as mock_dz,
+        patch.object(orchestrator, "_search_musicbrainz_artists", new_callable=AsyncMock) as mock_mb,
+    ):
+        results = await orchestrator.search_artists("Nirvana", source="spotify")
+
+    mock_dz.assert_not_awaited()
+    mock_mb.assert_not_awaited()
+    assert results == []

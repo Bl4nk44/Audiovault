@@ -2,6 +2,17 @@
 
 All notable changes to Audiovault will be documented in this file.
 
+## [0.6.1] - 2026-07-05
+
+### Features
+
+- **Spotify text search — no API keys needed**: searching by text (e.g. "sabaton") now returns Spotify results; previously the Spotify source only resolved pasted links. Implemented via the web player's internal GraphQL `searchTracks` operation using the existing anonymous TOTP auth chain — no developer app or credentials required. GraphQL hash discovery now also scans webpack lazy route chunks, requests JS without brotli (httpx can't decode it) and uses a lazy regex quantifier so it captures the operation's own hash instead of the next one's (`dd538b3`, discussion #132)
+- **Search source filter actually filters**: the source dropdown (Spotify/Deezer) was cosmetic — the frontend never sent it and `/browse/search` aggregated all providers regardless. The `source` parameter is now wired end-to-end (frontend → API → orchestrator); artist/album search for sources without support returns empty instead of mislabeled aggregates (`dd538b3`, discussion #132)
+
+### Fixed
+
+- **Custom filename schema ignored on fallback downloads**: `{artist}`/`{title}`/`{album}` tags mapped to yt-dlp output-template fields, so tracks downloaded through the YouTube fallback were named after the raw video title ("Artist - Title (Official Audio)") instead of the track's own metadata. Schema tags now substitute sanitized track metadata from the database (with `%` escaped for yt-dlp), falling back to yt-dlp fields only when metadata is missing; template validation checks for known tags instead of requiring a `%` in the result (`bc61fb2`, discussion #131)
+
 ## [0.6.0] - 2026-07-04
 
 ### Fixed

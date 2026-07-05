@@ -47,7 +47,10 @@ _JSON_CT = "application/json"  # noqa: S1192
 # Known stable hashes — refreshed automatically when Spotify deploys new JS
 _KNOWN_HASHES: dict[str, str] = {
     "fetchPlaylist": "a65e12194ed5fc443a1cdebed5fabe33ca5b07b987185d63c72483867ad13cb4",
+    "searchTracks": "59ee4a659c32e9ad894a71308207594a65ba67bb6b632b183abe97303a51fa55",
 }
+
+_CHUNK_BASE = "https://open.spotifycdn.com/cdn/build/web-player/"
 
 # Current Spotify web-player version — updated automatically from JS discovery
 _CURRENT_CLIENT_VERSIONS = [
@@ -197,9 +200,70 @@ class SpotifyPartnerClient:
     # GraphQL hash discovery                                               #
     # ------------------------------------------------------------------ #
 
+    @staticmethod
+    def _lazy_chunk_urls(js_text: str, operation: str) -> list[str]:
+        """Resolve webpack lazy-chunk URLs whose names hint at the operation.
+
+        Search/browse GraphQL operations live in route chunks (e.g.
+        "xpui-routes-search") that are not referenced from the HTML — their
+        names and content hashes sit in the main bundle's webpack chunk map.
+        """
+        segment_start = js_text.find(".u=e=>")
+        if segment_start == -1:
+            return []
+        segment = js_text[segment_start : segment_start + 20000]
+        objects = re.findall(r'\{(?:\d+:"[^"]*",?)+\}', segment)
+        name_maps: list[dict[str, str]] = []
+        hash_maps: list[dict[str, str]] = []
+        for obj in objects:
+            entries = dict(re.findall(r'(\d+):"([^"]+)"', obj))
+            if entries and all(re.fullmatch(r"[0-9a-f]{8}", v) for v in entries.values()):
+                hash_maps.append(entries)
+            else:
+                name_maps.append(entries)
+
+        # Split camelCase ("searchTracks" → "search", "tracks") to match chunk names.
+        tokens = [t.lower() for t in re.findall(r"[A-Z]?[a-z]+", operation) if len(t) > 3]
+        urls: list[str] = []
+        for names in name_maps:
+            for chunk_id, name in names.items():
+                if not any(t in name.lower() for t in tokens):
+                    continue
+                for hashes in hash_maps:
+                    content_hash = hashes.get(chunk_id)
+                    if content_hash:
+                        url = f"{_CHUNK_BASE}{name}.{content_hash}.js"
+                        if url not in urls:
+                            urls.append(url)
+        return urls
+
+    async def _scan_js_urls(
+        self, client: httpx.AsyncClient, urls: list[str], operation: str, *, collect_lazy: bool
+    ) -> tuple[str, list[str]]:
+        """Scan JS files for the operation hash; optionally collect lazy-chunk URLs."""
+        # Lazy quantifier — greedy would skip past the operation's own hash
+        # and capture the hash of the NEXT operation within the window.
+        pattern = re.compile(rf"{re.escape(operation)}.{{0,300}}?([a-f0-9]{{64}})")
+        lazy_urls: list[str] = []
+        for url in urls:
+            try:
+                js_resp = await client.get(url, timeout=30.0)
+            except Exception as e:
+                logger.debug(f"JS fetch error {url}: {e}")
+                continue
+            m = pattern.search(js_resp.text)
+            if m:
+                logger.info(f"Found GraphQL hash for {operation} in {url[-60:]}")
+                return m.group(1), lazy_urls
+            if collect_lazy:
+                lazy_urls.extend(u for u in self._lazy_chunk_urls(js_resp.text, operation) if u not in lazy_urls)
+        return "", lazy_urls
+
     async def _find_hash_in_js(self, operation: str) -> str:
-        pattern = re.compile(rf"{re.escape(operation)}.{{0,300}}([a-f0-9]{{64}})")
         headers = _browser_headers(self._ua, origin=_OPEN_SPOTIFY)
+        # Advertise only encodings httpx can decode without extra deps —
+        # with "br" the CDN sends brotli and resp.text is compressed garbage.
+        headers["Accept-Encoding"] = "gzip, deflate"
         async with httpx.AsyncClient(headers=headers) as client:
             html_resp = await client.get(_OPEN_SPOTIFY, timeout=10.0)
             # Single-quantifier regex (linear time) + netloc check ensures
@@ -209,16 +273,11 @@ class SpotifyPartnerClient:
                 for url in re.findall(r'src="(https://[^"]+\.js)"', html_resp.text)
                 if (h := urllib.parse.urlparse(url).netloc) == "spotifycdn.com" or h.endswith(".spotifycdn.com")
             ]
-            for url in js_urls:
-                try:
-                    js_resp = await client.get(url, timeout=30.0)
-                    m = pattern.search(js_resp.text)
-                    if m:
-                        logger.info(f"Found GraphQL hash for {operation} in {url[-60:]}")
-                        return m.group(1)
-                except Exception as e:
-                    logger.debug(f"JS fetch error {url}: {e}")
-        return ""
+            found, lazy_urls = await self._scan_js_urls(client, js_urls, operation, collect_lazy=True)
+            if found:
+                return found
+            found, _ = await self._scan_js_urls(client, lazy_urls, operation, collect_lazy=False)
+            return found
 
     async def _get_hash(self, operation: str) -> str:
         if operation not in self._graphql_hashes:
@@ -288,7 +347,8 @@ class SpotifyPartnerClient:
     # ------------------------------------------------------------------ #
 
     def _fmt_track_from_item(self, item: dict) -> dict[str, Any] | None:
-        wrapper = item.get("itemV2") or {}
+        # Playlist payloads wrap tracks in "itemV2", search payloads in "item".
+        wrapper = item.get("itemV2") or item.get("item") or {}
         if wrapper.get("__typename") != "TrackResponseWrapper":
             return None
         t = wrapper.get("data") or {}
@@ -416,6 +476,33 @@ class SpotifyPartnerClient:
 
         await self._cache_set_playlist(cache_key, result)
         return result
+
+    async def search_tracks(self, query: str, limit: int = 20) -> list[dict[str, Any]]:
+        """Text track search via the web-player GraphQL endpoint.
+
+        No official API credentials needed — same anonymous auth chain as
+        playlist fetching. The persisted-query hash for "searchTracks" is
+        discovered from the web-player JS on first use.
+        """
+        # Exact variable shape the web player sends for searchTracks —
+        # persisted queries reject unexpected/missing variables.
+        variables: dict[str, Any] = {
+            "searchTerm": query,
+            "offset": 0,
+            "limit": limit,
+            "includeEpisodeContentRatingsV2": False,
+        }
+        data = await self._query("searchTracks", variables)
+        if not data:
+            return []
+
+        items = ((((data.get("data") or {}).get("searchV2") or {}).get("tracksV2") or {}).get("items")) or []
+        tracks: list[dict[str, Any]] = []
+        for item in items:
+            t = self._fmt_track_from_item(item)
+            if t:
+                tracks.append(t)
+        return tracks
 
     async def invalidate_playlist_cache(self, playlist_id: str) -> None:
         from app.core.cache import cache_manager

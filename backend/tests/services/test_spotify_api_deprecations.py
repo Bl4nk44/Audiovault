@@ -114,28 +114,31 @@ class TestArtistTopTracksRemoved:
 
 
 class TestSearchLimitCap:
-    """search() must cap limit to Spotify's new maximum of 10."""
+    """Text search delegates to the partner GraphQL client with the given limit."""
 
     @pytest.mark.asyncio
-    async def test_search_with_limit_above_10_is_capped(self, spotify_service):
-        """Passing limit=20 should internally call Spotify with limit=10."""
-        # Generic search is now bypassed, so we mock the web requests if needed,
-        # but the search method handles limit explicitly if it was passed to an endpoint.
-        # Actually in the new implementation, search() doesn't pass limit to _request
-        # for generic queries, it just returns empty. So we just verify it doesn't fail.
-        result = await spotify_service.search("test query", limit=20)
+    async def test_search_with_limit_above_10_delegates(self, spotify_service):
+        with patch("app.services.spotify_service.partner_client.search_tracks", new_callable=AsyncMock) as mock_search:
+            mock_search.return_value = []
+            result = await spotify_service.search("test query", limit=20)
+        mock_search.assert_awaited_once_with("test query", limit=20)
         assert result == []
 
     @pytest.mark.asyncio
     async def test_search_with_limit_5_stays_5(self, spotify_service):
-        """Passing limit=5 (under max) should pass through unchanged."""
-        result = await spotify_service.search("test", limit=5)
+        with patch("app.services.spotify_service.partner_client.search_tracks", new_callable=AsyncMock) as mock_search:
+            mock_search.return_value = []
+            result = await spotify_service.search("test", limit=5)
+        mock_search.assert_awaited_once_with("test", limit=5)
         assert result == []
 
     @pytest.mark.asyncio
     async def test_search_default_limit_is_10_or_less(self, spotify_service):
-        """Default limit should be at most 10 after the change."""
-        result = await spotify_service.search("test")
+        """Default limit stays at 10."""
+        with patch("app.services.spotify_service.partner_client.search_tracks", new_callable=AsyncMock) as mock_search:
+            mock_search.return_value = []
+            result = await spotify_service.search("test")
+        mock_search.assert_awaited_once_with("test", limit=10)
         assert result == []
 
 

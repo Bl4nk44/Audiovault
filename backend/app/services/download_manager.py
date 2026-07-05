@@ -653,6 +653,17 @@ class DownloadManager:
             {"key": "EmbedThumbnail"},
         ]
 
+    @staticmethod
+    def _schema_literal(value: object, ydl_field: str) -> str:
+        """Literal schema value from track metadata; yt-dlp field when missing.
+
+        The literal is sanitized for filesystem use and '%' is escaped so
+        yt-dlp does not interpret it as an outtmpl field.
+        """
+        if isinstance(value, str) and value.strip():
+            return sanitize_filename(value.strip()).replace("%", "%%")
+        return ydl_field
+
     def _build_output_template(self, download: Download, filename_schema: str, schema_map: dict) -> str:
         PLAYLIST_TAG = "{playlist}"  # noqa: N806
         tmpl = filename_schema.replace("{service}", download.source or "")
@@ -662,7 +673,8 @@ class DownloadManager:
         for tag, replacement in schema_map.items():
             if tag != PLAYLIST_TAG:
                 tmpl = tmpl.replace(tag, replacement)
-        if not tmpl or "%" not in tmpl:
+        known_tags = set(schema_map) | {PLAYLIST_TAG, "{service}"}
+        if not tmpl.strip() or not any(tag in filename_schema for tag in known_tags):
             logger.warning(f"Output template '{tmpl}' invalid or missing tags. Fallback to default.")
             tmpl = "%(artist)s - %(title)s"
         return tmpl
@@ -705,10 +717,14 @@ class DownloadManager:
         }
         apply_proxy(ydl_opts)
 
+        # Prefer track metadata from DB over yt-dlp fields — the actual download
+        # may run against a fallback source (e.g. YouTube), where %(title)s is the
+        # raw video title ("Artist - Title (Official Audio)"), not the track title.
+        track = getattr(download, "track", None)
         schema_map = {
-            "{artist}": "%(artist)s",
-            "{title}": "%(title)s",
-            "{album}": "%(album|Single)s",
+            "{artist}": self._schema_literal(getattr(track, "artist", None), "%(artist)s"),
+            "{title}": self._schema_literal(getattr(track, "title", None), "%(title)s"),
+            "{album}": self._schema_literal(getattr(track, "album", None), "%(album|Single)s"),
             "{id}": "%(id)s",
             "{year}": "%(release_date>%Y|Unknown)s",
             "{track_number}": "%(playlist_index)s",

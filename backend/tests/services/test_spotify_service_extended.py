@@ -414,11 +414,13 @@ async def test_search_resolves_short_link(service):
 async def test_search_resolves_short_link_exception_continues(service):
     with (
         patch("httpx.AsyncClient") as mock_cls,
+        patch("app.services.spotify_service.partner_client.search_tracks", new_callable=AsyncMock) as mock_search,
     ):
         mock_client = AsyncMock()
         mock_cls.return_value.__aenter__ = AsyncMock(return_value=mock_client)
         mock_cls.return_value.__aexit__ = AsyncMock(return_value=False)
         mock_client.head = AsyncMock(side_effect=RuntimeError("network"))
+        mock_search.return_value = []
 
         result = await service.search("https://spotify.link/abc")
 
@@ -487,6 +489,9 @@ async def test_search_url_album_exception_returns_empty(service):
 
 
 @pytest.mark.asyncio
-async def test_search_non_url_returns_empty(service):
-    result = await service.search("some random query")
+async def test_search_non_url_delegates_to_partner(service):
+    with patch("app.services.spotify_service.partner_client.search_tracks", new_callable=AsyncMock) as mock_search:
+        mock_search.return_value = []
+        result = await service.search("some random query")
+    mock_search.assert_awaited_once_with("some random query", limit=10)
     assert result == []

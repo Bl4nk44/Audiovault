@@ -65,14 +65,14 @@ export default function Search() {
       try {
         const browseType = type === "all" ? "track" : type;
         const response = await api.get("/browse/search", {
-          params: { q: query, offset: currentOffset, type: browseType, limit: 20 },
+          params: { q: query, offset: currentOffset, type: browseType, limit: 20, source },
         });
         newResults = response.data;
 
         // For "all" type, also fetch artists
         if (type === "all") {
           const artistResponse = await api.get("/browse/search", {
-            params: { q: query, type: "artist", limit: 5 },
+            params: { q: query, type: "artist", limit: 5, source },
           }).catch(() => ({ data: [] }));
           newResults = [...newResults, ...artistResponse.data];
         }

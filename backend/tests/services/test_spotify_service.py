@@ -87,8 +87,10 @@ async def test_spotify_get_playlist_details(spotify_service):
 
 @pytest.mark.asyncio
 async def test_search_links_only(spotify_service):
-    # Text search should return empty
-    text_results = await spotify_service.search("some random text")
+    # Text search goes through the partner GraphQL client (no live HTTP in tests)
+    with patch("app.services.spotify_service.partner_client.search_tracks", new_callable=AsyncMock) as mock_search:
+        mock_search.return_value = []
+        text_results = await spotify_service.search("some random text")
     assert text_results == []
 
     # Link should still function (this will call get_track or other underlying methods)
@@ -97,3 +99,23 @@ async def test_search_links_only(spotify_service):
         link_results = await spotify_service.search("https://open.spotify.com/track/t1")
         assert len(link_results) == 1
         assert link_results[0]["title"] == "T1"
+
+
+@pytest.mark.asyncio
+async def test_search_text_query_delegates_to_partner(spotify_service):
+    """Text (non-URL) queries must use partner GraphQL search (discussion #132)."""
+    with patch("app.services.spotify_service.partner_client.search_tracks", new_callable=AsyncMock) as mock_search:
+        mock_search.return_value = [{"id": "t1", "title": "Primo Victoria", "source": "spotify"}]
+        results = await spotify_service.search("sabaton", limit=10)
+
+    mock_search.assert_awaited_once_with("sabaton", limit=10)
+    assert results[0]["source"] == "spotify"
+
+
+@pytest.mark.asyncio
+async def test_search_text_query_non_track_type_returns_empty(spotify_service):
+    with patch("app.services.spotify_service.partner_client.search_tracks", new_callable=AsyncMock) as mock_search:
+        results = await spotify_service.search("sabaton", type="artist")
+
+    mock_search.assert_not_awaited()
+    assert results == []
