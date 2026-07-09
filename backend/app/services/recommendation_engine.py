@@ -69,7 +69,7 @@ class HybridRecommendationEngine:
             logger.info(
                 "Fetching recommendations from Last.fm for user %s (variety=%s)",
                 sanitize_log(target_user),
-                variety,
+                sanitize_log(variety),
             )
             tracks = await self.lastfm.get_recommendations(target_user, session_key=session_key, variety=variety)
 

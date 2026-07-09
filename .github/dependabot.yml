@@ -17,6 +17,8 @@ updates:
       day: "monday"
       time: "09:00"
       timezone: "Europe/Berlin"
+    cooldown:
+      default-days: 7
     # Disable automatic PRs - only show alerts
     open-pull-requests-limit: 0
     labels:
@@ -31,6 +33,8 @@ updates:
       day: "monday"
       time: "09:00"
       timezone: "Europe/Berlin"
+    cooldown:
+      default-days: 7
     # Disable automatic PRs - only show alerts
     open-pull-requests-limit: 0
     labels:
@@ -45,6 +49,8 @@ updates:
       day: "monday"
       time: "09:00"
       timezone: "Europe/Berlin"
+    cooldown:
+      default-days: 7
     open-pull-requests-limit: 0
     labels:
       - "dependencies"
@@ -58,6 +64,8 @@ updates:
       day: "monday"
       time: "09:00"
       timezone: "Europe/Berlin"
+    cooldown:
+      default-days: 7
     open-pull-requests-limit: 0
     labels:
       - "dependencies"
@@ -71,6 +79,8 @@ updates:
       day: "monday"
       time: "09:00"
       timezone: "Europe/Berlin"
+    cooldown:
+      default-days: 7
     open-pull-requests-limit: 0
     labels:
       - "dependencies"
