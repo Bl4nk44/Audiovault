@@ -39,6 +39,13 @@ export default function Search() {
     type: string,
     currentOffset: number
   ) => {
+    // Backend only paginates the "track" type. For an explicit non-track type
+    // filter (e.g. type=playlist or type=artist), there is no page 2 to fetch.
+    if (currentOffset > 0 && type !== "all" && type !== "track") {
+      setHasMore(false);
+      return;
+    }
+
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     let newResults: any[] = [];
 

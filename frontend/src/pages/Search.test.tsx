@@ -54,6 +54,12 @@ vi.mock("../components/search/SearchBar", () => ({
         >
           Search Youtube
         </button>
+        <button
+          data-testid="search-playlist-btn"
+          onClick={() => onSearch("test query", "spotify", "playlist")}
+        >
+          Search Playlists
+        </button>
       </div>
     );
   },
@@ -287,6 +293,37 @@ describe("Search Page Integration", () => {
     await waitFor(() => {
       expect(screen.queryByText("search.loadMore")).not.toBeInTheDocument();
     });
+  });
+
+  it("does not re-fetch or duplicate results on load more for non-paginating types (playlist)", async () => {
+    (api.get as unknown as Mock).mockResolvedValue({
+      data: Array(20)
+        .fill(null)
+        .map((_, i) => ({ id: `pl${i}`, title: `Playlist ${i}` })),
+    });
+
+    renderSearch();
+    fireEvent.click(screen.getByTestId("search-playlist-btn"));
+
+    await waitFor(() => expect(screen.getByText("Playlist 0")).toBeInTheDocument());
+    expect(screen.getAllByTestId("result-item")).toHaveLength(20);
+
+    (api.get as unknown as Mock).mockClear();
+
+    const loadMoreBtn = screen.getByText("search.loadMore");
+    fireEvent.click(loadMoreBtn);
+
+    // hasMore flips to false synchronously in fetchResults, so the button disappears
+    await waitFor(() => {
+      expect(screen.queryByText("search.loadMore")).not.toBeInTheDocument();
+    });
+
+    // No pagination call was made and results were not duplicated
+    expect(api.get).not.toHaveBeenCalledWith(
+      "/browse/search",
+      expect.objectContaining({ params: expect.objectContaining({ type: "playlist" }) })
+    );
+    expect(screen.getAllByTestId("result-item")).toHaveLength(20);
   });
 
   it("handles load more error", async () => {
