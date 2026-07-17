@@ -103,8 +103,60 @@ describe("Search Page Integration", () => {
     fireEvent.click(screen.getByTestId("search-all-btn"));
 
     await waitFor(() => {
-      expect(screen.getAllByText("Browse Item").length).toBe(2);
+      expect(screen.getAllByText("Browse Item").length).toBe(3);
     });
+  });
+
+  it("fetches playlists alongside tracks and artists for type=all", async () => {
+    (api.get as unknown as Mock).mockResolvedValue({ data: [] });
+
+    renderSearch();
+    fireEvent.click(screen.getByTestId("search-all-btn"));
+
+    await waitFor(() => {
+      const calledTypes = (api.get as unknown as Mock).mock.calls
+        .filter(([url]) => url === "/browse/search")
+        .map(([, config]) => config.params.type);
+      expect(calledTypes).toEqual(expect.arrayContaining(["track", "artist", "playlist"]));
+    });
+  });
+
+  it("does not re-fetch artists and playlists on load more", async () => {
+    (api.get as unknown as Mock).mockImplementation((url, config) => {
+      if (url === "/browse/search" && config?.params?.type === "track") {
+        return Promise.resolve({
+          data: Array(20)
+            .fill(null)
+            .map((_, i) => ({ id: `p${i}`, title: `Result ${i}` })),
+        });
+      }
+      return Promise.resolve({ data: [] });
+    });
+
+    renderSearch();
+    fireEvent.click(screen.getByTestId("search-all-btn"));
+
+    await waitFor(() => expect(screen.getByText("Result 0")).toBeInTheDocument());
+
+    (api.get as unknown as Mock).mockClear();
+    (api.get as unknown as Mock).mockResolvedValue({
+      data: [{ id: "p20", title: "Result 20" }],
+    });
+
+    const loadMoreBtn = screen.getByText("search.loadMore");
+    fireEvent.click(loadMoreBtn);
+
+    await waitFor(() => {
+      expect(screen.getByText("Result 20")).toBeInTheDocument();
+    });
+
+    const callsAfterLoadMore = (api.get as unknown as Mock).mock.calls.filter(
+      ([url]) => url === "/browse/search"
+    );
+    expect(callsAfterLoadMore).toHaveLength(1);
+    expect(callsAfterLoadMore[0][1].params).toEqual(
+      expect.objectContaining({ type: "track", offset: 20 })
+    );
   });
 
   it("initializes from URL and performs auto-search", async () => {

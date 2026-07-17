@@ -69,12 +69,17 @@ export default function Search() {
         });
         newResults = response.data;
 
-        // For "all" type, also fetch artists
-        if (type === "all") {
-          const artistResponse = await api.get("/browse/search", {
-            params: { q: query, type: "artist", limit: 5, source },
-          }).catch(() => ({ data: [] }));
-          newResults = [...newResults, ...artistResponse.data];
+        // For "all" type on first page, also fetch artists and playlists
+        if (type === "all" && currentOffset === 0) {
+          const [artistResponse, playlistResponse] = await Promise.all([
+            api
+              .get("/browse/search", { params: { q: query, type: "artist", limit: 5, source } })
+              .catch(() => ({ data: [] })),
+            api
+              .get("/browse/search", { params: { q: query, type: "playlist", limit: 5, source } })
+              .catch(() => ({ data: [] })),
+          ]);
+          newResults = [...newResults, ...artistResponse.data, ...playlistResponse.data];
         }
       } catch (e) {
         console.error(e);
