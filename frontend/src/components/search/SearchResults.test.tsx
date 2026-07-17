@@ -55,4 +55,25 @@ describe("SearchResults Component", () => {
     expect(screen.getByText("search.headers.playlists")).toBeInTheDocument();
     expect(screen.getByText("Playlist 1")).toBeInTheDocument();
   });
+
+  it("renders track list in a single column on mobile", () => {
+    const results = [{ id: "1", title: "Song 1", type: "track" }] as any;
+
+    render(<SearchResults results={results} isLoading={false} />);
+
+    const grid = screen.getByTestId("track-card").parentElement!;
+    expect(grid.className).toContain("grid-cols-1");
+    expect(grid.className).toContain("md:grid-cols-2");
+  });
+
+  it("renders loading skeletons matching the track row layout", () => {
+    render(<SearchResults results={[]} isLoading={true} />);
+    const skeletons = screen
+      .getAllByRole("generic")
+      .filter((el) => el.className.includes("animate-pulse"));
+    const grid = skeletons[0].parentElement!;
+    expect(grid.className).toContain("grid-cols-1");
+    expect(grid.className).toContain("md:grid-cols-2");
+    expect(skeletons[0].className).toContain("h-20");
+  });
 });

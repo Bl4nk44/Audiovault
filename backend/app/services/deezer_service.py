@@ -202,9 +202,11 @@ class DeezerService:
             playlists.append(
                 {
                     "id": str(item["id"]),
+                    "type": "playlist",
                     "title": item.get("title", ""),
                     "image_url": item.get("picture_medium") or item.get("picture_big") or item.get("picture"),
                     "track_count": item.get("nb_tracks", 0),
+                    "tracks_count": item.get("nb_tracks", 0),
                     "url": item.get("link") or f"https://www.deezer.com/playlist/{item['id']}",
                     "source": "deezer",
                 }
