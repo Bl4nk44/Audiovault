@@ -32,8 +32,23 @@ class SearchOrchestrator:
 
     # --- Public Search Methods ---
 
-    async def search_tracks(self, query: str, limit: int = 20, source: str = "all") -> list[dict[str, Any]]:
-        """Search tracks across providers (or a single one) and deduplicate."""
+    async def search_tracks(
+        self, query: str, limit: int = 20, source: str = "all", offset: int = 0
+    ) -> list[dict[str, Any]]:
+        """Search tracks across providers (or a single one) and deduplicate.
+
+        offset > 0 (pagination beyond page 1) is only supported by Deezer —
+        Spotify partner search and MusicBrainz would just return page 1 again,
+        polluting later pages with duplicates after dedup. So for offset > 0
+        we query Deezer exclusively; if `source` requests a different single
+        provider, there's no pagination available and we return an empty list.
+        """
+        if offset > 0:
+            if source not in ("all", "deezer"):
+                return []
+            results = await self._safe_call(self.deezer.search(query, limit=limit, offset=offset))
+            return results[:limit]
+
         providers = {
             "deezer": self._search_deezer,
             "musicbrainz": self._search_musicbrainz,
@@ -92,6 +107,13 @@ class SearchOrchestrator:
             all_results.extend(results)
 
         return all_results[:limit]
+
+    async def search_playlists(self, query: str, limit: int = 10, source: str = "all") -> list[dict[str, Any]]:
+        """Search playlists. Deezer is the only provider with public playlist search."""
+        if source not in ("all", "deezer"):
+            return []
+        results = await self._safe_call(self.deezer.search_playlists(query, limit=limit))
+        return (results or [])[:limit]
 
     # --- Track/Artist/Album Details ---
 

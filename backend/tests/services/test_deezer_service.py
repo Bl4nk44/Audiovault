@@ -159,7 +159,9 @@ async def test_search_playlists_retries_on_quota_error(deezer_service):
         assert mock_get.call_count == 2  # retried after the quota error
         assert len(results) == 1
         assert results[0]["id"] == "99"
+        assert results[0]["type"] == "playlist"
         assert results[0]["track_count"] == 25
+        assert results[0]["tracks_count"] == 25
 
 
 @pytest.mark.asyncio

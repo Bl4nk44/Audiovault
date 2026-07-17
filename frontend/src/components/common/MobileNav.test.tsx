@@ -42,4 +42,16 @@ describe("MobileNav", () => {
     const homeLink = screen.getByText("Home").closest("a");
     expect(homeLink).not.toHaveClass("text-primary");
   });
+
+  it("contains a link to the Discovery page", () => {
+    render(
+      <MemoryRouter>
+        <MobileNav />
+      </MemoryRouter>
+    );
+    expect(screen.getByRole("link", { name: /discover/i })).toHaveAttribute(
+      "href",
+      "/recommendations"
+    );
+  });
 });

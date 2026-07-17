@@ -39,11 +39,18 @@ export default function Search() {
     type: string,
     currentOffset: number
   ) => {
+    // Backend only paginates the "track" type. For an explicit non-track type
+    // filter (e.g. type=playlist or type=artist), there is no page 2 to fetch.
+    if (currentOffset > 0 && type !== "all" && type !== "track") {
+      setHasMore(false);
+      return;
+    }
+
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     let newResults: any[] = [];
 
     // Determine which types to fetch
-    let typesToFetch = ["track", "artist", "playlist"];
+    let typesToFetch = currentOffset === 0 ? ["track", "artist", "playlist"] : ["track"];
     if (type !== "all") {
       typesToFetch = [type];
     }
@@ -69,12 +76,17 @@ export default function Search() {
         });
         newResults = response.data;
 
-        // For "all" type, also fetch artists
-        if (type === "all") {
-          const artistResponse = await api.get("/browse/search", {
-            params: { q: query, type: "artist", limit: 5, source },
-          }).catch(() => ({ data: [] }));
-          newResults = [...newResults, ...artistResponse.data];
+        // For "all" type on first page, also fetch artists and playlists
+        if (type === "all" && currentOffset === 0) {
+          const [artistResponse, playlistResponse] = await Promise.all([
+            api
+              .get("/browse/search", { params: { q: query, type: "artist", limit: 5, source } })
+              .catch(() => ({ data: [] })),
+            api
+              .get("/browse/search", { params: { q: query, type: "playlist", limit: 5, source } })
+              .catch(() => ({ data: [] })),
+          ]);
+          newResults = [...newResults, ...artistResponse.data, ...playlistResponse.data];
         }
       } catch (e) {
         console.error(e);

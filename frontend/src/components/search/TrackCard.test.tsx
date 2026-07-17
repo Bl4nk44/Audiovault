@@ -25,13 +25,18 @@ vi.mock("../../utils/notify", () => ({
   notify: { success: vi.fn(), error: vi.fn() },
 }));
 
+const mockAddToPlaylistModal = vi.fn();
+
 vi.mock("../AddToPlaylistModal", () => ({
-  default: ({ isOpen, onClose }: any) =>
-    isOpen ? (
+  default: (props: any) => {
+    mockAddToPlaylistModal(props);
+    const { isOpen, onClose } = props;
+    return isOpen ? (
       <div data-testid="add-modal">
         <button onClick={onClose}>Close</button>
       </div>
-    ) : null,
+    ) : null;
+  },
 }));
 
 vi.mock("framer-motion", () => ({
@@ -121,5 +126,29 @@ describe("TrackCard", () => {
 
     fireEvent.click(screen.getByText("Close"));
     expect(screen.queryByTestId("add-modal")).not.toBeInTheDocument();
+  });
+
+  it("maps non-UUID provider track id to external trackIds for AddToPlaylistModal", () => {
+    const track = { ...mockTrack, id: "3135556", artist: "Test Artist", title: "Test Track" };
+    render(<TrackCard track={track} />);
+    fireEvent.click(screen.getByTitle("Add to Playlist"));
+
+    expect(mockAddToPlaylistModal).toHaveBeenLastCalledWith(
+      expect.objectContaining({
+        trackIds: ["external:Test Artist:Test Track"],
+      })
+    );
+  });
+
+  it("passes library UUID track id through unchanged to AddToPlaylistModal", () => {
+    const track = { ...mockTrack, id: "550e8400-e29b-41d4-a716-446655440000" };
+    render(<TrackCard track={track} />);
+    fireEvent.click(screen.getByTitle("Add to Playlist"));
+
+    expect(mockAddToPlaylistModal).toHaveBeenLastCalledWith(
+      expect.objectContaining({
+        trackIds: ["550e8400-e29b-41d4-a716-446655440000"],
+      })
+    );
   });
 });

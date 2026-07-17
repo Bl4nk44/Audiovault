@@ -1,20 +1,24 @@
-import { Home, Search, Music, Download, Settings } from "lucide-react";
+import { Home, Search, Music, Sparkles, Download, Settings } from "lucide-react";
 import { NavLink } from "react-router-dom";
 import { cn } from "../../lib/utils";
 import { motion } from "framer-motion";
+import { useTranslation } from "../../hooks/useTranslation";
 
 export default function MobileNav() {
+  const { t } = useTranslation();
+
   const navItems = [
     { icon: Home, label: "Home", path: "/" },
     { icon: Search, label: "Search", path: "/search" },
     { icon: Music, label: "Library", path: "/library" },
+    { icon: Sparkles, label: t("sidebar.discover", "Discovery"), path: "/recommendations" },
     { icon: Download, label: "Queue", path: "/queue" },
     { icon: Settings, label: "Settings", path: "/settings" },
   ];
 
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-50 md:hidden pb-safe">
-      <div className="glass-neon border-t border-white/5 px-6 py-3 flex justify-between items-center backdrop-blur-xl bg-background/80">
+      <div className="glass-neon border-t border-white/5 px-2 py-3 flex justify-between items-center backdrop-blur-xl bg-background/80">
         {navItems.map((item) => (
           <NavLink
             key={item.path}

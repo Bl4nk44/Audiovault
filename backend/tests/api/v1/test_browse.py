@@ -99,6 +99,17 @@ async def test_browse_search_with_type_artist(client, admin_token_headers):
 
 
 @pytest.mark.asyncio
+async def test_browse_search_negative_offset_rejected(client, admin_token_headers):
+    """GET /browse/search?offset=-1 should be rejected with 422."""
+    response = await client.get(
+        "/api/v1/browse/search",
+        params={"q": "test", "offset": -1},
+        headers=admin_token_headers,
+    )
+    assert response.status_code == 422
+
+
+@pytest.mark.asyncio
 async def test_browse_search_unauthenticated(client):
     """Search without auth should return 401."""
     response = await client.get(
@@ -220,7 +231,7 @@ async def test_browse_search_with_type_album(client, admin_token_headers):
 async def test_browse_search_with_type_playlist(client, admin_token_headers):
     """GET /browse/search?type=playlist should return playlist results."""
     with patch("app.api.v1.browse.search_orchestrator") as mock_orch:
-        mock_orch.search_tracks = AsyncMock(return_value=[MOCK_PLAYLIST])
+        mock_orch.search_playlists = AsyncMock(return_value=[MOCK_PLAYLIST])
 
         response = await client.get(
             "/api/v1/browse/search",

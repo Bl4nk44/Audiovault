@@ -15,7 +15,7 @@ Endpoints:
 import logging
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Query
 
 from app.core.dependencies import get_current_active_user
 from app.models.user import User
@@ -30,7 +30,7 @@ router = APIRouter()
 async def browse_search(
     q: str,
     limit: int = 20,
-    offset: int = 0,
+    offset: Annotated[int, Query(ge=0)] = 0,
     type: str = "track",
     source: str = "all",
     current_user: Annotated[User, Depends(get_current_active_user)] = ...,
@@ -48,11 +48,10 @@ async def browse_search(
         elif type == "album":
             return await search_orchestrator.search_albums(q, limit=limit, source=source)
         elif type == "playlist":
-            # For playlist search, delegate to Deezer/Spotify directly
-            return await search_orchestrator.search_tracks(q, limit=limit, source=source)
+            return await search_orchestrator.search_playlists(q, limit=limit, source=source)
         else:
             # Default: track search
-            return await search_orchestrator.search_tracks(q, limit=limit, source=source)
+            return await search_orchestrator.search_tracks(q, limit=limit, source=source, offset=offset)
     except Exception as e:
         logger.error(f"Browse search error: {e}")
         raise HTTPException(status_code=500, detail=str(e)) from e
