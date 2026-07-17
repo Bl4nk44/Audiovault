@@ -8,6 +8,8 @@ import { type Track } from "../../types";
 import { notify as toast } from "../../utils/notify";
 import AddToPlaylistModal from "../AddToPlaylistModal";
 
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
 interface TrackCardProps {
   track: Track;
   queue?: Track[];
@@ -192,7 +194,7 @@ export default function TrackCard({ track, queue, onRemove }: Readonly<TrackCard
         isOpen={showPlaylistModal}
         onClose={() => setShowPlaylistModal(false)}
         trackIds={
-          track.id
+          track.id && UUID_RE.test(String(track.id))
             ? [track.id]
             : [`external:${track.artist}:${track.title}`]
         }
