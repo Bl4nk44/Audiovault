@@ -338,7 +338,7 @@ async def stream_track(
         if range_header:
             headers["Range"] = range_header
 
-        client = httpx.AsyncClient(timeout=httpx.Timeout(30.0, read=None))
+        client = httpx.AsyncClient(timeout=httpx.Timeout(30.0, read=300.0))
         upstream_req = client.build_request("GET", url, headers=headers)
         upstream = await client.send(upstream_req, stream=True, follow_redirects=True)
 
