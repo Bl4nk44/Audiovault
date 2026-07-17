@@ -1,6 +1,7 @@
 import asyncio
 import logging
 import os
+from collections.abc import AsyncIterator
 from typing import Annotated
 from urllib.parse import urlparse
 
@@ -9,7 +10,7 @@ import httpx
 import mutagen.mp4
 import yt_dlp
 from fastapi import APIRouter, Depends, HTTPException, Request
-from fastapi.responses import RedirectResponse, Response
+from fastapi.responses import RedirectResponse, Response, StreamingResponse
 from mutagen import File as MutagenFile
 from mutagen.id3 import APIC, ID3
 from sqlalchemy import select
@@ -286,9 +287,14 @@ async def _resolve_stream_url(track_id: str, db: AsyncSession) -> str:
     return youtube_url
 
 
-async def _extract_direct_url(youtube_url: str) -> tuple[str, dict]:
+def _build_ydl_format() -> str:
+    """iOS Safari cannot decode opus/webm — prefer AAC (m4a), fall back to anything."""
+    return "bestaudio[ext=m4a]/bestaudio[acodec^=mp4a]/bestaudio"
+
+
+async def _extract_direct_url(youtube_url: str) -> tuple[str, dict, str]:
     ydl_opts = {
-        "format": "bestaudio/best",
+        "format": _build_ydl_format(),
         "quiet": True,
         "no_warnings": True,
     }
@@ -301,7 +307,15 @@ async def _extract_direct_url(youtube_url: str) -> tuple[str, dict]:
         # Note: extract_info can still block significantly, so executor is crucial
         info_extractor = functools.partial(ydl.extract_info, youtube_url, download=False)
         info = await loop.run_in_executor(stream_executor, info_extractor)
-        return info["url"], info.get("http_headers", {})
+        ext = info.get("ext", "m4a")
+        mime = {
+            "m4a": "audio/mp4",
+            "mp4": "audio/mp4",
+            "webm": "audio/webm",
+            "opus": "audio/webm",
+            "mp3": "audio/mpeg",
+        }.get(ext, "audio/mp4")
+        return info["url"], info.get("http_headers", {}), mime
 
 
 @router.get(
@@ -313,37 +327,47 @@ async def stream_track(
     request: Request,
     db: Annotated[AsyncSession, Depends(get_db)] = ...,
 ):
+    client: httpx.AsyncClient | None = None
+    upstream: httpx.Response | None = None
     try:
         youtube_url = await _resolve_stream_url(track_id, db)
-        url, headers = await _extract_direct_url(youtube_url)
+        url, headers, media_type = await _extract_direct_url(youtube_url)
 
         # Forward Range header from browser for seeking support
         range_header = request.headers.get("range")
         if range_header:
             headers["Range"] = range_header
 
-        async with httpx.AsyncClient() as client:
-            upstream = await client.get(url, headers=headers, follow_redirects=True)
+        client = httpx.AsyncClient(timeout=httpx.Timeout(30.0, read=None))
+        upstream_req = client.build_request("GET", url, headers=headers)
+        upstream = await client.send(upstream_req, stream=True, follow_redirects=True)
 
-            response_headers = {
-                "Content-Type": "audio/mpeg",
-                "Accept-Ranges": "bytes",
-            }
+        response_headers = {"Accept-Ranges": "bytes"}
+        for h in ("content-range", "content-length"):
+            if h in upstream.headers:
+                response_headers[h.title()] = upstream.headers[h]
 
-            # Forward Content-Range and Content-Length from upstream
-            if "content-range" in upstream.headers:
-                response_headers["Content-Range"] = upstream.headers["content-range"]
-            if "content-length" in upstream.headers:
-                response_headers["Content-Length"] = upstream.headers["content-length"]
+        async def body() -> AsyncIterator[bytes]:
+            assert client is not None and upstream is not None
+            try:
+                async for chunk in upstream.aiter_bytes(64 * 1024):
+                    yield chunk
+            finally:
+                await upstream.aclose()
+                await client.aclose()
 
-            status_code = 206 if upstream.status_code == 206 else 200
-            return Response(
-                content=upstream.content,
-                status_code=status_code,
-                headers=response_headers,
-            )
-    except HTTPException as he:
-        raise he
+        status_code = 206 if upstream.status_code == 206 else 200
+        return StreamingResponse(body(), status_code=status_code, headers=response_headers, media_type=media_type)
+    except HTTPException:
+        if upstream is not None:
+            await upstream.aclose()
+        if client is not None:
+            await client.aclose()
+        raise
     except Exception as e:
+        if upstream is not None:
+            await upstream.aclose()
+        if client is not None:
+            await client.aclose()
         logger.error(f"Streaming error: {e}")
         raise HTTPException(status_code=500, detail="Internal streaming error") from e

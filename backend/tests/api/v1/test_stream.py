@@ -56,25 +56,31 @@ async def test_stream_track_success(client: AsyncClient):
         patch("app.api.v1.stream._extract_direct_url", new_callable=AsyncMock) as m_extract,
     ):
         m_resolve.return_value = "https://youtube.com/watch?v=123"
-        m_extract.return_value = ("https://googlevideo.com/direct-audio-url", {"User-Agent": "test"})
+        m_extract.return_value = ("https://googlevideo.com/direct-audio-url", {"User-Agent": "test"}, "audio/mp4")
 
-        # Mock httpx to avoid external call and return fake audio
+        # Mock httpx to avoid external call and return fake streamed audio
         with patch("httpx.AsyncClient") as mock_client_cls:
-            mock_upstream = AsyncMock()
-            mock_upstream.status_code = 200
-            mock_upstream.headers = {"Content-Type": "audio/mpeg", "Content-Length": "123"}
-            mock_upstream.content = b"fake_audio_content"
 
-            mock_client_instance = AsyncMock()
-            mock_client_instance.__aenter__.return_value = mock_client_instance
-            mock_client_instance.get.return_value = mock_upstream
+            async def fake_aiter_bytes(chunk_size=None):
+                yield b"fake_audio_content"
+
+            mock_upstream = MagicMock()
+            mock_upstream.status_code = 200
+            mock_upstream.headers = {"Content-Length": "18"}
+            mock_upstream.aiter_bytes = fake_aiter_bytes
+            mock_upstream.aclose = AsyncMock()
+
+            mock_client_instance = MagicMock()
+            mock_client_instance.build_request = MagicMock(return_value=MagicMock())
+            mock_client_instance.send = AsyncMock(return_value=mock_upstream)
+            mock_client_instance.aclose = AsyncMock()
             mock_client_cls.return_value = mock_client_instance
 
             response = await client.get("/api/v1/stream/123.mp3", follow_redirects=False)
 
             assert response.status_code == 200
             assert response.content == b"fake_audio_content"
-            assert response.headers["Content-Type"] == "audio/mpeg"
+            assert response.headers["Content-Type"] == "audio/mp4"
 
 
 def test_extract_art_flac_with_pictures():

@@ -53,9 +53,9 @@ def mock_yt_dlp():
 @pytest.mark.asyncio
 async def test_extract_direct_url_returns_headers(mock_yt_dlp):
     """
-    Test that _extract_direct_url returns both url and headers.
+    Test that _extract_direct_url returns url, headers and media type.
     """
-    url, headers = await _extract_direct_url("https://www.youtube.com/watch?v=test")
+    url, headers, _media_type = await _extract_direct_url("https://www.youtube.com/watch?v=test")
 
     assert url == "https://manifest.googlevideo.com/playback"
     assert headers is not None
