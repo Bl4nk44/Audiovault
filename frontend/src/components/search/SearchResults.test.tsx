@@ -63,5 +63,17 @@ describe("SearchResults Component", () => {
 
     const grid = screen.getByTestId("track-card").parentElement!;
     expect(grid.className).toContain("grid-cols-1");
+    expect(grid.className).toContain("md:grid-cols-2");
+  });
+
+  it("renders loading skeletons matching the track row layout", () => {
+    render(<SearchResults results={[]} isLoading={true} />);
+    const skeletons = screen
+      .getAllByRole("generic")
+      .filter((el) => el.className.includes("animate-pulse"));
+    const grid = skeletons[0].parentElement!;
+    expect(grid.className).toContain("grid-cols-1");
+    expect(grid.className).toContain("md:grid-cols-2");
+    expect(skeletons[0].className).toContain("h-20");
   });
 });
