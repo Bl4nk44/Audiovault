@@ -48,8 +48,7 @@ async def browse_search(
         elif type == "album":
             return await search_orchestrator.search_albums(q, limit=limit, source=source)
         elif type == "playlist":
-            # For playlist search, delegate to Deezer/Spotify directly
-            return await search_orchestrator.search_tracks(q, limit=limit, source=source)
+            return await search_orchestrator.search_playlists(q, limit=limit, source=source)
         else:
             # Default: track search
             return await search_orchestrator.search_tracks(q, limit=limit, source=source)

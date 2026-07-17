@@ -93,6 +93,13 @@ class SearchOrchestrator:
 
         return all_results[:limit]
 
+    async def search_playlists(self, query: str, limit: int = 10, source: str = "all") -> list[dict[str, Any]]:
+        """Search playlists. Deezer is the only provider with public playlist search."""
+        if source not in ("all", "deezer"):
+            return []
+        results = await self._safe_call(self.deezer.search_playlists(query, limit=limit))
+        return (results or [])[:limit]
+
     # --- Track/Artist/Album Details ---
 
     async def get_track_details(self, source: str, track_id: str) -> dict[str, Any] | None:

@@ -220,7 +220,7 @@ async def test_browse_search_with_type_album(client, admin_token_headers):
 async def test_browse_search_with_type_playlist(client, admin_token_headers):
     """GET /browse/search?type=playlist should return playlist results."""
     with patch("app.api.v1.browse.search_orchestrator") as mock_orch:
-        mock_orch.search_tracks = AsyncMock(return_value=[MOCK_PLAYLIST])
+        mock_orch.search_playlists = AsyncMock(return_value=[MOCK_PLAYLIST])
 
         response = await client.get(
             "/api/v1/browse/search",
