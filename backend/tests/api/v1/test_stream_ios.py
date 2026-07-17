@@ -14,6 +14,8 @@ from httpx import AsyncClient
 
 from app.api.v1.stream import _build_ydl_format, _extract_direct_url
 
+STREAM_URL_CACHE_KEY = "stream_url:abc"
+
 
 def test_build_ydl_format_prefers_m4a_then_mp4a_then_any():
     fmt = _build_ydl_format()
@@ -128,5 +130,74 @@ async def test_stream_track_streams_and_reports_real_media_type(client: AsyncCli
     assert response.headers["Content-Type"] == "audio/webm"
     assert response.content == b"chunk-1chunk-2"
     assert response.headers["Content-Range"] == "bytes 0-1/2"
+    assert response.headers["Accept-Ranges"] == "bytes"
     mock_upstream.aclose.assert_awaited_once()
     mock_client_instance.aclose.assert_awaited_once()
+
+
+@pytest.mark.asyncio
+async def test_stream_track_upstream_403_returns_502_and_invalidates_cache(client: AsyncClient):
+    """An expired googlevideo URL (cache TTL outlives the token) answers with an
+    upstream 403/HTML body. We must not stream that as if it were audio — return
+    502, close both httpx handles, and drop the stale cached URL so the next
+    request re-resolves instead of hitting the same dead link."""
+    with (
+        patch("app.api.v1.stream._resolve_stream_url", new_callable=AsyncMock) as m_resolve,
+        patch("app.api.v1.stream._extract_direct_url", new_callable=AsyncMock) as m_extract,
+        patch("app.api.v1.stream.cache_manager.delete", new_callable=AsyncMock) as m_delete,
+    ):
+        m_resolve.return_value = "https://youtube.com/watch?v=abc"
+        m_extract.return_value = ("https://googlevideo.com/expired-audio-url", {}, "audio/mp4")
+
+        with patch("httpx.AsyncClient") as mock_client_cls:
+            mock_upstream = MagicMock()
+            mock_upstream.status_code = 403
+            mock_upstream.headers = {}
+            mock_upstream.aclose = AsyncMock()
+
+            mock_client_instance = MagicMock()
+            mock_client_instance.build_request = MagicMock(return_value=MagicMock())
+            mock_client_instance.send = AsyncMock(return_value=mock_upstream)
+            mock_client_instance.aclose = AsyncMock()
+            mock_client_cls.return_value = mock_client_instance
+
+            response = await client.get("/api/v1/stream/abc.mp3", follow_redirects=False)
+
+    assert response.status_code == 502
+    mock_upstream.aclose.assert_awaited_once()
+    mock_client_instance.aclose.assert_awaited_once()
+    m_delete.assert_awaited_once_with(STREAM_URL_CACHE_KEY)
+
+
+@pytest.mark.asyncio
+async def test_stream_track_no_accept_ranges_when_upstream_lacks_support(client: AsyncClient):
+    """A plain 200 upstream response with no accept-ranges header must not
+    advertise range support to the browser — that was previously hardcoded."""
+    with (
+        patch("app.api.v1.stream._resolve_stream_url", new_callable=AsyncMock) as m_resolve,
+        patch("app.api.v1.stream._extract_direct_url", new_callable=AsyncMock) as m_extract,
+    ):
+        m_resolve.return_value = "https://youtube.com/watch?v=abc"
+        m_extract.return_value = ("https://googlevideo.com/direct-audio-url", {}, "audio/mp4")
+
+        with patch("httpx.AsyncClient") as mock_client_cls:
+
+            async def fake_aiter_bytes(chunk_size=None):
+                yield b"full-body"
+
+            mock_upstream = MagicMock()
+            mock_upstream.status_code = 200
+            mock_upstream.headers = {"content-length": "9"}
+            mock_upstream.aiter_bytes = fake_aiter_bytes
+            mock_upstream.aclose = AsyncMock()
+
+            mock_client_instance = MagicMock()
+            mock_client_instance.build_request = MagicMock(return_value=MagicMock())
+            mock_client_instance.send = AsyncMock(return_value=mock_upstream)
+            mock_client_instance.aclose = AsyncMock()
+            mock_client_cls.return_value = mock_client_instance
+
+            response = await client.get("/api/v1/stream/abc.mp3", follow_redirects=False)
+
+    assert response.status_code == 200
+    assert "Accept-Ranges" not in response.headers

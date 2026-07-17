@@ -342,7 +342,17 @@ async def stream_track(
         upstream_req = client.build_request("GET", url, headers=headers)
         upstream = await client.send(upstream_req, stream=True, follow_redirects=True)
 
-        response_headers = {"Accept-Ranges": "bytes"}
+        if upstream.status_code >= 400:
+            await upstream.aclose()
+            await client.aclose()
+            upstream = None
+            client = None
+            await cache_manager.delete(f"stream_url:{track_id}")
+            raise HTTPException(status_code=502, detail="Upstream stream unavailable")
+
+        response_headers = {}
+        if upstream.status_code == 206 or upstream.headers.get("accept-ranges") == "bytes":
+            response_headers["Accept-Ranges"] = "bytes"
         for h in ("content-range", "content-length"):
             if h in upstream.headers:
                 response_headers[h.title()] = upstream.headers[h]
