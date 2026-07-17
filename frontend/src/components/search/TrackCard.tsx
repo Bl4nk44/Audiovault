@@ -134,7 +134,7 @@ export default function TrackCard({ track, queue, onRemove }: Readonly<TrackCard
             </h3>
             <button
               onClick={handleArtistClick}
-              className={`text-sm text-left truncate transition-colors ${
+              className={`text-sm text-left truncate py-1 transition-colors ${
                 track.artist_id || track.spotify_artist_id
                   ? "text-gray-400 hover:text-white hover:underline decoration-white/50"
                   : "text-gray-400 cursor-default"
@@ -153,11 +153,11 @@ export default function TrackCard({ track, queue, onRemove }: Readonly<TrackCard
             </span>
 
             {/* Actions Icons */}
-            <div className="flex items-center gap-1">
+            <div className="flex items-center gap-2">
               {/* Add to Playlist */}
               <button
                 onClick={handleOpenPlaylistModal}
-                className="p-1.5 text-gray-400 hover:text-white hover:bg-white/10 rounded-lg transition-colors"
+                className="min-w-10 min-h-10 flex items-center justify-center text-gray-400 hover:text-white hover:bg-white/10 rounded-lg transition-colors"
                 title="Add to Playlist"
               >
                 <ListPlus size={18} />
@@ -166,7 +166,7 @@ export default function TrackCard({ track, queue, onRemove }: Readonly<TrackCard
               {/* Download */}
               <button
                 onClick={handleDownload}
-                className="p-1.5 text-primary/80 hover:text-primary hover:bg-primary/10 rounded-lg transition-colors"
+                className="min-w-10 min-h-10 flex items-center justify-center text-primary/80 hover:text-primary hover:bg-primary/10 rounded-lg transition-colors"
                 title="Download"
               >
                 <Download size={18} />
@@ -179,7 +179,7 @@ export default function TrackCard({ track, queue, onRemove }: Readonly<TrackCard
                     e.stopPropagation();
                     onRemove();
                   }}
-                  className="p-1.5 text-red-400 hover:text-red-300 hover:bg-red-500/10 rounded-lg transition-colors"
+                  className="min-w-10 min-h-10 flex items-center justify-center text-red-400 hover:text-red-300 hover:bg-red-500/10 rounded-lg transition-colors"
                   title="Remove"
                 >
                   <Trash2 size={18} />
