@@ -55,4 +55,13 @@ describe("SearchResults Component", () => {
     expect(screen.getByText("search.headers.playlists")).toBeInTheDocument();
     expect(screen.getByText("Playlist 1")).toBeInTheDocument();
   });
+
+  it("renders track list in a single column on mobile", () => {
+    const results = [{ id: "1", title: "Song 1", type: "track" }] as any;
+
+    render(<SearchResults results={results} isLoading={false} />);
+
+    const grid = screen.getByTestId("track-card").parentElement!;
+    expect(grid.className).toContain("grid-cols-1");
+  });
 });

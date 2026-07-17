@@ -70,7 +70,7 @@ export default function SearchResults({ results, isLoading }: Readonly<SearchRes
       {tracks.length > 0 && (
         <section>
           <h2 className="text-2xl font-bold mb-4 text-white">{t("search.headers.tracks")}</h2>
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
             {tracks.map((item) => (
               <TrackCard key={`${item.source}-${item.id}`} track={item} queue={tracks} />
             ))}
