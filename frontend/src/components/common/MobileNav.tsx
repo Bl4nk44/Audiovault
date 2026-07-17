@@ -2,13 +2,16 @@ import { Home, Search, Music, Sparkles, Download, Settings } from "lucide-react"
 import { NavLink } from "react-router-dom";
 import { cn } from "../../lib/utils";
 import { motion } from "framer-motion";
+import { useTranslation } from "../../hooks/useTranslation";
 
 export default function MobileNav() {
+  const { t } = useTranslation();
+
   const navItems = [
     { icon: Home, label: "Home", path: "/" },
     { icon: Search, label: "Search", path: "/search" },
     { icon: Music, label: "Library", path: "/library" },
-    { icon: Sparkles, label: "Discover", path: "/recommendations" },
+    { icon: Sparkles, label: t("sidebar.discover", "Discovery"), path: "/recommendations" },
     { icon: Download, label: "Queue", path: "/queue" },
     { icon: Settings, label: "Settings", path: "/settings" },
   ];
