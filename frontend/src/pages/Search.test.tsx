@@ -48,6 +48,12 @@ vi.mock("../components/search/SearchBar", () => ({
         >
           Search Soundcloud
         </button>
+        <button
+          data-testid="search-youtube-btn"
+          onClick={() => onSearch("test query", "youtube", "all")}
+        >
+          Search Youtube
+        </button>
       </div>
     );
   },
@@ -152,6 +158,44 @@ describe("Search Page Integration", () => {
 
     const callsAfterLoadMore = (api.get as unknown as Mock).mock.calls.filter(
       ([url]) => url === "/browse/search"
+    );
+    expect(callsAfterLoadMore).toHaveLength(1);
+    expect(callsAfterLoadMore[0][1].params).toEqual(
+      expect.objectContaining({ type: "track", offset: 20 })
+    );
+  });
+
+  it("does not re-fetch artists and playlists on load more (youtube)", async () => {
+    (api.get as unknown as Mock).mockImplementation((url, config) => {
+      if (url === "/youtube/search" && config?.params?.type === "track") {
+        return Promise.resolve({
+          data: Array(20)
+            .fill(null)
+            .map((_, i) => ({ id: `y${i}`, title: `YT Result ${i}` })),
+        });
+      }
+      return Promise.resolve({ data: [] });
+    });
+
+    renderSearch();
+    fireEvent.click(screen.getByTestId("search-youtube-btn"));
+
+    await waitFor(() => expect(screen.getByText("YT Result 0")).toBeInTheDocument());
+
+    (api.get as unknown as Mock).mockClear();
+    (api.get as unknown as Mock).mockResolvedValue({
+      data: [{ id: "y20", title: "YT Result 20" }],
+    });
+
+    const loadMoreBtn = screen.getByText("search.loadMore");
+    fireEvent.click(loadMoreBtn);
+
+    await waitFor(() => {
+      expect(screen.getByText("YT Result 20")).toBeInTheDocument();
+    });
+
+    const callsAfterLoadMore = (api.get as unknown as Mock).mock.calls.filter(
+      ([url]) => url === "/youtube/search"
     );
     expect(callsAfterLoadMore).toHaveLength(1);
     expect(callsAfterLoadMore[0][1].params).toEqual(

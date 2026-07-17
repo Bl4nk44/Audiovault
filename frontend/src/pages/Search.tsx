@@ -43,7 +43,7 @@ export default function Search() {
     let newResults: any[] = [];
 
     // Determine which types to fetch
-    let typesToFetch = ["track", "artist", "playlist"];
+    let typesToFetch = currentOffset === 0 ? ["track", "artist", "playlist"] : ["track"];
     if (type !== "all") {
       typesToFetch = [type];
     }
