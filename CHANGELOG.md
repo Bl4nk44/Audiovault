@@ -2,6 +2,31 @@
 
 All notable changes to Audiovault will be documented in this file.
 
+## [0.6.2] - 2026-07-18
+
+### Fixed
+
+- **Search type filters finally work**: the playlist filter returned tracks because the backend delegated playlist search to track search; the orchestrator now has a dedicated playlist search (Deezer), results are tagged with the correct type, and a search with the "All Types" filter shows Tracks, Artists and Playlists sections instead of tracks only (`a885245`, `bb07a4b`, `907d720`)
+- **"Load more" no longer repeats the same results**: the offset parameter was accepted by the API but never passed to the search orchestrator, so every page returned page one. Pagination now goes through Deezer (the only provider with real pagination), non paginating types end cleanly instead of appending duplicates, and the YouTube path no longer re-fetches artists and playlists on every page (`aa6197e`, `a23be70`, `4d8d3bd`)
+- **Searched tracks now play on iPhone**: yt-dlp picked opus/webm audio, which iOS Safari cannot decode (desktop Chrome can, hence the asymmetry). The stream endpoint now prefers AAC/m4a, reports the real Content-Type instead of a hardcoded `audio/mpeg`, streams the response in 64KB chunks instead of buffering whole files in RAM, returns 502 and invalidates the cached URL when the upstream link expires, and advertises range support only when the upstream actually provides it (`3ddd47f`, `8f81934`)
+- **Adding searched tracks to playlists**: tracks from search results carry provider ids, not library UUIDs, so adding them to a playlist failed with 400. Non UUID ids are now mapped to the external track format, which the backend resolves by creating the track and scheduling its download (`3d6cce2`)
+- **Mobile UI**: search result tracks render in a single column on phones (two on tablets) so titles are readable, the loading skeleton matches the final layout (`32ad0c9`, `c99cdad`); the bottom navigation gained a Discovery link, making Last.fm configuration reachable on mobile, with the label localized via the existing i18n key (`b55613e`, `51e761a`); track card action buttons meet the 40px touch target minimum (`a7a6532`)
+
+### Security
+
+- Resolved 22 open code scanning alerts (`569f738`)
+- CVE fixes in dependencies: anyio (backend) and undici (frontend, dev only) (`efb8ec8`, `709a092`)
+- Hardening: the search offset parameter rejects negative values with 422, and the stream proxy caps its read timeout so a stalled CDN cannot hold an async worker forever (`ab68a0d`)
+
+### Dependencies
+
+- Frontend: typescript 5.9 to 6.0, lucide-react 0.577 to 1.16, knip 5.88 to 6.14 plus patch and minor bumps (`e8a4a9f`, `6804a7e`, `806b315`, `3594f28`)
+- Backend: patch and minor bumps (`efb8ec8`)
+
+### Chore
+
+- Agent tooling files (claude/superpowers) moved outside the repository (`9f2c986`)
+
 ## [0.6.1] - 2026-07-05
 
 ### Features
