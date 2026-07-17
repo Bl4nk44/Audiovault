@@ -51,7 +51,7 @@ async def browse_search(
             return await search_orchestrator.search_playlists(q, limit=limit, source=source)
         else:
             # Default: track search
-            return await search_orchestrator.search_tracks(q, limit=limit, source=source)
+            return await search_orchestrator.search_tracks(q, limit=limit, source=source, offset=offset)
     except Exception as e:
         logger.error(f"Browse search error: {e}")
         raise HTTPException(status_code=500, detail=str(e)) from e
