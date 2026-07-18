@@ -179,9 +179,7 @@ describe("AccountSettings", () => {
     const file = new File(["(⌐□_□)"], "chucknorris.png", { type: "image/png" });
 
     // Trigger upload
-    await waitFor(() => {
-      fireEvent.change(fileInput, { target: { files: [file] } });
-    });
+    fireEvent.change(fileInput, { target: { files: [file] } });
 
     await waitFor(() => {
       expect(api.post).toHaveBeenCalledWith(

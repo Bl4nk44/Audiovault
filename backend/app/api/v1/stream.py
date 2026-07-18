@@ -153,7 +153,7 @@ async def _get_album_art_redirect(track: Track, db: AsyncSession) -> RedirectRes
     album = result.scalar_one_or_none()
     if not (album and album.images):
         return None
-    url = (album.images or {}).get("300") or (album.images or {}).get("640")
+    url = album.images.get("300") or album.images.get("640")
     if not url:
         return None
     parsed = urlparse(url)
@@ -358,7 +358,8 @@ async def stream_track(
                 response_headers[h.title()] = upstream.headers[h]
 
         async def body() -> AsyncIterator[bytes]:
-            assert client is not None and upstream is not None
+            if client is None or upstream is None:
+                raise RuntimeError("client and upstream must be initialized")
             try:
                 async for chunk in upstream.aiter_bytes(64 * 1024):
                     yield chunk
