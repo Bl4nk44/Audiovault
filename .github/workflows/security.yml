@@ -323,48 +323,6 @@ jobs:
       contents: read
 
     steps:
-      - name: Prepare Email Body
-        if: always()
-        env:
-          GH_REPOSITORY: ${{ github.repository }}
-          GH_REF_NAME: ${{ github.ref_name }}
-          GH_SHA: ${{ github.sha }}
-          RESULT_TRIVY: ${{ needs.trivy-scan.result }}
-          RESULT_SEMGREP: ${{ needs.semgrep.result }}
-          RESULT_SECRET: ${{ needs.secret-scan.result }}
-        run: |
-          REPORT_FILE="security-report.txt"
-          echo "GitHub Security Scan Report" > $REPORT_FILE
-          echo "===========================" >> $REPORT_FILE
-          echo "Repository: ${GH_REPOSITORY}" >> $REPORT_FILE
-          echo "Branch: ${GH_REF_NAME}" >> $REPORT_FILE
-          echo "Commit: ${GH_SHA}" >> $REPORT_FILE
-          echo "" >> $REPORT_FILE
-          echo "## Job Statuses" >> $REPORT_FILE
-          echo "- Trivy Scan: ${RESULT_TRIVY}" >> $REPORT_FILE
-          echo "- Semgrep Analysis: ${RESULT_SEMGREP}" >> $REPORT_FILE
-          echo "- Secret Scan: ${RESULT_SECRET}" >> $REPORT_FILE
-          echo "" >> $REPORT_FILE
-
-          if [[ "${RESULT_SECRET}" == "failure" ]]; then
-            echo "WARNING: Secrets detected in repository!" >> $REPORT_FILE
-          fi
-
-          echo "Full results are available in the job artifacts." >> $REPORT_FILE
-
-      - name: Send Email Report
-        uses: dawidd6/action-send-mail@611879133a9569642c41be66f4a323286e9b8a3b # v4
-        if: always() && (github.event_name == 'schedule' || needs.secret-scan.result == 'failure' || needs.trivy-scan.result == 'failure' || needs.semgrep.result == 'failure')
-        with:
-          server_address: ${{ secrets.MAIL_SERVER }}
-          server_port: 465
-          username: ${{ secrets.MAIL_USERNAME }}
-          password: ${{ secrets.MAIL_PASSWORD }}
-          subject: "GitHub Security Report: ${{ github.repository }} (${{ github.ref_name }})"
-          to: ${{ secrets.MAIL_DESTINATION }}
-          from: "GitHub Actions <${{ secrets.MAIL_USERNAME }}>"
-          body: file://security-report.txt
-
       - name: Job Failure Guard
         if: always()
         run: |
