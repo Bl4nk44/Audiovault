@@ -357,9 +357,7 @@ async def stream_track(
             if h in upstream.headers:
                 response_headers[h.title()] = upstream.headers[h]
 
-        async def body() -> AsyncIterator[bytes]:
-            if client is None or upstream is None:
-                raise RuntimeError("client and upstream must be initialized")
+        async def body(client: httpx.AsyncClient, upstream: httpx.Response) -> AsyncIterator[bytes]:
             try:
                 async for chunk in upstream.aiter_bytes(64 * 1024):
                     yield chunk
@@ -368,7 +366,9 @@ async def stream_track(
                 await client.aclose()
 
         status_code = 206 if upstream.status_code == 206 else 200
-        return StreamingResponse(body(), status_code=status_code, headers=response_headers, media_type=media_type)
+        return StreamingResponse(
+            body(client, upstream), status_code=status_code, headers=response_headers, media_type=media_type
+        )
     except HTTPException:
         if upstream is not None:
             await upstream.aclose()
