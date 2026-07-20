@@ -34,7 +34,7 @@ jobs:
           pip install -r backend/requirements.txt
           # Pin ruff to match .pre-commit-config.yaml (ruff-pre-commit rev) so CI and
           # local pre-commit never diverge on lint/format/isort behavior.
-          pip install ruff==0.15.12 mypy
+          pip install ruff==0.15.12 mypy==2.3.0
 
       - name: Run Ruff Check
         run: |
