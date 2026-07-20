@@ -17,7 +17,7 @@ COPY pylock.toml backend/requirements.txt ./
 
 # Install Python dependencies from the lock for reproducible builds
 RUN pip install --upgrade pip && \
-    pip install --no-cache-dir --only-binary :all: -r pylock.toml
+    pip install --no-cache-dir --only-binary :all: --require-hashes -r pylock.toml
 
 # Copy application code
 COPY backend/ .
