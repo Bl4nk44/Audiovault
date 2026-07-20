@@ -1,7 +1,7 @@
 # Pinned by digest for reproducible builds; tag kept for readability.
 # 3.14-slim-bookworm floating tag carries the latest Debian security patches
 # (fixes openssl use-after-free + CPython path-traversal CVEs). Refresh digest on bump.
-FROM public.ecr.aws/docker/library/python:3.14-slim-bookworm@sha256:a70519002c49552ea0a853de47599cf40479b001bd7a624f1112eaf44dcaccc7
+FROM public.ecr.aws/docker/library/python:3.14-slim-bookworm@sha256:86f975aca15cf04a40b399eebede9aea7c82eae084d1f1a0a6ef6bcaae871a30
 
 WORKDIR /app
 
