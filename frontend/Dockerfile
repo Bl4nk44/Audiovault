@@ -14,7 +14,7 @@ COPY frontend/package*.json ./
 COPY frontend/.npmrc ./
 
 # Install dependencies with retry logic
-RUN npm ci --prefer-offline --no-audit || npm ci --prefer-offline --no-audit
+RUN npm ci --prefer-offline --no-audit --ignore-scripts || npm ci --prefer-offline --no-audit --ignore-scripts
 
 # Copy remaining frontend code
 COPY frontend/ ./

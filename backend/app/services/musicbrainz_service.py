@@ -14,12 +14,21 @@ Rate limited to 1 request/second as per MusicBrainz API guidelines.
 
 import asyncio
 import logging
+import re
 import time
 from typing import Any
 
 import aiohttp
 
 logger = logging.getLogger(__name__)
+
+_MBID_RE = re.compile(r"^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$")
+_ISRC_RE = re.compile(r"^[A-Za-z]{2}[A-Za-z0-9]{3}\d{7}$")
+
+
+def _sanitize_log(value: object) -> str:
+    """Strip CR/LF from a value before logging to prevent log injection/forging."""
+    return str(value).replace("\r", "").replace("\n", "")
 
 
 class MusicBrainzService:
@@ -51,7 +60,7 @@ class MusicBrainzService:
             async with aiohttp.ClientSession(headers=headers) as session:
                 async with session.get(url, params=params) as response:
                     if response.status != 200:
-                        logger.warning(f"MusicBrainz API returned {response.status} for {url}")
+                        logger.warning(f"MusicBrainz API returned {response.status} for {_sanitize_log(url)}")
                         return None
                     return await response.json()
         except Exception as e:
@@ -102,6 +111,10 @@ class MusicBrainzService:
 
     async def get_track_by_isrc(self, isrc: str) -> dict[str, Any] | None:
         """Look up a recording by ISRC code."""
+        if not _ISRC_RE.match(isrc):
+            logger.warning(f"Rejected malformed ISRC: {_sanitize_log(isrc)}")
+            return None
+
         params = {"inc": "artist-credits+releases", "fmt": "json"}
 
         data = await self._get(f"{self.BASE_URL}/isrc/{isrc}", params=params)
@@ -116,6 +129,10 @@ class MusicBrainzService:
 
     async def get_artist(self, mbid: str) -> dict[str, Any] | None:
         """Get artist details by MusicBrainz ID."""
+        if not _MBID_RE.match(mbid):
+            logger.warning(f"Rejected malformed MBID: {_sanitize_log(mbid)}")
+            return None
+
         params = {"fmt": "json"}
 
         data = await self._get(f"{self.BASE_URL}/artist/{mbid}", params=params)
@@ -126,6 +143,10 @@ class MusicBrainzService:
 
     async def get_cover_art(self, release_mbid: str) -> str | None:
         """Get front cover art URL from Cover Art Archive."""
+        if not _MBID_RE.match(release_mbid):
+            logger.warning(f"Rejected malformed release MBID: {_sanitize_log(release_mbid)}")
+            return None
+
         data = await self._get(f"{self.COVER_ART_URL}/release/{release_mbid}")
         if not data:
             return None
