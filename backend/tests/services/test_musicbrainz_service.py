@@ -350,7 +350,7 @@ async def test_get_artist_by_mbid(service: MusicBrainzService):
     mock_session = _mock_session([mock_resp])
 
     with patch("aiohttp.ClientSession", return_value=mock_session):
-        result = await service.get_artist("artist-mbid-1")
+        result = await service.get_artist("5b11f4ce-a62d-471e-81fc-a69a8278c7da")
 
     assert result is not None
     assert result["name"] == "Nirvana"
@@ -381,7 +381,7 @@ async def test_get_cover_art_found(service: MusicBrainzService):
     mock_session = _mock_session([mock_resp])
 
     with patch("aiohttp.ClientSession", return_value=mock_session):
-        url = await service.get_cover_art("release-mbid-1")
+        url = await service.get_cover_art("f27ec8db-af05-4f36-916e-3d57f91ecf5e")
 
     assert url is not None
     assert "coverartarchive.org" in url

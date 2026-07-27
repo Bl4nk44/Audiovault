@@ -279,7 +279,7 @@ jobs:
           node-version: '24'
 
       - name: Install Socket CLI
-        run: npm install -g @socketsecurity/cli
+        run: npm install -g --ignore-scripts @socketsecurity/cli@1.1.102
 
       - name: Run Socket CI scan
         env:

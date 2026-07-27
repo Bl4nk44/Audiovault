@@ -28,6 +28,12 @@ import httpx
 
 logger = logging.getLogger(__name__)
 
+
+def _sanitize_log(value: object) -> str:
+    """Strip CR/LF from a value before logging to prevent log injection/forging."""
+    return str(value).replace("\r", "").replace("\n", "")
+
+
 # Rotated UA pool — pick one per session, not per-request
 _UA_POOL = [
     "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
@@ -440,7 +446,7 @@ class SpotifyPartnerClient:
         cache_key = f"sp:pl:{playlist_id}"
         cached = await self._cache_get_playlist(cache_key)
         if cached is not None:
-            logger.debug(f"Spotify playlist {playlist_id} served from cache")
+            logger.debug(f"Spotify playlist {_sanitize_log(playlist_id)} served from cache")
             return cached
 
         batch = 343

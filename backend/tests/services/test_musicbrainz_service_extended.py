@@ -74,7 +74,7 @@ async def test_get_track_by_isrc_empty_recordings_returns_none(service):
 @pytest.mark.asyncio
 async def test_get_cover_art_no_data_returns_none(service):
     with patch.object(service, "_get", new_callable=AsyncMock, return_value=None):
-        result = await service.get_cover_art("mbid-123")
+        result = await service.get_cover_art("f27ec8db-af05-4f36-916e-3d57f91ecf5e")
     assert result is None
 
 
@@ -82,14 +82,14 @@ async def test_get_cover_art_no_data_returns_none(service):
 async def test_get_cover_art_no_front_uses_first_image(service):
     data = {"images": [{"front": False, "thumbnails": {"500": "http://500.jpg"}, "image": "http://full.jpg"}]}
     with patch.object(service, "_get", new_callable=AsyncMock, return_value=data):
-        result = await service.get_cover_art("mbid-123")
+        result = await service.get_cover_art("f27ec8db-af05-4f36-916e-3d57f91ecf5e")
     assert result == "http://500.jpg"
 
 
 @pytest.mark.asyncio
 async def test_get_cover_art_no_images_returns_none(service):
     with patch.object(service, "_get", new_callable=AsyncMock, return_value={"images": []}):
-        result = await service.get_cover_art("mbid-123")
+        result = await service.get_cover_art("f27ec8db-af05-4f36-916e-3d57f91ecf5e")
     assert result is None
 
 

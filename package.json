@@ -1,5 +1,8 @@
 {
   "dependencies": {
     "sonarqube-scanner": "^3.5.0"
+  },
+  "overrides": {
+    "adm-zip": ">=0.5.16"
   }
 }

@@ -13,6 +13,12 @@ from app.schemas.recommendation import RecommendedArtist, RecommendedTrack
 
 logger = logging.getLogger(__name__)
 
+
+def _sanitize_log(value: object) -> str:
+    """Strip CR/LF from a value before logging to prevent log injection/forging."""
+    return str(value).replace("\r", "").replace("\n", "")
+
+
 # Rate limiter constants
 MAX_REQUESTS_PER_SECOND = 5
 RATE_WINDOW_SECONDS = 1.0
@@ -435,7 +441,7 @@ class LastfmService:
         pool = [r for r in candidates.values() if f"{r.artist} - {r.name}" not in seen_tracks]
         final_results = self._select_recommendations(pool, limit, variety)
 
-        logger.info(f"Generated {len(final_results)} recommendations for {user_id} (variety={variety})")
+        logger.info(f"Generated {len(final_results)} recommendations for {_sanitize_log(user_id)} (variety={variety})")
         return final_results
 
     @staticmethod
