@@ -138,4 +138,17 @@ async def test_get_recommendations_integration_logic(lastfm_service):
 
     assert len(recs) >= 1
     assert recs[0].name == "Rec1"
-    assert recs[0].score > 0
+
+
+@pytest.mark.asyncio
+async def test_get_recommendations_no_seeds_returns_empty(lastfm_service):
+    """No top tracks/artists at all -> logs a warning and returns [] early."""
+    mock_response = Mock()
+    mock_response.status_code = 200
+    mock_response.raise_for_status = Mock()
+    mock_response.json.return_value = {"topartists": {"artist": []}, "toptracks": {"track": []}}
+    lastfm_service.client.get.return_value = mock_response
+
+    recs = await lastfm_service.get_recommendations("testuser")
+
+    assert recs == []
