@@ -241,11 +241,13 @@ class LastfmService:
             raw_artists = await self._fetch_raw_artists_authenticated(session_key, limit)
 
         if not raw_artists and user_name:
-            logger.info(f"Falling back to user.getTopArtists for {user_name}")
+            logger.info(f"Falling back to user.getTopArtists for {_sanitize_log(user_name)}")
             raw_artists = await self._fetch_raw_top_artists(user_name, limit)
 
         if not raw_artists:
-            logger.warning(f"No artists found for user_name={user_name}, session_key={bool(session_key)}")
+            logger.warning(
+                f"No artists found for user_name={_sanitize_log(user_name)}, session_key={bool(session_key)}"
+            )
             return []
 
         logger.info(f"Processing {len(raw_artists)} raw artist items")
@@ -404,7 +406,7 @@ class LastfmService:
                 seen_tracks.add(key)
 
         if not unique_tracks and not seed_artists:
-            logger.warning(f"No seeds found for user {user_id} on Last.fm")
+            logger.warning(f"No seeds found for user {_sanitize_log(user_id)} on Last.fm")
             return []
 
         artist_seed_list = list(seed_artists)
