@@ -91,6 +91,7 @@ describe("LoginForm", () => {
     await waitFor(() => {
       expect(mockLogin).toHaveBeenCalledWith({
         email: "testuser",
+        // eslint-disable-next-line sonarjs/no-hardcoded-passwords -- test fixture, not a real credential
         password: "password123",
       });
     });

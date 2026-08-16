@@ -37,7 +37,7 @@ describe("Logs Page (History)", () => {
     await waitFor(() => {
       expect(screen.getByText("logs.title")).toBeInTheDocument();
       expect(screen.getByText(/System started/)).toBeInTheDocument();
-      expect(screen.getAllByText(/2023-01-01/).length).toBe(4);
+      expect(screen.getAllByText(/2023-01-01/)).toHaveLength(4);
     });
   });
 

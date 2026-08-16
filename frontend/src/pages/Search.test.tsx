@@ -115,7 +115,7 @@ describe("Search Page Integration", () => {
     fireEvent.click(screen.getByTestId("search-all-btn"));
 
     await waitFor(() => {
-      expect(screen.getAllByText("Browse Item").length).toBe(3);
+      expect(screen.getAllByText("Browse Item")).toHaveLength(3);
     });
   });
 

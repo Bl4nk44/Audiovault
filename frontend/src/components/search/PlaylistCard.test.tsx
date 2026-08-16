@@ -91,22 +91,14 @@ describe("PlaylistCard", () => {
     );
   };
 
-  it("should render playlist title", () => {
+  it.each([
+    ["playlist title", "Test Playlist"],
+    ["source", "spotify"],
+    ["tracks count", "25 tracks"],
+  ])("should render %s", (_label, text) => {
     renderPlaylistCard();
 
-    expect(screen.getByText("Test Playlist")).toBeTruthy();
-  });
-
-  it("should render source", () => {
-    renderPlaylistCard();
-
-    expect(screen.getByText("spotify")).toBeTruthy();
-  });
-
-  it("should render tracks count", () => {
-    renderPlaylistCard();
-
-    expect(screen.getByText("25 tracks")).toBeTruthy();
+    expect(screen.getByText(text)).toBeTruthy();
   });
 
   it("should not render tracks count when not provided", () => {
