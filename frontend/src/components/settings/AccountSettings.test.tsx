@@ -103,7 +103,9 @@ describe("AccountSettings", () => {
 
     await waitFor(() => {
       expect(api.put).toHaveBeenCalledWith("/users/me/password", {
+
         current_password: "oldpassword",
+        // eslint-disable-next-line sonarjs/no-hardcoded-passwords -- test fixtures, not real credentials
         new_password: "newpassword",
       });
       expect(notify.success).toHaveBeenCalled();

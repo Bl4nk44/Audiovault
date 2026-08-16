@@ -109,6 +109,7 @@ describe("RegisterForm", () => {
       expect(mockRegister).toHaveBeenCalledWith({
         username: "testuser",
         email: "test@example.com",
+        // eslint-disable-next-line sonarjs/no-hardcoded-passwords -- test fixture, not a real credential
         password: "password123",
       });
       expect(mockToast.success).toHaveBeenCalledWith("Registration successful! Please login.");

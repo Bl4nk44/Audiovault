@@ -65,7 +65,7 @@ describe("playerSlice", () => {
     it("should set volume", () => {
       state.setVolume(0.8);
 
-      expect(state.volume).toBe(0.8);
+      expect(state.volume).toBeCloseTo(0.8);
     });
   });
 
