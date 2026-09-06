@@ -1,17 +1,21 @@
 import logging
 from typing import Any
+from urllib.parse import urlparse
 
 import aiohttp
 
 from app.services.base_music_service import BaseMusicService
 from app.utils.log_sanitize import sanitize_log
 
-# Lazy import or direct import if circular dependency is not an issue.
-# Assuming unl_helper is fine.
-# We will do dynamic import inside methods to be safe as done in original
-# code effectively (it was imported inside try block? No it was inside method).
-
 logger = logging.getLogger(__name__)
+
+_APPLE_MUSIC_HOSTS = {
+    "music.apple.com",
+    "beta.music.apple.com",
+    "embed.music.apple.com",
+    "geo.music.apple.com",
+}
+_APPLE_SHORT_HOSTS = {"apple.co"}
 
 
 class AppleMusicService(BaseMusicService):
@@ -21,8 +25,16 @@ class AppleMusicService(BaseMusicService):
         super().__init__()
         self.source_name = "apple_music"
 
+    @staticmethod
+    def _host(url: str) -> str:
+        try:
+            return (urlparse(url).hostname or "").lower()
+        except ValueError:
+            return ""
+
     def can_handle(self, url: str) -> bool:
-        return "music.apple.com" in url or "apple.co" in url
+        host = self._host(url)
+        return host in _APPLE_MUSIC_HOSTS or host in _APPLE_SHORT_HOSTS
 
     async def search(self, query: str, limit: int = 20) -> list[dict[str, Any]]:
         """Keyword track search via Apple's public iTunes Search API (no key).
@@ -69,7 +81,7 @@ class AppleMusicService(BaseMusicService):
         }
 
     async def _resolve_url(self, url: str) -> str:
-        if "apple.co" in url:
+        if self._host(url) in _APPLE_SHORT_HOSTS:
             from app.utils.url_helper import resolve_redirects
 
             resolved = await resolve_redirects(url)

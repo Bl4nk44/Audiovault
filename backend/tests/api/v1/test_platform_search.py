@@ -4,6 +4,8 @@ from unittest.mock import AsyncMock, patch
 
 import pytest
 
+from app.services.apple_music_service import AppleMusicService
+
 # ─── Amazon Music ─────────────────────────────────────────────────────────────
 
 
@@ -66,7 +68,7 @@ async def test_amazon_search_playlist_none(client, admin_token_headers, mock_ama
 @pytest.fixture
 def mock_apple_service():
     with patch("app.api.v1.apple_music.apple_music_service") as mock:
-        mock.can_handle = lambda q: "music.apple.com" in q or "apple.co" in q
+        mock.can_handle = AppleMusicService().can_handle
         mock.get_playlist_info = AsyncMock(return_value=None)
         mock.get_tracks = AsyncMock(return_value=[])
         mock.search = AsyncMock(return_value=[])
