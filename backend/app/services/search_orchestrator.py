@@ -82,7 +82,11 @@ class SearchOrchestrator:
             all_results.extend(results)
 
         deduplicated = self._deduplicate_results(all_results)
-        return deduplicated[:limit]
+        # Round-robin by source so a provider that fills the whole page (Deezer
+        # always returns a full page) does not push every other source past the
+        # `limit` cut — the reason "all" used to look Deezer-only.
+        interleaved = self._interleave_by_source(deduplicated)
+        return interleaved[:limit]
 
     async def search_artists(self, query: str, limit: int = 10, source: str = "all") -> list[dict[str, Any]]:
         """Search artists across providers. No Spotify artist search available."""
@@ -267,6 +271,22 @@ class SearchOrchestrator:
         if not existing.get("image_url") and result.get("image_url"):
             unique[unique.index(existing)] = result
             seen_map[key] = result
+
+    def _interleave_by_source(self, results: list[dict[str, Any]]) -> list[dict[str, Any]]:
+        """Round-robin results across their ``source`` while preserving first-seen
+        source order and each source's internal ranking."""
+        buckets: dict[str, list[dict[str, Any]]] = {}
+        for r in results:
+            buckets.setdefault(r.get("source", "?"), []).append(r)
+
+        queues = list(buckets.values())
+        interleaved: list[dict[str, Any]] = []
+        while queues:
+            for queue in list(queues):
+                interleaved.append(queue.pop(0))
+                if not queue:
+                    queues.remove(queue)
+        return interleaved
 
     def _deduplicate_results(self, results: list[dict[str, Any]]) -> list[dict[str, Any]]:
         """Deduplicate results by ISRC, preferring entries with cover art."""

@@ -39,6 +39,49 @@ async def test_all_source_aggregates_youtube_soundcloud_apple(orchestrator: Sear
 
 
 @pytest.mark.asyncio
+async def test_all_source_interleaves_so_full_deezer_page_does_not_bury_others(orchestrator: SearchOrchestrator):
+    """Deezer returns a full page of 20; the limited response must still surface
+    YouTube / SoundCloud results, not 20 Deezer rows."""
+    dz_full = [
+        {"id": f"dz{i}", "title": f"Deezer Song {i}", "artist": "A", "source": "deezer", "isrc": f"X{i:04d}"}
+        for i in range(20)
+    ]
+    yt3 = [
+        {"id": f"yt{i}", "title": f"YT Song {i}", "artist": "B", "source": "youtube", "isrc": None} for i in range(3)
+    ]
+    sc2 = [{"id": f"sc{i}", "title": f"SC Song {i}", "artist": "C", "source": "soundcloud"} for i in range(2)]
+
+    with (
+        patch.object(orchestrator, "_search_deezer", new_callable=AsyncMock, return_value=dz_full),
+        patch.object(orchestrator, "_search_musicbrainz", new_callable=AsyncMock, return_value=[]),
+        patch.object(orchestrator, "_search_spotify", new_callable=AsyncMock, return_value=[]),
+        patch.object(orchestrator, "_search_youtube", new_callable=AsyncMock, return_value=yt3),
+        patch.object(orchestrator, "_search_soundcloud", new_callable=AsyncMock, return_value=sc2),
+        patch.object(orchestrator, "_search_apple", new_callable=AsyncMock, return_value=[]),
+    ):
+        results = await orchestrator.search_tracks("q", source="all", limit=20)
+
+    assert len(results) == 20
+    sources = [r["source"] for r in results]
+    assert sources.count("youtube") == 3
+    assert sources.count("soundcloud") == 2
+    # first rows alternate rather than being 20x deezer
+    assert sources[:3] == ["deezer", "youtube", "soundcloud"]
+
+
+def test_interleave_by_source_round_robins_and_keeps_order(orchestrator: SearchOrchestrator):
+    rows = [
+        {"source": "deezer", "id": "d1"},
+        {"source": "deezer", "id": "d2"},
+        {"source": "deezer", "id": "d3"},
+        {"source": "youtube", "id": "y1"},
+        {"source": "youtube", "id": "y2"},
+    ]
+    out = orchestrator._interleave_by_source(rows)
+    assert [r["id"] for r in out] == ["d1", "y1", "d2", "y2", "d3"]
+
+
+@pytest.mark.asyncio
 async def test_all_source_dedupes_across_new_providers_by_title_artist(orchestrator: SearchOrchestrator):
     """YouTube + Apple both return 'Blinding Lights' with no ISRC → collapsed to one."""
     with (
