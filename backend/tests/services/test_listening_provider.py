@@ -1,6 +1,6 @@
 """Tests for the listening-provider abstraction (Last.fm adapter + registry)."""
 
-from unittest.mock import AsyncMock
+from unittest.mock import AsyncMock, patch
 
 import pytest
 
@@ -125,3 +125,94 @@ async def test_get_profile_degrades_when_friends_fail(provider, lastfm_service):
 async def test_validate_credentials_unsupported_for_lastfm(provider):
     with pytest.raises(ListeningError):
         await provider.validate_credentials("whatever")
+
+
+# --- ListenBrainzProvider adapter ---
+
+
+@pytest.fixture
+def lb_service():
+    return AsyncMock()
+
+
+@pytest.fixture
+def lb_provider(lb_service):
+    from app.services.listening.listenbrainz import ListenBrainzProvider
+
+    return ListenBrainzProvider(service=lb_service)
+
+
+def test_registry_exposes_listenbrainz():
+    p = get_provider("listenbrainz")
+    assert p is not None
+    assert p.display_name == "ListenBrainz"
+    assert p.connects_with_token is True
+
+
+@pytest.mark.asyncio
+async def test_lb_validate_credentials_returns_identity(lb_provider, lb_service):
+    lb_service.validate_token.return_value = "alice"
+    identity = await lb_provider.validate_credentials("  tok  ")
+    assert identity.username == "alice"
+    lb_service.validate_token.assert_awaited_once_with("tok")
+
+
+@pytest.mark.asyncio
+async def test_lb_validate_credentials_wraps_error(lb_provider, lb_service):
+    from app.services.listenbrainz_service import ListenBrainzError
+
+    lb_service.validate_token.side_effect = ListenBrainzError("nope")
+    with pytest.raises(ListeningError):
+        await lb_provider.validate_credentials("bad")
+
+
+@pytest.mark.asyncio
+async def test_lb_get_credentials_none_when_not_stored(lb_provider):
+    with patch(
+        "app.services.listening.listenbrainz.credentials_service.get_tokens",
+        new_callable=AsyncMock,
+        return_value=None,
+    ):
+        assert await lb_provider.get_credentials(User(username="u"), db=None) is None
+
+
+@pytest.mark.asyncio
+async def test_lb_get_credentials_reads_encrypted_store(lb_provider):
+    with patch(
+        "app.services.listening.listenbrainz.credentials_service.get_tokens",
+        new_callable=AsyncMock,
+        return_value={"access_token": "secret-tok", "extra_data": {"username": "alice"}},
+    ):
+        creds = await lb_provider.get_credentials(User(username="u"), db=None)
+    assert creds.secret == "secret-tok"
+    assert creds.username == "alice"
+    assert creds.provider == "listenbrainz"
+
+
+@pytest.mark.asyncio
+async def test_lb_scrobble_delegates(lb_provider, lb_service):
+    creds = ProviderCredentials(provider="listenbrainz", username="alice", secret="tok")
+    await lb_provider.scrobble(creds, "Track", "Artist", timestamp=99, album="Alb")
+    lb_service.submit_listen.assert_awaited_once_with(
+        "tok", track="Track", artist="Artist", listened_at=99, album="Alb"
+    )
+
+
+@pytest.mark.asyncio
+async def test_lb_now_playing_delegates(lb_provider, lb_service):
+    creds = ProviderCredentials(provider="listenbrainz", username="alice", secret="tok")
+    await lb_provider.update_now_playing(creds, "Track", "Artist")
+    lb_service.submit_now_playing.assert_awaited_once_with("tok", track="Track", artist="Artist", album=None)
+
+
+@pytest.mark.asyncio
+async def test_lb_connected_providers_includes_lb_when_stored():
+    user = User(username="u")
+    with patch(
+        "app.services.listening.listenbrainz.credentials_service.get_tokens",
+        new_callable=AsyncMock,
+        return_value={"access_token": "tok", "extra_data": {"username": "alice"}},
+    ):
+        pairs = await connected_providers(user, db=None)
+    names = {p.name for p, _ in pairs}
+    assert "listenbrainz" in names

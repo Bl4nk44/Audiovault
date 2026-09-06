@@ -61,6 +61,11 @@ class Settings(BaseSettings):
     LASTFM_API_KEY: str | None = None
     LASTFM_API_SECRET: str | None = None
 
+    # ListenBrainz — no app registration needed; each user pastes a personal
+    # token from https://listenbrainz.org/settings/. Override the base URL only
+    # for a self-hosted instance.
+    LISTENBRAINZ_API_URL: str = "https://api.listenbrainz.org"
+
     DOWNLOAD_DIR: str = os.getenv("DOWNLOAD_DIR", os.path.join(os.getcwd(), "downloads"))
     MAX_PARALLEL_DOWNLOADS: int = 3
 

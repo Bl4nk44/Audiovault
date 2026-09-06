@@ -5,6 +5,7 @@ from typing import TYPE_CHECKING
 
 from app.services.listening.base import ListeningProvider, ProviderCredentials
 from app.services.listening.lastfm import LastfmProvider
+from app.services.listening.listenbrainz import ListenBrainzProvider
 
 if TYPE_CHECKING:
     from sqlalchemy.ext.asyncio import AsyncSession
@@ -15,7 +16,7 @@ logger = logging.getLogger(__name__)
 
 #: All known providers, keyed by their stable ``name``. Order defines the
 #: fan-out / "first connected" preference order.
-PROVIDERS: dict[str, ListeningProvider] = {p.name: p for p in (LastfmProvider(),)}
+PROVIDERS: dict[str, ListeningProvider] = {p.name: p for p in (LastfmProvider(), ListenBrainzProvider())}
 
 
 def get_provider(name: str) -> ListeningProvider | None:
@@ -29,7 +30,7 @@ async def connected_providers(user: User, db: AsyncSession) -> list[tuple[Listen
         try:
             creds = await provider.get_credentials(user, db)
         except Exception as e:  # pragma: no cover - defensive
-            logger.warning("Failed to resolve %s credentials for user %s: %s", provider.name, user.id, e)
+            logger.warning("Could not load %s link for user %s (%s)", provider.name, user.id, type(e).__name__)
             continue
         if creds is not None:
             out.append((provider, creds))
