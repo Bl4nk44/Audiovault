@@ -138,3 +138,79 @@ async def test_scrobble_fans_out(client, admin_token_headers):
 @pytest.mark.asyncio
 async def test_unauthenticated_rejected(client):
     assert (await client.get("/api/v1/listening/providers")).status_code == 401
+
+
+@pytest.mark.asyncio
+async def test_disconnect_lastfm_clears_columns(client, admin_token_headers, db_session, admin_user):
+    admin_user.lastfm_session_key = "sk"
+    admin_user.lastfm_username = "lfm"
+    db_session.add(admin_user)
+    await db_session.commit()
+
+    response = await client.post("/api/v1/listening/disconnect/lastfm", headers=admin_token_headers)
+    assert response.status_code == 200
+    assert response.json()["provider"] == "lastfm"
+
+    await db_session.refresh(admin_user)
+    assert admin_user.lastfm_session_key is None
+    assert admin_user.lastfm_username is None
+
+
+@pytest.mark.asyncio
+async def test_disconnect_unknown_provider_404(client, admin_token_headers):
+    response = await client.post("/api/v1/listening/disconnect/bandcamp", headers=admin_token_headers)
+    assert response.status_code == 404
+
+
+@pytest.mark.asyncio
+async def test_profile_success(client, admin_token_headers):
+    from app.services.listening.registry import PROVIDERS
+
+    lb = PROVIDERS["listenbrainz"]
+    with (
+        patch.object(
+            lb,
+            "get_credentials",
+            new_callable=AsyncMock,
+            return_value=type("C", (), {"provider": "listenbrainz", "username": "alice", "secret": "t"})(),
+        ),
+        patch.object(lb, "get_profile", new_callable=AsyncMock, return_value={"user": {"name": "alice"}}),
+    ):
+        response = await client.get("/api/v1/listening/profile/listenbrainz", headers=admin_token_headers)
+
+    assert response.status_code == 200
+    assert response.json()["user"]["name"] == "alice"
+
+
+@pytest.mark.asyncio
+async def test_profile_unknown_provider_404(client, admin_token_headers):
+    response = await client.get("/api/v1/listening/profile/bandcamp", headers=admin_token_headers)
+    assert response.status_code == 404
+
+
+@pytest.mark.asyncio
+async def test_now_playing_fans_out(client, admin_token_headers):
+    fake = AsyncMock()
+    fake.update_now_playing = AsyncMock()
+    with patch("app.api.v1.listening.AudiovaultScrobbler.for_user", new_callable=AsyncMock, return_value=fake):
+        response = await client.post(
+            "/api/v1/listening/scrobble/now_playing",
+            json={"track": "T", "artist": "A"},
+            headers=admin_token_headers,
+        )
+    assert response.status_code == 200
+    assert response.json()["status"] == "ok"
+    fake.update_now_playing.assert_awaited_once()
+
+
+@pytest.mark.asyncio
+async def test_scrobble_ignored_when_no_targets(client, admin_token_headers):
+    fake = AsyncMock()
+    fake.scrobble_track = AsyncMock(return_value=False)
+    with patch("app.api.v1.listening.AudiovaultScrobbler.for_user", new_callable=AsyncMock, return_value=fake):
+        response = await client.post(
+            "/api/v1/listening/scrobble",
+            json={"track": "T", "artist": "A", "timestamp": 1},
+            headers=admin_token_headers,
+        )
+    assert response.json()["status"] == "ignored_or_failed"

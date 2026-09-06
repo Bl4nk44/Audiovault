@@ -149,3 +149,65 @@ async def test_get_profile_combines_count_and_similar(service):
     assert profile["user"]["playcount"] == 999
     assert profile["user"]["url"] == "https://listenbrainz.org/user/alice/"
     assert profile["similar_users"] == [{"name": "bob", "similarity": 0.8}]
+
+
+@pytest.mark.asyncio
+async def test_get_recent_tracks_empty_payload(service):
+    service.client.get.return_value = _resp(200, {"payload": {"listens": []}})
+    assert await service.get_recent_tracks("alice") == []
+
+
+@pytest.mark.asyncio
+async def test_get_recent_tracks_no_data(service):
+    service.client.get.return_value = _resp(204, None)
+    assert await service.get_recent_tracks("alice") == []
+
+
+@pytest.mark.asyncio
+async def test_get_recommended_mbids_no_data(service):
+    service.client.get.return_value = _resp(204, None)
+    assert await service.get_recommended_recording_mbids("alice") == []
+
+
+@pytest.mark.asyncio
+async def test_get_listen_count(service):
+    service.client.get.return_value = _resp(200, {"payload": {"count": 4321}})
+    assert await service.get_listen_count("alice") == 4321
+    service.client.get.return_value = _resp(204, None)
+    assert await service.get_listen_count("alice") == 0
+
+
+@pytest.mark.asyncio
+async def test_get_similar_users_variants(service):
+    service.client.get.return_value = _resp(200, {"payload": [{"user_name": "bob", "similarity": 0.9}, {"x": 1}]})
+    assert await service.get_similar_users("alice") == [{"name": "bob", "similarity": 0.9}]
+
+    service.client.get.return_value = _resp(200, {"payload": "not-a-list"})
+    assert await service.get_similar_users("alice") == []
+
+    service.client.get.return_value = _resp(204, None)
+    assert await service.get_similar_users("alice") == []
+
+
+@pytest.mark.asyncio
+async def test_get_profile_survives_source_errors(service):
+    async def boom(*_a, **_kw):
+        raise ListenBrainzError("down")
+
+    service._get = boom  # type: ignore[method-assign]
+    profile = await service.get_profile("alice")
+    assert profile["user"]["playcount"] == 0
+    assert profile["similar_users"] == []
+
+
+@pytest.mark.asyncio
+async def test_get_post_http_error_wrapped(service):
+    import httpx
+
+    service.client.post.side_effect = httpx.ConnectError("boom")
+    with pytest.raises(ListenBrainzError):
+        await service.submit_now_playing("tok", "T", "A")
+
+    service.client.get.side_effect = httpx.ConnectError("boom")
+    with pytest.raises(ListenBrainzError):
+        await service.validate_token("tok")

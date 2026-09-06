@@ -220,3 +220,92 @@ async def test_lb_connected_providers_includes_lb_when_stored():
         pairs = await connected_providers(user, db=NO_DB)
     names = {p.name for p, _ in pairs}
     assert "listenbrainz" in names
+
+
+# --- get_seeds / get_recommended_artists coverage ---
+
+
+@pytest.mark.asyncio
+async def test_lastfm_get_seeds_delegates_and_listifies(provider, lastfm_service):
+    lastfm_service._gather_seeds = AsyncMock(return_value=([("Song", "Artist")], {"Artist", "Other"}))
+    creds = ProviderCredentials(provider="lastfm", username="lfm", secret="sk")
+
+    seed_tracks, seed_artists = await provider.get_seeds(creds, variety=True)
+
+    lastfm_service._gather_seeds.assert_awaited_once_with("lfm", "sk", variety=True)
+    assert seed_tracks == [("Song", "Artist")]
+    assert sorted(seed_artists) == ["Artist", "Other"]
+
+
+@pytest.mark.asyncio
+async def test_lastfm_get_seeds_wraps_error(provider, lastfm_service):
+    from app.services.lastfm_service import LastfmError
+
+    lastfm_service._gather_seeds = AsyncMock(side_effect=LastfmError("down"))
+    with pytest.raises(ListeningError):
+        await provider.get_seeds(ProviderCredentials(provider="lastfm", username="l", secret="s"))
+
+
+@pytest.mark.asyncio
+async def test_lastfm_get_recommended_artists_delegates(provider, lastfm_service):
+    lastfm_service.get_recommended_artists = AsyncMock(return_value=["x"])
+    creds = ProviderCredentials(provider="lastfm", username="lfm", secret="sk")
+
+    out = await provider.get_recommended_artists(creds, limit=7)
+
+    lastfm_service.get_recommended_artists.assert_awaited_once_with("sk", limit=7, user_name="lfm")
+    assert out == ["x"]
+
+
+@pytest.mark.asyncio
+async def test_lastfm_update_now_playing_wraps_error(provider, lastfm_service):
+    from app.services.lastfm_service import LastfmError
+
+    lastfm_service.update_now_playing.side_effect = LastfmError("boom")
+    with pytest.raises(ListeningError):
+        await provider.update_now_playing(ProviderCredentials(provider="lastfm", username="l", secret="s"), "T", "A")
+
+
+@pytest.mark.asyncio
+async def test_lb_get_seeds_maps_stats(lb_provider, lb_service):
+    lb_service.get_top_tracks.return_value = [{"name": "T1", "artist": "A1"}, {"name": "no artist"}]
+    lb_service.get_recent_tracks.return_value = [{"name": "T2", "artist": "A2"}]
+    lb_service.get_top_artists.return_value = [{"name": "A1"}, {"name": "A3"}, {"nope": 1}]
+    creds = ProviderCredentials(provider="listenbrainz", username="alice", secret="tok")
+
+    seed_tracks, seed_artists = await lb_provider.get_seeds(creds, variety=False)
+
+    assert ("T1", "A1") in seed_tracks and ("T2", "A2") in seed_tracks
+    assert len(seed_tracks) == 2
+    assert seed_artists == ["A1", "A3"]
+
+
+@pytest.mark.asyncio
+async def test_lb_get_seeds_tolerates_partial_failure(lb_provider, lb_service):
+    from app.services.listenbrainz_service import ListenBrainzError
+
+    lb_service.get_top_tracks.side_effect = ListenBrainzError("stats not ready")
+    lb_service.get_recent_tracks.return_value = [{"name": "T", "artist": "A"}]
+    lb_service.get_top_artists.return_value = []
+    creds = ProviderCredentials(provider="listenbrainz", username="alice", secret="tok")
+
+    seed_tracks, seed_artists = await lb_provider.get_seeds(creds)
+
+    assert seed_tracks == [("T", "A")]
+    assert seed_artists == []
+
+
+@pytest.mark.asyncio
+async def test_lb_get_profile_delegates(lb_provider, lb_service):
+    lb_service.get_profile.return_value = {"user": {"name": "alice"}}
+    creds = ProviderCredentials(provider="listenbrainz", username="alice", secret="tok")
+    assert await lb_provider.get_profile(creds) == {"user": {"name": "alice"}}
+
+
+@pytest.mark.asyncio
+async def test_lb_get_profile_wraps_error(lb_provider, lb_service):
+    from app.services.listenbrainz_service import ListenBrainzError
+
+    lb_service.get_profile.side_effect = ListenBrainzError("down")
+    with pytest.raises(ListeningError):
+        await lb_provider.get_profile(ProviderCredentials(provider="listenbrainz", username="a", secret="t"))
