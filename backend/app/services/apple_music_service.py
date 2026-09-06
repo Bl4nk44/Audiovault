@@ -30,7 +30,7 @@ class AppleMusicService(BaseMusicService):
         Apple Music has no yt-dlp keyword search; the iTunes Search API is the
         supported public surface for catalogue lookups.
         """
-        params = {
+        params: dict[str, str | int] = {
             "term": query,
             "media": "music",
             "entity": "song",
