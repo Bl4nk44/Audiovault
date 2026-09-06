@@ -2,6 +2,35 @@
 
 All notable changes to Audiovault will be documented in this file.
 
+## [0.6.3] - 2026-09-06
+
+### Added
+
+- **Multi-source track search**: a free-text search now aggregates YouTube Music, SoundCloud (yt-dlp `scsearch`) and Apple Music (public iTunes Search API) alongside Deezer, Spotify and MusicBrainz. The aggregated results are round-robined by source so one provider that fills a whole page no longer buries the others, and the SoundCloud / Apple Music `/search` routes do real keyword search instead of returning `[]` for anything that is not a URL (`715d64b`, `2d33194`)
+- **ListenBrainz as a second listening provider**: connect Last.fm, ListenBrainz, or both. Scrobbles fan out to every connected provider; recommendations are generated from the provider you pick (`preferences.listening_provider` = `auto` / `lastfm` / `listenbrainz`). A provider-agnostic `app/services/listening/` abstraction, a new `ListenBrainzService` client, a rebuilt `HybridRecommendationEngine` (ListenBrainz supplies the seeds, the public Last.fm graph does the similarity expansion, Deezer back-fills cover art), a new `/api/v1/listening/*` API, a provider picker with a token field on the Recommendations page, and `listening.*` i18n in 5 locales. The old `/api/v1/lastfm/*` routes and `lastfm_connected` response field are kept for compatibility. See `docs/LISTENBRAINZ_INTEGRATION.md` (`da5dd78`, `fbbe1f7`, `f4ab9f3`, `404e062`, `324154c`, `637a194`)
+- `LISTENBRAINZ_API_URL` env var (optional; defaults to `https://api.listenbrainz.org`, no API key)
+
+### Fixed
+
+- Stream body closure: removed an unreachable `None` check (`55e8928`, #140)
+- Resolved 3 SonarCloud reliability bugs that were blocking the quality gate (`bfd3394`, #138)
+- CI: removed a dead pip-cache config that broke the Backend Lint job; fixed pre-existing frontend eslint errors that blocked the pre-push CI (`c02bdf5`, `84915ea`)
+
+### Security
+
+- Patched a log-injection sink and bumped the vulnerable/outdated dependencies it surfaced (`0e953f4`)
+- Resolved the remaining open GitHub code-scanning alerts (`8f2b8fd`)
+- Enforced hash verification and wheel-only installs, and cleared the remaining SonarCloud new-code security-rating findings (`f013418`, `7992d21`)
+- Docker: refreshed the Python base-image digest to pick up the mesa CVE-2026-40393 fix (`08f4fbc`)
+
+### Dependencies
+
+- Refreshed the backend `pylock.toml` (PEP 751) and the frontend `package-lock.json` within their existing version ranges — yt-dlp, cryptography, pydantic, ruff, alembic, uvicorn, coverage on the backend; `@types/*`, testing-library, typescript-eslint, zustand, knip on the frontend (`23e9142`)
+
+### Chore
+
+- CI: dropped the weekly dependency-report and security-scan email (`37f87aa`, #139)
+
 ## [0.6.2] - 2026-07-18
 
 ### Fixed

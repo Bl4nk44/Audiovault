@@ -26,7 +26,7 @@ patch_tags = ["fix", "perf", "chore"]
 [project]
 name = "audiovault"
 description = "Self-hosted application for importing, managing, and downloading music from major streaming platforms"
-version = "0.6.2"
+version = "0.6.3"
 
 [tool.ruff]
 line-length = 120
