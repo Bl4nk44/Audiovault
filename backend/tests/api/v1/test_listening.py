@@ -35,6 +35,7 @@ async def test_connect_listenbrainz_stores_token(client, admin_token_headers):
     body = response.json()
     assert body == {"status": "connected", "provider": "listenbrainz", "username": "alice"}
     mock_store.assert_awaited_once()
+    assert mock_store.await_args is not None
     kwargs = mock_store.await_args.kwargs
     assert kwargs["access_token"] == "lb-secret-token"
     assert kwargs["extra_data"]["username"] == "alice"

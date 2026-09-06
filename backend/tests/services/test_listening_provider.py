@@ -1,13 +1,17 @@
 """Tests for the listening-provider abstraction (Last.fm adapter + registry)."""
 
+from typing import cast
 from unittest.mock import AsyncMock, patch
 
 import pytest
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models.user import User
 from app.services.listening import connected_providers, get_provider
 from app.services.listening.base import ListeningError, ProviderCredentials
 from app.services.listening.lastfm import LastfmProvider
+
+NO_DB = cast(AsyncSession, None)  # db is unused on the paths under test
 
 
 @pytest.fixture
@@ -37,13 +41,13 @@ def test_registry_unknown_provider_is_none():
 @pytest.mark.asyncio
 async def test_connected_providers_empty_when_nothing_linked():
     user = User(username="u")
-    assert await connected_providers(user, db=None) == []
+    assert await connected_providers(user, db=NO_DB) == []
 
 
 @pytest.mark.asyncio
 async def test_connected_providers_returns_lastfm_when_session_key_present():
     user = User(username="u", lastfm_session_key="sk", lastfm_username="lfm")
-    pairs = await connected_providers(user, db=None)
+    pairs = await connected_providers(user, db=NO_DB)
     assert len(pairs) == 1
     prov, creds = pairs[0]
     assert prov.name == "lastfm"
@@ -56,13 +60,13 @@ async def test_connected_providers_returns_lastfm_when_session_key_present():
 
 @pytest.mark.asyncio
 async def test_get_credentials_none_without_session_key(provider):
-    assert await provider.get_credentials(User(username="u"), db=None) is None
+    assert await provider.get_credentials(User(username="u"), db=NO_DB) is None
 
 
 @pytest.mark.asyncio
 async def test_get_credentials_falls_back_to_username(provider):
     user = User(username="fallback", lastfm_session_key="sk")  # no lastfm_username
-    creds = await provider.get_credentials(user, db=None)
+    creds = await provider.get_credentials(user, db=NO_DB)
     assert creds.username == "fallback"
 
 
@@ -173,7 +177,7 @@ async def test_lb_get_credentials_none_when_not_stored(lb_provider):
         new_callable=AsyncMock,
         return_value=None,
     ):
-        assert await lb_provider.get_credentials(User(username="u"), db=None) is None
+        assert await lb_provider.get_credentials(User(username="u"), db=NO_DB) is None
 
 
 @pytest.mark.asyncio
@@ -183,7 +187,7 @@ async def test_lb_get_credentials_reads_encrypted_store(lb_provider):
         new_callable=AsyncMock,
         return_value={"access_token": "secret-tok", "extra_data": {"username": "alice"}},
     ):
-        creds = await lb_provider.get_credentials(User(username="u"), db=None)
+        creds = await lb_provider.get_credentials(User(username="u"), db=NO_DB)
     assert creds.secret == "secret-tok"
     assert creds.username == "alice"
     assert creds.provider == "listenbrainz"
@@ -213,6 +217,6 @@ async def test_lb_connected_providers_includes_lb_when_stored():
         new_callable=AsyncMock,
         return_value={"access_token": "tok", "extra_data": {"username": "alice"}},
     ):
-        pairs = await connected_providers(user, db=None)
+        pairs = await connected_providers(user, db=NO_DB)
     names = {p.name for p, _ in pairs}
     assert "listenbrainz" in names

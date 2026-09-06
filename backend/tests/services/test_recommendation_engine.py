@@ -1,14 +1,18 @@
 from datetime import datetime
+from typing import cast
 from unittest.mock import AsyncMock, patch
 from uuid import uuid4
 
 import pytest
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models.user import User
 from app.schemas.recommendation import RecommendationResponse, RecommendedTrack
 from app.services.lastfm_service import LastfmError
 from app.services.listening.base import ProviderCredentials
 from app.services.recommendation_engine import HybridRecommendationEngine
+
+NO_DB = cast(AsyncSession, None)  # db is unused on the paths under test
 
 
 def _fake_provider(name="lastfm"):
@@ -161,7 +165,7 @@ async def test_for_user_auto_picks_first_connected():
         new_callable=AsyncMock,
         return_value=[(prov, creds)],
     ):
-        engine = await HybridRecommendationEngine.for_user(user, db=None)
+        engine = await HybridRecommendationEngine.for_user(user, db=NO_DB)
 
     assert engine.provider is prov
     assert engine.credentials is creds
@@ -186,7 +190,7 @@ async def test_for_user_honours_preference():
             "app.services.recommendation_engine.get_provider", side_effect=lambda n: lbz if n == "listenbrainz" else lfm
         ),
     ):
-        engine = await HybridRecommendationEngine.for_user(user, db=None)
+        engine = await HybridRecommendationEngine.for_user(user, db=NO_DB)
 
     assert engine.provider is lbz
 
@@ -200,6 +204,6 @@ async def test_for_user_nothing_connected_gives_disconnected_engine():
         new_callable=AsyncMock,
         return_value=[],
     ):
-        engine = await HybridRecommendationEngine.for_user(user, db=None)
+        engine = await HybridRecommendationEngine.for_user(user, db=NO_DB)
 
     assert engine.is_connected is False

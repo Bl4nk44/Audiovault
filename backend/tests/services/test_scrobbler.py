@@ -1,10 +1,14 @@
+from typing import cast
 from unittest.mock import AsyncMock, patch
 
 import pytest
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models.user import User
 from app.services.listening.base import ListeningError, ProviderCredentials
 from app.services.scrobbler import AudiovaultScrobbler, scrobbling_enabled
+
+NO_DB = cast(AsyncSession, None)  # db is unused on the paths under test
 
 
 def _creds(name: str) -> ProviderCredentials:
@@ -82,7 +86,7 @@ async def test_for_user_skips_everything_when_scrobbling_disabled():
     u.preferences = {"scrobble_enabled": False}
 
     with patch("app.services.scrobbler.connected_providers", new_callable=AsyncMock) as mock_conn:
-        scrobbler = await AudiovaultScrobbler.for_user(u, db=None)
+        scrobbler = await AudiovaultScrobbler.for_user(u, db=NO_DB)
 
     mock_conn.assert_not_awaited()
     assert scrobbler.has_targets is False
@@ -96,7 +100,7 @@ async def test_for_user_builds_from_connected_providers(user):
         new_callable=AsyncMock,
         return_value=[(lfm, _creds("lastfm"))],
     ):
-        scrobbler = await AudiovaultScrobbler.for_user(user, db=None)
+        scrobbler = await AudiovaultScrobbler.for_user(user, db=NO_DB)
 
     assert scrobbler.has_targets is True
 
