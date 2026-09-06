@@ -15,10 +15,8 @@ RUN apt-get update && apt-get upgrade -y && apt-get install -y --no-install-reco
 # Copy dependency lock (PEP 751) + source manifest
 COPY pylock.toml backend/requirements.txt ./
 
-# Upgrade the bundled pip first (base image ships pip 26.1.2 — CVE-2026-13346,
-# arbitrary file install via malicious package indexes), then install from the lock.
-RUN pip install --no-cache-dir --upgrade "pip>=26.2.0" && \
-    pip install --no-cache-dir --only-binary :all: --require-hashes -r pylock.toml
+# Install Python dependencies from the lock for reproducible builds
+RUN pip install --no-cache-dir --only-binary :all: --require-hashes -r pylock.toml
 
 # Copy application code
 COPY backend/ .
