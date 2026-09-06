@@ -12,6 +12,7 @@ from app.api.v1 import (
     downloads,
     history,
     lastfm,
+    listening,
     lyrics,
     playlists,
     settings,
@@ -39,6 +40,7 @@ api_router.include_router(dashboard.router, prefix="/dashboard", tags=["dashboar
 api_router.include_router(stream.router, prefix="/stream", tags=["stream"])
 api_router.include_router(lyrics.router, prefix="/lyrics", tags=["lyrics"])
 api_router.include_router(lastfm.router, prefix="/lastfm", tags=["lastfm"])
+api_router.include_router(listening.router, prefix="/listening", tags=["listening"])
 api_router.include_router(audit.router, prefix="/audit", tags=["audit"])
 api_router.include_router(storage.router, prefix="/storage", tags=["storage"])
 

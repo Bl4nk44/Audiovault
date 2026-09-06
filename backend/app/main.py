@@ -27,6 +27,7 @@ from app.api.v1 import (
     history,
     import_routes,
     lastfm,
+    listening,
     lyrics,
     metadata_routes,  # noqa: E402
     playlists,
@@ -119,6 +120,7 @@ application.include_router(playlists.router, prefix="/api/v1/playlists", tags=["
 application.include_router(storage.router, prefix="/api/v1/storage", tags=["storage"])
 application.include_router(tidal.router, prefix="/api/v1/tidal", tags=["tidal"])
 application.include_router(lastfm.router, prefix="/api/v1/lastfm", tags=["lastfm"])
+application.include_router(listening.router, prefix="/api/v1/listening", tags=["listening"])
 application.include_router(metadata_routes.router, prefix="/api/v1/metadata", tags=["metadata"])
 application.include_router(amazon_music.router, prefix="/api/v1/amazon_music", tags=["amazon_music"])
 application.include_router(apple_music.router, prefix="/api/v1/apple_music", tags=["apple_music"])
