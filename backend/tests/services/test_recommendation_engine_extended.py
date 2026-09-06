@@ -1,13 +1,13 @@
 """Extended tests covering uncovered branches in HybridRecommendationEngine."""
 
-from unittest.mock import AsyncMock, Mock, patch
+from unittest.mock import AsyncMock, patch
 from uuid import uuid4
 
 import pytest
 
 from app.models.user import User
 from app.schemas.recommendation import RecommendedArtist, RecommendedTrack
-from app.services.lastfm_service import LastfmService
+from app.services.listening.base import ListeningError, ProviderCredentials
 from app.services.recommendation_engine import HybridRecommendationEngine, _is_missing_image
 
 # ─── _is_missing_image ────────────────────────────────────────────────────────
@@ -31,8 +31,7 @@ def test_is_missing_image_lastfm_placeholder():
 
 
 def test_is_missing_image_alternative_placeholder():
-    url = "https://img/c6f59c1e5e7240a4c0d427abd71f3dbb.png"
-    assert _is_missing_image(url) is True
+    assert _is_missing_image("https://img/c6f59c1e5e7240a4c0d427abd71f3dbb.png") is True
 
 
 def test_is_missing_image_real_url():
@@ -42,181 +41,148 @@ def test_is_missing_image_real_url():
 # ─── Fixtures ─────────────────────────────────────────────────────────────────
 
 
+def _fake_provider(name="lastfm"):
+    p = AsyncMock()
+    p.name = name
+    p.get_seeds = AsyncMock(return_value=([("Song", "Artist")], ["Nirvana"]))
+    p.get_recommended_artists = AsyncMock(return_value=[])
+    return p
+
+
 @pytest.fixture
-def mock_lastfm():
-    svc = Mock(spec=LastfmService)
-    svc.get_recommendations = AsyncMock(return_value=[])
-    svc.get_recommended_artists = AsyncMock(return_value=[])
-    svc.get_user_top_artists = AsyncMock(return_value=[])
-    svc.get_user_recent_tracks = AsyncMock(return_value=[])
-    return svc
+def provider():
+    return _fake_provider()
+
+
+@pytest.fixture
+def expansion():
+    exp = AsyncMock()
+    exp.recommend_from_seeds = AsyncMock(return_value=[])
+    return exp
 
 
 @pytest.fixture
 def mock_cache():
     cache = AsyncMock()
     cache.get.return_value = None
-    cache.set = AsyncMock()
-    cache.delete = AsyncMock()
     return cache
 
 
 @pytest.fixture
-def engine(mock_lastfm, mock_cache):
+def engine(provider, expansion, mock_cache):
     with patch("app.services.recommendation_engine.cache_manager", mock_cache):
-        return HybridRecommendationEngine(mock_lastfm)
+        return HybridRecommendationEngine(
+            provider=provider,
+            credentials=ProviderCredentials(provider="lastfm", username="lfuser", secret="sk"),
+            expansion=expansion,
+        )
 
 
 @pytest.fixture
 def user_lf():
-    return User(
-        id=uuid4(),
-        username="u",
-        lastfm_session_key="sk",
-        lastfm_username="lfuser",
-    )
+    return User(id=uuid4(), username="u")
 
 
-@pytest.fixture
-def user_no_lf():
-    return User(id=uuid4(), username="u", lastfm_session_key=None)
-
-
-# ─── _fetch_lastfm_recommendations ────────────────────────────────────────────
+# ─── _expand_tracks + image backfill ─────────────────────────────────────────
 
 
 @pytest.mark.asyncio
-async def test_fetch_lastfm_missing_images_triggers_deezer(engine, mock_lastfm):
-    placeholder_track = RecommendedTrack(
-        name="Track",
-        artist="Artist",
-        url="https://last.fm/track/1",
-        match=0.9,
-        image_url="https://img/2a96cbd8b46e442fc41c2b86b821562f.png",
-    )
-    mock_lastfm.get_recommendations.return_value = [placeholder_track]
-
-    user = User(id=uuid4(), username="u", lastfm_session_key="sk", lastfm_username="lfuser")
-
+async def test_expand_missing_images_triggers_deezer(engine, expansion):
+    expansion.recommend_from_seeds.return_value = [
+        RecommendedTrack(
+            name="Track",
+            artist="Artist",
+            url="https://last.fm/track/1",
+            match=0.9,
+            image_url="https://img/2a96cbd8b46e442fc41c2b86b821562f.png",
+        )
+    ]
     mock_deezer = AsyncMock()
     mock_deezer.search.return_value = [{"image_url": "https://cdn.real-cover.com/img.jpg"}]
 
     with patch("app.services.recommendation_engine.DeezerService", return_value=mock_deezer):
-        result = await engine._fetch_lastfm_recommendations(user, source="auto")
+        result = await engine._expand_tracks([("s", "a")], ["a"], variety=False)
 
     assert result[0].image_url == "https://cdn.real-cover.com/img.jpg"
 
 
 @pytest.mark.asyncio
-async def test_fetch_lastfm_deezer_no_image_found(engine, mock_lastfm):
-    placeholder_track = RecommendedTrack(
-        name="Track",
-        artist="Artist",
-        url="",
-        match=0.9,
-        image_url=None,
-    )
-    mock_lastfm.get_recommendations.return_value = [placeholder_track]
-
-    user = User(id=uuid4(), username="u", lastfm_session_key="sk", lastfm_username="lfuser")
-
+async def test_expand_deezer_no_image_leaves_none(engine, expansion):
+    expansion.recommend_from_seeds.return_value = [
+        RecommendedTrack(name="Track", artist="Artist", url="", match=0.9, image_url=None)
+    ]
     mock_deezer = AsyncMock()
     mock_deezer.search.return_value = [{"image_url": None}]
 
     with patch("app.services.recommendation_engine.DeezerService", return_value=mock_deezer):
-        result = await engine._fetch_lastfm_recommendations(user, source="auto")
+        result = await engine._expand_tracks([("s", "a")], [], variety=False)
 
     assert result[0].image_url is None
 
 
 @pytest.mark.asyncio
-async def test_fetch_lastfm_deezer_search_exception(engine, mock_lastfm):
-    placeholder = RecommendedTrack(name="T", artist="A", url="", match=0.9, image_url=None)
-    mock_lastfm.get_recommendations.return_value = [placeholder]
-
-    user = User(id=uuid4(), username="u", lastfm_session_key="sk", lastfm_username="lfuser")
-
+async def test_expand_deezer_exception_is_swallowed(engine, expansion):
+    expansion.recommend_from_seeds.return_value = [
+        RecommendedTrack(name="T", artist="A", url="", match=0.9, image_url=None)
+    ]
     mock_deezer = AsyncMock()
     mock_deezer.search.side_effect = RuntimeError("deezer down")
 
     with patch("app.services.recommendation_engine.DeezerService", return_value=mock_deezer):
-        result = await engine._fetch_lastfm_recommendations(user, source="auto")
+        result = await engine._expand_tracks([("s", "a")], [], variety=False)
 
-    # Should not raise, track image stays None
     assert result[0].image_url is None
 
 
 @pytest.mark.asyncio
-async def test_fetch_lastfm_non_auto_source_still_calls_lastfm(engine, mock_lastfm):
-    user = User(id=uuid4(), username="u", lastfm_session_key="sk", lastfm_username="lfuser")
-    mock_lastfm.get_recommendations.return_value = []
-
-    result = await engine._fetch_lastfm_recommendations(user, source="lastfm")
-
-    mock_lastfm.get_recommendations.assert_called_once()
+async def test_expand_no_seeds_returns_empty(engine, expansion):
+    result = await engine._expand_tracks([], [], variety=False)
     assert result == []
+    expansion.recommend_from_seeds.assert_not_called()
+
+
+# ─── _gather_seeds ───────────────────────────────────────────────────────────
+
+
+@pytest.mark.asyncio
+async def test_gather_seeds_swallows_provider_error(engine, provider):
+    provider.get_seeds.side_effect = ListeningError("provider down")
+    assert await engine._gather_seeds(variety=False) == ([], [])
+
+
+@pytest.mark.asyncio
+async def test_gather_seeds_empty_when_disconnected(mock_cache):
+    with patch("app.services.recommendation_engine.cache_manager", mock_cache):
+        engine = HybridRecommendationEngine(provider=None, credentials=None)
+    assert await engine._gather_seeds(variety=False) == ([], [])
 
 
 # ─── _fetch_playlists ─────────────────────────────────────────────────────────
 
 
 @pytest.mark.asyncio
-async def test_fetch_playlists_no_lastfm_returns_empty(engine, user_no_lf):
-    result = await engine._fetch_playlists(user_no_lf)
-    assert result == []
+async def test_fetch_playlists_no_artists_returns_empty(engine):
+    assert await engine._fetch_playlists([]) == []
 
 
 @pytest.mark.asyncio
-async def test_fetch_playlists_fallback_to_recent_tracks(engine, mock_lastfm, user_lf):
-    mock_lastfm.get_user_top_artists.return_value = []
-    mock_lastfm.get_user_recent_tracks.return_value = [
-        {"artist": {"#text": "Nirvana"}},
-        {"artist": {"#text": "Nirvana"}},  # duplicate
-        {"artist": {"name": "Foo Fighters"}},
-    ]
-
-    mock_deezer = AsyncMock()
-    mock_deezer.search.return_value = []
-
-    with patch("app.services.recommendation_engine.DeezerService", return_value=mock_deezer):
-        await engine._fetch_playlists(user_lf)
-
-    # Should have called deezer for deduplicated artists
-    assert mock_deezer.search.call_count >= 0  # 2 unique artists → searches
-
-
-@pytest.mark.asyncio
-async def test_fetch_playlists_no_artists_at_all_returns_empty(engine, mock_lastfm, user_lf):
-    mock_lastfm.get_user_top_artists.return_value = []
-    mock_lastfm.get_user_recent_tracks.return_value = []
-
-    result = await engine._fetch_playlists(user_lf)
-
-    assert result == []
-
-
-@pytest.mark.asyncio
-async def test_fetch_playlists_success_builds_playlists(engine, mock_lastfm, user_lf):
-    mock_lastfm.get_user_top_artists.return_value = [{"name": "Nirvana"}]
-
+async def test_fetch_playlists_builds_from_seed_artists(engine):
     mock_deezer = AsyncMock()
     mock_deezer.search_playlists.return_value = [
         {"id": "p1", "title": "This Is Nirvana", "image_url": "img", "track_count": 20},
     ]
-
     with patch("app.services.recommendation_engine.DeezerService", return_value=mock_deezer):
-        result = await engine._fetch_playlists(user_lf)
+        result = await engine._fetch_playlists(["Nirvana"])
 
-    assert len(result) >= 1
     assert result[0].title == "This Is Nirvana"
 
 
 @pytest.mark.asyncio
-async def test_fetch_playlists_exception_returns_empty(engine, mock_lastfm, user_lf):
-    mock_lastfm.get_user_top_artists.side_effect = RuntimeError("lastfm down")
-
-    result = await engine._fetch_playlists(user_lf)
-
+async def test_fetch_playlists_search_error_returns_empty(engine):
+    mock_deezer = AsyncMock()
+    mock_deezer.search_playlists.side_effect = RuntimeError("deezer down")
+    with patch("app.services.recommendation_engine.DeezerService", return_value=mock_deezer):
+        result = await engine._fetch_playlists(["Nirvana"])
     assert result == []
 
 
@@ -224,70 +190,64 @@ async def test_fetch_playlists_exception_returns_empty(engine, mock_lastfm, user
 
 
 @pytest.mark.asyncio
-async def test_fetch_artists_no_target_user_returns_empty(engine):
-    user = User(id=uuid4(), username="u", lastfm_session_key=None, lastfm_username=None)
-    result = await engine._fetch_artists(user)
-    assert result == []
+async def test_fetch_artists_disconnected_returns_empty(mock_cache):
+    with patch("app.services.recommendation_engine.cache_manager", mock_cache):
+        engine = HybridRecommendationEngine(provider=None, credentials=None)
+    assert await engine._fetch_artists(variety=False) == []
 
 
 @pytest.mark.asyncio
-async def test_fetch_artists_success_with_deezer_images(engine, mock_lastfm, user_lf):
-    artist = RecommendedArtist(name="Nirvana", url="", match=1.0, image_url="old_img")
-    mock_lastfm.get_recommended_artists.return_value = [artist]
-
+async def test_fetch_artists_fills_images_from_deezer(engine, provider):
+    provider.get_recommended_artists.return_value = [
+        RecommendedArtist(name="Nirvana", url="", match=1.0, image_url="old")
+    ]
     mock_deezer = AsyncMock()
     mock_deezer.search.return_value = [{"image_url": "https://cdn.img/nirvana.jpg"}]
 
     with patch("app.services.recommendation_engine.DeezerService", return_value=mock_deezer):
-        result = await engine._fetch_artists(user_lf)
+        result = await engine._fetch_artists(variety=False)
 
     assert result[0].image_url == "https://cdn.img/nirvana.jpg"
 
 
 @pytest.mark.asyncio
-async def test_fetch_artists_deezer_no_results_clears_image(engine, mock_lastfm, user_lf):
-    artist = RecommendedArtist(name="Nirvana", url="", match=1.0, image_url="old_img")
-    mock_lastfm.get_recommended_artists.return_value = [artist]
-
+async def test_fetch_artists_deezer_empty_clears_image(engine, provider):
+    provider.get_recommended_artists.return_value = [
+        RecommendedArtist(name="Nirvana", url="", match=1.0, image_url="old")
+    ]
     mock_deezer = AsyncMock()
     mock_deezer.search.return_value = []
 
     with patch("app.services.recommendation_engine.DeezerService", return_value=mock_deezer):
-        result = await engine._fetch_artists(user_lf)
+        result = await engine._fetch_artists(variety=False)
 
     assert result[0].image_url is None
 
 
 @pytest.mark.asyncio
-async def test_fetch_artists_exception_returns_empty(engine, mock_lastfm, user_lf):
-    mock_lastfm.get_recommended_artists.side_effect = RuntimeError("lastfm down")
-
-    result = await engine._fetch_artists(user_lf)
-
-    assert result == []
+async def test_fetch_artists_provider_error_returns_empty(engine, provider):
+    provider.get_recommended_artists.side_effect = ListeningError("down")
+    assert await engine._fetch_artists(variety=False) == []
 
 
-# ─── get_recommendations cache error ─────────────────────────────────────────
+# ─── get_recommendations caching edges ───────────────────────────────────────
 
 
 @pytest.mark.asyncio
-async def test_get_recommendations_cache_set_exception_doesnt_raise(engine, mock_lastfm, mock_cache, user_lf):
-    mock_cache.get.return_value = None
+async def test_cache_set_exception_doesnt_raise(engine, expansion, mock_cache, user_lf):
     mock_cache.set.side_effect = RuntimeError("redis down")
-
-    track = RecommendedTrack(name="T", artist="A", url="", match=0.9)
-    mock_lastfm.get_recommendations.return_value = [track]
+    expansion.recommend_from_seeds.return_value = [RecommendedTrack(name="T", artist="A", url="", match=0.9)]
 
     result = await engine.get_recommendations(user_lf)
 
-    assert result is not None
     assert len(result.tracks) == 1
 
 
 @pytest.mark.asyncio
-async def test_get_recommendations_no_results_doesnt_cache(engine, mock_lastfm, mock_cache, user_lf):
-    mock_cache.get.return_value = None
-    mock_lastfm.get_recommendations.return_value = []
+async def test_no_results_are_not_cached(engine, expansion, mock_cache, user_lf):
+    expansion.recommend_from_seeds.return_value = []
+    engine.provider.get_recommended_artists.return_value = []
+    engine.provider.get_seeds.return_value = ([], [])
 
     await engine.get_recommendations(user_lf)
 

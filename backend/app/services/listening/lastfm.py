@@ -13,12 +13,14 @@ from app.services.listening.base import (
     ListeningError,
     ListeningProvider,
     ProviderCredentials,
+    Seeds,
 )
 
 if TYPE_CHECKING:
     from sqlalchemy.ext.asyncio import AsyncSession
 
     from app.models.user import User
+    from app.schemas.recommendation import RecommendedArtist
 
 logger = logging.getLogger(__name__)
 
@@ -74,5 +76,18 @@ class LastfmProvider(ListeningProvider):
             if isinstance(info, BaseException):
                 raise ListeningError(str(info))
             return {"user": info, "friends": [] if isinstance(friends, BaseException) else friends}
+        except LastfmError as e:
+            raise ListeningError(str(e)) from e
+
+    async def get_seeds(self, creds: ProviderCredentials, variety: bool = False) -> Seeds:
+        try:
+            seed_tracks, seed_artists = await self._service._gather_seeds(creds.username, creds.secret, variety=variety)
+        except LastfmError as e:
+            raise ListeningError(str(e)) from e
+        return seed_tracks, list(seed_artists)
+
+    async def get_recommended_artists(self, creds: ProviderCredentials, limit: int = 20) -> list[RecommendedArtist]:
+        try:
+            return await self._service.get_recommended_artists(creds.secret, limit=limit, user_name=creds.username)
         except LastfmError as e:
             raise ListeningError(str(e)) from e

@@ -79,18 +79,18 @@ async def lastfm_callback(
 async def get_recommendations(
     db: Annotated[AsyncSession, Depends(get_db)],
     current_user: Annotated[User, Depends(get_current_user)],
-    service: Annotated[LastfmService, Depends(get_lastfm_service)],
     force_refresh: bool = False,
     source: str = "auto",
+    provider: str | None = None,
 ):
     """
-    Get personalized recommendations.
-    Source: 'auto'.
+    Get personalized recommendations from the user's chosen listening provider
+    (Last.fm or ListenBrainz). ``provider`` overrides the saved preference for
+    this call; ``source`` is accepted for backwards compatibility.
     """
-    # Initialize engine with service
     from app.services.recommendation_engine import HybridRecommendationEngine
 
-    engine = HybridRecommendationEngine(service)
+    engine = await HybridRecommendationEngine.for_user(current_user, db, preferred=provider)
 
     return await engine.get_recommendations(user=current_user, source=source, force_refresh=force_refresh)
 

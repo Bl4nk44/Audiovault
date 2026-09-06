@@ -169,5 +169,6 @@ async def test_recommendations_endpoint(client, admin_token_headers, mock_lastfm
         mock_engine.get_recommendations = AsyncMock(
             return_value={"tracks": [], "source": "auto", "generated_at": "2024-01-01T00:00:00"}
         )
+        mock_engine_cls.for_user = AsyncMock(return_value=mock_engine)
         response = await client.get("/api/v1/lastfm/recommendations", headers=admin_token_headers)
     assert response.status_code == 200

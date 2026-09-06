@@ -139,8 +139,9 @@ async def test_scheduled_recommendation_refresh_success(scheduler_svc):
 
     with (
         patch("app.services.scheduler.AsyncSessionLocal") as mock_session_cls,
-        patch("app.services.scheduler.recommendation_engine") as mock_engine,
+        patch("app.services.scheduler.HybridRecommendationEngine") as mock_engine_cls,
         patch("app.services.scheduler.select"),
+        patch("app.services.scheduler.or_"),
     ):
         mock_db = AsyncMock()
         mock_result = MagicMock()
@@ -149,7 +150,8 @@ async def test_scheduled_recommendation_refresh_success(scheduler_svc):
         mock_session_cls.return_value.__aenter__ = AsyncMock(return_value=mock_db)
         mock_session_cls.return_value.__aexit__ = AsyncMock(return_value=False)
 
-        mock_engine.get_recommendations = AsyncMock()
+        mock_engine = AsyncMock()
+        mock_engine_cls.for_user = AsyncMock(return_value=mock_engine)
 
         await scheduler_svc.scheduled_recommendation_refresh()
 
@@ -163,8 +165,9 @@ async def test_scheduled_recommendation_refresh_user_error_continues(scheduler_s
 
     with (
         patch("app.services.scheduler.AsyncSessionLocal") as mock_session_cls,
-        patch("app.services.scheduler.recommendation_engine") as mock_engine,
+        patch("app.services.scheduler.HybridRecommendationEngine") as mock_engine_cls,
         patch("app.services.scheduler.select"),
+        patch("app.services.scheduler.or_"),
     ):
         mock_db = AsyncMock()
         mock_result = MagicMock()
@@ -173,7 +176,9 @@ async def test_scheduled_recommendation_refresh_user_error_continues(scheduler_s
         mock_session_cls.return_value.__aenter__ = AsyncMock(return_value=mock_db)
         mock_session_cls.return_value.__aexit__ = AsyncMock(return_value=False)
 
+        mock_engine = AsyncMock()
         mock_engine.get_recommendations = AsyncMock(side_effect=RuntimeError("rec error"))
+        mock_engine_cls.for_user = AsyncMock(return_value=mock_engine)
 
         await scheduler_svc.scheduled_recommendation_refresh()  # must not raise
 
@@ -182,7 +187,7 @@ async def test_scheduled_recommendation_refresh_user_error_continues(scheduler_s
 async def test_scheduled_recommendation_refresh_db_error(scheduler_svc):
     with (
         patch("app.services.scheduler.AsyncSessionLocal") as mock_session_cls,
-        patch("app.services.scheduler.recommendation_engine"),
+        patch("app.services.scheduler.HybridRecommendationEngine"),
     ):
         mock_session_cls.return_value.__aenter__ = AsyncMock(side_effect=RuntimeError("db error"))
         mock_session_cls.return_value.__aexit__ = AsyncMock(return_value=False)

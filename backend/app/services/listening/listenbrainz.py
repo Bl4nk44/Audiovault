@@ -5,7 +5,9 @@ Credentials live in the encrypted ``service_credentials`` table
 resolved username in ``extra_data.username``.
 """
 
+import asyncio
 import logging
+import random
 from typing import TYPE_CHECKING
 
 from app.services.credentials_service import credentials_service
@@ -15,6 +17,7 @@ from app.services.listening.base import (
     ListeningProvider,
     ProviderCredentials,
     ProviderIdentity,
+    Seeds,
 )
 
 if TYPE_CHECKING:
@@ -78,3 +81,30 @@ class ListenBrainzProvider(ListeningProvider):
             return await self._service.get_profile(creds.username)
         except ListenBrainzError as e:
             raise ListeningError(str(e)) from e
+
+    async def _safe(self, coro: object) -> list[dict]:
+        try:
+            return await coro  # type: ignore[misc]
+        except ListenBrainzError as e:
+            logger.warning("ListenBrainz seed source failed: %s", e)
+            return []
+
+    async def get_seeds(self, creds: ProviderCredentials, variety: bool = False) -> Seeds:
+        """Seeds from ListenBrainz stats — top recordings + recent listens for
+        tracks, top artists for artist seeds. Expansion into recommendations is
+        done by the shared Last.fm similarity graph in the engine."""
+        period = random.choice(["7day", "1month", "3month", "12month"]) if variety else "1month"
+        top_tracks, recent, top_artists = await asyncio.gather(
+            self._safe(self._service.get_top_tracks(creds.username, period=period, limit=30)),
+            self._safe(self._service.get_recent_tracks(creds.username, limit=30)),
+            self._safe(self._service.get_top_artists(creds.username, period=period, limit=20)),
+        )
+
+        seed_tracks: list[tuple[str, str]] = [
+            (t["name"], t["artist"])
+            for bucket in (top_tracks, recent)
+            for t in bucket
+            if t.get("name") and t.get("artist")
+        ]
+        seed_artists: list[str] = [a["name"] for a in top_artists if a.get("name")]
+        return seed_tracks, seed_artists

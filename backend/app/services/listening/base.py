@@ -8,6 +8,11 @@ if TYPE_CHECKING:
     from sqlalchemy.ext.asyncio import AsyncSession
 
     from app.models.user import User
+    from app.schemas.recommendation import RecommendedArtist
+
+#: Seeds for the recommendation engine: ``(track_name, artist_name)`` pairs and
+#: a list of artist names, gathered from a provider's listening history.
+Seeds = tuple[list[tuple[str, str]], list[str]]
 
 
 class ListeningError(Exception):
@@ -85,3 +90,12 @@ class ListeningProvider(ABC):
     @abstractmethod
     async def get_profile(self, creds: ProviderCredentials) -> dict:
         """Return public profile info for the connected account."""
+
+    @abstractmethod
+    async def get_seeds(self, creds: ProviderCredentials, variety: bool = False) -> Seeds:
+        """Gather recommendation seeds (recent / top tracks and artists) from the
+        user's listening history on this provider."""
+
+    async def get_recommended_artists(self, creds: ProviderCredentials, limit: int = 20) -> list[RecommendedArtist]:
+        """Provider-native recommended artists. Default: none."""
+        return []

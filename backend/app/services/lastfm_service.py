@@ -395,7 +395,22 @@ class LastfmService:
         ``variety=False`` is deterministic (stable for caching).
         """
         seed_tracks, seed_artists = await self._gather_seeds(user_id, session_key, variety=variety)
+        return await self.recommend_from_seeds(seed_tracks, seed_artists, variety=variety, limit=limit)
 
+    async def recommend_from_seeds(
+        self,
+        seed_tracks: list[tuple[str, str]],
+        seed_artists: list[str] | set[str],
+        variety: bool = False,
+        limit: int = 60,
+    ) -> list[RecommendedTrack]:
+        """Expand ``(track, artist)`` / artist seeds into recommendations using
+        Last.fm's public similarity graph.
+
+        The seeds may come from any listening provider — this method only needs
+        ``LASTFM_API_KEY`` (no user session), so it is the shared expansion engine
+        for both Last.fm and ListenBrainz.
+        """
         # Deduplicate tracks
         unique_tracks = []
         seen_tracks = set()
@@ -406,7 +421,7 @@ class LastfmService:
                 seen_tracks.add(key)
 
         if not unique_tracks and not seed_artists:
-            logger.warning(f"No seeds found for user {_sanitize_log(user_id)} on Last.fm")
+            logger.warning("No seeds to expand into recommendations")
             return []
 
         artist_seed_list = list(seed_artists)
@@ -443,7 +458,7 @@ class LastfmService:
         pool = [r for r in candidates.values() if f"{r.artist} - {r.name}" not in seen_tracks]
         final_results = self._select_recommendations(pool, limit, variety)
 
-        logger.info(f"Generated {len(final_results)} recommendations for {_sanitize_log(user_id)} (variety={variety})")
+        logger.info("Generated %d recommendations from seeds (variety=%s)", len(final_results), variety)
         return final_results
 
     @staticmethod

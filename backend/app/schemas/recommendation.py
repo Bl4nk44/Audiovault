@@ -41,5 +41,8 @@ class RecommendationResponse(BaseModel):
     playlists: list[RecommendedPlaylist] = []
     source: str
     cache_status: str = "miss"
+    #: which listening provider produced these ("lastfm", "listenbrainz", "none")
+    provider: str = "none"
+    #: kept for backwards compatibility with older clients; equals provider == "lastfm"
     lastfm_connected: bool = False
     generated_at: datetime = Field(default_factory=datetime.now)

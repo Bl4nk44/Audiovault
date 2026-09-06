@@ -2,13 +2,14 @@ import logging
 
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from apscheduler.triggers.interval import IntervalTrigger
-from sqlalchemy import select
+from sqlalchemy import or_, select
 
 from app.core.cache import cache_manager
 from app.db.database import AsyncSessionLocal
+from app.models.credentials import ServiceCredentials
 from app.models.user import User
 from app.services.download_manager import download_manager
-from app.services.recommendation_engine import recommendation_engine
+from app.services.recommendation_engine import HybridRecommendationEngine
 from app.services.sync_manager import sync_manager
 from app.services.watchlist_engine import watchlist_engine
 
@@ -117,12 +118,16 @@ class SchedulerService:
         logger.info("⏰ Starting scheduled recommendation refresh...")
         try:
             async with AsyncSessionLocal() as db:
-                users_result = await db.execute(select(User).where(User.lastfm_session_key.isnot(None)))
+                lb_user_ids = select(ServiceCredentials.user_id).where(ServiceCredentials.service == "listenbrainz")
+                users_result = await db.execute(
+                    select(User).where(or_(User.lastfm_session_key.isnot(None), User.id.in_(lb_user_ids)))
+                )
                 users = users_result.scalars().all()
 
                 for user in users:
                     try:
-                        await recommendation_engine.get_recommendations(user, force_refresh=True)
+                        engine = await HybridRecommendationEngine.for_user(user, db)
+                        await engine.get_recommendations(user, force_refresh=True)
                         logger.info(f"Refreshed recommendations for {user.username}")
                     except Exception as e:
                         logger.error(f"Failed to refresh recommendations for {user.username}: {e}")
