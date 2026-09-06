@@ -67,6 +67,7 @@ async def test_now_playing_ok(client, admin_token_headers, mock_lastfm_service):
     with patch("app.services.scrobbler.AudiovaultScrobbler") as mock_scrobbler_cls:
         mock_scrobbler = mock_scrobbler_cls.return_value
         mock_scrobbler.update_now_playing = AsyncMock()
+        mock_scrobbler_cls.for_user = AsyncMock(return_value=mock_scrobbler)
         response = await client.post(
             "/api/v1/lastfm/scrobble/now_playing",
             json={"track": "Test Track", "artist": "Test Artist", "album": "Test Album"},
@@ -81,6 +82,7 @@ async def test_scrobble_success(client, admin_token_headers, mock_lastfm_service
     with patch("app.services.scrobbler.AudiovaultScrobbler") as mock_scrobbler_cls:
         mock_scrobbler = mock_scrobbler_cls.return_value
         mock_scrobbler.scrobble_track = AsyncMock(return_value=True)
+        mock_scrobbler_cls.for_user = AsyncMock(return_value=mock_scrobbler)
         response = await client.post(
             "/api/v1/lastfm/scrobble",
             json={"track": "Test Track", "artist": "Test Artist", "timestamp": 1234567890},
@@ -95,6 +97,7 @@ async def test_scrobble_ignored(client, admin_token_headers, mock_lastfm_service
     with patch("app.services.scrobbler.AudiovaultScrobbler") as mock_scrobbler_cls:
         mock_scrobbler = mock_scrobbler_cls.return_value
         mock_scrobbler.scrobble_track = AsyncMock(return_value=False)
+        mock_scrobbler_cls.for_user = AsyncMock(return_value=mock_scrobbler)
         response = await client.post(
             "/api/v1/lastfm/scrobble",
             json={"track": "Track", "artist": "Artist", "timestamp": 1234567890},

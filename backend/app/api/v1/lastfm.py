@@ -98,13 +98,13 @@ async def get_recommendations(
 @router.post("/scrobble/now_playing")
 async def update_now_playing(
     request: NowPlayingRequest,
+    db: Annotated[AsyncSession, Depends(get_db)],
     current_user: Annotated[User, Depends(get_current_user)],
-    service: Annotated[LastfmService, Depends(get_lastfm_service)],
 ):
-    """Update Now Playing status."""
+    """Update Now Playing status on every connected listening provider."""
     from app.services.scrobbler import AudiovaultScrobbler
 
-    scrobbler = AudiovaultScrobbler(service)
+    scrobbler = await AudiovaultScrobbler.for_user(current_user, db)
 
     await scrobbler.update_now_playing(current_user, request.track, request.artist, request.album)
     return {"status": "ok"}
@@ -113,13 +113,13 @@ async def update_now_playing(
 @router.post("/scrobble")
 async def scrobble_track(
     request: ScrobbleRequest,
+    db: Annotated[AsyncSession, Depends(get_db)],
     current_user: Annotated[User, Depends(get_current_user)],
-    service: Annotated[LastfmService, Depends(get_lastfm_service)],
 ):
-    """Scrobble a track."""
+    """Scrobble a track to every connected listening provider."""
     from app.services.scrobbler import AudiovaultScrobbler
 
-    scrobbler = AudiovaultScrobbler(service)
+    scrobbler = await AudiovaultScrobbler.for_user(current_user, db)
 
     success = await scrobbler.scrobble_track(
         current_user, request.track, request.artist, request.timestamp, request.album

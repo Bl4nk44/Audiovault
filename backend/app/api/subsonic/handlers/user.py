@@ -350,11 +350,9 @@ async def scrobble(
     Returns:
         Empty success response
     """
-    from app.services.lastfm_service import LastfmService
     from app.services.scrobbler import AudiovaultScrobbler
 
-    lastfm_service = LastfmService()
-    scrobbler_service = AudiovaultScrobbler(lastfm_service)
+    scrobbler_service = await AudiovaultScrobbler.for_user(current_user, db)
 
     try:
         track_id = UUID(id)

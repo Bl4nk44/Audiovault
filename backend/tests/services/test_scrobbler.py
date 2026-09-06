@@ -1,87 +1,113 @@
-from unittest.mock import AsyncMock, Mock
+from unittest.mock import AsyncMock, patch
 
 import pytest
 
 from app.models.user import User
-from app.services.lastfm_service import LastfmError, LastfmService
-from app.services.scrobbler import AudiovaultScrobbler
+from app.services.listening.base import ListeningError, ProviderCredentials
+from app.services.scrobbler import AudiovaultScrobbler, scrobbling_enabled
+
+
+def _creds(name: str) -> ProviderCredentials:
+    return ProviderCredentials(provider=name, username=f"{name}_user", secret="secret")
+
+
+def _fake_provider(name: str):
+    p = AsyncMock()
+    p.name = name
+    return p
 
 
 @pytest.fixture
-def mock_lastfm_service():
-    service = Mock(spec=LastfmService)
-    service.update_now_playing = AsyncMock()
-    service.scrobble = AsyncMock()
-    return service
-
-
-@pytest.fixture
-def scrobbler(mock_lastfm_service):
-    return AudiovaultScrobbler(mock_lastfm_service)
-
-
-@pytest.fixture
-def user_connected():
-    user = User(username="test", lastfm_session_key="key")
-    user.preferences = {"scrobble_enabled": True}
-    return user
-
-
-@pytest.fixture
-def user_disconnected():
-    user = User(username="test", lastfm_session_key=None)
-    return user
+def user():
+    u = User(username="test")
+    u.preferences = {"scrobble_enabled": True}
+    return u
 
 
 @pytest.mark.asyncio
-async def test_update_now_playing_success(scrobbler, mock_lastfm_service, user_connected):
-    await scrobbler.update_now_playing(user_connected, "Track", "Artist")
-    mock_lastfm_service.update_now_playing.assert_called_once()
+async def test_scrobble_fans_out_to_every_provider(user):
+    lfm, lbz = _fake_provider("lastfm"), _fake_provider("listenbrainz")
+    scrobbler = AudiovaultScrobbler([(lfm, _creds("lastfm")), (lbz, _creds("listenbrainz"))])
 
+    result = await scrobbler.scrobble_track(user, "Track", "Artist", timestamp=111)
 
-@pytest.mark.asyncio
-async def test_scrobble_track_success(scrobbler, mock_lastfm_service, user_connected):
-    result = await scrobbler.scrobble_track(user_connected, "Track", "Artist")
     assert result is True
-    mock_lastfm_service.scrobble.assert_called_once()
+    lfm.scrobble.assert_awaited_once()
+    lbz.scrobble.assert_awaited_once()
 
 
 @pytest.mark.asyncio
-async def test_disconnected_user_no_op(scrobbler, mock_lastfm_service, user_disconnected):
-    await scrobbler.update_now_playing(user_disconnected, "Track", "Artist")
-    await scrobbler.scrobble_track(user_disconnected, "Track", "Artist")
+async def test_now_playing_fans_out(user):
+    lfm, lbz = _fake_provider("lastfm"), _fake_provider("listenbrainz")
+    scrobbler = AudiovaultScrobbler([(lfm, _creds("lastfm")), (lbz, _creds("listenbrainz"))])
 
-    mock_lastfm_service.update_now_playing.assert_not_called()
-    mock_lastfm_service.scrobble.assert_not_called()
+    await scrobbler.update_now_playing(user, "Track", "Artist")
 
-
-@pytest.mark.asyncio
-async def test_scrobble_error_handling(scrobbler, mock_lastfm_service, user_connected):
-    mock_lastfm_service.scrobble.side_effect = LastfmError("Fail")
-
-    result = await scrobbler.scrobble_track(user_connected, "Track", "Artist")
-    assert result is False
+    lfm.update_now_playing.assert_awaited_once()
+    lbz.update_now_playing.assert_awaited_once()
 
 
 @pytest.mark.asyncio
-async def test_update_now_playing_lastfm_error(scrobbler, mock_lastfm_service, user_connected):
-    mock_lastfm_service.update_now_playing.side_effect = LastfmError("API error")
-    # Should not raise, error is caught internally
-    await scrobbler.update_now_playing(user_connected, "Track", "Artist")
+async def test_one_provider_failure_does_not_block_the_other(user):
+    lfm, lbz = _fake_provider("lastfm"), _fake_provider("listenbrainz")
+    lfm.scrobble.side_effect = ListeningError("lastfm down")
+    scrobbler = AudiovaultScrobbler([(lfm, _creds("lastfm")), (lbz, _creds("listenbrainz"))])
+
+    result = await scrobbler.scrobble_track(user, "Track", "Artist")
+
+    assert result is True  # listenbrainz still accepted it
+    lbz.scrobble.assert_awaited_once()
 
 
-def test_should_scrobble_connected_no_prefs(scrobbler):
-    user = User(username="test", lastfm_session_key="key")
-    user.preferences = {}
-    assert scrobbler._should_scrobble(user) is True
+@pytest.mark.asyncio
+async def test_all_providers_fail_returns_false(user):
+    lfm = _fake_provider("lastfm")
+    lfm.scrobble.side_effect = ListeningError("down")
+    scrobbler = AudiovaultScrobbler([(lfm, _creds("lastfm"))])
+
+    assert await scrobbler.scrobble_track(user, "Track", "Artist") is False
 
 
-def test_should_scrobble_disconnected(scrobbler):
-    user = User(username="test", lastfm_session_key=None)
-    assert scrobbler._should_scrobble(user) is False
+@pytest.mark.asyncio
+async def test_no_providers_is_a_noop(user):
+    scrobbler = AudiovaultScrobbler([])
+    assert scrobbler.has_targets is False
+    assert await scrobbler.scrobble_track(user, "Track", "Artist") is False
+    await scrobbler.update_now_playing(user, "Track", "Artist")  # no raise
 
 
-def test_should_scrobble_disabled_in_prefs(scrobbler):
-    user = User(username="test", lastfm_session_key="key")
-    user.preferences = {"scrobble_enabled": False}
-    assert scrobbler._should_scrobble(user) is False
+@pytest.mark.asyncio
+async def test_for_user_skips_everything_when_scrobbling_disabled():
+    u = User(username="test")
+    u.preferences = {"scrobble_enabled": False}
+
+    with patch("app.services.scrobbler.connected_providers", new_callable=AsyncMock) as mock_conn:
+        scrobbler = await AudiovaultScrobbler.for_user(u, db=None)
+
+    mock_conn.assert_not_awaited()
+    assert scrobbler.has_targets is False
+
+
+@pytest.mark.asyncio
+async def test_for_user_builds_from_connected_providers(user):
+    lfm = _fake_provider("lastfm")
+    with patch(
+        "app.services.scrobbler.connected_providers",
+        new_callable=AsyncMock,
+        return_value=[(lfm, _creds("lastfm"))],
+    ):
+        scrobbler = await AudiovaultScrobbler.for_user(user, db=None)
+
+    assert scrobbler.has_targets is True
+
+
+def test_scrobbling_enabled_defaults_true():
+    u = User(username="test")
+    u.preferences = {}
+    assert scrobbling_enabled(u) is True
+
+
+def test_scrobbling_enabled_respects_pref():
+    u = User(username="test")
+    u.preferences = {"scrobble_enabled": False}
+    assert scrobbling_enabled(u) is False
