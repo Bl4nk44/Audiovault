@@ -1,7 +1,8 @@
 """
 SearchOrchestrator — Multi-source search aggregation layer.
 
-Aggregates results from Deezer (primary), MusicBrainz, and Spotify (optional fallback).
+Aggregates track results from Deezer, YouTube Music, SoundCloud, Apple Music
+(iTunes), MusicBrainz and Spotify (optional).
 Provides:
 - Unified search across providers
 - ISRC-based deduplication
@@ -15,8 +16,10 @@ import asyncio
 import logging
 from typing import Any
 
+from app.services.apple_music_service import apple_music_service
 from app.services.deezer_service import DeezerService
 from app.services.musicbrainz_service import MusicBrainzService
+from app.services.soundcloud_service import soundcloud_service
 from app.services.spotify_service import SpotifyService  # noqa: F401
 
 logger = logging.getLogger(__name__)
@@ -29,6 +32,19 @@ class SearchOrchestrator:
         self.deezer = DeezerService()
         self.musicbrainz = MusicBrainzService()
         self.spotify = SpotifyService()
+        self.soundcloud = soundcloud_service
+        self.apple = apple_music_service
+        self._youtube: Any = None
+
+    @property
+    def youtube(self) -> Any:
+        """Lazily construct YouTubeService — ``YTMusic()`` init is deferred so a
+        transient ytmusicapi failure cannot break module import / app startup."""
+        if self._youtube is None:
+            from app.services.youtube_service import YouTubeService
+
+            self._youtube = YouTubeService()
+        return self._youtube
 
     # --- Public Search Methods ---
 
@@ -51,6 +67,9 @@ class SearchOrchestrator:
 
         providers = {
             "deezer": self._search_deezer,
+            "youtube": self._search_youtube,
+            "soundcloud": self._search_soundcloud,
+            "apple_music": self._search_apple,
             "musicbrainz": self._search_musicbrainz,
             "spotify": self._search_spotify,
         }
@@ -179,13 +198,25 @@ class SearchOrchestrator:
         return await self.deezer.search(query, limit=limit)
 
     async def _search_musicbrainz(self, query: str, limit: int = 10) -> list[dict[str, Any]]:
-        """Search tracks via MusicBrainz API."""
-        # MusicBrainz search expects artist and title separately
-        # For a generic query, we split crudely or search as full string
-        parts = query.split(" ", 1)
-        if len(parts) >= 2:
-            return await self.musicbrainz.search_track(artist=parts[0], title=parts[1], limit=limit)
-        return await self.musicbrainz.search_track(artist="", title=query, limit=limit)
+        """Search tracks via MusicBrainz API using a free-form query.
+
+        The whole phrase is handed to MusicBrainz as-is instead of being split on
+        the first space into artist/title — that split produced garbage for any
+        query longer than "Artist Title".
+        """
+        return await self.musicbrainz.search_recording(query, limit=limit)
+
+    async def _search_youtube(self, query: str, limit: int = 20) -> list[dict[str, Any]]:
+        """Search tracks via YouTube Music (ytmusicapi is sync — off-load to a thread)."""
+        return await asyncio.to_thread(self.youtube.search, query, limit, "song")
+
+    async def _search_soundcloud(self, query: str, limit: int = 20) -> list[dict[str, Any]]:
+        """Search tracks via SoundCloud (yt-dlp ``scsearch``)."""
+        return await self.soundcloud.search(query, limit=limit)
+
+    async def _search_apple(self, query: str, limit: int = 20) -> list[dict[str, Any]]:
+        """Search tracks via Apple Music (iTunes Search API)."""
+        return await self.apple.search(query, limit=limit)
 
     async def _search_spotify(self, query: str, limit: int = 10) -> list[dict[str, Any]]:
         """Search tracks via Spotify API (optional)."""
@@ -284,10 +315,17 @@ class SearchOrchestrator:
 
     # --- Utility ---
 
-    async def _safe_call(self, coro) -> list[dict[str, Any]]:
-        """Safely call a coroutine, returning empty list on failure."""
+    async def _safe_call(self, coro, timeout: float = 15.0) -> list[dict[str, Any]]:
+        """Safely call a coroutine, returning empty list on failure or timeout.
+
+        A per-provider timeout keeps one slow backend (SoundCloud's yt-dlp
+        ``scsearch`` in particular) from stalling the whole aggregated search.
+        """
         try:
-            return await coro
+            return await asyncio.wait_for(coro, timeout=timeout)
+        except TimeoutError:
+            logger.warning("Provider search timed out after %.0fs", timeout)
+            return []
         except Exception as e:
             logger.warning(f"Provider search failed: {e}")
             return []

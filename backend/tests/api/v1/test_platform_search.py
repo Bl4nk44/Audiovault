@@ -66,16 +66,23 @@ async def test_amazon_search_playlist_none(client, admin_token_headers, mock_ama
 @pytest.fixture
 def mock_apple_service():
     with patch("app.api.v1.apple_music.apple_music_service") as mock:
+        mock.can_handle = lambda q: "music.apple.com" in q or "apple.co" in q
         mock.get_playlist_info = AsyncMock(return_value=None)
         mock.get_tracks = AsyncMock(return_value=[])
+        mock.search = AsyncMock(return_value=[])
         yield mock
 
 
 @pytest.mark.asyncio
-async def test_apple_search_non_url_returns_empty(client, admin_token_headers, mock_apple_service):
-    response = await client.get("/api/v1/apple_music/search", params={"q": "random query"}, headers=admin_token_headers)
+async def test_apple_search_non_url_delegates_to_keyword_search(client, admin_token_headers, mock_apple_service):
+    mock_apple_service.search.return_value = [{"title": "Blinding Lights", "source": "apple_music"}]
+    response = await client.get(
+        "/api/v1/apple_music/search", params={"q": "blinding lights"}, headers=admin_token_headers
+    )
     assert response.status_code == 200
-    assert response.json() == []
+    assert response.json()[0]["title"] == "Blinding Lights"
+    mock_apple_service.search.assert_awaited_once()
+    mock_apple_service.get_tracks.assert_not_awaited()
 
 
 @pytest.mark.asyncio
@@ -123,14 +130,20 @@ def mock_soundcloud_service():
         mock.can_handle = lambda q: "soundcloud.com" in q
         mock.get_playlist_info = AsyncMock(return_value=None)
         mock.get_tracks = AsyncMock(return_value=[])
+        mock.search = AsyncMock(return_value=[])
         yield mock
 
 
 @pytest.mark.asyncio
-async def test_soundcloud_search_non_url(client, admin_token_headers, mock_soundcloud_service):
+async def test_soundcloud_search_non_url_delegates_to_keyword_search(
+    client, admin_token_headers, mock_soundcloud_service
+):
+    mock_soundcloud_service.search.return_value = [{"title": "SC Result", "source": "soundcloud"}]
     response = await client.get("/api/v1/soundcloud/search", params={"q": "search query"}, headers=admin_token_headers)
     assert response.status_code == 200
-    assert response.json() == []
+    assert response.json()[0]["title"] == "SC Result"
+    mock_soundcloud_service.search.assert_awaited_once()
+    mock_soundcloud_service.get_tracks.assert_not_awaited()
 
 
 @pytest.mark.asyncio

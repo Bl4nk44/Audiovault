@@ -24,6 +24,18 @@ def orchestrator() -> SearchOrchestrator:
     return SearchOrchestrator()
 
 
+@pytest.fixture(autouse=True)
+def _stub_network_providers():
+    """Keep the newer network-backed track providers (YouTube / SoundCloud /
+    Apple Music) inert in tests that only stub Deezer / MusicBrainz / Spotify."""
+    with (
+        patch.object(SearchOrchestrator, "_search_youtube", new_callable=AsyncMock, return_value=[]),
+        patch.object(SearchOrchestrator, "_search_soundcloud", new_callable=AsyncMock, return_value=[]),
+        patch.object(SearchOrchestrator, "_search_apple", new_callable=AsyncMock, return_value=[]),
+    ):
+        yield
+
+
 # --- Mock Data ---
 
 DEEZER_RESULTS = [

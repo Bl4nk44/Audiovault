@@ -71,6 +71,40 @@ class SoundCloudService:
             logger.error(f"Error extracting SoundCloud data: {e}")
             return []
 
+    async def search(self, query: str, limit: int = 20) -> list[dict[str, Any]]:
+        """Keyword track search on SoundCloud via yt-dlp's ``scsearch`` extractor.
+
+        yt-dlp has no public SoundCloud metadata API, but ``scsearchN:<query>``
+        performs a real keyword search and returns flat entries we can map to the
+        unified track shape. No API key required.
+        """
+        count = max(1, min(limit, 50))
+        ydl_opts = {
+            "extract_flat": True,
+            "dump_single_json": True,
+            "quiet": True,
+            "no_warnings": True,
+            "ignoreerrors": True,
+        }
+        apply_proxy(ydl_opts)
+
+        try:
+            logger.info("SoundCloud keyword search: %s", sanitize_log(query))
+            loop = asyncio.get_running_loop()
+            info = await loop.run_in_executor(
+                None,
+                lambda: yt_dlp.YoutubeDL(ydl_opts).extract_info(f"scsearch{count}:{query}", download=False),
+            )
+            if not info:
+                return []
+            entries = info.get("entries") or []
+            tracks = [t for e in entries if (t := self._format_entry(e, ""))]
+            logger.info("SoundCloud search returned %d tracks", len(tracks))
+            return tracks
+        except Exception as e:
+            logger.error(f"Error searching SoundCloud: {e}")
+            return []
+
     async def get_playlist_info(self, url: str) -> dict[str, Any] | None:
         """
         Extract playlist info (title, image, id) from SoundCloud URL.

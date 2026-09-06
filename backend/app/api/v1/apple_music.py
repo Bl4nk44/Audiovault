@@ -16,8 +16,8 @@ async def search_apple_music(
     offset: int = 0,
     current_user: Annotated[User, Depends(get_current_active_user)] = ...,
 ):
-    # Apple Music Service currently only supports URL extraction via yt-dlp
-    if "music.apple.com" in q:
+    # An Apple Music URL → extract that album/playlist/track via yt-dlp.
+    if apple_music_service.can_handle(q):
         # Check if it looks like a playlist/album URL that we should return as a container
         if "/playlist/" in q or "/album/" in q:
             playlist_info = await apple_music_service.get_playlist_info(q)
@@ -26,4 +26,6 @@ async def search_apple_music(
 
         # Fallback to returning tracks
         return await apple_music_service.get_tracks(q)
-    return []
+
+    # A free-text phrase → keyword search via the public iTunes Search API.
+    return await apple_music_service.search(q, limit)

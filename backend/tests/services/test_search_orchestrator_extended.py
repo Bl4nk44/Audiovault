@@ -330,27 +330,28 @@ def test_deduplicate_by_name_uses_title_key_for_albums(orchestrator):
     assert len(result) == 1
 
 
-# ─── _search_musicbrainz single-word query ────────────────────────────────────
+# ─── _search_musicbrainz free-form query ──────────────────────────────────────
+
+
+@pytest.mark.asyncio
+async def test_search_musicbrainz_passes_full_phrase(orchestrator):
+    """The whole query goes to search_recording — no split on the first space."""
+    orchestrator.musicbrainz = AsyncMock()
+    orchestrator.musicbrainz.search_recording.return_value = []
+
+    await orchestrator._search_musicbrainz("the weeknd blinding lights", limit=5)
+
+    orchestrator.musicbrainz.search_recording.assert_called_once_with("the weeknd blinding lights", limit=5)
 
 
 @pytest.mark.asyncio
 async def test_search_musicbrainz_single_word_query(orchestrator):
     orchestrator.musicbrainz = AsyncMock()
-    orchestrator.musicbrainz.search_track.return_value = []
+    orchestrator.musicbrainz.search_recording.return_value = []
 
     await orchestrator._search_musicbrainz("Nirvana", limit=5)
 
-    orchestrator.musicbrainz.search_track.assert_called_once_with(artist="", title="Nirvana", limit=5)
-
-
-@pytest.mark.asyncio
-async def test_search_musicbrainz_two_word_query(orchestrator):
-    orchestrator.musicbrainz = AsyncMock()
-    orchestrator.musicbrainz.search_track.return_value = []
-
-    await orchestrator._search_musicbrainz("Nirvana Smells", limit=5)
-
-    orchestrator.musicbrainz.search_track.assert_called_once_with(artist="Nirvana", title="Smells", limit=5)
+    orchestrator.musicbrainz.search_recording.assert_called_once_with("Nirvana", limit=5)
 
 
 # ─── resolve_isrc exception ───────────────────────────────────────────────────

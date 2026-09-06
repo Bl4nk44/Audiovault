@@ -81,6 +81,22 @@ class MusicBrainzService:
         recordings = data.get("recordings", [])
         return [self._format_recording(rec) for rec in recordings]
 
+    async def search_recording(self, query: str, limit: int = 10) -> list[dict[str, Any]]:
+        """Free-form recording search — passes the whole phrase as the Lucene query.
+
+        Unlike :meth:`search_track`, this does not force ``recording:``/``artist:``
+        field qualifiers, so a generic phrase like "the weeknd blinding lights"
+        matches across MusicBrainz's default fields instead of being split
+        arbitrarily on the first space.
+        """
+        params = {"query": query, "limit": limit, "fmt": "json"}
+
+        data = await self._get(f"{self.BASE_URL}/recording", params=params)
+        if not data:
+            return []
+
+        return [self._format_recording(rec) for rec in data.get("recordings", [])]
+
     async def search_artist(self, name: str, limit: int = 10) -> list[dict[str, Any]]:
         """Search for artists by name."""
         params = {"query": f'artist:"{name}"', "limit": limit, "fmt": "json"}

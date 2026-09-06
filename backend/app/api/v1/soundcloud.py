@@ -16,7 +16,7 @@ async def search_soundcloud(
     offset: int = 0,
     current_user: Annotated[User, Depends(get_current_active_user)] = ...,
 ):
-    # SoundCloud via yt-dlp primarily works with URLs
+    # A SoundCloud URL → extract that track/playlist directly.
     if soundcloud_service.can_handle(q):
         if "/sets/" in q:
             playlist_info = await soundcloud_service.get_playlist_info(q)
@@ -24,4 +24,6 @@ async def search_soundcloud(
                 return [playlist_info]
 
         return await soundcloud_service.get_tracks(q)
-    return []
+
+    # A free-text phrase → keyword search via yt-dlp scsearch.
+    return await soundcloud_service.search(q, limit)

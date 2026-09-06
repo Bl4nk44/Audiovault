@@ -36,10 +36,12 @@ async def browse_search(
     current_user: Annotated[User, Depends(get_current_active_user)] = ...,
 ):
     """
-    Search across multiple music providers (Deezer, MusicBrainz, Spotify).
+    Search across multiple music providers. Track search aggregates Deezer,
+    YouTube Music, SoundCloud, Apple Music (iTunes), MusicBrainz and Spotify;
+    artist/album search uses Deezer + MusicBrainz.
 
     Supports types: track, artist, album, playlist.
-    Supports source filter: all, deezer, spotify, musicbrainz.
+    Supports source filter: all, deezer, youtube, soundcloud, apple_music, spotify, musicbrainz.
     Results are deduplicated by ISRC and title+artist.
     """
     try:

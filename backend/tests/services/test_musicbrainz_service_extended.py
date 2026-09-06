@@ -157,3 +157,31 @@ def test_format_recording_with_joinphrase(service):
     assert "Artist A" in result["artist"]
     assert "&" in result["artist"]
     assert "Artist B" in result["artist"]
+
+
+# ─── search_recording (free-form query) ──────────────────────────────────────
+
+
+@pytest.mark.asyncio
+async def test_search_recording_passes_raw_query_and_formats(service):
+    captured = {}
+
+    async def fake_get(url, params=None):
+        captured["url"] = url
+        captured["params"] = params
+        return {"recordings": [{"id": "r1", "title": "Blinding Lights", "artist-credit": [{"name": "The Weeknd"}]}]}
+
+    with patch.object(service, "_get", side_effect=fake_get):
+        results = await service.search_recording("the weeknd blinding lights", limit=7)
+
+    assert captured["url"].endswith("/recording")
+    assert captured["params"]["query"] == "the weeknd blinding lights"
+    assert captured["params"]["limit"] == 7
+    assert len(results) == 1
+    assert results[0]["title"] == "Blinding Lights"
+
+
+@pytest.mark.asyncio
+async def test_search_recording_no_data_returns_empty(service):
+    with patch.object(service, "_get", new_callable=AsyncMock, return_value=None):
+        assert await service.search_recording("anything") == []

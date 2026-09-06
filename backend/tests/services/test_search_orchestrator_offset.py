@@ -35,6 +35,17 @@ def orchestrator() -> SearchOrchestrator:
     return SearchOrchestrator()
 
 
+@pytest.fixture(autouse=True)
+def _stub_network_providers():
+    """YouTube / SoundCloud / Apple providers stay inert for the offset=0 path."""
+    with (
+        patch.object(SearchOrchestrator, "_search_youtube", new_callable=AsyncMock, return_value=[]),
+        patch.object(SearchOrchestrator, "_search_soundcloud", new_callable=AsyncMock, return_value=[]),
+        patch.object(SearchOrchestrator, "_search_apple", new_callable=AsyncMock, return_value=[]),
+    ):
+        yield
+
+
 @pytest.mark.asyncio
 async def test_search_tracks_offset_queries_deezer_with_offset(orchestrator: SearchOrchestrator):
     """offset>0 should call deezer.search with offset=20 and return its results."""

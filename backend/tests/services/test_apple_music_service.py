@@ -96,3 +96,81 @@ async def test_get_playlist_info_full_url(service):
     ):
         result = await service.get_playlist_info(url)
     assert result == mock_info
+
+
+# --- Keyword search via iTunes Search API ---
+
+
+def _itunes_cm(status, payload):
+    from unittest.mock import AsyncMock, MagicMock
+
+    resp = MagicMock()
+    resp.status = status
+    resp.json = AsyncMock(return_value=payload)
+    return MagicMock(__aenter__=AsyncMock(return_value=resp), __aexit__=AsyncMock(return_value=False))
+
+
+@pytest.mark.asyncio
+async def test_search_maps_itunes_results(service):
+    payload = {
+        "resultCount": 1,
+        "results": [
+            {
+                "trackId": 111,
+                "trackName": "Blinding Lights",
+                "artistName": "The Weeknd",
+                "collectionName": "After Hours",
+                "trackTimeMillis": 200040,
+                "artworkUrl100": "https://is1.mzstatic.com/image/100x100bb.jpg",
+            }
+        ],
+    }
+    with patch("aiohttp.ClientSession.get", return_value=_itunes_cm(200, payload)):
+        results = await service.search("blinding lights", limit=5)
+
+    assert len(results) == 1
+    r = results[0]
+    assert r["id"] == "111"
+    assert r["title"] == "Blinding Lights"
+    assert r["artist"] == "The Weeknd"
+    assert r["source"] == "apple_music"
+    assert r["type"] == "track"
+    assert r["image_url"] == "https://is1.mzstatic.com/image/600x600bb.jpg"
+
+
+@pytest.mark.asyncio
+async def test_search_skips_entries_without_track_id(service):
+    payload = {"results": [{"trackName": "No Id"}, {"trackId": 5, "trackName": "Ok", "artistName": "A"}]}
+    with patch("aiohttp.ClientSession.get", return_value=_itunes_cm(200, payload)):
+        results = await service.search("q")
+    assert [r["id"] for r in results] == ["5"]
+
+
+@pytest.mark.asyncio
+async def test_search_non_200_returns_empty(service):
+    with patch("aiohttp.ClientSession.get", return_value=_itunes_cm(503, {})):
+        assert await service.search("q") == []
+
+
+@pytest.mark.asyncio
+async def test_search_exception_returns_empty(service):
+    with patch("aiohttp.ClientSession.get", side_effect=RuntimeError("network down")):
+        assert await service.search("q") == []
+
+
+@pytest.mark.asyncio
+async def test_search_sends_song_entity_params(service):
+    captured = {}
+
+    def _capture(url, params=None):
+        captured["url"] = url
+        captured["params"] = params
+        return _itunes_cm(200, {"results": []})
+
+    with patch("aiohttp.ClientSession.get", side_effect=_capture):
+        await service.search("daft punk", limit=999)
+
+    assert captured["url"] == service.ITUNES_SEARCH_URL
+    assert captured["params"]["term"] == "daft punk"
+    assert captured["params"]["entity"] == "song"
+    assert captured["params"]["limit"] == 200

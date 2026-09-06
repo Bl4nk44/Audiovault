@@ -304,3 +304,76 @@ async def test_get_playlist_info_passes_proxy_to_ytdlp(service):
         await service.get_playlist_info("https://soundcloud.com/x/sets/y")
 
     assert captured["proxy"] == "http://privoxy:8118"
+
+
+# --- Keyword search (scsearch) ---
+
+
+@pytest.mark.asyncio
+async def test_search_builds_scsearch_query_and_maps_entries(service):
+    mock_info = {
+        "entries": [
+            {
+                "id": "111",
+                "title": "Phrase Match",
+                "uploader": "Some Artist",
+                "duration": 200,
+                "thumbnail": "http://img",
+                "webpage_url": "https://soundcloud.com/some/phrase-match",
+            },
+            None,
+            {"id": "222"},  # no title → skipped
+        ]
+    }
+    with patch("app.services.soundcloud_service.yt_dlp.YoutubeDL") as mock_ydl:
+        mock_ydl.return_value.extract_info.return_value = mock_info
+
+        tracks = await service.search("phrase match", limit=5)
+
+    call_url = mock_ydl.return_value.extract_info.call_args[0][0]
+    assert call_url == "scsearch5:phrase match"
+    assert len(tracks) == 1
+    assert tracks[0]["source"] == "soundcloud"
+    assert tracks[0]["title"] == "Phrase Match"
+
+
+@pytest.mark.asyncio
+async def test_search_clamps_limit_between_1_and_50(service):
+    with patch("app.services.soundcloud_service.yt_dlp.YoutubeDL") as mock_ydl:
+        mock_ydl.return_value.extract_info.return_value = {"entries": []}
+        await service.search("q", limit=999)
+    assert mock_ydl.return_value.extract_info.call_args[0][0] == "scsearch50:q"
+
+
+@pytest.mark.asyncio
+async def test_search_no_info_returns_empty(service):
+    with patch("app.services.soundcloud_service.yt_dlp.YoutubeDL") as mock_ydl:
+        mock_ydl.return_value.extract_info.return_value = None
+        assert await service.search("q") == []
+
+
+@pytest.mark.asyncio
+async def test_search_exception_returns_empty(service):
+    with patch("app.services.soundcloud_service.yt_dlp.YoutubeDL") as mock_ydl:
+        mock_ydl.return_value.extract_info.side_effect = RuntimeError("yt-dlp boom")
+        assert await service.search("q") == []
+
+
+@pytest.mark.asyncio
+async def test_search_passes_proxy_to_ytdlp(service):
+    captured: dict = {}
+
+    def fake_ytdl(opts):
+        captured.update(opts)
+        instance = MagicMock()
+        instance.extract_info.return_value = {"entries": []}
+        return instance
+
+    with (
+        patch("app.utils.ydl.settings") as mock_settings,
+        patch("app.services.soundcloud_service.yt_dlp.YoutubeDL", side_effect=fake_ytdl),
+    ):
+        mock_settings.DOWNLOAD_PROXY = "http://privoxy:8118"
+        await service.search("q")
+
+    assert captured["proxy"] == "http://privoxy:8118"
