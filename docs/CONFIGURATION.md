@@ -55,6 +55,10 @@ DOWNLOAD_PROXY=http://privoxy:8118        # or socks5://host:1080
 LASTFM_API_KEY=your_lastfm_api_key
 LASTFM_API_SECRET=your_lastfm_api_secret
 
+# ListenBrainz — see LISTENBRAINZ_INTEGRATION.md (no API key; per-user token).
+# Override only for a self-hosted instance.
+# LISTENBRAINZ_API_URL=https://api.listenbrainz.org
+
 # Genius (lyrics)
 GENIUS_API_TOKEN=your_genius_api_token
 ```
@@ -69,6 +73,7 @@ TIMEZONE=UTC
 See detailed guides for:
 - [Spotify Integration](SPOTIFY_INTEGRATION.md) (zero-config, no keys needed)
 - [Last.fm Integration](LASTFM_INTEGRATION.md)
+- [ListenBrainz Integration](LISTENBRAINZ_INTEGRATION.md)
 - [Platform Support & Fallbacks](PLATFORM_SUPPORT.md)
 - [Automation & Watchlists](AUTOMATION.md)
 

@@ -62,13 +62,14 @@ Audiovault is a powerful, self-hosted application designed to import, manage, an
 - **Smart Formatting**: Automatic format selection based on preference
 - [Read the Audio Quality Guide](docs/AUDIO_QUALITY.md)
 
-### 🎵 Last.fm Integration
+### 🎵 Scrobbling & Recommendations
 
-- **Scrobbling**: Automatically sync your listening history to Last.fm
-- **Recommendations**: Personalized track suggestions based on your taste
-- **Integration**: Easy setup with OAuth connection
-- [Read the Setup Guide](docs/LASTFM_INTEGRATION.md)
-  > **Note**: When creating your API key, use `http://localhost:2137/recommendations` as the **Callback URL**.
+- **Providers**: Connect **Last.fm**, **ListenBrainz**, or both — scrobbles fan
+  out to every connected provider
+- **Scrobbling**: Automatically sync your listening history
+- **Recommendations**: Personalized track suggestions from the provider you pick
+- [Last.fm setup guide](docs/LASTFM_INTEGRATION.md) · [ListenBrainz setup guide](docs/LISTENBRAINZ_INTEGRATION.md)
+  > **Last.fm note**: When creating your API key, use `http://localhost:2137/recommendations` as the **Callback URL**.
 
 ### Personal Streaming Server
 
@@ -139,6 +140,7 @@ Audiovault supports running behind reverse proxies out of the box. For detailed 
 - [Platform Support & Fallbacks](docs/PLATFORM_SUPPORT.md)
 - [Spotify Integration](docs/SPOTIFY_INTEGRATION.md)
 - [Last.fm Integration](docs/LASTFM_INTEGRATION.md)
+- [ListenBrainz Integration](docs/LISTENBRAINZ_INTEGRATION.md)
 - [Audio Quality](docs/AUDIO_QUALITY.md)
 - [Automation & Watchlists](docs/AUTOMATION.md)
 - [Streaming Server (Subsonic)](docs/STREAMING_SERVER.md)

@@ -2,6 +2,10 @@
 
 Audiovault integrates with Last.fm to provide personalized music recommendations and scrobbling capabilities. This guide explains how to set up the integration.
 
+> Audiovault also supports **[ListenBrainz](./LISTENBRAINZ_INTEGRATION.md)** as an
+> alternative (or additional) listening provider. You can connect either or both
+> and pick which one drives recommendations.
+
 ## Features
 
 - **Personalized Recommendations**: Get track recommendations based on your listening history.
