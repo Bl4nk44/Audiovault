@@ -187,10 +187,26 @@ export const fr = {
     viewDetails: "Voir les détails",
   },
   recommendations: {
+    tabs: {
+      tracks: "Titres",
+      artists: "Artistes",
+      playlists: "Playlists",
+    },
     title: "Découverte musicale",
     subtitle: "Sélections personnalisées basées sur vos habitudes d'écoute",
     refreshed: "Nouvelles recommandations chargées",
     refreshError: "Échec de l'actualisation des recommandations",
+  },
+  listening: {
+    connect: "Se connecter",
+    connectedAs: "Connecté en tant que {name}",
+    tokenPlaceholder: "Collez votre jeton",
+    tokenError: "Jeton invalide",
+    recommendationSource: "Source des recommandations",
+    auto: "Auto",
+    connectPrompt: "Connectez un service d'écoute pour commencer",
+    connectHint: "Connectez Last.fm ou ListenBrainz pour analyser votre historique d'écoute.",
+    getToken: "Où puis-je obtenir un jeton ListenBrainz ?",
   },
   lastfm: {
     connect: "Se connecter à Last.fm",

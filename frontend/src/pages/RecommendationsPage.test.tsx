@@ -3,23 +3,24 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 import RecommendationsPage from "./RecommendationsPage";
 import { BrowserRouter } from "react-router-dom";
 import * as lastfmService from "../services/lastfm";
+import * as listeningService from "../services/listening";
 import api from "../services/api";
 import { toast } from "react-hot-toast";
 
-// Mocks
 vi.mock("../services/lastfm", () => ({
-  getLastfmStatus: vi.fn(),
   getRecommendations: vi.fn(),
-  connectLastfm: vi.fn(),
-  disconnectLastfm: vi.fn(),
   callbackLastfm: vi.fn(),
 }));
 
-vi.mock("../services/api", () => ({
-  default: {
-    get: vi.fn(),
-  },
+vi.mock("../services/listening", () => ({
+  getProviders: vi.fn(),
+  connectRedirectProvider: vi.fn(),
+  connectTokenProvider: vi.fn(),
+  disconnectProvider: vi.fn(),
+  setListeningPreference: vi.fn(),
 }));
+
+vi.mock("../services/api", () => ({ default: { get: vi.fn() } }));
 
 vi.mock("react-hot-toast", () => ({
   toast: {
@@ -30,7 +31,6 @@ vi.mock("react-hot-toast", () => ({
   },
 }));
 
-// Mock sub-components to stay focused on RecommendationsPage logic
 vi.mock("../components/dashboard/ArtistRecommendationCard", () => ({
   default: () => <div data-testid="artist-card" />,
 }));
@@ -41,6 +41,7 @@ vi.mock("../components/dashboard/PlaylistRecommendationCard", () => ({
   default: () => <div data-testid="playlist-card" />,
 }));
 vi.mock("../components/dashboard/RecommendationCard", () => ({
+
   default: ({ track, onPlay }: any) => (
     <div data-testid="track-card">
       <span>{track.name}</span>
@@ -67,34 +68,71 @@ vi.mock("../hooks/useTranslation", () => ({
   }),
 }));
 
+const providersResponse = (over: {
+  lastfmConnected?: boolean;
+  lbConnected?: boolean;
+  preference?: string;
+} = {}) => ({
+  preference: over.preference ?? "auto",
+  providers: [
+    {
+      name: "lastfm",
+      display_name: "Last.fm",
+      connected: over.lastfmConnected ?? false,
+      username: over.lastfmConnected ? "lfuser" : null,
+      supports_recommendations: true,
+      connects_with_token: false,
+    },
+    {
+      name: "listenbrainz",
+      display_name: "ListenBrainz",
+      connected: over.lbConnected ?? false,
+      username: over.lbConnected ? "lbuser" : null,
+      supports_recommendations: true,
+      connects_with_token: true,
+    },
+  ],
+});
+
+const emptyRecs = {
+  source: "lastfm+deezer",
+  cache_status: "hit",
+  provider: "lastfm",
+  lastfm_connected: true,
+  generated_at: new Date().toISOString(),
+  tracks: [],
+  artists: [],
+  playlists: [],
+};
+
 describe("RecommendationsPage", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mockSearchParams.delete("token");
   });
 
-  const renderPage = () => {
-    return render(
+  const renderPage = () =>
+    render(
       <BrowserRouter>
         <RecommendationsPage />
       </BrowserRouter>
     );
-  };
 
-  it("renders connect button when not connected", async () => {
-    vi.mocked(lastfmService.getLastfmStatus).mockResolvedValue({ connected: false, username: null });
+  it("shows connect controls for both providers when nothing is connected", async () => {
+    vi.mocked(listeningService.getProviders).mockResolvedValue(providersResponse());
     renderPage();
 
     await waitFor(() => {
-      // There's a button "Connect Last.fm" and a header "Connect Last.fm to get started"
-      expect(screen.getAllByText(/Connect Last.fm/i)).toHaveLength(2);
+      expect(screen.getByRole("button", { name: /Connect Last\.fm/i })).toBeInTheDocument();
+      expect(screen.getByRole("button", { name: /Connect ListenBrainz/i })).toBeInTheDocument();
+      expect(screen.getByText(/Connect a listening service to get started/i)).toBeInTheDocument();
     });
   });
 
-  it("handles Last.fm callback when token is present in URL", async () => {
+  it("handles the Last.fm redirect callback from ?token=", async () => {
     mockSearchParams.set("token", "test-token");
-    vi.mocked(lastfmService.getLastfmStatus).mockResolvedValue({ connected: false, username: null });
-    vi.mocked(lastfmService.callbackLastfm).mockResolvedValue({ status: "success" } as any);
+    vi.mocked(listeningService.getProviders).mockResolvedValue(providersResponse());
+    vi.mocked(lastfmService.callbackLastfm).mockResolvedValue(undefined);
 
     renderPage();
 
@@ -105,38 +143,69 @@ describe("RecommendationsPage", () => {
     });
   });
 
-  it("renders recommendations when connected", async () => {
-    vi.mocked(lastfmService.getLastfmStatus).mockResolvedValue({ connected: true, username: "testuser" });
-    vi.mocked(lastfmService.getRecommendations).mockResolvedValue({
-      source: "lastfm",
-      cache_status: "hit",
-      lastfm_connected: true,
-      generated_at: new Date().toISOString(),
-      tracks: [{ name: "Song 1", artist: "Artist 1" } as any],
-      artists: [],
-      playlists: [],
+  it("connects ListenBrainz with a pasted token", async () => {
+    vi.mocked(listeningService.getProviders).mockResolvedValue(providersResponse());
+    vi.mocked(listeningService.connectTokenProvider).mockResolvedValue({ username: "lbuser" });
+
+    renderPage();
+
+    const input = await screen.findByPlaceholderText(/Paste your token/i);
+    fireEvent.change(input, { target: { value: "  my-lb-token  " } });
+    fireEvent.click(screen.getByRole("button", { name: /Connect ListenBrainz/i }));
+
+    await waitFor(() => {
+      expect(listeningService.connectTokenProvider).toHaveBeenCalledWith("listenbrainz", "my-lb-token");
     });
+  });
+
+  it("renders recommendations and the Last.fm profile card when connected", async () => {
+    vi.mocked(listeningService.getProviders).mockResolvedValue(
+      providersResponse({ lastfmConnected: true })
+    );
+    vi.mocked(lastfmService.getRecommendations).mockResolvedValue({
+      ...emptyRecs,
+      tracks: [{ name: "Song 1", artist: "Artist 1" }],
+
+    } as any);
 
     renderPage();
 
     await waitFor(() => {
-      expect(screen.getByTestId("profile-card")).toHaveTextContent("testuser");
-      expect(screen.getByTestId("track-card")).toBeInTheDocument();
+      expect(screen.getByTestId("profile-card")).toHaveTextContent("lfuser");
       expect(screen.getByText("Song 1")).toBeInTheDocument();
     });
   });
 
-  it("handles tab switching", async () => {
-    vi.mocked(lastfmService.getLastfmStatus).mockResolvedValue({ connected: true, username: "testuser" });
-    vi.mocked(lastfmService.getRecommendations).mockResolvedValue({
-      source: "lastfm",
-      cache_status: "hit",
-      lastfm_connected: true,
-      generated_at: new Date().toISOString(),
-      tracks: [],
-      artists: [{ name: "Artist A" } as any],
-      playlists: [{ id: "pl1", name: "List A" } as any],
+  it("shows a recommendation-source switch when both providers are connected", async () => {
+    vi.mocked(listeningService.getProviders).mockResolvedValue(
+      providersResponse({ lastfmConnected: true, lbConnected: true })
+    );
+
+    vi.mocked(lastfmService.getRecommendations).mockResolvedValue(emptyRecs as any);
+    vi.mocked(listeningService.setListeningPreference).mockResolvedValue(undefined);
+
+    renderPage();
+
+    await waitFor(() => {
+      expect(screen.getByText(/Recommendation source/i)).toBeInTheDocument();
     });
+
+    fireEvent.click(screen.getByRole("button", { name: /^ListenBrainz$/i }));
+    await waitFor(() => {
+      expect(listeningService.setListeningPreference).toHaveBeenCalledWith("listenbrainz");
+    });
+  });
+
+  it("switches tabs", async () => {
+    vi.mocked(listeningService.getProviders).mockResolvedValue(
+      providersResponse({ lastfmConnected: true })
+    );
+    vi.mocked(lastfmService.getRecommendations).mockResolvedValue({
+      ...emptyRecs,
+      artists: [{ name: "Artist A" }],
+      playlists: [{ id: "pl1", title: "List A" }],
+
+    } as any);
 
     renderPage();
 
@@ -144,43 +213,29 @@ describe("RecommendationsPage", () => {
       expect(screen.getByText(/No track recommendations found/i)).toBeInTheDocument();
     });
 
-    // Switch to Artists - use exact match to avoid "Playlist" button
-    fireEvent.click(screen.getByRole("button", { name: /^Artists$/i }));
-    await waitFor(() => {
-      expect(screen.getByTestId("artist-card")).toBeInTheDocument();
-    });
+    fireEvent.click(screen.getByRole("button", { name: /^artists$/i }));
+    await waitFor(() => expect(screen.getByTestId("artist-card")).toBeInTheDocument());
 
-    // Switch to Playlists
-    fireEvent.click(screen.getByRole("button", { name: /^Playlists$/i }));
-    await waitFor(() => {
-      expect(screen.getByTestId("playlist-card")).toBeInTheDocument();
-    });
+    fireEvent.click(screen.getByRole("button", { name: /^playlists$/i }));
+    await waitFor(() => expect(screen.getByTestId("playlist-card")).toBeInTheDocument());
   });
 
-  it("handles track play action", async () => {
-    vi.mocked(lastfmService.getLastfmStatus).mockResolvedValue({ connected: true, username: "testuser" });
+  it("plays a recommended track via browse search", async () => {
+    vi.mocked(listeningService.getProviders).mockResolvedValue(
+      providersResponse({ lastfmConnected: true })
+    );
     vi.mocked(lastfmService.getRecommendations).mockResolvedValue({
-      source: "lastfm",
-      cache_status: "hit",
-      lastfm_connected: true,
-      generated_at: new Date().toISOString(),
-      tracks: [{ name: "Recommended", artist: "Cool Artist" } as any],
-      artists: [],
-      playlists: [],
-    });
+      ...emptyRecs,
+      tracks: [{ name: "Recommended", artist: "Cool Artist" }],
 
-    // Mock search API
+    } as any);
     vi.mocked(api.get).mockResolvedValue({
       data: [{ id: "track-123", name: "Recommended", artist: "Cool Artist", source: "deezer" }],
     });
 
     renderPage();
+    await waitFor(() => expect(screen.getByTestId("track-card")).toBeInTheDocument());
 
-    await waitFor(() => {
-      expect(screen.getByTestId("track-card")).toBeInTheDocument();
-    });
-
-    // Use exact name match for the "Play" button in the track card
     fireEvent.click(screen.getByRole("button", { name: /^Play$/i }));
 
     await waitFor(() => {
@@ -189,29 +244,22 @@ describe("RecommendationsPage", () => {
     });
   });
 
-  it("handles disconnect", async () => {
-    vi.mocked(lastfmService.getLastfmStatus).mockResolvedValue({ connected: true, username: "testuser" });
-    vi.mocked(lastfmService.getRecommendations).mockResolvedValue({
-      source: "lastfm",
-      cache_status: "hit",
-      lastfm_connected: true,
-      generated_at: new Date().toISOString(),
-      tracks: [],
-      artists: [],
-      playlists: [],
-    });
+  it("disconnects a provider and reloads", async () => {
+    vi.mocked(listeningService.getProviders).mockResolvedValue(
+      providersResponse({ lastfmConnected: true })
+    );
+
+    vi.mocked(lastfmService.getRecommendations).mockResolvedValue(emptyRecs as any);
+    vi.mocked(listeningService.disconnectProvider).mockResolvedValue(undefined);
 
     renderPage();
-
-    await waitFor(() => {
-      expect(screen.getByText(/Disconnect/i)).toBeInTheDocument();
-    });
+    await waitFor(() => expect(screen.getByText(/Disconnect/i)).toBeInTheDocument());
 
     fireEvent.click(screen.getByText(/Disconnect/i));
 
     await waitFor(() => {
-      expect(lastfmService.disconnectLastfm).toHaveBeenCalled();
-      expect(lastfmService.getLastfmStatus).toHaveBeenCalledTimes(2); // Initial + after disconnect
+      expect(listeningService.disconnectProvider).toHaveBeenCalledWith("lastfm");
+      expect(listeningService.getProviders).toHaveBeenCalledTimes(2);
     });
   });
 });

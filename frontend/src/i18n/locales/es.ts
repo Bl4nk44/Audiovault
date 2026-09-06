@@ -186,10 +186,26 @@ export const es = {
     viewDetails: "Ver detalles",
   },
   recommendations: {
+    tabs: {
+      tracks: "Pistas",
+      artists: "Artistas",
+      playlists: "Listas",
+    },
     title: "Descubrimiento musical",
     subtitle: "Selecciones personalizadas basadas en tus hábitos de escucha",
     refreshed: "Nuevas recomendaciones cargadas",
     refreshError: "No se pudieron actualizar las recomendaciones",
+  },
+  listening: {
+    connect: "Conectar",
+    connectedAs: "Conectado como {name}",
+    tokenPlaceholder: "Pega tu token",
+    tokenError: "Token no válido",
+    recommendationSource: "Fuente de recomendaciones",
+    auto: "Automático",
+    connectPrompt: "Conecta un servicio de escucha para empezar",
+    connectHint: "Conecta Last.fm o ListenBrainz para analizar tu historial de reproducción.",
+    getToken: "¿Dónde consigo un token de ListenBrainz?",
   },
   lastfm: {
     connect: "Conectar con Last.fm",

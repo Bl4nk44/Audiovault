@@ -50,7 +50,7 @@ export default function Player() {
   useEffect(() => {
     // 1. Scrobble Now Playing when track changes
     if (currentTrack && isPlaying && audioRef.current && audioRef.current.currentTime < 5) {
-      import("../../services/lastfm").then((mod) => {
+      import("../../services/listening").then((mod) => {
         mod.scrobbleNowPlaying(currentTrack.title, currentTrack.artist, currentTrack.album);
       });
     }
@@ -74,7 +74,7 @@ export default function Player() {
         });
 
         // Last.fm Scrobble
-        import("../../services/lastfm").then((mod) => {
+        import("../../services/listening").then((mod) => {
           mod.scrobbleTrack(
             currentTrack.title,
             currentTrack.artist,

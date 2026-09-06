@@ -36,6 +36,7 @@ export interface RecommendationResponse {
   playlists: RecommendedPlaylist[];
   source: string;
   cache_status: string;
+  provider?: string;
   lastfm_connected: boolean;
   generated_at: string;
 }

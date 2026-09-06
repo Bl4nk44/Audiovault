@@ -186,10 +186,26 @@ export const de = {
     viewDetails: "Details anzeigen",
   },
   recommendations: {
+    tabs: {
+      tracks: "Titel",
+      artists: "Künstler",
+      playlists: "Playlists",
+    },
     title: "Musik entdecken",
     subtitle: "Personalisierte Auswahl basierend auf Ihren Hörgewohnheiten",
     refreshed: "Neue Empfehlungen geladen",
     refreshError: "Empfehlungen konnten nicht aktualisiert werden",
+  },
+  listening: {
+    connect: "Verbinden",
+    connectedAs: "Verbunden als {name}",
+    tokenPlaceholder: "Token einfügen",
+    tokenError: "Ungültiger Token",
+    recommendationSource: "Empfehlungsquelle",
+    auto: "Automatisch",
+    connectPrompt: "Verbinde einen Hördienst, um zu starten",
+    connectHint: "Verbinde Last.fm oder ListenBrainz, damit wir deinen Hörverlauf analysieren können.",
+    getToken: "Wo bekomme ich einen ListenBrainz-Token?",
   },
   lastfm: {
     connect: "Mit Last.fm verbinden",

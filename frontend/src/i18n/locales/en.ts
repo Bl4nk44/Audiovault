@@ -187,10 +187,26 @@ export const en = {
     viewDetails: "View details",
   },
   recommendations: {
+    tabs: {
+      tracks: "Tracks",
+      artists: "Artists",
+      playlists: "Playlists",
+    },
     title: "Music Discovery",
     subtitle: "Personalized picks based on your listening habits",
     refreshed: "Fresh picks loaded",
     refreshError: "Failed to refresh recommendations",
+  },
+  listening: {
+    connect: "Connect",
+    connectedAs: "Connected as {name}",
+    tokenPlaceholder: "Paste your token",
+    tokenError: "Invalid token",
+    recommendationSource: "Recommendation source",
+    auto: "Auto",
+    connectPrompt: "Connect a listening service to get started",
+    connectHint: "Connect Last.fm or ListenBrainz so we can analyze your listening history.",
+    getToken: "Where do I get a ListenBrainz token?",
   },
   lastfm: {
     connect: "Connect Last.fm",
