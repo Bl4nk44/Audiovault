@@ -7,7 +7,7 @@ resolved username in ``extra_data.username``.
 
 import asyncio
 import logging
-import random
+import secrets
 from typing import TYPE_CHECKING
 
 from app.services.credentials_service import credentials_service
@@ -93,7 +93,9 @@ class ListenBrainzProvider(ListeningProvider):
         """Seeds from ListenBrainz stats — top recordings + recent listens for
         tracks, top artists for artist seeds. Expansion into recommendations is
         done by the shared Last.fm similarity graph in the engine."""
-        period = random.choice(["7day", "1month", "3month", "12month"]) if variety else "1month"
+        # secrets.choice (not random): keeps SonarCloud's insecure-PRNG rule quiet;
+        # this only rotates a stats window for seed variety, nothing security-sensitive.
+        period = secrets.choice(["7day", "1month", "3month", "12month"]) if variety else "1month"
         top_tracks, recent, top_artists = await asyncio.gather(
             self._safe(self._service.get_top_tracks(creds.username, period=period, limit=30)),
             self._safe(self._service.get_recent_tracks(creds.username, limit=30)),
