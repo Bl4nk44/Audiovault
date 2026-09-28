@@ -1,0 +1,25 @@
+# yaml-language-server: $schema=https://docs.coderabbit.ai/schemas/coderabbit-config.json
+language: en-US
+
+reviews:
+  profile: chill
+  high_level_summary: true
+  auto_review:
+    enabled: true
+    drafts: false
+  path_filters:
+    - "!pylock.toml"          # generated from backend/requirements.txt
+    - "!**/package-lock.json"
+    - "!frontend/dist/**"
+    - "!coverage/**"
+  path_instructions:
+    - path: "backend/**/*.py"
+      instructions: >-
+        FastAPI + async SQLAlchemy. ORM only (no raw SQL), selectinload against N+1, Pydantic v2 APIs,
+        every model change needs an Alembic migration, domain exception classes. Subsonic API stays in
+        api/subsonic/, never mixed with api/v1/. A change to backend/requirements.txt must regenerate pylock.toml.
+    - path: "frontend/src/**/*.{ts,tsx}"
+      instructions: "React + TypeScript strict (no untyped any), TanStack Query for server state, Zustand for client state."
+
+chat:
+  auto_reply: true
