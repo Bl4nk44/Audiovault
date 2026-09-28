@@ -1,6 +1,12 @@
 {
-  "include": ["backend/app"],
-  "exclude": ["backend/tests", "**/__pycache__", "**/.venv"],
+  "include": [
+    "backend/app"
+  ],
+  "exclude": [
+    "backend/tests",
+    "**/__pycache__",
+    "**/.venv"
+  ],
   "pythonVersion": "3.14",
   "pythonPlatform": "Linux",
   "typeCheckingMode": "basic",
@@ -14,5 +20,7 @@
   "reportTypedDictNotRequiredAccess": "none",
   "reportReturnType": "none",
   "reportOptionalOperand": "none",
-  "reportOperatorIssue": "none"
+  "reportOperatorIssue": "none",
+  "venvPath": "backend",
+  "venv": ".venv"
 }
