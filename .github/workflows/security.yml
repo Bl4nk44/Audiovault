@@ -16,6 +16,13 @@ on:
     - cron: '0 2 * * 0'
   workflow_dispatch:
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+permissions:
+  contents: read
+
 jobs:
   # ==============================================
   # Trivy Vulnerability Scanning
@@ -23,6 +30,7 @@ jobs:
   trivy-scan:
     name: Trivy Security Scan
     runs-on: ubuntu-latest
+    timeout-minutes: 45
     permissions:
       contents: read
       security-events: write
@@ -91,6 +99,7 @@ jobs:
   trivy-docker:
     name: Trivy Docker Scan
     runs-on: ubuntu-latest
+    timeout-minutes: 45
     if: github.event_name == 'push' || github.event_name == 'schedule'
     permissions:
       contents: read
@@ -163,6 +172,7 @@ jobs:
   semgrep:
     name: Semgrep Static Analysis
     runs-on: ubuntu-latest
+    timeout-minutes: 45
     permissions:
       contents: read
       security-events: write
@@ -221,6 +231,7 @@ jobs:
   secret-scan:
     name: Secret Scanning
     runs-on: ubuntu-latest
+    timeout-minutes: 45
     permissions:
       contents: read
       security-events: write
@@ -264,6 +275,7 @@ jobs:
   socket-scan:
     name: Socket Supply Chain Scan
     runs-on: ubuntu-latest
+    timeout-minutes: 45
     permissions:
       contents: read
     # Pomiń gdy brak sekretu (np. fork PR) — nie wywalaj buildu.
@@ -293,6 +305,7 @@ jobs:
   license-check:
     name: License Compliance
     runs-on: ubuntu-latest
+    timeout-minutes: 45
     permissions:
       contents: read
     if: github.event_name == 'push' || github.event_name == 'schedule'
@@ -317,6 +330,7 @@ jobs:
   security-summary:
     name: Security Summary
     runs-on: ubuntu-latest
+    timeout-minutes: 45
     needs: [trivy-scan, semgrep, secret-scan]
     if: always()
     permissions:
