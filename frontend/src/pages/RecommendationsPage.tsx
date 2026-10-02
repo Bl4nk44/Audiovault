@@ -57,10 +57,10 @@ const RecommendationsPage: React.FC = () => {
     const token = searchParams.get("token");
     if (token) {
       // eslint-disable-next-line react-hooks/immutability
-      handleLastfmCallback(token);
+      void handleLastfmCallback(token);
     } else {
       // eslint-disable-next-line react-hooks/immutability
-      loadProviders();
+      void loadProviders();
     }
   }, [searchParams]);
 
@@ -103,7 +103,7 @@ const RecommendationsPage: React.FC = () => {
       await callbackLastfm(token);
       toast.success(t("lastfm.connected", "Successfully connected to Last.fm!"));
       navigate("/recommendations", { replace: true });
-      loadProviders();
+      void loadProviders();
     } catch (e) {
       console.error("Callback failed", e);
       toast.error(t("lastfm.error", "Failed to connect to Last.fm"));
