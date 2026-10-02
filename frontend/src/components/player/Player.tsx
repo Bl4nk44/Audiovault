@@ -52,7 +52,7 @@ export default function Player() {
     if (currentTrack && isPlaying && audioRef.current && audioRef.current.currentTime < 5) {
       import("../../services/listening").then((mod) => {
         mod.scrobbleNowPlaying(currentTrack.title, currentTrack.artist, currentTrack.album);
-      });
+      }).catch((err) => console.error("Failed to scrobble", err));
     }
   }, [currentTrack, isPlaying]);
 
@@ -81,7 +81,7 @@ export default function Player() {
             Math.floor(Date.now() / 1000) - 30, // rough timestamp
             currentTrack.album
           );
-        });
+        }).catch((err) => console.error("Failed to scrobble", err));
       }
     }
   }, [currentTime, currentTrack, duration]);
