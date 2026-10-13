@@ -49,6 +49,8 @@ repos:
         entry: semgrep --config=.semgrep.yml --error --exclude=backend/tests
         language: system
         types_or: [python, javascript, ts, tsx]
+        # pre-commit passes file names explicitly, and semgrep does not apply --exclude to named files
+        exclude: ^backend/tests/
 
   # TypeScript/React — ESLint flat config
   - repo: local
