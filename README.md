@@ -11,11 +11,12 @@
 [![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=Bl4nk44_Audiovault&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=Bl4nk44_Audiovault)
 [![Semgrep](https://img.shields.io/badge/Semgrep-Scanned-00D26A?logo=semgrep)](https://semgrep.dev/)
 [![Checkov](https://img.shields.io/badge/IaC-Checkov-blue?logo=paloaltonetworks&logoColor=white)](https://www.checkov.io/)
-[![Aikido](https://img.shields.io/badge/SAST%2FSCA-Aikido-FF6B35?logo=aikido&logoColor=white)](https://aikido.dev/)
 [![OSV-Scanner](https://img.shields.io/badge/CVE-OSV--Scanner-4285F4?logo=google&logoColor=white)](https://google.github.io/osv-scanner/)
 [![Nuclei](https://img.shields.io/badge/DAST-Nuclei-9B59B6?logoColor=white)](https://nuclei.projectdiscovery.io/)
 [![Trivy](https://img.shields.io/badge/Container-Trivy-1904DA?logo=aquasecurity&logoColor=white)](https://trivy.dev/)
 [![Socket](https://img.shields.io/badge/Supply_Chain-Socket-7C3AED?logoColor=white)](https://socket.dev/)
+[![CodeRabbit Reviews](https://img.shields.io/coderabbit/prs/github/Bl4nk44/Audiovault?logo=coderabbit&label=CodeRabbit)](https://coderabbit.ai/)
+[![Repowise](https://img.shields.io/badge/Code_Intelligence-Repowise-5B5BD6)](https://repowise.dev/)
 [![codecov](https://codecov.io/gh/Bl4nk44/Audiovault/branch/main/graph/badge.svg)](https://codecov.io/gh/Bl4nk44/Audiovault)
 [![Build Status](https://github.com/Bl4nk44/Audiovault/actions/workflows/ci.yml/badge.svg)](https://github.com/Bl4nk44/Audiovault/actions)
 
@@ -27,10 +28,6 @@
 [🤝 Contributing](CONTRIBUTING.md)
 
 </div>
-
----
-
-> **Legal Notice** — Audiovault is an independent, open-source project developed for **educational and personal use**. It is a technical demonstration of self-hosted media management and local network streaming. The author does not endorse, encourage, or condone any use of this software that violates applicable laws, the terms of service of any streaming platform, or the rights of copyright holders. You are solely responsible for how you use this software and for ensuring your usage complies with the laws of your jurisdiction. Downloading copyrighted content without authorization may be illegal. **If you enjoy an artist's work, please support them through official channels.**
 
 ---
 
@@ -187,3 +184,7 @@ This project adheres to a [Code of Conduct](CODE_OF_CONDUCT.md). By participatin
 Distributed under the MIT License. See [LICENSE](LICENSE) for more information.
 
 ![Alt](https://repobeats.axiom.co/api/embed/3899106cb052b5ce0965925dd8ffb1ba7f599234.svg "Repobeats analytics image")
+
+---
+
+> **Legal Notice** — Audiovault is an independent, open-source project developed for **educational and personal use**. It is a technical demonstration of self-hosted media management and local network streaming. The author does not endorse, encourage, or condone any use of this software that violates applicable laws, the terms of service of any streaming platform, or the rights of copyright holders. You are solely responsible for how you use this software and for ensuring your usage complies with the laws of your jurisdiction. Downloading copyrighted content without authorization may be illegal. **If you enjoy an artist's work, please support them through official channels.**
