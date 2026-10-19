@@ -25,7 +25,7 @@ repos:
 
   # Python — ruff (linting + formatting), config in pyproject.toml
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.17.0
+    rev: v0.17.1
     hooks:
       - id: ruff
         args: [--fix]
@@ -35,7 +35,7 @@ repos:
 
   # Secret scanning
   - repo: https://github.com/gitguardian/ggshield
-    rev: v1.55.0
+    rev: v1.56.0
     hooks:
       - id: ggshield
 
