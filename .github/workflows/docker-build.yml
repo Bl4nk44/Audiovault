@@ -61,7 +61,43 @@ jobs:
             type=sha
             type=raw,value=latest,enable={{is_default_branch}}
 
+      # public.ecr.aws zwraca 429 przy limicie anonimowych pobrań — ponów z przerwą.
       - name: Build and push Docker image (Backend)
+        id: build-backend-1
+        continue-on-error: true
+        uses: docker/build-push-action@bcafcacb16a39f128d818304e6c9c0c18556b85f # v7.1.0
+        with:
+          context: .
+          file: ./backend/Dockerfile
+          push: ${{ github.event_name != 'pull_request' }}
+          tags: ${{ steps.meta-backend.outputs.tags }}
+          labels: ${{ steps.meta-backend.outputs.labels }}
+          cache-from: type=gha,scope=backend
+          cache-to: type=gha,mode=max,scope=backend
+
+      - name: Wait before retrying Backend build
+        if: steps.build-backend-1.outcome == 'failure'
+        run: sleep 60
+      - name: Build and push Docker image (Backend) (retry 1)
+        id: build-backend-2
+        if: steps.build-backend-1.outcome == 'failure'
+        continue-on-error: true
+        uses: docker/build-push-action@bcafcacb16a39f128d818304e6c9c0c18556b85f # v7.1.0
+        with:
+          context: .
+          file: ./backend/Dockerfile
+          push: ${{ github.event_name != 'pull_request' }}
+          tags: ${{ steps.meta-backend.outputs.tags }}
+          labels: ${{ steps.meta-backend.outputs.labels }}
+          cache-from: type=gha,scope=backend
+          cache-to: type=gha,mode=max,scope=backend
+
+      - name: Wait before retrying Backend build
+        if: steps.build-backend-2.outcome == 'failure'
+        run: sleep 60
+      - name: Build and push Docker image (Backend) (retry 2)
+        id: build-backend-3
+        if: steps.build-backend-2.outcome == 'failure'
         uses: docker/build-push-action@bcafcacb16a39f128d818304e6c9c0c18556b85f # v7.1.0
         with:
           context: .
@@ -73,6 +109,45 @@ jobs:
           cache-to: type=gha,mode=max,scope=backend
 
       - name: Build and push Docker image (Frontend)
+        id: build-frontend-1
+        continue-on-error: true
+        uses: docker/build-push-action@bcafcacb16a39f128d818304e6c9c0c18556b85f # v7.1.0
+        with:
+          context: .
+          file: ./frontend/Dockerfile
+          push: ${{ github.event_name != 'pull_request' }}
+          tags: ${{ steps.meta-frontend.outputs.tags }}
+          labels: ${{ steps.meta-frontend.outputs.labels }}
+          cache-from: type=gha,scope=frontend
+          cache-to: type=gha,mode=max,scope=frontend
+          build-args: |
+            BUILDKIT_INLINE_CACHE=1
+
+      - name: Wait before retrying Frontend build
+        if: steps.build-frontend-1.outcome == 'failure'
+        run: sleep 60
+      - name: Build and push Docker image (Frontend) (retry 1)
+        id: build-frontend-2
+        if: steps.build-frontend-1.outcome == 'failure'
+        continue-on-error: true
+        uses: docker/build-push-action@bcafcacb16a39f128d818304e6c9c0c18556b85f # v7.1.0
+        with:
+          context: .
+          file: ./frontend/Dockerfile
+          push: ${{ github.event_name != 'pull_request' }}
+          tags: ${{ steps.meta-frontend.outputs.tags }}
+          labels: ${{ steps.meta-frontend.outputs.labels }}
+          cache-from: type=gha,scope=frontend
+          cache-to: type=gha,mode=max,scope=frontend
+          build-args: |
+            BUILDKIT_INLINE_CACHE=1
+
+      - name: Wait before retrying Frontend build
+        if: steps.build-frontend-2.outcome == 'failure'
+        run: sleep 60
+      - name: Build and push Docker image (Frontend) (retry 2)
+        id: build-frontend-3
+        if: steps.build-frontend-2.outcome == 'failure'
         uses: docker/build-push-action@bcafcacb16a39f128d818304e6c9c0c18556b85f # v7.1.0
         with:
           context: .
