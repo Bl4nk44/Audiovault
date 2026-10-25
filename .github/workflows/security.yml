@@ -38,10 +38,10 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
       - name: Run Trivy vulnerability scanner (filesystem)
-        uses: aquasecurity/trivy-action@57a97c7e7821a5776cebc9bb87c984fa69cba8f1 # v0.35.0
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
         with:
           scan-type: 'fs'
           scan-ref: '.'
@@ -52,21 +52,21 @@ jobs:
           ignore-unfixed: true  # Skip CVEs without an available patch
 
       - name: Archive Trivy FS results
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
-        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        if: always() && hashFiles('trivy-results.sarif') != ''
         with:
           name: trivy-fs-results-sarif
           path: trivy-results.sarif
 
       - name: Upload Trivy FS SARIF to Code Scanning
-        uses: github/codeql-action/upload-sarif@dd903d2e4f5405488e5ef1422510ee31c8b32357 # v3
-        if: always()
+        uses: github/codeql-action/upload-sarif@9b3254085494b55a0f7c4c2b3d2d52cc712ce370 # v4.39.1
+        if: always() && hashFiles('trivy-results.sarif') != ''
         with:
           sarif_file: trivy-results.sarif
           category: trivy-fs
 
       - name: Run Trivy vulnerability scanner (filesystem JSON)
-        uses: aquasecurity/trivy-action@57a97c7e7821a5776cebc9bb87c984fa69cba8f1 # v0.35.0
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
         with:
           scan-type: 'fs'
           scan-ref: '.'
@@ -77,14 +77,14 @@ jobs:
           ignore-unfixed: true
 
       - name: Upload Trivy FS JSON results
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
-        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        if: always() && hashFiles('trivy-results.json') != ''
         with:
           name: trivy-fs-results
           path: trivy-results.json
 
       - name: Run Trivy vulnerability scanner (dependencies)
-        uses: aquasecurity/trivy-action@57a97c7e7821a5776cebc9bb87c984fa69cba8f1 # v0.35.0
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
         with:
           scan-type: 'fs'
           scan-ref: '.'
@@ -100,12 +100,14 @@ jobs:
     name: Trivy Docker Scan
     runs-on: ubuntu-latest
     timeout-minutes: 45
-    if: github.event_name == 'push' || github.event_name == 'schedule'
+    if: github.event_name == 'push' || github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
     permissions:
       contents: read
       security-events: write
 
     strategy:
+      # Don't let one leg's registry failure cancel the other leg.
+      fail-fast: false
       matrix:
         image:
           - name: backend
@@ -117,24 +119,58 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Login to Docker Hub
+        # Authenticated pulls get a much higher rate limit than anonymous ones.
+        uses: docker/login-action@81c6f93d4bc991e510b342a00b419b3bb4efc5c6 # v4.7.0
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+
+      - name: Pre-pull base images (retry with jittered backoff)
+        # Registries return 429 on anonymous/shared-IP pull rate limits.
+        # Pull the FROM images separately so `docker build` finds them locally.
+        env:
+          DOCKERFILE: ${{ matrix.image.dockerfile }}
+        run: |
+          images=$(awk '
+            toupper($1) == "FROM" {
+              i = 2
+              while ($i ~ /^--/) i++
+              if (!($i in stage) && tolower($i) != "scratch") print $i
+              if (toupper($(i + 1)) == "AS") stage[$(i + 2)] = 1
+            }' "$DOCKERFILE" | sort -u)
+          for image in $images; do
+            for attempt in 1 2 3 4 5 6 7 8; do
+              if docker pull "$image"; then
+                continue 2
+              fi
+              delay=$(( attempt * 30 + RANDOM % 30 ))
+              echo "docker pull $image failed (attempt $attempt/8), retrying in ${delay}s..."
+              sleep "$delay"
+            done
+            echo "::error::docker pull $image failed after 8 attempts"
+            exit 1
+          done
 
       - name: Build Docker image
-        # public.ecr.aws potrafi zwrócić 429 (anonimowy limit pobrań) — ponów z backoffem.
+        env:
+          IMAGE_NAME: audiovault-${{ matrix.image.name }}:test
+          DOCKERFILE: ${{ matrix.image.dockerfile }}
+          BUILD_CONTEXT: ${{ matrix.image.context }}
         run: |
           for attempt in 1 2 3 4; do
-            if docker build -t audiovault-${{ matrix.image.name }}:test \
-              -f ${{ matrix.image.dockerfile }} \
-              ${{ matrix.image.context }}; then
+            if docker build -t "$IMAGE_NAME" -f "$DOCKERFILE" "$BUILD_CONTEXT"; then
               exit 0
             fi
-            echo "docker build failed (attempt $attempt), retrying..."
-            sleep $((attempt * 30))
+            echo "docker build failed (attempt $attempt/4), retrying..."
+            sleep $(( attempt * 30 + RANDOM % 30 ))
           done
           exit 1
 
       - name: Run Trivy on Docker image
-        uses: aquasecurity/trivy-action@57a97c7e7821a5776cebc9bb87c984fa69cba8f1 # v0.35.0
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
         with:
           image-ref: 'audiovault-${{ matrix.image.name }}:test'
           format: 'sarif'
@@ -144,21 +180,21 @@ jobs:
           ignore-unfixed: true
 
       - name: Archive Trivy Docker results (${{ matrix.image.name }})
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
-        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        if: always() && hashFiles(format('trivy-docker-{0}.sarif', matrix.image.name)) != ''
         with:
           name: trivy-docker-${{ matrix.image.name }}-sarif
           path: trivy-docker-${{ matrix.image.name }}.sarif
 
       - name: Upload Trivy Docker SARIF to Code Scanning
-        uses: github/codeql-action/upload-sarif@dd903d2e4f5405488e5ef1422510ee31c8b32357 # v3
-        if: always()
+        uses: github/codeql-action/upload-sarif@9b3254085494b55a0f7c4c2b3d2d52cc712ce370 # v4.39.1
+        if: always() && hashFiles(format('trivy-docker-{0}.sarif', matrix.image.name)) != ''
         with:
           sarif_file: trivy-docker-${{ matrix.image.name }}.sarif
           category: trivy-docker-${{ matrix.image.name }}
 
       - name: Run Trivy on Docker image (JSON)
-        uses: aquasecurity/trivy-action@57a97c7e7821a5776cebc9bb87c984fa69cba8f1 # v0.35.0
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
         with:
           image-ref: 'audiovault-${{ matrix.image.name }}:test'
           format: 'json'
@@ -168,8 +204,8 @@ jobs:
           ignore-unfixed: true
 
       - name: Upload Docker JSON results
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
-        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        if: always() && hashFiles(format('trivy-docker-{0}.json', matrix.image.name)) != ''
         with:
           name: trivy-docker-${{ matrix.image.name }}
           path: trivy-docker-${{ matrix.image.name }}.json
@@ -190,7 +226,7 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
       - name: Run Semgrep (SARIF — fails job on findings)
         run: |
@@ -213,22 +249,22 @@ jobs:
         continue-on-error: true
 
       - name: Upload Semgrep JSON results
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
-        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        if: always() && hashFiles('semgrep-results.json') != ''
         with:
           name: semgrep-results
           path: semgrep-results.json
 
       - name: Archive Semgrep SARIF results
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
-        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        if: always() && hashFiles('semgrep-results.sarif') != ''
         with:
           name: semgrep-results-sarif
           path: semgrep-results.sarif
 
       - name: Upload Semgrep SARIF to Code Scanning
-        uses: github/codeql-action/upload-sarif@dd903d2e4f5405488e5ef1422510ee31c8b32357 # v3
-        if: always()
+        uses: github/codeql-action/upload-sarif@9b3254085494b55a0f7c4c2b3d2d52cc712ce370 # v4.39.1
+        if: always() && hashFiles('semgrep-results.sarif') != ''
         with:
           sarif_file: semgrep-results.sarif
           category: semgrep
@@ -246,12 +282,12 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           fetch-depth: 0  # Full history for better secret detection
 
       - name: Run Trivy secret scanner
-        uses: aquasecurity/trivy-action@57a97c7e7821a5776cebc9bb87c984fa69cba8f1 # v0.35.0
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
         with:
           scan-type: 'fs'
           scan-ref: '.'
@@ -261,15 +297,15 @@ jobs:
           exit-code: '1'  # Fail on secrets
 
       - name: Archive secret scan results
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
-        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        if: always() && hashFiles('trivy-secrets.sarif') != ''
         with:
           name: trivy-secrets-sarif
           path: trivy-secrets.sarif
 
       - name: Upload Trivy secrets SARIF to Code Scanning
-        uses: github/codeql-action/upload-sarif@dd903d2e4f5405488e5ef1422510ee31c8b32357 # v3
-        if: always()
+        uses: github/codeql-action/upload-sarif@9b3254085494b55a0f7c4c2b3d2d52cc712ce370 # v4.39.1
+        if: always() && hashFiles('trivy-secrets.sarif') != ''
         with:
           sarif_file: trivy-secrets.sarif
           category: trivy-secrets
@@ -291,10 +327,10 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
       - name: Setup Node.js
-        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version: '24'
 
@@ -320,10 +356,10 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
       - name: Run Trivy license scanner
-        uses: aquasecurity/trivy-action@57a97c7e7821a5776cebc9bb87c984fa69cba8f1 # v0.35.0
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
         with:
           scan-type: 'fs'
           scan-ref: '.'

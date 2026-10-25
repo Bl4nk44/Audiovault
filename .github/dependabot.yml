@@ -3,9 +3,14 @@
 # ==============================================
 # Documentation: https://docs.github.com/code-security/dependabot/dependabot-version-updates/configuration-options-for-the-dependabot.yml-file
 #
-# This configuration disables automatic PR creation.
-# You will receive security alerts and can view available updates
-# in the Security > Dependabot alerts tab.
+# Version updates: one grouped PR per ecosystem (patch + minor only),
+# at most 3 open PRs per ecosystem. Major bumps are ignored here and stay manual.
+# Security alerts/updates are independent of this file and keep working.
+#
+# NOTE (pip): Dependabot edits backend/requirements.txt only. pylock.toml is NOT
+# updated automatically - regenerate it in the PR branch before merging
+# (pip lock -r backend/requirements.txt -o pylock.toml; verify with
+# scripts/check-pylock-sync.sh).
 
 version: 2
 updates:
@@ -19,8 +24,15 @@ updates:
       timezone: "Europe/Berlin"
     cooldown:
       default-days: 7
-    # Disable automatic PRs - only show alerts
-    open-pull-requests-limit: 0
+    open-pull-requests-limit: 3
+    groups:
+      minor-and-patch:
+        update-types:
+          - "minor"
+          - "patch"
+    ignore:
+      - dependency-name: "*"
+        update-types: ["version-update:semver-major"]
     labels:
       - "dependencies"
       - "frontend"
@@ -35,8 +47,20 @@ updates:
       timezone: "Europe/Berlin"
     cooldown:
       default-days: 7
-    # Disable automatic PRs - only show alerts
-    open-pull-requests-limit: 0
+    open-pull-requests-limit: 3
+    groups:
+      minor-and-patch:
+        update-types:
+          - "minor"
+          - "patch"
+    ignore:
+      # Pinned in backend/requirements.txt (see comments there).
+      - dependency-name: "fastapi"
+        versions: [">=0.137"]
+      - dependency-name: "sqlalchemy"
+        versions: [">=2.1"]
+      - dependency-name: "*"
+        update-types: ["version-update:semver-major"]
     labels:
       - "dependencies"
       - "backend"
@@ -51,7 +75,15 @@ updates:
       timezone: "Europe/Berlin"
     cooldown:
       default-days: 7
-    open-pull-requests-limit: 0
+    open-pull-requests-limit: 3
+    groups:
+      minor-and-patch:
+        update-types:
+          - "minor"
+          - "patch"
+    ignore:
+      - dependency-name: "*"
+        update-types: ["version-update:semver-major"]
     labels:
       - "dependencies"
       - "docker"
@@ -66,7 +98,15 @@ updates:
       timezone: "Europe/Berlin"
     cooldown:
       default-days: 7
-    open-pull-requests-limit: 0
+    open-pull-requests-limit: 3
+    groups:
+      minor-and-patch:
+        update-types:
+          - "minor"
+          - "patch"
+    ignore:
+      - dependency-name: "*"
+        update-types: ["version-update:semver-major"]
     labels:
       - "dependencies"
       - "docker"
@@ -81,7 +121,15 @@ updates:
       timezone: "Europe/Berlin"
     cooldown:
       default-days: 7
-    open-pull-requests-limit: 0
+    open-pull-requests-limit: 3
+    groups:
+      minor-and-patch:
+        update-types:
+          - "minor"
+          - "patch"
+    ignore:
+      - dependency-name: "*"
+        update-types: ["version-update:semver-major"]
     labels:
       - "dependencies"
       - "github-actions"
