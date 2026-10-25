@@ -100,7 +100,7 @@ jobs:
     name: Trivy Docker Scan
     runs-on: ubuntu-latest
     timeout-minutes: 45
-    if: github.event_name == 'push' || github.event_name == 'schedule'
+    if: github.event_name == 'push' || github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
     permissions:
       contents: read
       security-events: write

@@ -77,7 +77,7 @@ jobs:
 
       - name: Wait before retrying Backend build
         if: steps.build-backend-1.outcome == 'failure'
-        run: sleep 60
+        run: sleep $((90 + RANDOM % 30))
       - name: Build and push Docker image (Backend) (retry 1)
         id: build-backend-2
         if: steps.build-backend-1.outcome == 'failure'
@@ -94,7 +94,7 @@ jobs:
 
       - name: Wait before retrying Backend build
         if: steps.build-backend-2.outcome == 'failure'
-        run: sleep 60
+        run: sleep $((180 + RANDOM % 60))
       - name: Build and push Docker image (Backend) (retry 2)
         id: build-backend-3
         if: steps.build-backend-2.outcome == 'failure'
@@ -125,7 +125,7 @@ jobs:
 
       - name: Wait before retrying Frontend build
         if: steps.build-frontend-1.outcome == 'failure'
-        run: sleep 60
+        run: sleep $((90 + RANDOM % 30))
       - name: Build and push Docker image (Frontend) (retry 1)
         id: build-frontend-2
         if: steps.build-frontend-1.outcome == 'failure'
@@ -144,7 +144,7 @@ jobs:
 
       - name: Wait before retrying Frontend build
         if: steps.build-frontend-2.outcome == 'failure'
-        run: sleep 60
+        run: sleep $((180 + RANDOM % 60))
       - name: Build and push Docker image (Frontend) (retry 2)
         id: build-frontend-3
         if: steps.build-frontend-2.outcome == 'failure'
