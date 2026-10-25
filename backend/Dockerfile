@@ -1,7 +1,9 @@
-# Pinned by digest for reproducible builds; tag kept for readability.
-# 3.14-slim-bookworm floating tag carries the latest Debian security patches
+# Pinned by digest only (reproducible builds; Sonar docker:S8431 forbids tag+digest).
+# Image: python:3.14-slim-bookworm. Docker Hub (authenticated in CI) instead of ECR: anonymous
+# public.ecr.aws pulls hit 429 on shared runners. Digests are identical on both registries.
+# The 3.14-slim-bookworm floating tag carries the latest Debian security patches
 # (fixes openssl use-after-free + CPython path-traversal CVEs). Refresh digest on bump.
-FROM public.ecr.aws/docker/library/python:3.14-slim-bookworm@sha256:86f975aca15cf04a40b399eebede9aea7c82eae084d1f1a0a6ef6bcaae871a30
+FROM docker.io/library/python@sha256:945c2676dc2b18e0c1f16879244122c57c0ffede60006bf3df159c507a31bcae
 
 WORKDIR /app
 
