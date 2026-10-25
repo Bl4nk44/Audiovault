@@ -1,9 +1,9 @@
 # Pinned by digest only (reproducible builds; Sonar docker:S8431 forbids tag+digest).
-# Image: python:3.14-slim-bookworm. Docker Hub (authenticated in CI) instead of ECR: anonymous
-# public.ecr.aws pulls hit 429 on shared runners. Digests are identical on both registries.
-# The 3.14-slim-bookworm floating tag carries the latest Debian security patches
-# (fixes openssl use-after-free + CPython path-traversal CVEs). Refresh digest on bump.
-FROM docker.io/library/python@sha256:945c2676dc2b18e0c1f16879244122c57c0ffede60006bf3df159c507a31bcae
+# Image: python:3.14-slim-trixie (Debian 13: ffmpeg 7.1, aria2 1.37, curl 8.14). HIGH/CRITICAL OS-level
+# findings incl. unfixed: 215 vs 286 on bookworm (see AV-72).
+# Docker Hub (authenticated in CI) instead of ECR: anonymous public.ecr.aws pulls hit 429 on shared
+# runners; digests are identical on both registries. Refresh digest on bump.
+FROM docker.io/library/python@sha256:35caba83af2fe6da9a5d922f9b0156f21d1246a48278c58a08bd253303ba42e8
 
 WORKDIR /app
 
