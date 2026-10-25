@@ -25,14 +25,14 @@ sha256 = "9243213661e29250eb41368e5daa826fc017156c3b8a11440826b2e3ed376472"
 
 [[packages]]
 name = "aiohttp"
-version = "3.14.3"
+version = "3.14.5"
 
 [[packages.wheels]]
-name = "aiohttp-3.14.3-cp314-cp314-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl"
-url = "https://files.pythonhosted.org/packages/d5/b7/1da684a04175473fa4cddbf9a2f572e79514c3fd27a74597f43057d4f3da/aiohttp-3.14.3-cp314-cp314-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl"
+name = "aiohttp-3.14.5-cp314-cp314-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl"
+url = "https://files.pythonhosted.org/packages/a6/66/55a8904b3a129fafdf94f9cc0a2e4ca09a3c914650be52355db7ad0bbdb6/aiohttp-3.14.5-cp314-cp314-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl"
 
 [packages.wheels.hashes]
-sha256 = "18cb43369747b2ae007bd2655fb8e63a099c2ff1d207962943636dac989b3147"
+sha256 = "94684b879ac1d71e4238850c99b62dc1b28d9086b156a2555f082010b85a865c"
 
 [[packages]]
 name = "aiosignal"
@@ -58,14 +58,14 @@ sha256 = "21c002eb13823fad740196c5a2e9d8e62f6243bd9e7e4a1f87fb5e44ecb4fceb"
 
 [[packages]]
 name = "alembic"
-version = "1.20.0"
+version = "1.20.1"
 
 [[packages.wheels]]
-name = "alembic-1.20.0-py3-none-any.whl"
-url = "https://files.pythonhosted.org/packages/3f/27/78a89b55b0904d222183164e079b4ca56208e94eff1d35ad1f1ad5be9b06/alembic-1.20.0-py3-none-any.whl"
+name = "alembic-1.20.1-py3-none-any.whl"
+url = "https://files.pythonhosted.org/packages/11/3c/8740f5b4e1bd57333e4f84265b9b6363da4f7cf70f5622dd1e2fde7a0bd5/alembic-1.20.1-py3-none-any.whl"
 
 [packages.wheels.hashes]
-sha256 = "77eb101048d95f982c0353e9233404889dcd7a6fc244c107836c0e2fc9cf7d9d"
+sha256 = "9970712cfb81ea26c8658d378aaa5b8f6ff9146e5bb111d70497c164016cf598"
 
 [[packages]]
 name = "annotated-doc"
@@ -113,25 +113,25 @@ sha256 = "bbeb2ec02d23d3c06a6c07ed7f0f3939ada6680eb121fae809a69bb42c537a30"
 
 [[packages]]
 name = "ast-serialize"
-version = "0.11.2"
+version = "0.13.1"
 
 [[packages.wheels]]
-name = "ast_serialize-0.11.2-cp39-abi3-manylinux_2_17_x86_64.manylinux2014_x86_64.whl"
-url = "https://files.pythonhosted.org/packages/04/6f/4c992cd7841ba589fefb14ddc9aff2f6db7f2a615d4074f9ad04115b5ce0/ast_serialize-0.11.2-cp39-abi3-manylinux_2_17_x86_64.manylinux2014_x86_64.whl"
+name = "ast_serialize-0.13.1-cp39-abi3-manylinux_2_17_x86_64.manylinux2014_x86_64.whl"
+url = "https://files.pythonhosted.org/packages/c5/fa/da311559dd3dae9af5825cf21660775a929b970f72e3786af3f2cd667944/ast_serialize-0.13.1-cp39-abi3-manylinux_2_17_x86_64.manylinux2014_x86_64.whl"
 
 [packages.wheels.hashes]
-sha256 = "a7004ba572f09be34342ccb98dcd4bad5707d3d81adc8cb4c3f685d2a2c51bbc"
+sha256 = "9f99786e0d62082a5b121b3437f3167562133711df22128de1e9886f57f0b226"
 
 [[packages]]
 name = "asyncpg"
-version = "0.31.0"
+version = "0.32.0"
 
 [[packages.wheels]]
-name = "asyncpg-0.31.0-cp314-cp314-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl"
-url = "https://files.pythonhosted.org/packages/6f/de/bf1b60de3dede5c2731e6788617a512bc0ebd9693eac297ee74086f101d7/asyncpg-0.31.0-cp314-cp314-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl"
+name = "asyncpg-0.32.0-cp314-cp314-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl"
+url = "https://files.pythonhosted.org/packages/68/db/fc91b503b3ec66cf242d83c799388285ea5f0ee238435d53dd9c1a8648a9/asyncpg-0.32.0-cp314-cp314-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl"
 
 [packages.wheels.hashes]
-sha256 = "9322b563e2661a52e3cdbc93eed3be7748b289f792e0011cb2720d278b366ce2"
+sha256 = "63417b8f7369c54f6754c1fbd5a2968fbe632ff55bfbedd56a0177b6a96bd251"
 
 [[packages]]
 name = "attrs"
@@ -179,14 +179,14 @@ sha256 = "fd3eaa737917d8a14f4baa391670c433c4e3f6f5fd2cd99d4bf436437f432364"
 
 [[packages]]
 name = "certifi"
-version = "2026.7.22"
+version = "2026.10.23"
 
 [[packages.wheels]]
-name = "certifi-2026.7.22-py3-none-any.whl"
-url = "https://files.pythonhosted.org/packages/0b/a7/71ac2cff56fec219ed242bb11b8efb69fcc4bec75db06fb7bfe35de520e6/certifi-2026.7.22-py3-none-any.whl"
+name = "certifi-2026.10.23-py3-none-any.whl"
+url = "https://files.pythonhosted.org/packages/32/d1/a3652fe2c19134d0d15922177821d863cbd7e842d53a21bbe7e8e3a1b5ac/certifi-2026.10.23-py3-none-any.whl"
 
 [packages.wheels.hashes]
-sha256 = "62f22742b58a1a33014a2b6b706588a8d7e2a88ae7bd1a6ebe8c992928483775"
+sha256 = "e9b54de76e530bb6cf0ccd036787103acb58fd42ba930ea8bf948ddbaa2f61d1"
 
 [[packages]]
 name = "cffi"
@@ -223,14 +223,14 @@ sha256 = "255bc9599cf7748b4b1a446ccc735421bd08a2ae529a8b88597d3de5664ee360"
 
 [[packages]]
 name = "coverage"
-version = "7.16.2"
+version = "7.17.0"
 
 [[packages.wheels]]
-name = "coverage-7.16.2-cp314-cp314-manylinux1_x86_64.manylinux_2_28_x86_64.manylinux_2_5_x86_64.whl"
-url = "https://files.pythonhosted.org/packages/a8/d4/a306940c81c6ae759e82fff27d20b7fdc6896e422b821f51313cce212b6c/coverage-7.16.2-cp314-cp314-manylinux1_x86_64.manylinux_2_28_x86_64.manylinux_2_5_x86_64.whl"
+name = "coverage-7.17.0-cp314-cp314-manylinux1_x86_64.manylinux_2_28_x86_64.manylinux_2_5_x86_64.whl"
+url = "https://files.pythonhosted.org/packages/e9/58/d8bdd65a661913bc12eaaa3e59742b2cb8b94f2e7f78e62184f0a58ca493/coverage-7.17.0-cp314-cp314-manylinux1_x86_64.manylinux_2_28_x86_64.manylinux_2_5_x86_64.whl"
 
 [packages.wheels.hashes]
-sha256 = "35f37886699cb9abd29958247d718628d5bc6f39e623dff66a09e546c42a7e03"
+sha256 = "acdb5f3c96046efff9dc6c572a6acb2b8d0da09372d7b9a9ed7249cf7d17434f"
 
 [[packages]]
 name = "cryptography"
@@ -245,14 +245,14 @@ sha256 = "9dab55f57c74c3cad24c323bacbbd04be4705ba6eb0d92e920b1fc4837ed5079"
 
 [[packages]]
 name = "dnspython"
-version = "2.8.0"
+version = "2.9.0"
 
 [[packages.wheels]]
-name = "dnspython-2.8.0-py3-none-any.whl"
-url = "https://files.pythonhosted.org/packages/ba/5a/18ad964b0086c6e62e2e7500f7edc89e3faa45033c71c1893d34eed2b2de/dnspython-2.8.0-py3-none-any.whl"
+name = "dnspython-2.9.0-py3-none-any.whl"
+url = "https://files.pythonhosted.org/packages/10/02/cdcc9b7c051786a103c3b09e1003a82fa0c66bcb91ffbdabcfbf7b4163b9/dnspython-2.9.0-py3-none-any.whl"
 
 [packages.wheels.hashes]
-sha256 = "01d9bbc4a2d76bf0db7c1f729812ded6d912bd318d3b1cf81d30c0f845dbf3af"
+sha256 = "9a4aedb833c3c1b49214d04d44d3032ab7a9135f7c1d29a549b4ff78fd82fda9"
 
 [[packages]]
 name = "email-validator"
@@ -267,14 +267,14 @@ sha256 = "80f13f623413e6b197ae73bb10bf4eb0908faf509ad8362c5edeb0be7fd450b4"
 
 [[packages]]
 name = "fakeredis"
-version = "2.39.0"
+version = "2.40.0"
 
 [[packages.wheels]]
-name = "fakeredis-2.39.0-py3-none-any.whl"
-url = "https://files.pythonhosted.org/packages/35/ca/8bf657139922808196e6480ec6ed94008897e23d603abd5b27538cfdf811/fakeredis-2.39.0-py3-none-any.whl"
+name = "fakeredis-2.40.0-py3-none-any.whl"
+url = "https://files.pythonhosted.org/packages/c7/e4/6919d3653d72c53d1fb22c97ceb6fa3664cad302994e90ee52279f7eb394/fakeredis-2.40.0-py3-none-any.whl"
 
 [packages.wheels.hashes]
-sha256 = "acd1450575259634db2942d5bae93e383aac32bb9968aab29fe7b0c2ab880bb8"
+sha256 = "b155ef2442134372eb1cc5664cf5638ccbe0a6dde9d1942153708e2782f315c9"
 
 [[packages]]
 name = "fastapi"
@@ -366,14 +366,14 @@ sha256 = "2d400746a40668fc9dec9810239072b40b4484b640a8c38fd654a024c7a1bf55"
 
 [[packages]]
 name = "httptools"
-version = "0.8.0"
+version = "0.9.0"
 
 [[packages.wheels]]
-name = "httptools-0.8.0-cp314-cp314-manylinux1_x86_64.manylinux_2_28_x86_64.manylinux_2_5_x86_64.whl"
-url = "https://files.pythonhosted.org/packages/ba/53/771bd891eb0f236f32145d6a1775777ec85745f3cc983a1f23d1a3b8ddfe/httptools-0.8.0-cp314-cp314-manylinux1_x86_64.manylinux_2_28_x86_64.manylinux_2_5_x86_64.whl"
+name = "httptools-0.9.0-cp314-cp314-manylinux1_x86_64.manylinux_2_28_x86_64.manylinux_2_5_x86_64.whl"
+url = "https://files.pythonhosted.org/packages/72/04/4ecb7251a6c55bef61b157bb93fd44678943c35702a5966e4d5ebda2d450/httptools-0.9.0-cp314-cp314-manylinux1_x86_64.manylinux_2_28_x86_64.manylinux_2_5_x86_64.whl"
 
 [packages.wheels.hashes]
-sha256 = "c4a9f1707e4823d54dfec6c33fa3697d302aed536ed352a7ebb5a061ddb869d0"
+sha256 = "18d800aaa2d6bff7d889df810d1b19a5fde72b1f6c0ca96e8d9f28a692fe5460"
 
 [[packages]]
 name = "httpx"
@@ -399,14 +399,14 @@ sha256 = "ab7ae7122974553370f0bdb919e1a960b2cd1bc1ef0276416d896db81c14582c"
 
 [[packages]]
 name = "iniconfig"
-version = "2.3.0"
+version = "2.3.1"
 
 [[packages.wheels]]
-name = "iniconfig-2.3.0-py3-none-any.whl"
-url = "https://files.pythonhosted.org/packages/cb/b1/3846dd7f199d53cb17f49cba7e651e9ce294d8497c8c150530ed11865bb8/iniconfig-2.3.0-py3-none-any.whl"
+name = "iniconfig-2.3.1-py3-none-any.whl"
+url = "https://files.pythonhosted.org/packages/56/43/4ca9e49d27a1fcf6bece6f6aec0ea46bb9112489b93d4b688fb415457bdb/iniconfig-2.3.1-py3-none-any.whl"
 
 [packages.wheels.hashes]
-sha256 = "f631c04d2c48c52b84d0d0549c99ff3859c98df65b3101406327ecc7d53fbf12"
+sha256 = "9121e2c1fdb355232495be3194c8dfe87ccc2d5dee45947b78e68f499790d7a7"
 
 [[packages]]
 name = "librt"
@@ -432,14 +432,14 @@ sha256 = "a591b9947ca347b41a63370e121d6e2b1458fe6dde9ae065029ec10a37f25ff4"
 
 [[packages]]
 name = "lyricsgenius"
-version = "3.14.0"
+version = "3.15.0"
 
 [[packages.wheels]]
-name = "lyricsgenius-3.14.0-py3-none-any.whl"
-url = "https://files.pythonhosted.org/packages/f5/32/6869cb93fd4f1a038f1e1d7c33f81617f99042dd8c19776545e517c41708/lyricsgenius-3.14.0-py3-none-any.whl"
+name = "lyricsgenius-3.15.0-py3-none-any.whl"
+url = "https://files.pythonhosted.org/packages/9e/72/2f4e61aca119ce8fe35d396be6056cdb7068efc66709a6ef0cb3ddc109ed/lyricsgenius-3.15.0-py3-none-any.whl"
 
 [packages.wheels.hashes]
-sha256 = "3917f1b5cf299247b79ecb19a1b5abc303f8d479b58bbcf2a1c6242a1433f83d"
+sha256 = "dc4cd28403962b35c2dcbb78f7297df0ef889300c193664e5e359cfd1298ff32"
 
 [[packages]]
 name = "mako"
@@ -454,14 +454,14 @@ sha256 = "723296007c870bfd6b3f0c3230dba7198096e5269297ebf5e4eff9e7ffa39d4f"
 
 [[packages]]
 name = "markupsafe"
-version = "3.0.3"
+version = "3.0.4"
 
 [[packages.wheels]]
-name = "markupsafe-3.0.3-cp314-cp314-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl"
-url = "https://files.pythonhosted.org/packages/41/3c/a36c2450754618e62008bf7435ccb0f88053e07592e6028a34776213d877/markupsafe-3.0.3-cp314-cp314-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl"
+name = "markupsafe-3.0.4-cp314-cp314-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl"
+url = "https://files.pythonhosted.org/packages/8f/db/d7282caf7ab03af44d5d6fdbaa019b35c7d7f1c90588b839c07cba640d6a/markupsafe-3.0.4-cp314-cp314-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl"
 
 [packages.wheels.hashes]
-sha256 = "457a69a9577064c05a97c41f4e65148652db078a3a509039e64d3467b9e7ef97"
+sha256 = "a8e9f292fcda89b324f2f5c91d13f1424a153e40fc2756f38ee23b15835ff300"
 
 [[packages]]
 name = "multidict"
@@ -487,14 +487,14 @@ sha256 = "4f077fe87d3fc7fba259aa63d8c026b18382ca6a42ef37c61e16f1b1b5b82fe7"
 
 [[packages]]
 name = "mypy"
-version = "2.3.1"
+version = "2.4.0"
 
 [[packages.wheels]]
-name = "mypy-2.3.1-cp314-cp314-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl"
-url = "https://files.pythonhosted.org/packages/78/f7/f4a34edab45667c5465855dc585a20e87978ffa8aee711445b7239d120c6/mypy-2.3.1-cp314-cp314-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl"
+name = "mypy-2.4.0-cp314-cp314-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl"
+url = "https://files.pythonhosted.org/packages/bc/1c/26e16977e25ef2494a74f8ffc872a76ec2c3aa43c3156057cbdf88f352c5/mypy-2.4.0-cp314-cp314-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl"
 
 [packages.wheels.hashes]
-sha256 = "8e036f06b41630f4c8a1d48f9ac6aa26acc65f8be089973f5519da643318f03f"
+sha256 = "20e9a5cd875837520c43db98dea0b6d0c2197833d95c30127d8f570fb9b1f00b"
 
 [[packages]]
 name = "mypy-extensions"
@@ -542,14 +542,14 @@ sha256 = "a00ce642f577bf7f473932318056212bc4f8bfdf53128c78bbd5af0b9b20b189"
 
 [[packages]]
 name = "pluggy"
-version = "1.6.0"
+version = "1.7.0"
 
 [[packages.wheels]]
-name = "pluggy-1.6.0-py3-none-any.whl"
-url = "https://files.pythonhosted.org/packages/54/20/4d324d65cc6d9205fabedc306948156824eb9f0ee1633355a8f7ec5c66bf/pluggy-1.6.0-py3-none-any.whl"
+name = "pluggy-1.7.0-py3-none-any.whl"
+url = "https://files.pythonhosted.org/packages/40/9e/2b38731e0fc536806f16490e1a12d7f0dc2a1235aa8cc07bcc75416a7daa/pluggy-1.7.0-py3-none-any.whl"
 
 [packages.wheels.hashes]
-sha256 = "e920276dd6813095e9377c0bc5566d94c932c33b27a3e3945d8389c374dd4746"
+sha256 = "7dd7b0d8832ba3cb632c306926ded123429211b83641b35dc5c41ad2d34f9bec"
 
 [[packages]]
 name = "propcache"
@@ -586,14 +586,14 @@ sha256 = "190c18b97d9ef72f2e88c451b6588af90d6bd7bf54cb94b963280dc86a2c7076"
 
 [[packages]]
 name = "pycparser"
-version = "3.0"
+version = "3.12"
 
 [[packages.wheels]]
-name = "pycparser-3.0-py3-none-any.whl"
-url = "https://files.pythonhosted.org/packages/0c/c3/44f3fbbfa403ea2a7c779186dc20772604442dde72947e7d01069cbe98e3/pycparser-3.0-py3-none-any.whl"
+name = "pycparser-3.12-py3-none-any.whl"
+url = "https://files.pythonhosted.org/packages/b6/ae/315bbeee126a769cbde43cf4908acb4b40408d8bf8bbf334dd7368d8dadf/pycparser-3.12-py3-none-any.whl"
 
 [packages.wheels.hashes]
-sha256 = "b727414169a36b7d524c1c3e31839a521725078d7b2ff038656844266160a992"
+sha256 = "a076f3f489b39b43ed13563a1dafe42447445bec2e294154ec5c57fcdda4c85e"
 
 [[packages]]
 name = "pydantic"
@@ -619,14 +619,14 @@ sha256 = "54d510bac3ee52247af28ed4bb18a1e799f040ac60fd2bf5ccd4c92f1fbe786f"
 
 [[packages]]
 name = "pydantic-settings"
-version = "2.15.0"
+version = "2.16.1"
 
 [[packages.wheels]]
-name = "pydantic_settings-2.15.0-py3-none-any.whl"
-url = "https://files.pythonhosted.org/packages/30/a4/2bffa9f8e804325a09867f0e9d30795c80ea9f8d62560bd1b6ad6220eb2f/pydantic_settings-2.15.0-py3-none-any.whl"
+name = "pydantic_settings-2.16.1-py3-none-any.whl"
+url = "https://files.pythonhosted.org/packages/3c/74/fdf926afe145d8629c4b2ff57f4ea1d64ed7abc4d84d97463b2517a2547e/pydantic_settings-2.16.1-py3-none-any.whl"
 
 [packages.wheels.hashes]
-sha256 = "0ba092c291c94baceb5eff768aa0d56400a457585bc0175925a5a5510303da42"
+sha256 = "30f5313340da4e8f1b440d1910b92a5bc3ccbb6b4ba70ec2b8395bc921f418f5"
 
 [[packages]]
 name = "pygments"
@@ -652,14 +652,14 @@ sha256 = "42d59d631f7768a1028a64c7ff581a9bf7519804daf91fc5b6c56e30eec5e193"
 
 [[packages]]
 name = "pyrate-limiter"
-version = "4.5.0"
+version = "4.5.1"
 
 [[packages.wheels]]
-name = "pyrate_limiter-4.5.0-py3-none-any.whl"
-url = "https://files.pythonhosted.org/packages/64/dc/02f88649feeabf4282c8c194a6f6060ca858041bab1204365b5d8ef8a95e/pyrate_limiter-4.5.0-py3-none-any.whl"
+name = "pyrate_limiter-4.5.1-py3-none-any.whl"
+url = "https://files.pythonhosted.org/packages/bc/72/bf7279ae5799e1b54cf137859c17755446b2d2b6194606bda41753a43f76/pyrate_limiter-4.5.1-py3-none-any.whl"
 
 [packages.wheels.hashes]
-sha256 = "e7320a715adf404cb7b2f399e05ceb59cae165275b21f7708eb1b9fd9608e91c"
+sha256 = "bb8dd2926b0679e4ada6629a865e85daa5599268f930c61a8992dafa8bf3ba0d"
 
 [[packages]]
 name = "pytest"
@@ -817,25 +817,25 @@ sha256 = "8596eb8967d744174820280fa62b4542a2e955bfaccca73ed8a13c6eb8e9b502"
 
 [[packages]]
 name = "sqlalchemy"
-version = "2.0.54"
+version = "2.0.55"
 
 [[packages.wheels]]
-name = "sqlalchemy-2.0.54-cp314-cp314-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl"
-url = "https://files.pythonhosted.org/packages/59/d2/7f0c77f8e042cb5f28275fea29c3080b4ac6fd4b3fdd7f59ff1ef3e28c11/sqlalchemy-2.0.54-cp314-cp314-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl"
+name = "sqlalchemy-2.0.55-cp314-cp314-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl"
+url = "https://files.pythonhosted.org/packages/4e/55/332d70b9321e2acd01ee9f669a6577321d889b697fd582384e54547c1f52/sqlalchemy-2.0.55-cp314-cp314-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl"
 
 [packages.wheels.hashes]
-sha256 = "6f84099e4b04a5c2d44500a2a8302eee5af4bc6fee63e8c6e9cf6786e747280e"
+sha256 = "637c7da1c75626a398196bfe82ea93dcf8f3ab8a6613a07727fe48496d4c8562"
 
 [[packages]]
 name = "starlette"
-version = "1.7.0"
+version = "1.10.0"
 
 [[packages.wheels]]
-name = "starlette-1.7.0-py3-none-any.whl"
-url = "https://files.pythonhosted.org/packages/4e/d6/1ec1b290f9e0fb067899b61e1d37a30c923068bad260b216dbe37a7d2967/starlette-1.7.0-py3-none-any.whl"
+name = "starlette-1.10.0-py3-none-any.whl"
+url = "https://files.pythonhosted.org/packages/88/2e/947cfe02def9371c07cd5bf5b6b61c829e9aecb9904db02a66cfafbc1eec/starlette-1.10.0-py3-none-any.whl"
 
 [packages.wheels.hashes]
-sha256 = "67f8e99895493dd2911a03f11314af6ceebeae4e704bb9f43dfc6a9db151c93e"
+sha256 = "478c0ab3b4ced6e82719849c118fa406f0278a3499c1a898cd15cd31bdc38ce4"
 
 [[packages]]
 name = "types-aiofiles"
@@ -883,25 +883,25 @@ sha256 = "ef5da68cb827e5f606c8f9c0b49eeee4c2669d6d97122f301d3a55dc6a63f6ed"
 
 [[packages]]
 name = "types-requests"
-version = "2.33.0.20260906"
+version = "2.33.0.20261006"
 
 [[packages.wheels]]
-name = "types_requests-2.33.0.20260906-py3-none-any.whl"
-url = "https://files.pythonhosted.org/packages/60/4c/51ec821d22a45b4162fa3f3e9e94ea4c0f8c49e82363b10955baa5438391/types_requests-2.33.0.20260906-py3-none-any.whl"
+name = "types_requests-2.33.0.20261006-py3-none-any.whl"
+url = "https://files.pythonhosted.org/packages/4d/72/b82789207b3d360ce9f5a4372c790c52cc3dd928aeb7d4faeec652b651b2/types_requests-2.33.0.20261006-py3-none-any.whl"
 
 [packages.wheels.hashes]
-sha256 = "9f53622652bd921ead7a54d665be1b8d518165c8b51cc9d68d944cd6b6bfa8fb"
+sha256 = "26cc8146505cab33cda9737991929e4144c559bebe05078ccc6998f27c4ca2c1"
 
 [[packages]]
 name = "types-setuptools"
-version = "84.0.0.20260812"
+version = "84.0.0.20261006"
 
 [[packages.wheels]]
-name = "types_setuptools-84.0.0.20260812-py3-none-any.whl"
-url = "https://files.pythonhosted.org/packages/8a/e5/3a41cab4066465593facd660b2683c017f3d88d3297cdd26db0677b8e479/types_setuptools-84.0.0.20260812-py3-none-any.whl"
+name = "types_setuptools-84.0.0.20261006-py3-none-any.whl"
+url = "https://files.pythonhosted.org/packages/de/24/add82014f533f2ebf62088b39db86d6a341bb0fd94af50b3a3c1e8886683/types_setuptools-84.0.0.20261006-py3-none-any.whl"
 
 [packages.wheels.hashes]
-sha256 = "799c08e4bc6a288e8a0b538afb5f5ff320a08927ba8dbedb30c74ee3ba5d867b"
+sha256 = "f435ec88f8f2319316969e37b5a1ca49496b276889124de249b422b061b492fe"
 
 [[packages]]
 name = "typing-extensions"
@@ -927,14 +927,14 @@ sha256 = "65b8397ba37ccbce054456aaccddfc91e6e3083c92824df348d96ca832f3f147"
 
 [[packages]]
 name = "tzlocal"
-version = "5.4.4"
+version = "5.4.5"
 
 [[packages.wheels]]
-name = "tzlocal-5.4.4-py3-none-any.whl"
-url = "https://files.pythonhosted.org/packages/9e/a4/017a7a6cbe387d961a688ec31364ae60a5c4e22c96ae9921b79a947c855d/tzlocal-5.4.4-py3-none-any.whl"
+name = "tzlocal-5.4.5-py3-none-any.whl"
+url = "https://files.pythonhosted.org/packages/7b/c1/9be4e1a8a30db8729a86628073910e56f85aaf8a659e053f376a2e6ea5a8/tzlocal-5.4.5-py3-none-any.whl"
 
 [packages.wheels.hashes]
-sha256 = "aae09f0126a8a86fa736be266eb4a471380d26a0de3bc14844e7821fee3e2a15"
+sha256 = "ecab534f6d65d9deb4c4ea52c121ab6dd5958e9b878e71dcb102578269752454"
 
 [[packages]]
 name = "urllib3"
@@ -982,14 +982,14 @@ sha256 = "b5768b49e426fd5b550b012c866db347cdf15c398ef98dc557b6e6b72fa74cd1"
 
 [[packages]]
 name = "websockets"
-version = "17.1"
+version = "17.3"
 
 [[packages.wheels]]
-name = "websockets-17.1-cp314-cp314-manylinux1_x86_64.manylinux_2_28_x86_64.manylinux_2_5_x86_64.whl"
-url = "https://files.pythonhosted.org/packages/46/c8/d8372256e00c4e3cab1115c45075d1eeedb642a3f2b42bd70c4deae03f06/websockets-17.1-cp314-cp314-manylinux1_x86_64.manylinux_2_28_x86_64.manylinux_2_5_x86_64.whl"
+name = "websockets-17.3-cp314-cp314-manylinux1_x86_64.manylinux_2_28_x86_64.manylinux_2_5_x86_64.whl"
+url = "https://files.pythonhosted.org/packages/eb/8f/46e4030947f5590cb61832901f44a3edb07ef8d1e27f6c06b42c5f1c4d33/websockets-17.3-cp314-cp314-manylinux1_x86_64.manylinux_2_28_x86_64.manylinux_2_5_x86_64.whl"
 
 [packages.wheels.hashes]
-sha256 = "6f42912fa9eb4cb7c7ec9fde9b3332ba339eb8a8811981043d4029599f3d950b"
+sha256 = "8dbb3862aa649de95660b6337d97101977f160b5b354d07b82fe309874d2c8bc"
 
 [[packages]]
 name = "wsproto"
@@ -1037,11 +1037,11 @@ sha256 = "f65db840907a43ca23b29bd563951a1e390fbe2089d7aa4ddbe2043824b2acd9"
 
 [[packages]]
 name = "zipp"
-version = "4.1.0"
+version = "4.1.2"
 
 [[packages.wheels]]
-name = "zipp-4.1.0-py3-none-any.whl"
-url = "https://files.pythonhosted.org/packages/3a/13/547360d81e6d88d58492968ffda9f9542854f11310ee556fef14260cc886/zipp-4.1.0-py3-none-any.whl"
+name = "zipp-4.1.2-py3-none-any.whl"
+url = "https://files.pythonhosted.org/packages/b8/44/7bd2007260da11cccca29ba2d4c345f1287aa663db38ee7cefeabf6386a5/zipp-4.1.2-py3-none-any.whl"
 
 [packages.wheels.hashes]
-sha256 = "25ad4e16390cd314347dd8f1de67a2ac538ae658ed4ab9db16029c07c188e97f"
+sha256 = "b30cb6cd253122169c47de245ca24a86bac2a5d3802ba15bf7ba6414eb9e144d"
