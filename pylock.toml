@@ -1015,14 +1015,14 @@ sha256 = "30eec96e8a91bd588ce897c9543f6d5d8d34b28fbcba28a4dedf20ebeae9fe57"
 
 [[packages]]
 name = "yt-dlp"
-version = "2026.8.19"
+version = "2026.10.21"
 
 [[packages.wheels]]
-name = "yt_dlp-2026.8.19-py3-none-any.whl"
-url = "https://files.pythonhosted.org/packages/69/b2/8cd1613f56eed7ceb64fbd4df3f1c01246bfb098e6f398228bafda22b80b/yt_dlp-2026.8.19-py3-none-any.whl"
+name = "yt_dlp-2026.10.21-py3-none-any.whl"
+url = "https://files.pythonhosted.org/packages/b7/75/ae700ddc7e0b1095fd06cf7e251627dcf4cafcaff460cce92cdc08023b13/yt_dlp-2026.10.21-py3-none-any.whl"
 
 [packages.wheels.hashes]
-sha256 = "1d57897e94c6665a0a6f9bc54b34e584284e32c034ffab3a7df25d8f7b24eedf"
+sha256 = "94a3a3e2c423129d0bbd2f1be000c4171fa1226c29e251c84aff868f2851c247"
 
 [[packages]]
 name = "ytmusicapi"
