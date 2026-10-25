@@ -1,6 +1,6 @@
 # Build Stage
-# Pinned by digest (multi-arch index); refresh digest on bump.
-FROM public.ecr.aws/docker/library/node:24-alpine@sha256:06d7adf3e0ef61a13f1d28682726366f97a15aa1888c934d3ecec86c33918b53 AS build
+# Image: node:24-alpine. Pinned by digest only (multi-arch index); refresh digest on bump.
+FROM docker.io/library/node@sha256:06d7adf3e0ef61a13f1d28682726366f97a15aa1888c934d3ecec86c33918b53 AS build
 
 ARG APP_VERSION=0.9.0
 ENV VITE_APP_VERSION=${APP_VERSION}
@@ -24,8 +24,8 @@ COPY frontend/ ./
 RUN npm run build
 
 # Production Stage
-# Pinned by digest (multi-arch index); refresh digest on bump.
-FROM public.ecr.aws/docker/library/nginx:stable-alpine@sha256:47928bf67eb62a1863cb08d9ecb52d3e704304ba614eaee17884204677702951 AS production
+# Image: nginx:stable-alpine. Pinned by digest only (multi-arch index); refresh digest on bump.
+FROM docker.io/library/nginx@sha256:47928bf67eb62a1863cb08d9ecb52d3e704304ba614eaee17884204677702951 AS production
 
 # Patch all OS packages for known CVEs (libxml2, openssl, libexpat 2.8.2-r0
 # CVE-2026-56403..56412 et al.) — full upgrade so each rebuild picks up current fixes
