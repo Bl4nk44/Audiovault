@@ -1,6 +1,6 @@
 fastapi>=0.136.3,<0.137  # 0.137+ regresja typów: Annotated[X, Depends()] = ... → mypy EllipsisType (232 miejsc, osobny refactor)
 starlette>=1.10.0  # CVE-2026-54283: form() limits ignored for urlencoded (DoS)
-anyio>=4.15.1  # CVE fix — transitive przez starlette/httpx, explicit floor
+anyio>=4.16.0  # CVE fix — transitive przez starlette/httpx, explicit floor
 uvicorn[standard]>=0.54.0
 h11>=0.16.0
 sqlalchemy>=2.0.55,<2.1  # 2.1 removes sqlalchemy.ext.mypy plugin; models use legacy Column() (migrate to Mapped[] first)
