@@ -17,8 +17,10 @@ RUN apt-get update && apt-get upgrade -y && apt-get install -y --no-install-reco
 # Copy dependency lock (PEP 751) + source manifest
 COPY pylock.toml backend/requirements.txt ./
 
-# Install Python dependencies from the lock for reproducible builds
-RUN pip install --no-cache-dir --only-binary :all: --require-hashes -r pylock.toml
+# Install Python dependencies from the lock for reproducible builds.
+# pip is not needed at runtime; removing it drops its vendored msgpack/setuptools (Trivy CVEs).
+RUN pip install --no-cache-dir --only-binary :all: --require-hashes -r pylock.toml \
+    && pip uninstall -y pip
 
 # Copy application code
 COPY backend/ .
