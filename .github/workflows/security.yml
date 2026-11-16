@@ -59,7 +59,7 @@ jobs:
           path: trivy-results.sarif
 
       - name: Upload Trivy FS SARIF to Code Scanning
-        uses: github/codeql-action/upload-sarif@9b3254085494b55a0f7c4c2b3d2d52cc712ce370 # v4.39.1
+        uses: github/codeql-action/upload-sarif@33d7b85da1a04171e211befe2c739303b9a4c066 # v4.39.3
         if: always() && hashFiles('trivy-results.sarif') != ''
         with:
           sarif_file: trivy-results.sarif
@@ -123,7 +123,7 @@ jobs:
 
       - name: Login to Docker Hub
         # Authenticated pulls get a much higher rate limit than anonymous ones.
-        uses: docker/login-action@81c6f93d4bc991e510b342a00b419b3bb4efc5c6 # v4.7.0
+        uses: docker/login-action@8aa5831fb8d48d8f76594c7ddde61ae58019f550 # v4.8.0
         with:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
@@ -187,7 +187,7 @@ jobs:
           path: trivy-docker-${{ matrix.image.name }}.sarif
 
       - name: Upload Trivy Docker SARIF to Code Scanning
-        uses: github/codeql-action/upload-sarif@9b3254085494b55a0f7c4c2b3d2d52cc712ce370 # v4.39.1
+        uses: github/codeql-action/upload-sarif@33d7b85da1a04171e211befe2c739303b9a4c066 # v4.39.3
         if: always() && hashFiles(format('trivy-docker-{0}.sarif', matrix.image.name)) != ''
         with:
           sarif_file: trivy-docker-${{ matrix.image.name }}.sarif
@@ -263,7 +263,7 @@ jobs:
           path: semgrep-results.sarif
 
       - name: Upload Semgrep SARIF to Code Scanning
-        uses: github/codeql-action/upload-sarif@9b3254085494b55a0f7c4c2b3d2d52cc712ce370 # v4.39.1
+        uses: github/codeql-action/upload-sarif@33d7b85da1a04171e211befe2c739303b9a4c066 # v4.39.3
         if: always() && hashFiles('semgrep-results.sarif') != ''
         with:
           sarif_file: semgrep-results.sarif
@@ -304,7 +304,7 @@ jobs:
           path: trivy-secrets.sarif
 
       - name: Upload Trivy secrets SARIF to Code Scanning
-        uses: github/codeql-action/upload-sarif@9b3254085494b55a0f7c4c2b3d2d52cc712ce370 # v4.39.1
+        uses: github/codeql-action/upload-sarif@33d7b85da1a04171e211befe2c739303b9a4c066 # v4.39.3
         if: always() && hashFiles('trivy-secrets.sarif') != ''
         with:
           sarif_file: trivy-secrets.sarif
