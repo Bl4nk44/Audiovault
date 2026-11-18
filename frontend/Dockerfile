@@ -25,7 +25,7 @@ RUN npm run build
 
 # Production Stage
 # Image: nginx:stable-alpine. Pinned by digest only (multi-arch index); refresh digest on bump.
-FROM docker.io/library/nginx@sha256:47928bf67eb62a1863cb08d9ecb52d3e704304ba614eaee17884204677702951 AS production
+FROM docker.io/library/nginx@sha256:165ddde8751e75a1c907d24ef10d9f6deb08b57e0fe56caf67512486aff76d82 AS production
 
 # Patch all OS packages for known CVEs (libxml2, openssl, libexpat 2.8.2-r0
 # CVE-2026-56403..56412 et al.) — full upgrade so each rebuild picks up current fixes
