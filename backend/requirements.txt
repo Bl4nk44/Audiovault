@@ -38,7 +38,7 @@ aiosqlite>=0.22.1
 fakeredis[lua]>=2.40.0
 aiofiles>=25.1.0
 ruff>=0.17.3
-mypy>=2.4.0
+mypy>=2.4.1
 types-redis
 zipp>=3.23.1
 dnspython>=2.9.0
