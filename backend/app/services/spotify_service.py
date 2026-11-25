@@ -406,7 +406,7 @@ class SpotifyService:
         url = f"{base.rstrip('/')}/{resource_type}/{resource_id}"
         async with httpx.AsyncClient() as client:
             try:
-                resp = await client.get(url, timeout=15.0)  # NOSONAR S7044: id validated above
+                resp = await client.get(url, timeout=15.0)
                 resp.raise_for_status()
                 return resp.json()
             except Exception as e:

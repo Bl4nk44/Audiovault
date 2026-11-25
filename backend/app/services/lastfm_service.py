@@ -77,7 +77,7 @@ class LastfmService:
         sig_str = "".join(f"{k}{v}" for k, v in sorted_params)
         sig_str += str(settings.LASTFM_API_SECRET or "")
         # nosemgrep: python.lang.security.audit.md5-used-as-password.md5-used-as-password, md5-used-as-password
-        return hashlib.md5(sig_str.encode("utf-8")).hexdigest()  # nosec B324  # noqa: S324  # NOSONAR S4790: MD5 mandated by Last.fm api_sig
+        return hashlib.md5(sig_str.encode("utf-8")).hexdigest()  # nosec B324  # noqa: S324
 
     async def _request(self, method: str, params: dict[str, Any], signed: bool = False) -> dict[str, Any]:
         # Apply rate limiting before each request
