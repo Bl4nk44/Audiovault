@@ -107,7 +107,7 @@ def dict_to_xml(tag: str, d: Any) -> str:
     """Simple dict to XML converter for Subsonic format."""
     elem = ET.Element(tag)
     _build_xml_element(elem, d)
-    elem.set("xmlns", "http://subsonic.org/restapi")
+    elem.set("xmlns", "http://subsonic.org/restapi")  # NOSONAR S5332: XML namespace identifier, not a connection
     return ET.tostring(elem, encoding="unicode", method="xml")
 
 
