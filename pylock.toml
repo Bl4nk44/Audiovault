@@ -69,14 +69,14 @@ sha256 = "9970712cfb81ea26c8658d378aaa5b8f6ff9146e5bb111d70497c164016cf598"
 
 [[packages]]
 name = "annotated-doc"
-version = "0.0.6"
+version = "0.0.7"
 
 [[packages.wheels]]
-name = "annotated_doc-0.0.6-py3-none-any.whl"
-url = "https://files.pythonhosted.org/packages/cd/f5/3dd85d583e55be76cd02b1fc9bbec771b12d63124b01661d9535ccf8721f/annotated_doc-0.0.6-py3-none-any.whl"
+name = "annotated_doc-0.0.7-py3-none-any.whl"
+url = "https://files.pythonhosted.org/packages/5e/b1/9530d6bee606979d54501adcc767d958a38929827f11a524b0d93429d2ad/annotated_doc-0.0.7-py3-none-any.whl"
 
 [packages.wheels.hashes]
-sha256 = "361ca0950cc7082f53fa69e9328409f40a62c61e57e0a47e1825a08078a58a53"
+sha256 = "6bc31bbbec6dfaaedc1676dbc11dbda96fe22a2b5c400e9ebad113fec44a9dc6"
 
 [[packages]]
 name = "annotated-types"
@@ -179,14 +179,14 @@ sha256 = "fd3eaa737917d8a14f4baa391670c433c4e3f6f5fd2cd99d4bf436437f432364"
 
 [[packages]]
 name = "certifi"
-version = "2026.10.23"
+version = "2026.11.20"
 
 [[packages.wheels]]
-name = "certifi-2026.10.23-py3-none-any.whl"
-url = "https://files.pythonhosted.org/packages/32/d1/a3652fe2c19134d0d15922177821d863cbd7e842d53a21bbe7e8e3a1b5ac/certifi-2026.10.23-py3-none-any.whl"
+name = "certifi-2026.11.20-py3-none-any.whl"
+url = "https://files.pythonhosted.org/packages/6d/39/5eec3296860b94ac20bb8ed807725b88f6adfab3f343df592afd975f5f86/certifi-2026.11.20-py3-none-any.whl"
 
 [packages.wheels.hashes]
-sha256 = "e9b54de76e530bb6cf0ccd036787103acb58fd42ba930ea8bf948ddbaa2f61d1"
+sha256 = "7422df25243767b9877031a2248cb14d09ddac9beee846f4cef3d5c9191d488f"
 
 [[packages]]
 name = "cffi"
@@ -201,14 +201,14 @@ sha256 = "b0431303acaea1089ad4b3e9ce4e6518193def1118d4073ca848635ee4ea2e96"
 
 [[packages]]
 name = "charset-normalizer"
-version = "3.5.2"
+version = "3.5.3"
 
 [[packages.wheels]]
-name = "charset_normalizer-3.5.2-cp314-cp314-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl"
-url = "https://files.pythonhosted.org/packages/18/24/bad3ac4271589df29cf5ce2f5ae490518a5739358052bd0d61209e6fea54/charset_normalizer-3.5.2-cp314-cp314-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl"
+name = "charset_normalizer-3.5.3-cp314-cp314-manylinux1_x86_64.manylinux_2_28_x86_64.manylinux_2_5_x86_64.whl"
+url = "https://files.pythonhosted.org/packages/aa/a8/0fed9cde3b8197c99b0981bc53ee7f84cc38a3805a4c5f1c1003cda50588/charset_normalizer-3.5.3-cp314-cp314-manylinux1_x86_64.manylinux_2_28_x86_64.manylinux_2_5_x86_64.whl"
 
 [packages.wheels.hashes]
-sha256 = "34276fd796040bf0993ab33a369aa572e6979c7aab225a88893667ad8eac8f7a"
+sha256 = "ee9de080e8d6221bbe4ba2667367b1cee0f47a53f60ffc5e431b698cd2f2b214"
 
 [[packages]]
 name = "click"
@@ -223,14 +223,14 @@ sha256 = "8bb5376d2006950386f8c6427613334a2acadc5f559cb80e638d00b4df957e37"
 
 [[packages]]
 name = "coverage"
-version = "7.17.3"
+version = "7.17.5"
 
 [[packages.wheels]]
-name = "coverage-7.17.3-cp314-cp314-manylinux1_x86_64.manylinux_2_28_x86_64.manylinux_2_5_x86_64.whl"
-url = "https://files.pythonhosted.org/packages/26/2c/c871c22a11981f58895e4dd167f4aa64c04853c5a0e91de853408c0f2d3e/coverage-7.17.3-cp314-cp314-manylinux1_x86_64.manylinux_2_28_x86_64.manylinux_2_5_x86_64.whl"
+name = "coverage-7.17.5-cp314-cp314-manylinux1_x86_64.manylinux_2_28_x86_64.manylinux_2_5_x86_64.whl"
+url = "https://files.pythonhosted.org/packages/df/6f/8343e92c0c3c51270f7ed15bb0875e04037caaa2bc415a1ab02a1662da63/coverage-7.17.5-cp314-cp314-manylinux1_x86_64.manylinux_2_28_x86_64.manylinux_2_5_x86_64.whl"
 
 [packages.wheels.hashes]
-sha256 = "eb25b51a30d07db8493901e3040284f2e756ec2b6549ee392798b9ef4c0607b3"
+sha256 = "bf704353a9da00a67bc5965ba46dee91ee472a54369ebc267eeaacfe85ebc0db"
 
 [[packages]]
 name = "cryptography"
@@ -267,14 +267,14 @@ sha256 = "4454e41c4e1c6b6caee34a1dc71d5e736791562be8fd179b02e298f796522684"
 
 [[packages]]
 name = "fakeredis"
-version = "2.40.0"
+version = "2.41.0"
 
 [[packages.wheels]]
-name = "fakeredis-2.40.0-py3-none-any.whl"
-url = "https://files.pythonhosted.org/packages/c7/e4/6919d3653d72c53d1fb22c97ceb6fa3664cad302994e90ee52279f7eb394/fakeredis-2.40.0-py3-none-any.whl"
+name = "fakeredis-2.41.0-py3-none-any.whl"
+url = "https://files.pythonhosted.org/packages/3a/47/1a20be7813c4f079b478d9d2c54fcfc4178062a3acd028dd289cdced3904/fakeredis-2.41.0-py3-none-any.whl"
 
 [packages.wheels.hashes]
-sha256 = "b155ef2442134372eb1cc5664cf5638ccbe0a6dde9d1942153708e2782f315c9"
+sha256 = "9a2bb58889e8bf646b991324ac4d226a3ae74a3bdde7b6e533c7072c853f236e"
 
 [[packages]]
 name = "fastapi"
@@ -410,14 +410,14 @@ sha256 = "9121e2c1fdb355232495be3194c8dfe87ccc2d5dee45947b78e68f499790d7a7"
 
 [[packages]]
 name = "librt"
-version = "0.16.0"
+version = "0.17.0"
 
 [[packages.wheels]]
-name = "librt-0.16.0-cp314-cp314-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl"
-url = "https://files.pythonhosted.org/packages/50/07/79007d2165f649ea93e08c0962d1d62c70af9cde77965255095bf9d96f9a/librt-0.16.0-cp314-cp314-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl"
+name = "librt-0.17.0-cp314-cp314-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl"
+url = "https://files.pythonhosted.org/packages/71/85/4d4525b1b84b85a9ed6113ee80e36853b8102cd6cfe902dc5de8e7280fe1/librt-0.17.0-cp314-cp314-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl"
 
 [packages.wheels.hashes]
-sha256 = "ca8052401c55d7511dda6760719fda7618067e83535d7d0010096d216c34b667"
+sha256 = "de7dd4d3ec15cf15299cd30839773f58d6dc109a057cb2c797bb11fba478721b"
 
 [[packages]]
 name = "lupa"
@@ -432,14 +432,14 @@ sha256 = "a591b9947ca347b41a63370e121d6e2b1458fe6dde9ae065029ec10a37f25ff4"
 
 [[packages]]
 name = "lyricsgenius"
-version = "3.16.0"
+version = "3.18.1"
 
 [[packages.wheels]]
-name = "lyricsgenius-3.16.0-py3-none-any.whl"
-url = "https://files.pythonhosted.org/packages/66/6f/7de04aa9725967bf3273fc532a926a7d0a6c205e103db7178917999366b6/lyricsgenius-3.16.0-py3-none-any.whl"
+name = "lyricsgenius-3.18.1-py3-none-any.whl"
+url = "https://files.pythonhosted.org/packages/ad/7d/412d5e475b4ae11f31f951a53e81280852251dd46c7d9e6065e044cd4551/lyricsgenius-3.18.1-py3-none-any.whl"
 
 [packages.wheels.hashes]
-sha256 = "eae52d4a872d073877ddb62c6d651282dd827894bd43e28c87e9e1640f535630"
+sha256 = "ec8a79e178da29e1355369bfdb26aef76e6cffcdbd8d90b2a890a7eaf8ad800e"
 
 [[packages]]
 name = "mako"
@@ -509,14 +509,14 @@ sha256 = "993e7a20aa5671eb41a7132cf555af30062da99729601601b9a8382b11cae768"
 
 [[packages]]
 name = "packaging"
-version = "26.3"
+version = "26.4"
 
 [[packages.wheels]]
-name = "packaging-26.3-py3-none-any.whl"
-url = "https://files.pythonhosted.org/packages/63/34/ba1c580383c9eada3711951fef0795c80b829a078d72188184bcab9dd527/packaging-26.3-py3-none-any.whl"
+name = "packaging-26.4-py3-none-any.whl"
+url = "https://files.pythonhosted.org/packages/ba/7b/5504f91c9c2733f693d7759e50ede5d27119d4da7e5836c46d3b5ff81d56/packaging-26.4-py3-none-any.whl"
 
 [packages.wheels.hashes]
-sha256 = "d7193f7c8e4e93f444fde0262bf90af30e16fa0ad0ad44cb553c87339b23cd1c"
+sha256 = "81383611a09c1bc0b08b76e0fd5829d7c6824c65b27a6aee339da133f4233ea2"
 
 [[packages]]
 name = "passlib"
@@ -597,25 +597,25 @@ sha256 = "a076f3f489b39b43ed13563a1dafe42447445bec2e294154ec5c57fcdda4c85e"
 
 [[packages]]
 name = "pydantic"
-version = "2.14.3"
+version = "2.14.4"
 
 [[packages.wheels]]
-name = "pydantic-2.14.3-py3-none-any.whl"
-url = "https://files.pythonhosted.org/packages/72/b8/b864503789ef5c58597d2a7b4adbee62c26440ab1e682581fc6838df8947/pydantic-2.14.3-py3-none-any.whl"
+name = "pydantic-2.14.4-py3-none-any.whl"
+url = "https://files.pythonhosted.org/packages/8a/8c/824a686c4ba815ddb0722f9e66272088bccd4e1ae1d2f7015375e4a4fc7f/pydantic-2.14.4-py3-none-any.whl"
 
 [packages.wheels.hashes]
-sha256 = "3f7b347782ab7e4cf4c798496ae3a82787d9f21ec12676a9c564355eeef8daa8"
+sha256 = "653a2ad9f6d8858529c77c72717d0ea991d6c6837fe683246b2f4b2bbfc3fadc"
 
 [[packages]]
 name = "pydantic-core"
-version = "2.50.4"
+version = "2.50.5"
 
 [[packages.wheels]]
-name = "pydantic_core-2.50.4-cp314-cp314-manylinux2014_x86_64.manylinux_2_17_x86_64.whl"
-url = "https://files.pythonhosted.org/packages/56/9c/621ad8f88590a92a086b1168dce09369d9c5e079e2e635e6646d248af55b/pydantic_core-2.50.4-cp314-cp314-manylinux2014_x86_64.manylinux_2_17_x86_64.whl"
+name = "pydantic_core-2.50.5-cp314-cp314-manylinux2014_x86_64.manylinux_2_17_x86_64.whl"
+url = "https://files.pythonhosted.org/packages/79/e3/df03dc4e10c460d37dad8921ec9c6f177bc33d4f2da808d5ae4d8f11acfe/pydantic_core-2.50.5-cp314-cp314-manylinux2014_x86_64.manylinux_2_17_x86_64.whl"
 
 [packages.wheels.hashes]
-sha256 = "f1d62fb172db35c6478c9323da34ff37d1f3d37d7d44337a9d94ba8c583e5730"
+sha256 = "88b543705849d0c59343f97c38296dbf59eb7b3c9565bd4fe1ed638ba38da5ed"
 
 [[packages]]
 name = "pydantic-settings"
@@ -740,25 +740,25 @@ sha256 = "e768c473842be811f6dd24bd0a49cd0d4a0c994182e3eba23cc9d1489c7a697e"
 
 [[packages]]
 name = "pyyaml"
-version = "6.0.3"
+version = "6.0.4"
 
 [[packages.wheels]]
-name = "pyyaml-6.0.3-cp314-cp314-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl"
-url = "https://files.pythonhosted.org/packages/88/f9/16491d7ed2a919954993e48aa941b200f38040928474c9e85ea9e64222c3/pyyaml-6.0.3-cp314-cp314-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl"
+name = "pyyaml-6.0.4-cp314-cp314-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl"
+url = "https://files.pythonhosted.org/packages/ef/1b/54ce11b40c8fa1883f14eef46525c3c329509dcc268164074fbe60add8ed/pyyaml-6.0.4-cp314-cp314-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl"
 
 [packages.wheels.hashes]
-sha256 = "c458b6d084f9b935061bc36216e8a69a7e293a2f1e68bf956dcd9e6cbcd143f5"
+sha256 = "c604dc2613c417130479cdd6e55c2faa691b6365aa82b3dafddfcecc2eaf1ac7"
 
 [[packages]]
 name = "redis"
-version = "8.1.0"
+version = "8.2.0"
 
 [[packages.wheels]]
-name = "redis-8.1.0-py3-none-any.whl"
-url = "https://files.pythonhosted.org/packages/66/9d/c5731f6e3608663d4d3656fd8d3aecee8b509c3082818f5a13eae925baea/redis-8.1.0-py3-none-any.whl"
+name = "redis-8.2.0-py3-none-any.whl"
+url = "https://files.pythonhosted.org/packages/ea/8f/98458650cca985032598a59caca0641e7889cf4d536dc12dc032bef7df47/redis-8.2.0-py3-none-any.whl"
 
 [packages.wheels.hashes]
-sha256 = "a4fe1aac3d3b3cc791d4b3d5931c5a956045dc951ee74d1c913ee3ac4d2ee9fb"
+sha256 = "4ff649f10fae5e7e97798fb2a84e84a0a66e98310d75cad2b5a572ce0f9f15a7"
 
 [[packages]]
 name = "requests"
@@ -773,14 +773,14 @@ sha256 = "2a0d60c172f83ac6ab31e4554906c0f3b3588d37b5cb939b1c061f4907e278e0"
 
 [[packages]]
 name = "ruff"
-version = "0.17.5"
+version = "0.17.6"
 
 [[packages.wheels]]
-name = "ruff-0.17.5-py3-none-manylinux_2_17_x86_64.manylinux2014_x86_64.whl"
-url = "https://files.pythonhosted.org/packages/f2/8a/1e29c0c3785ae7e5cd0d54ee8717a08867ef71545796340be4c653c57e24/ruff-0.17.5-py3-none-manylinux_2_17_x86_64.manylinux2014_x86_64.whl"
+name = "ruff-0.17.6-py3-none-manylinux_2_17_x86_64.manylinux2014_x86_64.whl"
+url = "https://files.pythonhosted.org/packages/be/48/3df7d81249fd69ee6a49519b149fb5d11e13118fd7d0e8d65329a237087b/ruff-0.17.6-py3-none-manylinux_2_17_x86_64.manylinux2014_x86_64.whl"
 
 [packages.wheels.hashes]
-sha256 = "40ca8afaac309b41a5b2e09e4e7beb1f824826b93c25697c4d74f573324fba4e"
+sha256 = "aa3b08254a732acba246891089a152c47c5733dc36b8ecb76ce8602f8326e5e4"
 
 [[packages]]
 name = "simple-websocket"
@@ -806,25 +806,25 @@ sha256 = "a163dcaede0f1c021485e957a39245190e74249897e2ae4b2aa38595db237ee0"
 
 [[packages]]
 name = "soupsieve"
-version = "4.1.1"
+version = "4.1.3"
 
 [[packages.wheels]]
-name = "soupsieve-4.1.1-py3-none-any.whl"
-url = "https://files.pythonhosted.org/packages/cd/65/7fae69a095696195334a934eab23aeb12e2715e6c3f08025d2f91942750e/soupsieve-4.1.1-py3-none-any.whl"
+name = "soupsieve-4.1.3-py3-none-any.whl"
+url = "https://files.pythonhosted.org/packages/f6/f7/be207468cac6ad79389f36cf1fce4f2836960df91659979ec486c727bb2e/soupsieve-4.1.3-py3-none-any.whl"
 
 [packages.wheels.hashes]
-sha256 = "8ff3422dab0b720fb667ee79864d80531a0e57994a13eb701697719ffcb751f6"
+sha256 = "7a390d1a57d1ab7bb228531e9b8a750a5ebf87db774e0ef6faeeac057d22a5bf"
 
 [[packages]]
 name = "sqlalchemy"
-version = "2.0.57"
+version = "2.0.58"
 
 [[packages.wheels]]
-name = "sqlalchemy-2.0.57-cp314-cp314-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl"
-url = "https://files.pythonhosted.org/packages/37/12/103eee964f27b47b274a03fac580a04acf95547040e1dd0ae75f73336f3a/sqlalchemy-2.0.57-cp314-cp314-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl"
+name = "sqlalchemy-2.0.58-cp314-cp314-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl"
+url = "https://files.pythonhosted.org/packages/22/a6/d2cb9911cfae073381235c7cf31d7bcac5d6e919a768fcd3932ba12fdca2/sqlalchemy-2.0.58-cp314-cp314-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl"
 
 [packages.wheels.hashes]
-sha256 = "23af494d0e22c51185d2d93b9a98666042d17a518df2731787dff7f20ee438e4"
+sha256 = "b08475f3bcbf5f6c10654874601c8a8ef5b50e2c8c944d8cbf6a4d81618c2ba1"
 
 [[packages]]
 name = "starlette"
@@ -850,14 +850,14 @@ sha256 = "1401114ecf3764eb1c0f6bb175e9ceb8d1741311394dee384d8642f5b3be9b46"
 
 [[packages]]
 name = "types-cffi"
-version = "2.1.0.20260827"
+version = "2.1.0.20261122"
 
 [[packages.wheels]]
-name = "types_cffi-2.1.0.20260827-py3-none-any.whl"
-url = "https://files.pythonhosted.org/packages/0c/fc/690c243ddac627901f1448f5cb29ca3b5463774a00ac932862c60d7ce5cf/types_cffi-2.1.0.20260827-py3-none-any.whl"
+name = "types_cffi-2.1.0.20261122-py3-none-any.whl"
+url = "https://files.pythonhosted.org/packages/24/3d/9d87c8b7114ac948599f9b2314cc51ce592b3a108da85852cf6453fcd3e8/types_cffi-2.1.0.20261122-py3-none-any.whl"
 
 [packages.wheels.hashes]
-sha256 = "851b6ffa5b962c577a2330b98ac0b60c56c904d086726276946388f58a0cffaf"
+sha256 = "db8c1354c9b3ebfc15f724a2c224883ead71573df244604be5ef333c4d5e6aca"
 
 [[packages]]
 name = "types-pyopenssl"
@@ -894,14 +894,14 @@ sha256 = "06cfc2e92399bf46eda78a65cd0e2203d29ebbeede78b4ab0a5922f749ce1492"
 
 [[packages]]
 name = "types-setuptools"
-version = "84.2.0.20261104"
+version = "84.2.0.20261122"
 
 [[packages.wheels]]
-name = "types_setuptools-84.2.0.20261104-py3-none-any.whl"
-url = "https://files.pythonhosted.org/packages/bd/50/84d3ea21646c5039660e9fa08d9fb180ac43a8cb93a8f45e045d312c7e2d/types_setuptools-84.2.0.20261104-py3-none-any.whl"
+name = "types_setuptools-84.2.0.20261122-py3-none-any.whl"
+url = "https://files.pythonhosted.org/packages/43/92/774f6ce90fd16d98dc07d57270f82a8f64243f01bf81288360c44a90a178/types_setuptools-84.2.0.20261122-py3-none-any.whl"
 
 [packages.wheels.hashes]
-sha256 = "23e9bf876adca8df2285a68f76c355128b1e679b27cfec4854faf350cd7999e5"
+sha256 = "b8cec8f40ad925233859f59922d6cf3df069f31530394a429604cb9521b69ea7"
 
 [[packages]]
 name = "typing-extensions"
@@ -1015,25 +1015,25 @@ sha256 = "30eec96e8a91bd588ce897c9543f6d5d8d34b28fbcba28a4dedf20ebeae9fe57"
 
 [[packages]]
 name = "yt-dlp"
-version = "2026.10.26"
+version = "2026.11.23"
 
 [[packages.wheels]]
-name = "yt_dlp-2026.10.26-py3-none-any.whl"
-url = "https://files.pythonhosted.org/packages/7f/3d/16ea7d5638cf585991f2c5705e8083688dde633d32d0871f2404e0f4d827/yt_dlp-2026.10.26-py3-none-any.whl"
+name = "yt_dlp-2026.11.23-py3-none-any.whl"
+url = "https://files.pythonhosted.org/packages/30/1e/f4bf64ca733135e609696c6df77a6c22c6d4909b6e293e4563ae51ea335c/yt_dlp-2026.11.23-py3-none-any.whl"
 
 [packages.wheels.hashes]
-sha256 = "a05c5b5d8562f7e8a62f5334348b406af4930d56d3a65f8021d14af0e22339ae"
+sha256 = "e9188e0c559905f7ee05acc1ba0b6fb3f310e7565bf6dea5f62b5300e0775e35"
 
 [[packages]]
 name = "ytmusicapi"
-version = "1.12.3"
+version = "1.12.4"
 
 [[packages.wheels]]
-name = "ytmusicapi-1.12.3-py3-none-any.whl"
-url = "https://files.pythonhosted.org/packages/29/ad/6d471ea9d81e1f59a4d01badda21e7f3f508b94ed171c677b6547b292f73/ytmusicapi-1.12.3-py3-none-any.whl"
+name = "ytmusicapi-1.12.4-py3-none-any.whl"
+url = "https://files.pythonhosted.org/packages/ac/36/dcd31faf354db266171a869ddc0026d568c801312f5fea790ebfb2e9bf68/ytmusicapi-1.12.4-py3-none-any.whl"
 
 [packages.wheels.hashes]
-sha256 = "f65db840907a43ca23b29bd563951a1e390fbe2089d7aa4ddbe2043824b2acd9"
+sha256 = "6f2dd849f76850c8053cd40ecd7ae26e1195c0874463784a5203158a1ac453b0"
 
 [[packages]]
 name = "zipp"

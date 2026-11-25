@@ -72,7 +72,7 @@ _PAGE_JITTER_MS = (150, 600)
 
 
 def _ua() -> str:
-    return random.choice(_UA_POOL)  # noqa: S311
+    return random.choice(_UA_POOL)  # noqa: S311  # NOSONAR S2245: non-crypto UA rotation
 
 
 def _browser_headers(ua: str, *, origin: str = _OPEN_SPOTIFY) -> dict[str, str]:
@@ -95,7 +95,7 @@ def _totp(secret_b32: str) -> str:
     pad = (8 - len(secret_b32) % 8) % 8
     key = base64.b32decode(secret_b32 + "=" * pad)
     t_val = struct.pack(">Q", int(time.time()) // 30)
-    h = hmac.new(key, t_val, hashlib.sha1).digest()
+    h = hmac.new(key, t_val, hashlib.sha1).digest()  # NOSONAR S4790: SHA1 mandated by TOTP (RFC 6238)
     offset = h[-1] & 0xF
     code = (struct.unpack(">I", h[offset : offset + 4])[0] & 0x7FFFFFFF) % 1_000_000
     return str(code).zfill(6)
@@ -125,7 +125,7 @@ class SpotifyPartnerClient:
         self._access_token_expires: float = 0
         self._client_token: str = ""
         self._client_token_expires: float = 0
-        self._client_version: str = random.choice(_CURRENT_CLIENT_VERSIONS)  # noqa: S311
+        self._client_version: str = random.choice(_CURRENT_CLIENT_VERSIONS)  # noqa: S311  # NOSONAR S2245: non-crypto UA rotation
         self._client_id: str = ""
         self._totp_secret: str = ""
         self._totp_version: str = ""

@@ -206,7 +206,7 @@ def main():
     log.info("Spotify embed proxy listening on %s:%d", HOST, PORT)
     log.info("Add to .env: SPOTIFY_HOST_PROXY=http://host.docker.internal:%d", PORT)
     try:
-        server.serve_forever()
+        server.serve_forever()  # NOSONAR S5332: local-only dev proxy hint
     except KeyboardInterrupt:
         log.info("Stopped")
 

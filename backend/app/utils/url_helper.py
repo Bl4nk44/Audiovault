@@ -41,13 +41,13 @@ ALLOWED_DOMAINS: set[str] = {
 # Private/internal IP ranges that should be blocked (SSRF protection)
 BLOCKED_IP_NETWORKS: list[ipaddress.IPv4Network | ipaddress.IPv6Network] = [
     ipaddress.ip_network("127.0.0.0/8"),  # Loopback
-    ipaddress.ip_network("10.0.0.0/8"),  # Private Class A
-    ipaddress.ip_network("172.16.0.0/12"),  # Private Class B
-    ipaddress.ip_network("192.168.0.0/16"),  # Private Class C
-    ipaddress.ip_network("169.254.0.0/16"),  # Link-local
+    ipaddress.ip_network("10.0.0.0/8"),  # Private Class A  # NOSONAR S1313: SSRF blocklist literal
+    ipaddress.ip_network("172.16.0.0/12"),  # Private Class B  # NOSONAR S1313: SSRF blocklist literal
+    ipaddress.ip_network("192.168.0.0/16"),  # Private Class C  # NOSONAR S1313: SSRF blocklist literal
+    ipaddress.ip_network("169.254.0.0/16"),  # Link-local  # NOSONAR S1313: SSRF blocklist literal
     ipaddress.ip_network("0.0.0.0/8"),  # "This" network
-    ipaddress.ip_network("224.0.0.0/4"),  # Multicast
-    ipaddress.ip_network("240.0.0.0/4"),  # Reserved
+    ipaddress.ip_network("224.0.0.0/4"),  # Multicast  # NOSONAR S1313: SSRF blocklist literal
+    ipaddress.ip_network("240.0.0.0/4"),  # Reserved  # NOSONAR S1313: SSRF blocklist literal
     ipaddress.ip_network("::1/128"),  # IPv6 loopback
     ipaddress.ip_network("fc00::/7"),  # IPv6 unique local
     ipaddress.ip_network("fe80::/10"),  # IPv6 link-local

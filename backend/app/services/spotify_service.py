@@ -41,7 +41,7 @@ logger = logging.getLogger(__name__)
 # spotDL's publicly embedded credentials — Authorization Code redirect registered
 # to http://127.0.0.1:9900/ in their Spotify developer app (MIT-licensed project).
 _FALLBACK_CLIENT_ID = "5f573c9620494bae87890c0f08a60293"  # noqa: S105  # nosemgrep  # ggignore — public spotDL MIT credentials
-_FALLBACK_CLIENT_SECRET = "212476d9b0f3472eaa762d90b19b0ba8"  # noqa: S105  # nosemgrep  # ggignore — public spotDL MIT credentials
+_FALLBACK_CLIENT_SECRET = "212476d9b0f3472eaa762d90b19b0ba8"  # noqa: S105  # nosemgrep  # ggignore — public spotDL MIT credentials  # NOSONAR S6699: public spotDL MIT credentials
 
 _REDIRECT_URI = "http://127.0.0.1:9900/"
 _SCOPE = "playlist-read-private playlist-read-collaborative"
